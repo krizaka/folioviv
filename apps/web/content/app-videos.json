@@ -6,33 +6,33 @@
       "platform": "android",
       "flow": "today-books",
       "seconds": 10.1,
-      "capturedAt": "2026-11-07T11:58:09.760Z",
+      "capturedAt": "2026-11-10T13:44:29.922Z",
       "files": {
-        "webm": "sites/folioviv/download/android-today-books.00fd8da3f0.webm",
-        "mp4": "sites/folioviv/download/android-today-books.b2dfc3f089.mp4",
-        "poster": "sites/folioviv/download/android-today-books.2a8ad0f008.jpg"
+        "webm": "sites/folioviv/download/android-today-books.75d73666b4.webm",
+        "mp4": "sites/folioviv/download/android-today-books.270402d753.mp4",
+        "poster": "sites/folioviv/download/android-today-books.8f6deebda4.jpg"
       }
     },
     {
       "platform": "web",
       "flow": "composer",
-      "seconds": 10.1,
-      "capturedAt": "2026-11-07T11:57:42.620Z",
+      "seconds": 10.2,
+      "capturedAt": "2026-11-10T13:44:08.314Z",
       "files": {
-        "webm": "sites/folioviv/download/web-composer.ef5bc86771.webm",
-        "mp4": "sites/folioviv/download/web-composer.e6b63de495.mp4",
-        "poster": "sites/folioviv/download/web-composer.3d6d23f22d.jpg"
+        "webm": "sites/folioviv/download/web-composer.f31e1965c1.webm",
+        "mp4": "sites/folioviv/download/web-composer.d8a3b2ed3f.mp4",
+        "poster": "sites/folioviv/download/web-composer.c6b0974956.jpg"
       }
     },
     {
       "platform": "web",
       "flow": "storefront",
-      "seconds": 15.1,
-      "capturedAt": "2026-11-07T11:57:56.009Z",
+      "seconds": 15.3,
+      "capturedAt": "2026-11-10T13:44:19.314Z",
       "files": {
-        "webm": "sites/folioviv/download/web-storefront.5302eeb6f9.webm",
-        "mp4": "sites/folioviv/download/web-storefront.f67a29b442.mp4",
-        "poster": "sites/folioviv/download/web-storefront.ce0dd3500a.jpg"
+        "webm": "sites/folioviv/download/web-storefront.3c3f79e01e.webm",
+        "mp4": "sites/folioviv/download/web-storefront.d97e07da34.mp4",
+        "poster": "sites/folioviv/download/web-storefront.fb9b868500.jpg"
       }
     }
   ]
