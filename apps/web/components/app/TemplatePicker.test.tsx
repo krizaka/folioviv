@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { TEMPLATES, templatesFor } from "@akinaza/core";
+import { TEMPLATES, templatesFor } from "@folioviv/core";
 import { describe, expect, it, vi } from "vitest";
 
 import { bindProduct } from "@/lib/brand";
@@ -67,7 +67,7 @@ describe("the preview of a template (#261, step 4)", () => {
       const positions = template.sections.filter((s) => s.visible).map((s) => t.indexOf(labels[s.id as keyof typeof labels]!));
       expect(positions.every((p) => p >= 0), template.id).toBe(true);
       expect([...positions].sort((a, b) => a - b), template.id).toEqual(positions);
-      expect(html.includes("data-hue="), template.id).toBe(template.hue !== "brand-akinaza");
+      expect(html.includes("data-hue="), template.id).toBe(template.hue !== "brand-folioviv");
       expect(html).toContain(`data-paper="${template.paper}"`);
       expect(html).toContain('aria-hidden="true"');
     }

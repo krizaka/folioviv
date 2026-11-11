@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { avatarChoice, avatarOf, avatarOptions, avatarSrc, pictureOf } from "./avatar";
 
-describe("a person without a photo wears the org JSON's default picture (akinaza#499)", () => {
+describe("a person without a photo wears the org JSON's default picture (folioviv#499)", () => {
   it("draws the picture the person chose", () => {
     const [first] = listDefaults("person");
     expect(pictureOf({ id: "a", avatarSeed: first!.id })?.id).toBe(first!.id);
@@ -41,7 +41,7 @@ describe("a person without a photo wears the org JSON's default picture (akinaza
   it("the cast names pictures the set has: seeding Éric and the others can never point at a missing one", () => {
     const people = new Set(listDefaults("person").map((i) => i.id));
     const banners = new Set(listDefaults("banner").map((i) => i.id));
-    for (const p of castOf("akinaza")) {
+    for (const p of castOf("folioviv")) {
       expect(people.has(p.avatar), `${p.id} avatar ${p.avatar}`).toBe(true);
       if (p.banner) expect(banners.has(p.banner), `${p.id} banner ${p.banner}`).toBe(true);
       expect(avatarChoice({ avatarSeed: p.avatar })).toBe(p.avatar);

@@ -1,7 +1,7 @@
 "use client";
 
 import { BillingIcon, BookmarkIcon, CalendarIcon, ClockIcon, HomeIcon, PlusIcon, UsersIcon } from "@krizaka/icons";
-import { AkinazaLogo } from "@krizaka/ui";
+import { FoliovivLogo } from "@krizaka/ui";
 import { AppFrame, type FrameSection } from "@krizaka/ui/app-frame";
 import { Badge } from "@krizaka/ui/badge";
 import { Button } from "@krizaka/ui/button";
@@ -14,6 +14,7 @@ import { type ChipShop, ShopChip } from "@/components/app/ShopChip";
 import { ShopSearch } from "@/components/app/ShopSearch";
 import { useFrameAccount } from "@/components/app/use-frame-account";
 import { type AppPlace, screenPrimary } from "@/lib/app-nav";
+import { BRAND_ID } from "@/lib/brand-id";
 import { useSay } from "@/lib/i18n-client";
 import type { PaletteItem } from "@/lib/palette";
 
@@ -77,10 +78,10 @@ export function ShopFrame({ locale, account, places, shop, newInvoiceHref, searc
       <FrameSlot>
       <AppFrame
         name={productName}
-        mark={<AkinazaLogo size={28} animated={false} />}
-        headerMark={<AkinazaLogo size={22} animated={false} />}
+        mark={<FoliovivLogo size={28} animated={false} />}
+        headerMark={<FoliovivLogo size={22} animated={false} />}
         homeHref={home}
-        accent="akinaza"
+        accent={BRAND_ID}
         sections={sections}
         currentId={currentId}
         account={who}

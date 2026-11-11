@@ -1,10 +1,10 @@
 # Storefront templates — proposal (phase 1)
 
-Issue: krizaka/akinaza#261. Part of epic #236 (the shops platform). Status: **validé** (CTO review: option C, with the corrections below). No code changes in this PR.
+Issue: krizaka/folioviv#261. Part of epic #236 (the shops platform). Status: **validé** (CTO review: option C, with the corrections below). No code changes in this PR.
 
 Oussama (2026-10-23): « proposer aussi quelques templates pour chaque boutique ». A shop owner starts from a finished storefront that suits
 their trade, not from a blank page. The public pages follow the Cahier (artistic notebook) style; the owner's back office stays plain Krizaka UI.
-Akinaza serves service businesses and never restaurants or bars (AGENTS section 2).
+Folioviv serves service businesses and never restaurants or bars (AGENTS section 2).
 
 Shared vocabulary with the default-media issue (#267): **shop types** `salon · coaching · workshop · cleaning · pets · consulting`; **media slots**
 `cover` (16:9, image or loop) · `gallery` (4:3) · `service` (3:2) · `logo` (1:1, optional) · `about`/`team` (default avatars) · later `announcement`, `reel`, `wall`, `share`.
@@ -35,10 +35,10 @@ Everything below is an export of the package (`node_modules/@krizaka/ui/package.
 - **Storefront blocks already used**: `cover-hero`, `service-card`, `card-grid`, `media-gallery`, `opening-hours`, `slot-picker`, `avatar` (+ `avatar/defaults`), `badge`, `description-list`, `map`, `site-footer`.
 - **Blocks available for templates**: `photo-grid`, `media-grid` (a grid of media with ratios), `profile-card` (the owner or a team member), `cta-panel` and `action-bar` (the booking call), `link-card`, `argument-card` (a card that argues: icon, hook, facts), `section-backdrop` (a coloured transition), `stage-banner`, `glow-card`, `marquee`, `video-player` and `vertical-video` (a loop or a reel), `meta-row`, `list`, `page-index` (a sticky in-page index), `tabs`, `stepper`, `sticky-action` (a phone's booking bar).
 - **The Cahier**: `TapedPhoto` is merged in krizaka-ui (#542) and not released yet. **Not released**: `Polaroid`, `PinnedNote`, `ShopSign`, the textured `Wall` surface (krizaka-ui#537, #540), `RetroTv` (#539), and the text-style control `TextStylePicker`/`StyledText` (#561).
-- **Brand and fonts**: the `.brand-akinaza` hue (forest green + copper, `@krizaka/tokens/brands/scoped.css`), the family hues `data-hue` (cobalt · sky · cyan · indigo · steel · ink), the curated faces of `@krizaka/fonts`, light and dark tokens `var(--kz-*)`.
+- **Brand and fonts**: the `.brand-folioviv` hue (forest green + copper, `@krizaka/tokens/brands/scoped.css`), the family hues `data-hue` (cobalt · sky · cyan · indigo · steel · ink), the curated faces of `@krizaka/fonts`, light and dark tokens `var(--kz-*)`.
 
 ### Ready-to-file krizaka-ui blocks (nothing missing is hand-made here)
-1. **`PaperSurface` + paper tokens** (the spec of akinaza#238): `--kz-paper-{dot-grid,kraft,ruled,plain}`, grain by inline SVG, no image. *Needed by every Cahier template.*
+1. **`PaperSurface` + paper tokens** (the spec of folioviv#238): `--kz-paper-{dot-grid,kraft,ruled,plain}`, grain by inline SVG, no image. *Needed by every Cahier template.*
 2. **`Badge tone="ink"` (stamp)** and **hand-drawn `Divider`** variants (three shapes). *Needed to give the three layouts their Cahier look.*
 3. **`ServiceCard variant="index"`** (a ruled index card, price stamped), with lift and reduced motion. *Used by the « Carte » layout.*
 4. **`StorefrontSection` contract** is app-level (see option C), not a krizaka-ui block; only if a second product reuses it does it move to `@krizaka/ui`.
@@ -67,7 +67,7 @@ Until 1 to 3 are released, templates use the existing blocks with `data-hue` and
 **Recommendation: C.** It is the only option that keeps the owner's content independent of the layout, lets the administrator hold the catalogue as data, and versions without migrating
 copies, while reusing the section components and tests that already exist. A is a page builder (« arbitrary page building » is already refused in `docs/UX_DECISIONS.md`); B hard-codes the trade into code.
 
-## 4. ADR (draft, to land in `docs/adr/ADR-004-storefront-templates.md` with phase 2)
+## 4. ADR (draft, to be recorded internally with phase 2)
 
 - **Decision**: a template is a versioned, validated record of **section order, section variants, media slot names, a hue and default text styles**, held as data in `packages/core` (a zod schema, parsed at build) and selected by the shop with `shop_page.template_id` + `template_version` (never implied by the shop's type). The page renders the existing section components in the template's order with its variants; the owner's own section order and visibility (`shop_page.sections`) remain **overrides** over the template.
 - **Rejected A (stored copy / generic builder)**: copies diverge from improvements, switching is a merge, it grows into a page builder. **Rejected B (a component per type)**: trade-specific code, every improvement six times, no admin control.
@@ -86,16 +86,16 @@ Three **layouts** carry the structure; each type gets two templates, which diffe
 
 | Shop type | Template id | Name and intention | Layout | Hue | Paper † | Default text styles (roles: title / body / price) | Media slots (defaults of #267) |
 | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
-| `salon` | `salon-vitrine` | « Salon » — light, airy, mirrors and plants | L1 | `brand-akinaza` | plain | display 3xl 700 / body md / price md 600 | cover (loop), gallery ×4, service ×3 |
-| `salon` | `salon-carte` | « Sur rendez-vous » — the menu of cuts and colour | L2 | `brand-akinaza` | ruled | display 2xl 600 / body md / price lg 700 | cover (image), service ×3 |
+| `salon` | `salon-vitrine` | « Salon » — light, airy, mirrors and plants | L1 | `brand-folioviv` | plain | display 3xl 700 / body md / price md 600 | cover (loop), gallery ×4, service ×3 |
+| `salon` | `salon-carte` | « Sur rendez-vous » — the menu of cuts and colour | L2 | `brand-folioviv` | ruled | display 2xl 600 / body md / price lg 700 | cover (image), service ×3 |
 | `coaching` | `coaching-vitrine` | « Studio » — energy and space | L1 | `cyan` | dot-grid | display 3xl 700 / body md / price md 600 | cover (loop), gallery ×4 |
 | `coaching` | `coaching-histoire` | « Mon approche » — the coach's story first | L3 | `sky` | kraft | display 3xl 600 italic / body lg / price md 600 | cover, gallery ×4 (taped †) |
 | `workshop` | `workshop-histoire` | « L'atelier » — craft, tools, hands | L3 | `steel` | kraft | display 3xl 700 / body md / price md | cover, gallery ×4 (taped †) |
 | `workshop` | `workshop-carte` | « Réparations et sur mesure » — a price list | L2 | `steel` | ruled | display 2xl 700 / body md / price lg 700 | cover (image), service ×3 |
 | `cleaning` | `cleaning-vitrine` | « Frais et net » — bright, simple packages | L1 | `sky` | plain | display 3xl 700 / body md / price lg 700 | cover (loop), gallery ×4, service ×3 |
 | `cleaning` | `cleaning-carte` | « Forfaits » — what is included, at what price | L2 | `cyan` | dot-grid | display 2xl 600 / body md / price lg 700 | cover (image), service ×3 |
-| `pets` | `pets-histoire` | « Le quartier » — walks, photos, a note after each outing | L3 | `brand-akinaza` | kraft | display 3xl 700 / body lg / price md | cover (loop), gallery ×4 |
-| `pets` | `pets-vitrine` | « Promeneur » — zones and the team | L1 | `brand-akinaza` | dot-grid | display 3xl 700 / body md / price md | cover, gallery ×4 |
+| `pets` | `pets-histoire` | « Le quartier » — walks, photos, a note after each outing | L3 | `brand-folioviv` | kraft | display 3xl 700 / body lg / price md | cover (loop), gallery ×4 |
+| `pets` | `pets-vitrine` | « Promeneur » — zones and the team | L1 | `brand-folioviv` | dot-grid | display 3xl 700 / body md / price md | cover, gallery ×4 |
 | `consulting` | `consulting-carte` | « Bureau » — calm, hourly and flat fees | L2 | `indigo` | plain | display 2xl 600 / body md / price lg 600 | cover (image) |
 | `consulting` | `consulting-histoire` | « Mon travail » — approach and cases first | L3 | `ink` | ruled | display 3xl 600 / body lg / price md | cover, gallery ×4 |
 
