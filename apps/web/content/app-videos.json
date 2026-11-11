@@ -5,34 +5,34 @@
     {
       "platform": "android",
       "flow": "today-books",
-      "seconds": 10.1,
-      "capturedAt": "2026-11-10T13:44:29.922Z",
+      "seconds": 10.5,
+      "capturedAt": "2026-11-11T12:57:05.588Z",
       "files": {
-        "webm": "sites/folioviv/download/android-today-books.75d73666b4.webm",
-        "mp4": "sites/folioviv/download/android-today-books.270402d753.mp4",
-        "poster": "sites/folioviv/download/android-today-books.8f6deebda4.jpg"
+        "webm": "sites/folioviv/download/android-today-books.33bde8d42d.webm",
+        "mp4": "sites/folioviv/download/android-today-books.ff259e34ed.mp4",
+        "poster": "sites/folioviv/download/android-today-books.62c740a624.jpg"
       }
     },
     {
       "platform": "web",
       "flow": "composer",
       "seconds": 10.2,
-      "capturedAt": "2026-11-10T13:44:08.314Z",
+      "capturedAt": "2026-11-11T12:56:49.415Z",
       "files": {
-        "webm": "sites/folioviv/download/web-composer.f31e1965c1.webm",
-        "mp4": "sites/folioviv/download/web-composer.d8a3b2ed3f.mp4",
-        "poster": "sites/folioviv/download/web-composer.c6b0974956.jpg"
+        "webm": "sites/folioviv/download/web-composer.d5a0c614cf.webm",
+        "mp4": "sites/folioviv/download/web-composer.d3b4ed9142.mp4",
+        "poster": "sites/folioviv/download/web-composer.d9c4ba0f86.jpg"
       }
     },
     {
       "platform": "web",
       "flow": "storefront",
-      "seconds": 15.3,
-      "capturedAt": "2026-11-10T13:44:19.314Z",
+      "seconds": 15.2,
+      "capturedAt": "2026-11-11T12:56:57.452Z",
       "files": {
-        "webm": "sites/folioviv/download/web-storefront.3c3f79e01e.webm",
-        "mp4": "sites/folioviv/download/web-storefront.d97e07da34.mp4",
-        "poster": "sites/folioviv/download/web-storefront.fb9b868500.jpg"
+        "webm": "sites/folioviv/download/web-storefront.f7e4ddc3df.webm",
+        "mp4": "sites/folioviv/download/web-storefront.a392d9ccf8.mp4",
+        "poster": "sites/folioviv/download/web-storefront.208236e9cf.jpg"
       }
     }
   ]
