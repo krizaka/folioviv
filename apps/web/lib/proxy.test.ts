@@ -14,18 +14,21 @@ beforeEach(() => vi.stubEnv("APP_ALLOWED_HOSTS", "dev.folioviv.com"));
 afterEach(() => vi.unstubAllEnvs());
 
 describe("the proxy of a deployment closed to search engines (APP_SEARCH_INDEXING=off)", () => {
-  it("noindexes every page, closes robots.txt (with its Sitemap line) and still serves the sitemap, noindexed", async () => {
+  it("noindexes every page, closes robots.txt (no Sitemap line) and still serves the sitemap, noindexed", async () => {
     vi.stubEnv("APP_SEARCH_INDEXING", "off");
     expect((await get("/en")).headers.get("x-robots-tag")).toBe("noindex, nofollow");
     const robots = await get("/robots.txt");
     expect(robots.headers.get("x-robots-tag")).toBe("noindex, nofollow");
-    expect(await robots.text()).toBe("User-agent: *\nDisallow: /\nSitemap: https://www.folioviv.com/sitemap.xml\n");
+    expect(await robots.text()).toBe("User-agent: *\nDisallow: /\n");
     const sitemap = await get("/sitemap.xml");
     expect(sitemap.status).toBe(200);
     expect(sitemap.headers.get("x-robots-tag")).toBe("noindex, nofollow");
   });
 
-  it("leaves an open deployment alone", async () => {
+  it("opens only a deployment that says on AND the host of its public address", async () => {
+    vi.stubEnv("APP_ALLOWED_HOSTS", "dev.folioviv.com,www.folioviv.com");
+    vi.stubEnv("APP_SEARCH_INDEXING", "on");
+    vi.stubEnv("APP_PUBLIC_URL", "https://www.folioviv.com");
     const open = (path: string) => proxy(new NextRequest(`https://www.folioviv.com${path}`, { headers: { host: "www.folioviv.com" } }));
     expect((await open("/en")).headers.get("x-robots-tag")).toBeNull();
     expect((await open("/sitemap.xml")).status).toBe(200);
@@ -43,11 +46,28 @@ describe("www.folioviv.com is public, dev.folioviv.com leaves search (epic kriza
     vi.stubEnv("APP_DEV_HOST", "dev.folioviv.com");
   };
 
-  it("www is indexed even on a deployment that is closed elsewhere: no noindex, robots.txt and the sitemap are the app's", async () => {
+  it("a closed setting closes the public host too: noindex on every answer, robots.txt closed, the sitemap still served (wave 1, krizaka-internal#2630)", async () => {
     setup();
-    expect((await as("www.folioviv.com", "/en")).headers.get("x-robots-tag")).toBeNull();
-    expect((await as("www.folioviv.com", "/robots.txt")).headers.get("content-type")).not.toBe("text/plain");
+    vi.stubEnv("APP_ALLOWED_HOSTS", "www.folioviv.com");
+    expect((await as("www.folioviv.com", "/en")).headers.get("x-robots-tag")).toBe("noindex, nofollow");
+    expect((await as("www.folioviv.com", "/robots.txt")).headers.get("content-type")).toBe("text/plain");
     expect((await as("www.folioviv.com", "/sitemap.xml")).status).toBe(200);
+  });
+
+  it("no setting at all closes it as well: the site is open only when explicitly on", async () => {
+    vi.stubEnv("APP_ALLOWED_HOSTS", "www.folioviv.com");
+    vi.stubEnv("APP_SEARCH_INDEXING", "");
+    vi.stubEnv("APP_PUBLIC_URL", "https://www.folioviv.com");
+    expect((await as("www.folioviv.com", "/en")).headers.get("x-robots-tag")).toBe("noindex, nofollow");
+    expect((await as("www.folioviv.com", "/api/healthz")).headers.get("x-robots-tag")).toBe("noindex, nofollow");
+  });
+
+  it("on, but a host that is not the public address stays closed", async () => {
+    vi.stubEnv("APP_ALLOWED_HOSTS", "www.folioviv.com,admin.folioviv.com");
+    vi.stubEnv("APP_SEARCH_INDEXING", "on");
+    vi.stubEnv("APP_PUBLIC_URL", "https://www.folioviv.com");
+    expect((await as("admin.folioviv.com", "/en/sign-in")).headers.get("x-robots-tag")).toBe("noindex, nofollow");
+    expect((await as("www.folioviv.com", "/en")).headers.get("x-robots-tag")).toBeNull();
   });
 
   it("dev: a page answers 308 to the same path on www, noindex", async () => {

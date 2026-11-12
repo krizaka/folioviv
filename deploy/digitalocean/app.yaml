@@ -77,7 +77,7 @@ services:
       - key: APP_ENVIRONMENT
         scope: RUN_AND_BUILD_TIME
         value: "dev"
-      # Every dev deployment: noindex and a closed robots.txt on every host but www (the public address), the development notice in the footer.
+      # Every dev deployment: noindex and a closed robots.txt on every host, the development notice in the footer.
       - key: APP_SEARCH_INDEXING
         scope: RUN_AND_BUILD_TIME
         value: "off"

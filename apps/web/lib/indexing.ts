@@ -1,14 +1,14 @@
-import { SITE_URL } from "./site";
-
 /**
  * One flag decides whether this deployment is open to search engines: `APP_SEARCH_INDEXING=off` (every dev and preview
  * deployment) puts `noindex, nofollow` on every response and closes robots.txt (the sitemap stays served, noindexed: the family contract), and shows the
- * development notice in the footer. Anything else (default `on`) leaves the public pages open to crawlers.
+ * development notice in the footer. `indexable` only drives that notice; whether a host may be indexed is `indexableOn`: closed unless the
+ * setting is explicitly `on` AND the host is the configured public host (krizaka-internal#2630: the paused site is not advertised).
  */
 export const indexable = (env: Record<string, string | undefined> = process.env): boolean => env.APP_SEARCH_INDEXING?.trim().toLowerCase() !== "off";
 
 export const NOINDEX = "noindex, nofollow";
-export const CLOSED_ROBOTS = `User-agent: *\nDisallow: /\nSitemap: ${SITE_URL}/sitemap.xml\n`;
+/** A closed site advertises nothing, no sitemap either (the family contract, krizaka-seo-family `--index off`). */
+export const CLOSED_ROBOTS = "User-agent: *\nDisallow: /\n";
 /** Closed to every crawler; the dev host, which sends every page to www, names no sitemap. */
 export const closedRobots = (siteUrl?: string): string => {
   const sitemap = siteUrl ? `Sitemap: ${siteUrl}/sitemap.xml\n` : "";
@@ -28,9 +28,15 @@ export const publicHost = (env: Record<string, string | undefined> = process.env
     return "";
   }
 };
-/** Whether a response to this host may be indexed. A `dev.*` host never is: www is production, whatever APP_DEV_HOST or APP_SEARCH_INDEXING say. */
-export const indexableOn = (host: string | null | undefined, env: Record<string, string | undefined> = process.env): boolean => !bare(host).startsWith("dev.") && (indexable(env) || bare(host) === publicHost(env));
 export const isDevHost = (host: string | null | undefined, env: Record<string, string | undefined> = process.env): boolean => !!env.APP_DEV_HOST?.trim() && bare(host) === bare(env.APP_DEV_HOST);
+/** The setting is on only when it is explicitly `on`: unset, `off` or anything else keeps the site closed (the product is paused, krizaka-internal#2630). */
+export const indexingExplicitlyOn = (env: Record<string, string | undefined> = process.env): boolean => env.APP_SEARCH_INDEXING?.trim().toLowerCase() === "on";
+/**
+ * Whether a response to this host may be indexed: only when the setting is explicitly on AND the host is the configured public host
+ * (`APP_PUBLIC_URL`). No host is typed here, today's configuration decides. A `dev.*` host, or the one `APP_DEV_HOST` names, never is.
+ */
+export const indexableOn = (host: string | null | undefined, env: Record<string, string | undefined> = process.env): boolean =>
+  !bare(host).startsWith("dev.") && !isDevHost(host, env) && indexingExplicitlyOn(env) && bare(host) === publicHost(env);
 
 /** What the dev host keeps serving: robots.txt, /healthz, the API (auth callbacks, webhooks, the mobile apps' calls) and /.well-known. */
 const DEV_KEEPS = ["/api/", "/.well-known/"];

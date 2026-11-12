@@ -12,30 +12,37 @@ describe("APP_SEARCH_INDEXING", () => {
 
   it("closes robots.txt to everyone", () => {
     expect(CLOSED_ROBOTS).toContain("Disallow: /");
-    // The family contract (AGENTS.md of krizaka-com §2.4): a closed site still serves correct files for the day it opens.
-    expect(CLOSED_ROBOTS).toContain("Sitemap: https://www.folioviv.com/sitemap.xml");
+    // The family contract (krizaka-seo-family --index off): a closed site advertises no sitemap.
+    expect(CLOSED_ROBOTS).not.toMatch(/sitemap/i);
     expect(NOINDEX).toBe("noindex, nofollow");
   });
 });
 
 const ENV = { APP_SEARCH_INDEXING: "off", APP_PUBLIC_URL: "https://www.folioviv.com", APP_DEV_HOST: "dev.folioviv.com" };
 
-describe("the public host is indexed, the dev host never (epic krizaka/.github#119)", () => {
-  it("a closed deployment (off) stays closed everywhere but on the host of APP_PUBLIC_URL", () => {
+describe("the public host is indexed only when the setting is on, the dev host never (epic krizaka/.github#119)", () => {
+  it("is closed unless the setting is explicitly on AND the host is the configured public host", () => {
+    const on = { ...ENV, APP_SEARCH_INDEXING: "on" };
     expect(publicHost(ENV)).toBe("www.folioviv.com");
-    expect(indexableOn("www.folioviv.com", ENV)).toBe(true);
-    expect(indexableOn("WWW.folioviv.com:443", ENV)).toBe(true);
-    expect(indexableOn("dev.folioviv.com", ENV)).toBe(false);
-    expect(indexableOn("admin.folioviv.com", ENV)).toBe(false);
-    expect(indexableOn("anything.test", ENV)).toBe(false);
+    expect(indexableOn("www.folioviv.com", on)).toBe(true);
+    expect(indexableOn("WWW.folioviv.com:443", on)).toBe(true);
+    // off, unset or anything else: closed, even on the public host
+    for (const setting of ["off", "", "yes", undefined]) { expect(indexableOn("www.folioviv.com", { ...ENV, APP_SEARCH_INDEXING: setting })).toBe(false); }
+    expect(indexableOn("www.folioviv.com", {})).toBe(false);
+    // on, but not the configured public host: closed (no host is typed in the code, the configuration names it)
+    expect(indexableOn("admin.folioviv.com", on)).toBe(false);
+        expect(indexableOn("anything.test", on)).toBe(false);
+    expect(indexableOn("www.other.test", { ...on, APP_PUBLIC_URL: "https://www.other.test" })).toBe(true);
+    expect(indexableOn(null, on)).toBe(false);
   });
 
   it("a dev.* host is never indexable, whatever the configuration says (#249)", () => {
-    for (const config of [{ APP_SEARCH_INDEXING: "on" }, {}, { APP_PUBLIC_URL: "https://dev.folioviv.com" }, { APP_DEV_HOST: "other.test" }]) {
+    for (const config of [{ APP_SEARCH_INDEXING: "on" }, {}, { APP_SEARCH_INDEXING: "on", APP_PUBLIC_URL: "https://dev.folioviv.com" }]) {
       expect(indexableOn("dev.folioviv.com", config)).toBe(false);
       expect(indexableOn("DEV.folioviv.com:443", config)).toBe(false);
     }
-    expect(indexableOn("www.folioviv.com", { APP_SEARCH_INDEXING: "on" })).toBe(true);
+    // the host APP_DEV_HOST names is a dev host too, whatever its name
+    expect(indexableOn("preview.test", { APP_SEARCH_INDEXING: "on", APP_PUBLIC_URL: "https://preview.test", APP_DEV_HOST: "preview.test" })).toBe(false);
   });
 
   it("the dev host is the one APP_DEV_HOST names", () => {
