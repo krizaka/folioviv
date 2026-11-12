@@ -41,7 +41,7 @@ describe("readHostname", () => {
       expect(readHostname(`book.${name}.ca`)).toEqual({ ok: false, reason: "platform" });
       expect(readHostname(`${name}.book.example.org`)).toEqual({ ok: false, reason: "platform" });
     }
-    expect(OWN_NAMES).toEqual(expect.arrayContaining(["krizaka", "folioviv", "verikora", "sovkora", "kridoc", "akinaza"]));
+    expect(OWN_NAMES).toEqual(expect.arrayContaining(["krizaka", "folioviv", "verikora", "sovkora", "kridoc", "akinaza", "orazaka", "yomizaka"]));
     expect(readHostname("a.folioviv.shop")).toEqual({ ok: false, reason: "platform" });
     expect(readHostname("a.krizaka.dev")).toEqual({ ok: false, reason: "platform" });
   });

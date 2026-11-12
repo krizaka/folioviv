@@ -33,7 +33,7 @@ export const txtRecordValue = (token: string): string => TXT_VALUE_PREFIX + toke
  * any suffix (`folioviv.shop`, `monsalon.krizaka.com`, `akinaza.ca`), is never accepted as a merchant's domain: it would pass for us.
  * The shop domain itself (`APP_SHOP_DOMAIN`) is refused too: the caller passes it, nothing is typed twice.
  */
-export const OWN_NAMES: readonly string[] = ["krizaka", "folioviv", "verikora", "sovkora", "kridoc", "akinaza"];
+export const OWN_NAMES: readonly string[] = ["krizaka", "folioviv", "verikora", "sovkora", "kridoc", "akinaza", "orazaka", "yomizaka"];
 
 const isOwnName = (raw: string, shopDomain?: string | null): boolean =>
   raw.split(".").some((label) => OWN_NAMES.includes(label)) || (!!shopDomain && (raw === shopDomain || raw.endsWith(`.${shopDomain}`)));
