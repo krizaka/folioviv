@@ -28,8 +28,15 @@ export const TXT_VALUE_PREFIX = "folioviv-site-verification=";
 export const txtRecordName = (hostname: string): string => `${TXT_PREFIX}.${hostname}`;
 export const txtRecordValue = (token: string): string => TXT_VALUE_PREFIX + token;
 
-/** Registrable names that are ours: never accepted as a merchant's domain. */
-const PLATFORM_DOMAINS = ["folioviv.com", "folioviv.shop", "krizaka.com", "krizaka.dev"];
+/**
+ * The names that are ours, in one list: the company, its products and their former code names. A hostname holding one of them as a label, on
+ * any suffix (`folioviv.shop`, `monsalon.krizaka.com`, `akinaza.ca`), is never accepted as a merchant's domain: it would pass for us.
+ * The shop domain itself (`APP_SHOP_DOMAIN`) is refused too: the caller passes it, nothing is typed twice.
+ */
+export const OWN_NAMES: readonly string[] = ["krizaka", "folioviv", "verikora", "sovkora", "kridoc", "akinaza", "orazaka", "yomizaka"];
+
+const isOwnName = (raw: string, shopDomain?: string | null): boolean =>
+  raw.split(".").some((label) => OWN_NAMES.includes(label)) || (!!shopDomain && (raw === shopDomain || raw.endsWith(`.${shopDomain}`)));
 const LABEL = /^(?!-)[a-z0-9-]{1,63}(?<!-)$/;
 const TLD = /^(?:[a-z]{2,}|xn--[a-z0-9-]+)$/;
 const IPV4 = /^\d{1,3}(?:\.\d{1,3}){3}$/;
@@ -43,7 +50,7 @@ export type HostnameCheck = { ok: true; hostname: string } | { ok: false; reason
  * What a merchant typed, read as a hostname: scheme, path, port and a trailing dot are dropped, the name is lower-cased. A subdomain is required
  * (`reservation.monsalon.ca`): the edge service does not proxy an apex on every plan. An IP, a platform name or a malformed label is refused.
  */
-export function readHostname(input: string): HostnameCheck {
+export function readHostname(input: string, shopDomain?: string | null): HostnameCheck {
   const withoutScheme = input.trim().toLowerCase().replace(/^[a-z][a-z0-9+.-]*:\/\//, "");
   const raw = (withoutScheme.split(/[/?#]/)[0] ?? "").replace(/:\d+$/, "").replace(/\.$/, "");
   if (!raw) return { ok: false, reason: "empty" };
@@ -51,7 +58,7 @@ export function readHostname(input: string): HostnameCheck {
   const labels = raw.split(".");
   const tld = labels[labels.length - 1] ?? "";
   if (raw.length > MAX_HOSTNAME || labels.length < 2 || !labels.every((l) => LABEL.test(l)) || !TLD.test(tld)) return { ok: false, reason: "invalid" };
-  if (PLATFORM_DOMAINS.some((d) => raw === d || raw.endsWith(`.${d}`))) return { ok: false, reason: "platform" };
+  if (isOwnName(raw, shopDomain?.trim().toLowerCase())) return { ok: false, reason: "platform" };
   if (labels.length < MIN_LABELS) return { ok: false, reason: "apex" };
   return { ok: true, hostname: raw };
 }

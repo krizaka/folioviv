@@ -7,6 +7,7 @@ import { systemClock } from "@/app/system-clock";
 import { audit } from "@/lib/audit";
 import { db } from "@/lib/db";
 import { refuse } from "@/lib/http";
+import { shopDomain } from "@/lib/shop-domain";
 import { appPrices } from "@/lib/price-catalogue";
 import { CUSTOM_DOMAIN } from "@/lib/pricing";
 
@@ -54,7 +55,7 @@ export async function ownerDomains(shopId: string, enabled: boolean): Promise<Ow
 
 export async function addOwnerDomain(shopId: string, hostname: string, who: Actor) {
   const addon = await customDomainAddon();
-  const row = await addShopDomain(db(), shopId, hostname, { max: addon?.maxDomains ?? 0, random: (n) => randomBytes(n) });
+  const row = await addShopDomain(db(), shopId, hostname, { max: addon?.maxDomains ?? 0, random: (n) => randomBytes(n), shopDomain: shopDomain(process.env) });
   await audit({ ...who, action: "domain.add", targetId: row.id, detail: { shopId, hostname: row.hostname } });
   return row;
 }

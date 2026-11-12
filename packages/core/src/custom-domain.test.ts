@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  checkDomain, type CustomHostnames, DOMAIN_ERROR, DOMAIN_STATE, type DomainSnapshot, dnsInstructions, newDomainToken, ownershipProven, readHostname,
+  checkDomain, type CustomHostnames, DOMAIN_ERROR, DOMAIN_STATE, type DomainSnapshot, dnsInstructions, newDomainToken, OWN_NAMES, ownershipProven, readHostname,
   type TlsStatus, txtRecordName, txtRecordValue,
 } from "./custom-domain";
 
@@ -34,6 +34,22 @@ describe("readHostname", () => {
     expect(readHostname("-bad.monsalon.ca")).toEqual({ ok: false, reason: "invalid" });
     expect(readHostname("bad_name.monsalon.ca")).toEqual({ ok: false, reason: "invalid" });
     expect(readHostname("localhost")).toEqual({ ok: false, reason: "invalid" });
+  });
+  it("refuses every one of our own names, on any suffix", () => {
+    for (const name of OWN_NAMES) {
+      expect(readHostname(`book.${name}.com`)).toEqual({ ok: false, reason: "platform" });
+      expect(readHostname(`book.${name}.ca`)).toEqual({ ok: false, reason: "platform" });
+      expect(readHostname(`${name}.book.example.org`)).toEqual({ ok: false, reason: "platform" });
+    }
+    expect(OWN_NAMES).toEqual(expect.arrayContaining(["krizaka", "folioviv", "verikora", "sovkora", "kridoc", "akinaza", "orazaka", "yomizaka"]));
+    expect(readHostname("a.folioviv.shop")).toEqual({ ok: false, reason: "platform" });
+    expect(readHostname("a.krizaka.dev")).toEqual({ ok: false, reason: "platform" });
+  });
+  it("refuses the configured shop domain, whatever its name", () => {
+    expect(readHostname("a.shops.example.net")).toEqual({ ok: true, hostname: "a.shops.example.net" });
+    expect(readHostname("a.shops.example.net", "shops.example.net")).toEqual({ ok: false, reason: "platform" });
+    expect(readHostname("shops.example.net", "Shops.Example.net")).toEqual({ ok: false, reason: "platform" });
+    expect(readHostname("a.myshops.example.net", "shops.example.net")).toEqual({ ok: true, hostname: "a.myshops.example.net" });
   });
   it("does not take a look-alike for a platform name", () => {
     expect(readHostname("book.notfolioviv.com")).toEqual({ ok: true, hostname: "book.notfolioviv.com" });

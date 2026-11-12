@@ -49,8 +49,8 @@ export async function listShopDomains(db: Db, shopId: string): Promise<ShopDomai
 }
 
 /** The owner adds a hostname. `max` is the catalogue's limit for the option. The new row gets a token of its own: a domain released by one shop is never inherited. */
-export async function addShopDomain(db: Db, shopId: string, input: string, opts: { max: number; random: (bytes: number) => Uint8Array }): Promise<ShopDomain> {
-  const read = readHostname(input);
+export async function addShopDomain(db: Db, shopId: string, input: string, opts: { max: number; random: (bytes: number) => Uint8Array; shopDomain?: string | null }): Promise<ShopDomain> {
+  const read = readHostname(input, opts.shopDomain);
   if (!read.ok) throw new ShopError(DOMAIN_CODE.invalid, read.reason);
   const [shop] = await db.select({ enabled: shops.customDomainEnabled }).from(shops).where(eq(shops.id, shopId));
   if (!shop) throw new ShopError(DOMAIN_CODE.notFound);
