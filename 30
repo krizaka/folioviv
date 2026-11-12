@@ -1,0 +1,291 @@
+[heavy-lock] collecteurs-3222 got a slot 19:22:14
+
+> folioviv-monorepo@0.1.0 build /Users/oussamaabid/krizaka-hq/workspace/worktrees/folioviv-3222
+> turbo run build
+
+
+   • turbo 2.11.8
+   • Packages in scope: @folioviv/client, @folioviv/core, @folioviv/db, @folioviv/desktop, @folioviv/mobile, @folioviv/web
+   • Running build in 6 packages
+   • Remote caching disabled, using shared worktree cache
+
+@folioviv/web:build: cache miss, executing c4db4074719ff78b
+@folioviv/web:build: 
+@folioviv/web:build: > @folioviv/web@0.1.0 build /Users/oussamaabid/krizaka-hq/workspace/worktrees/folioviv-3222/apps/web
+@folioviv/web:build: > next build
+@folioviv/web:build: 
+@folioviv/web:build: ▲ Next.js 16.4.1 (Turbopack)
+@folioviv/web:build: ✓ Running next.config.mjs took 11ms
+@folioviv/web:build: - Experiments (use with caution):
+@folioviv/web:build:   ✓ globalNotFound
+@folioviv/web:build: 
+@folioviv/web:build:   Creating an optimized production build ...
+@folioviv/web:build: ✓ Compiled successfully in 7.5s
+@folioviv/web:build:   Running TypeScript ...
+@folioviv/web:build:   Finished TypeScript in 8.0s ...
+@folioviv/web:build:   Collecting page data using 9 workers ...
+@folioviv/web:build:   Generating static pages using 9 workers (0/126) ...
+@folioviv/web:build:   Generating static pages using 9 workers (31/126) 
+@folioviv/web:build:   Generating static pages using 9 workers (62/126) 
+@folioviv/web:build:   Generating static pages using 9 workers (94/126) 
+@folioviv/web:build: ✓ Generating static pages using 9 workers (126/126) in 799ms
+@folioviv/web:build:   Finalizing page optimization ...
+@folioviv/web:build: 
+@folioviv/web:build: Route (app)
+@folioviv/web:build: ┌ ƒ /_not-found
+@folioviv/web:build: ├ ƒ /[locale]
+@folioviv/web:build: ├ ƒ /[locale]/app
+@folioviv/web:build: ├ ƒ /[locale]/app/[shop]/books
+@folioviv/web:build: ├ ƒ /[locale]/app/[shop]/brief
+@folioviv/web:build: ├ ƒ /[locale]/app/[shop]/clients
+@folioviv/web:build: ├ ƒ /[locale]/app/[shop]/clients/[id]
+@folioviv/web:build: ├ ƒ /[locale]/app/[shop]/invoices
+@folioviv/web:build: ├ ƒ /[locale]/app/[shop]/invoices/[id]
+@folioviv/web:build: ├ ƒ /[locale]/app/[shop]/invoices/[id]/correct
+@folioviv/web:build: ├ ƒ /[locale]/app/[shop]/invoices/new
+@folioviv/web:build: ├ ƒ /[locale]/app/[shop]/settings
+@folioviv/web:build: ├ ƒ /[locale]/app/[shop]/settings/[section]
+@folioviv/web:build: ├ ƒ /[locale]/app/[shop]/shop/new
+@folioviv/web:build: ├ ƒ /[locale]/app/[shop]/today
+@folioviv/web:build: ├ ƒ /[locale]/app/books
+@folioviv/web:build: ├ ƒ /[locale]/app/clients
+@folioviv/web:build: ├ ƒ /[locale]/app/invoices
+@folioviv/web:build: ├ ƒ /[locale]/app/invoices/[id]
+@folioviv/web:build: ├ ƒ /[locale]/app/open-shop
+@folioviv/web:build: ├ ƒ /[locale]/app/profile
+@folioviv/web:build: ├ ƒ /[locale]/app/profile/data
+@folioviv/web:build: ├ ƒ /[locale]/app/profile/preferences
+@folioviv/web:build: ├ ƒ /[locale]/app/profile/security
+@folioviv/web:build: ├ ƒ /[locale]/app/profile/subscription
+@folioviv/web:build: ├ ƒ /[locale]/app/shop
+@folioviv/web:build: ├ ƒ /[locale]/app/team
+@folioviv/web:build: ├ ƒ /[locale]/brief/stop/[token]
+@folioviv/web:build: ├ ƒ /[locale]/console
+@folioviv/web:build: ├ ƒ /[locale]/console/addresses
+@folioviv/web:build: ├ ƒ /[locale]/console/associations
+@folioviv/web:build: ├ ƒ /[locale]/console/audit
+@folioviv/web:build: ├ ƒ /[locale]/console/incidents
+@folioviv/web:build: ├ ƒ /[locale]/console/invoices
+@folioviv/web:build: ├ ƒ /[locale]/console/ledger
+@folioviv/web:build: ├ ƒ /[locale]/console/operations
+@folioviv/web:build: ├ ƒ /[locale]/console/organize
+@folioviv/web:build: ├ ƒ /[locale]/console/prices
+@folioviv/web:build: ├ ƒ /[locale]/console/shops
+@folioviv/web:build: ├ ƒ /[locale]/console/sign-in
+@folioviv/web:build: ├ ƒ /[locale]/console/storage
+@folioviv/web:build: ├ ƒ /[locale]/console/users
+@folioviv/web:build: ├ ƒ /[locale]/console/users/[id]
+@folioviv/web:build: ├ ƒ /[locale]/docs
+@folioviv/web:build: ├ ƒ /[locale]/docs/[page]
+@folioviv/web:build: ├ ƒ /[locale]/download
+@folioviv/web:build: ├ ƒ /[locale]/explore
+@folioviv/web:build: ├ ƒ /[locale]/forgot-password
+@folioviv/web:build: ├ ƒ /[locale]/invoice/[token]
+@folioviv/web:build: ├ ƒ /[locale]/preview/[shop]
+@folioviv/web:build: ├ ƒ /[locale]/pricing
+@folioviv/web:build: ├ ƒ /[locale]/privacy
+@folioviv/web:build: ├ ƒ /[locale]/report/[token]
+@folioviv/web:build: ├ ƒ /[locale]/reset-password
+@folioviv/web:build: ├ ƒ /[locale]/s/[slug]
+@folioviv/web:build: ├ ƒ /[locale]/s/[slug]/service/[id]
+@folioviv/web:build: ├ ƒ /[locale]/s/[slug]/service/[id]/confirm
+@folioviv/web:build: ├ ƒ /[locale]/s/[slug]/service/[id]/confirmation
+@folioviv/web:build: ├ ƒ /[locale]/s/[slug]/service/[id]/slots
+@folioviv/web:build: ├ ƒ /[locale]/sign-in
+@folioviv/web:build: ├ ƒ /[locale]/sign-up
+@folioviv/web:build: ├ ƒ /[locale]/terms
+@folioviv/web:build: ├ ƒ /api/admin/associations
+@folioviv/web:build: ├ ƒ /api/admin/associations/[id]
+@folioviv/web:build: ├ ƒ /api/admin/domains
+@folioviv/web:build: ├ ƒ /api/admin/domains/[id]
+@folioviv/web:build: ├ ƒ /api/admin/domains/shops/[id]
+@folioviv/web:build: ├ ƒ /api/admin/incidents
+@folioviv/web:build: ├ ƒ /api/admin/incidents/[id]
+@folioviv/web:build: ├ ƒ /api/admin/incidents/export
+@folioviv/web:build: ├ ƒ /api/admin/organize/[kind]/config
+@folioviv/web:build: ├ ƒ /api/admin/prices
+@folioviv/web:build: ├ ƒ /api/admin/prices/[key]
+@folioviv/web:build: ├ ƒ /api/admin/settings
+@folioviv/web:build: ├ ƒ /api/admin/settings/[key]
+@folioviv/web:build: ├ ƒ /api/admin/settings/history
+@folioviv/web:build: ├ ƒ /api/admin/slug-holds
+@folioviv/web:build: ├ ƒ /api/admin/slug-holds/[id]
+@folioviv/web:build: ├ ƒ /api/admin/slug-holds/[id]/keep
+@folioviv/web:build: ├ ƒ /api/admin/slug-holds/rejudge
+@folioviv/web:build: ├ ƒ /api/admin/users
+@folioviv/web:build: ├ ƒ /api/admin/users/[id]
+@folioviv/web:build: ├ ƒ /api/admin/users/[id]/export
+@folioviv/web:build: ├ ƒ /api/admin/users/[id]/restore
+@folioviv/web:build: ├ ƒ /api/admin/users/[id]/role
+@folioviv/web:build: ├ ƒ /api/admin/users/[id]/sessions
+@folioviv/web:build: ├ ƒ /api/admin/users/[id]/suspend
+@folioviv/web:build: ├ ƒ /api/auth/accept-invite
+@folioviv/web:build: ├ ƒ /api/auth/confirm-email
+@folioviv/web:build: ├ ƒ /api/auth/password/change
+@folioviv/web:build: ├ ƒ /api/auth/password/forgot
+@folioviv/web:build: ├ ƒ /api/auth/password/reset
+@folioviv/web:build: ├ ƒ /api/auth/sign-in
+@folioviv/web:build: ├ ƒ /api/auth/sign-out
+@folioviv/web:build: ├ ƒ /api/auth/sign-up
+@folioviv/web:build: ├ ƒ /api/billing/association
+@folioviv/web:build: ├ ƒ /api/billing/checkout
+@folioviv/web:build: ├ ƒ /api/billing/portal
+@folioviv/web:build: ├ ƒ /api/brief/stop
+@folioviv/web:build: ├ ƒ /api/calendars/callback/[kind]
+@folioviv/web:build: ├ ƒ /api/calendars/connect/[kind]
+@folioviv/web:build: ├ ƒ /api/domains
+@folioviv/web:build: ├ ƒ /api/domains/[id]
+@folioviv/web:build: ├ ƒ /api/explore/geocode
+@folioviv/web:build: ├ ƒ /api/explore/shops
+@folioviv/web:build: ├ ƒ /api/feed
+@folioviv/web:build: ├ ƒ /api/feed/[token]
+@folioviv/web:build: ├ ƒ /api/healthz
+@folioviv/web:build: ├ ƒ /api/internal/shop-exists
+@folioviv/web:build: ├ ƒ /api/internal/shop-sitemap
+@folioviv/web:build: ├ ƒ /api/invoice/[token]
+@folioviv/web:build: ├ ƒ /api/me
+@folioviv/web:build: ├ ƒ /api/me/access-notes
+@folioviv/web:build: ├ ƒ /api/me/account-export
+@folioviv/web:build: ├ ƒ /api/me/api-keys
+@folioviv/web:build: ├ ƒ /api/me/api-keys/[id]
+@folioviv/web:build: ├ ƒ /api/me/api-keys/[id]/rotate
+@folioviv/web:build: ├ ƒ /api/me/bookings
+@folioviv/web:build: ├ ƒ /api/me/bookings/[id]/calendar
+@folioviv/web:build: ├ ƒ /api/me/bookings/[id]/cancel
+@folioviv/web:build: ├ ƒ /api/me/delete
+@folioviv/web:build: ├ ƒ /api/me/dependants
+@folioviv/web:build: ├ ƒ /api/me/email
+@folioviv/web:build: ├ ƒ /api/me/erase
+@folioviv/web:build: ├ ƒ /api/me/export
+@folioviv/web:build: ├ ƒ /api/me/join
+@folioviv/web:build: ├ ƒ /api/me/password
+@folioviv/web:build: ├ ƒ /api/me/profile
+@folioviv/web:build: ├ ƒ /api/me/reports/[id]/photo
+@folioviv/web:build: ├ ƒ /api/me/requests
+@folioviv/web:build: ├ ƒ /api/me/requests/[id]
+@folioviv/web:build: ├ ƒ /api/me/requests/[id]/files
+@folioviv/web:build: ├ ƒ /api/me/requests/[id]/files/[fileId]
+@folioviv/web:build: ├ ƒ /api/me/sessions
+@folioviv/web:build: ├ ƒ /api/me/sessions/sign-out-others
+@folioviv/web:build: ├ ƒ /api/report/[token]/photo
+@folioviv/web:build: ├ ƒ /api/shops/[slug]/events
+@folioviv/web:build: ├ ƒ /api/shops/[slug]/guest/code
+@folioviv/web:build: ├ ƒ /api/shops/[slug]/guest/confirm
+@folioviv/web:build: ├ ƒ /api/shops/[slug]/slots
+@folioviv/web:build: ├ ƒ /api/v1/bookings
+@folioviv/web:build: ├ ƒ /api/v1/clients
+@folioviv/web:build: ├ ƒ /api/v1/invoices
+@folioviv/web:build: ├ ƒ /api/v1/reports
+@folioviv/web:build: ├ ƒ /api/walker/announcements
+@folioviv/web:build: ├ ƒ /api/walker/announcements/[id]
+@folioviv/web:build: ├ ƒ /api/walker/bookings/[id]/report
+@folioviv/web:build: ├ ƒ /api/walker/bookings/[id]/report/send
+@folioviv/web:build: ├ ƒ /api/walker/books
+@folioviv/web:build: ├ ƒ /api/walker/brief
+@folioviv/web:build: ├ ƒ /api/walker/brief/invite
+@folioviv/web:build: ├ ƒ /api/walker/calendar
+@folioviv/web:build: ├ ƒ /api/walker/calendars
+@folioviv/web:build: ├ ƒ /api/walker/calendars/[id]/sync
+@folioviv/web:build: ├ ƒ /api/walker/clients
+@folioviv/web:build: ├ ƒ /api/walker/clients/[id]/access-notes
+@folioviv/web:build: ├ ƒ /api/walker/clients/[id]/erase
+@folioviv/web:build: ├ ƒ /api/walker/clients/[id]/export
+@folioviv/web:build: ├ ƒ /api/walker/clients/[id]/notes
+@folioviv/web:build: ├ ƒ /api/walker/clients/tags
+@folioviv/web:build: ├ ƒ /api/walker/clients/tags/[id]
+@folioviv/web:build: ├ ƒ /api/walker/clients/tags/apply
+@folioviv/web:build: ├ ƒ /api/walker/clients/views
+@folioviv/web:build: ├ ƒ /api/walker/clients/views/[id]
+@folioviv/web:build: ├ ƒ /api/walker/day
+@folioviv/web:build: ├ ƒ /api/walker/days-off
+@folioviv/web:build: ├ ƒ /api/walker/days-off/[day]
+@folioviv/web:build: ├ ƒ /api/walker/exports/[file]
+@folioviv/web:build: ├ ƒ /api/walker/feeds
+@folioviv/web:build: ├ ƒ /api/walker/figures
+@folioviv/web:build: ├ ƒ /api/walker/figures/rules
+@folioviv/web:build: ├ ƒ /api/walker/hours
+@folioviv/web:build: ├ ƒ /api/walker/hours/[id]
+@folioviv/web:build: ├ ƒ /api/walker/invoices
+@folioviv/web:build: ├ ƒ /api/walker/invoices/[id]/payments
+@folioviv/web:build: ├ ƒ /api/walker/invoices/[id]/replace
+@folioviv/web:build: ├ ƒ /api/walker/invoices/[id]/send
+@folioviv/web:build: ├ ƒ /api/walker/invoices/settings
+@folioviv/web:build: ├ ƒ /api/walker/invoices/tags
+@folioviv/web:build: ├ ƒ /api/walker/invoices/tags/[id]
+@folioviv/web:build: ├ ƒ /api/walker/invoices/tags/apply
+@folioviv/web:build: ├ ƒ /api/walker/invoices/views
+@folioviv/web:build: ├ ƒ /api/walker/invoices/views/[id]
+@folioviv/web:build: ├ ƒ /api/walker/media
+@folioviv/web:build: ├ ƒ /api/walker/media/upload
+@folioviv/web:build: ├ ƒ /api/walker/page/accent
+@folioviv/web:build: ├ ƒ /api/walker/page/discard
+@folioviv/web:build: ├ ƒ /api/walker/page/draft
+@folioviv/web:build: ├ ƒ /api/walker/page/publish
+@folioviv/web:build: ├ ƒ /api/walker/page/rollback
+@folioviv/web:build: ├ ƒ /api/walker/page/versions
+@folioviv/web:build: ├ ƒ /api/walker/reels
+@folioviv/web:build: ├ ƒ /api/walker/reels/[id]
+@folioviv/web:build: ├ ƒ /api/walker/reels/playlist
+@folioviv/web:build: ├ ƒ /api/walker/reels/upload
+@folioviv/web:build: ├ ƒ /api/walker/reviews
+@folioviv/web:build: ├ ƒ /api/walker/reviews/[id]
+@folioviv/web:build: ├ ƒ /api/walker/rules
+@folioviv/web:build: ├ ƒ /api/walker/search
+@folioviv/web:build: ├ ƒ /api/walker/services
+@folioviv/web:build: ├ ƒ /api/walker/services/order
+@folioviv/web:build: ├ ƒ /api/walker/shop
+@folioviv/web:build: ├ ƒ /api/walker/shop-collections
+@folioviv/web:build: ├ ƒ /api/walker/shop-collections/[id]
+@folioviv/web:build: ├ ƒ /api/walker/shop-page
+@folioviv/web:build: ├ ƒ /api/walker/shop-page/template
+@folioviv/web:build: ├ ƒ /api/walker/shop-tags
+@folioviv/web:build: ├ ƒ /api/walker/shop-tags/[id]
+@folioviv/web:build: ├ ƒ /api/walker/shops
+@folioviv/web:build: ├ ƒ /api/walker/shops/[id]
+@folioviv/web:build: ├ ƒ /api/walker/shops/[id]/default
+@folioviv/web:build: ├ ƒ /api/walker/social-links
+@folioviv/web:build: ├ ƒ /api/walker/team
+@folioviv/web:build: ├ ƒ /api/walker/team/invitations
+@folioviv/web:build: ├ ƒ /api/walker/team/invitations/[id]
+@folioviv/web:build: ├ ƒ /api/walker/team/members/[accountId]
+@folioviv/web:build: ├ ƒ /api/walker/time-off
+@folioviv/web:build: ├ ƒ /api/walker/translations
+@folioviv/web:build: ├ ƒ /api/walker/translations/run
+@folioviv/web:build: ├ ƒ /api/walker/translations/text
+@folioviv/web:build: ├ ƒ /api/walker/visits/[id]/check-in
+@folioviv/web:build: ├ ƒ /api/walker/visits/[id]/check-out
+@folioviv/web:build: ├ ƒ /api/walker/wall
+@folioviv/web:build: ├ ƒ /api/walker/webhooks
+@folioviv/web:build: ├ ƒ /api/walker/webhooks/[id]
+@folioviv/web:build: ├ ƒ /api/walker/webhooks/[id]/deliveries
+@folioviv/web:build: ├ ƒ /api/walker/webhooks/[id]/rotate
+@folioviv/web:build: ├ ƒ /api/walker/zones
+@folioviv/web:build: ├ ƒ /api/walker/zones/[id]
+@folioviv/web:build: ├ ƒ /api/webhooks/payments
+@folioviv/web:build: ├ ○ /apple-icon.png
+@folioviv/web:build: ├ ○ /icon.svg
+@folioviv/web:build: ├ ○ /icon1.png
+@folioviv/web:build: ├ ○ /icon2.png
+@folioviv/web:build: ├ ○ /icon3.png
+@folioviv/web:build: ├ ○ /llms.txt
+@folioviv/web:build: ├ ○ /manifest.webmanifest
+@folioviv/web:build: ├   /maplibre/[file]
+@folioviv/web:build: │ ├ ● /maplibre/maplibre-gl-worker.mjs
+@folioviv/web:build: │ └ ● /maplibre/maplibre-gl-shared.mjs
+@folioviv/web:build: ├ ○ /og.png
+@folioviv/web:build: ├ ○ /robots.txt
+@folioviv/web:build: └ ○ /sitemap.xml
+@folioviv/web:build: 
+@folioviv/web:build: 
+@folioviv/web:build: ƒ Proxy (Middleware)
+@folioviv/web:build: 
+@folioviv/web:build: ○  (Static)   prerendered as static content
+@folioviv/web:build: ●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+@folioviv/web:build: ƒ  (Dynamic)  server-rendered on demand
+@folioviv/web:build: 
+
+ Tasks:    1 successful, 1 total
+Cached:    0 cached, 1 total
+  Time:    22.232s 
+
+[heavy-lock] collecteurs-3222 done rc=0 19:22:38
