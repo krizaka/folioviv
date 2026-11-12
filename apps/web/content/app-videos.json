@@ -5,34 +5,34 @@
     {
       "platform": "android",
       "flow": "today-books",
-      "seconds": 10.5,
-      "capturedAt": "2026-11-11T12:57:05.588Z",
+      "seconds": 6.9,
+      "capturedAt": "2026-11-12T13:59:45.783Z",
       "files": {
-        "webm": "sites/folioviv/download/android-today-books.33bde8d42d.webm",
-        "mp4": "sites/folioviv/download/android-today-books.ff259e34ed.mp4",
-        "poster": "sites/folioviv/download/android-today-books.62c740a624.jpg"
+        "webm": "sites/folioviv/download/android-today-books.96ccad710b.webm",
+        "mp4": "sites/folioviv/download/android-today-books.599ddef66f.mp4",
+        "poster": "sites/folioviv/download/android-today-books.bb7c8a6f41.jpg"
       }
     },
     {
       "platform": "web",
       "flow": "composer",
       "seconds": 10.2,
-      "capturedAt": "2026-11-11T12:56:49.415Z",
+      "capturedAt": "2026-11-12T13:59:30.721Z",
       "files": {
-        "webm": "sites/folioviv/download/web-composer.d5a0c614cf.webm",
-        "mp4": "sites/folioviv/download/web-composer.d3b4ed9142.mp4",
-        "poster": "sites/folioviv/download/web-composer.d9c4ba0f86.jpg"
+        "webm": "sites/folioviv/download/web-composer.08f7219544.webm",
+        "mp4": "sites/folioviv/download/web-composer.bfa0ba29a8.mp4",
+        "poster": "sites/folioviv/download/web-composer.c3f9318d3a.jpg"
       }
     },
     {
       "platform": "web",
       "flow": "storefront",
-      "seconds": 15.2,
-      "capturedAt": "2026-11-11T12:56:57.452Z",
+      "seconds": 15.6,
+      "capturedAt": "2026-11-12T13:59:39.277Z",
       "files": {
-        "webm": "sites/folioviv/download/web-storefront.f7e4ddc3df.webm",
-        "mp4": "sites/folioviv/download/web-storefront.a392d9ccf8.mp4",
-        "poster": "sites/folioviv/download/web-storefront.208236e9cf.jpg"
+        "webm": "sites/folioviv/download/web-storefront.af28ba190d.webm",
+        "mp4": "sites/folioviv/download/web-storefront.0776940b67.mp4",
+        "poster": "sites/folioviv/download/web-storefront.f35e8b4f5d.jpg"
       }
     }
   ]
