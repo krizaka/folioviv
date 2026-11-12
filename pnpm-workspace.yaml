@@ -12,3 +12,7 @@ overrides:
   "undici@8.12.1": "8.12.3" # GHSA-2m5v-pch6-74hx and 7 more: testcontainers pins 8.12.1 (krizaka/.github#372)
   "minimatch@>=7.0.0 <11.0.1": "11.0.8" # GHSA-g3hv-75wg-m249: dev tooling pulls 9.x/10.x (typescript-estree, glob); minimatch@3 (ESLint) is outside the range
   "@react-email/render@2.1.1": "2.3.1" # GHSA-gcqx-w48m-w2h4: 2.1.1 (pinned by @krizaka/email) pulls html-to-text@9, which uses deepmerge 4.3.1; 2.3.1 uses html-to-text@10 (deepmerge-ts)
+  "node-forge@<1.4.3": "1.4.3" # GHSA node-forge x21: @expo/cli and @expo/code-signing-certificates pin ^1.4.0 and the lockfile held 1.4.0; remove once the lockfile resolves >= 1.4.3 without it (a fresh pnpm update does)
+  "seroval@<1.6.11": "1.6.11" # solid-js@1.9.17 (via @tanstack/query-devtools > @kobalte/core) pins seroval 1.6.9; remove once solid-js ships a range that resolves >= 1.6.11
+  "seroval-plugins@<1.6.11": "1.6.11"
+  "glob@>=9.0.0 <14.0.2": "14.0.5" # GHSA glob CLI: archiver-utils (^10), test-exclude@7 (^10.4.1) and the Expo/Jest tooling (13.0.6) pin old ranges; remove once those parents move to glob >= 14.0.2
