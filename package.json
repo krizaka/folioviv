@@ -25,7 +25,7 @@
     "check:overflow": "node scripts/check-overflow.mjs",
     "check:maps": "node scripts/check-maps.mjs",
     "check:hydration": "node scripts/check-hydration.mjs",
-    "seo:check": "krizaka-seo-family --base http://localhost:3000 --host https://www.folioviv.com --types WebSite,SoftwareApplication",
+    "seo:check": "krizaka-seo-family --base http://localhost:3000 --host https://www.folioviv.com --index off --types WebSite,SoftwareApplication",
     "e2e:admin": "node scripts/e2e-admin.mjs",
     "lint:sg": "krizaka-sg-ratchet",
     "lint:sg:test": "ast-grep test --skip-snapshot-tests",

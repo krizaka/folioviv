@@ -14,12 +14,12 @@ beforeEach(() => vi.stubEnv("APP_ALLOWED_HOSTS", "dev.folioviv.com"));
 afterEach(() => vi.unstubAllEnvs());
 
 describe("the proxy of a deployment closed to search engines (APP_SEARCH_INDEXING=off)", () => {
-  it("noindexes every page, closes robots.txt (with its Sitemap line) and still serves the sitemap, noindexed", async () => {
+  it("noindexes every page, closes robots.txt (no Sitemap line) and still serves the sitemap, noindexed", async () => {
     vi.stubEnv("APP_SEARCH_INDEXING", "off");
     expect((await get("/en")).headers.get("x-robots-tag")).toBe("noindex, nofollow");
     const robots = await get("/robots.txt");
     expect(robots.headers.get("x-robots-tag")).toBe("noindex, nofollow");
-    expect(await robots.text()).toBe("User-agent: *\nDisallow: /\nSitemap: https://www.folioviv.com/sitemap.xml\n");
+    expect(await robots.text()).toBe("User-agent: *\nDisallow: /\n");
     const sitemap = await get("/sitemap.xml");
     expect(sitemap.status).toBe(200);
     expect(sitemap.headers.get("x-robots-tag")).toBe("noindex, nofollow");
