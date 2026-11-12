@@ -48,12 +48,11 @@ jobs:
       next-cache-paths: apps/web/.next/cache
       postgres-image: postgres:16
       postgres-name: folioviv
-      # Test values only — no real secret anywhere. The database tests create a database per file on this server.
+      # Test values only — no real secret anywhere. APP_SEARCH_INDEXING=on: the SEO family contract (seo:check) is checked on the open site, so that it holds the day the site opens; the closed state is unit-tested. The database tests create a database per file on this server.
       env: |
         DATABASE_URL=postgresql://folioviv:ci-only-password@localhost:5432/folioviv
         DATABASE_IT=1
         APP_PUBLIC_URL=http://localhost:3000
-        # The family contract (seo:check) is checked on the open site, so that the day the site opens it holds: the setting is on for this build, the closed state is unit-tested.
         APP_SEARCH_INDEXING=on
       playwright: chromium
       # SEO family contract on the built site, sign-up closed, no horizontal overflow (scripts/ci-after-build.sh).
