@@ -1,4 +1,4 @@
-import { AkinazaLogo } from "@krizaka/ui";
+import { FoliovivLogo } from "@krizaka/ui";
 import { AuthLayout } from "@krizaka/ui/auth-layout";
 import { Badge } from "@krizaka/ui/badge";
 import { Mascot } from "@krizaka/ui/mascots";
@@ -10,7 +10,7 @@ import { ipAllowed, pageAdmin } from "@/lib/access";
 import { PRODUCT_NAME } from "@/lib/brand";
 import { asLocale, getDictionary } from "@/lib/i18n";
 
-/** The administration's own sign-in (its cookie belongs to admin.akinaza.com), on @krizaka/ui's auth template. */
+/** The administration's own sign-in (its cookie belongs to admin.folioviv.com), on @krizaka/ui's auth template. */
 export default async function AdminSignIn({ params }: Readonly<{ params: Promise<{ locale: string }> }>) {
   const locale = asLocale((await params).locale);
   if (!ipAllowed(await headers())) notFound();
@@ -20,7 +20,7 @@ export default async function AdminSignIn({ params }: Readonly<{ params: Promise
     <AuthLayout
       brand={
         <span className="inline-flex items-center gap-2">
-          <AkinazaLogo size={28} /> {PRODUCT_NAME} <Badge tone="warning">{t.dev}</Badge>
+          <FoliovivLogo size={28} /> {PRODUCT_NAME} <Badge tone="warning">{t.dev}</Badge>
         </span>
       }
       promise={t.promise}

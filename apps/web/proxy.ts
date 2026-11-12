@@ -1,10 +1,10 @@
-import { readHostname } from "@akinaza/core";
+import { readHostname } from "@folioviv/core";
 import { landingRedirect, sessionHint } from "@krizaka/auth";
 import { type NextRequest, NextResponse } from "next/server";
 
 import { HOST_FREE_PATHS, isAllowedHost } from "./lib/allowed-hosts";
 import { cookieName, dropCookie, ownCookie } from "./lib/cookie";
-import { contentSecurityPolicy, allowsCaptcha, isShopPath, newNonce, upgradesInsecure } from "./lib/csp";
+import { allowsCaptcha, contentSecurityPolicy, isShopPath, newNonce, upgradesInsecure } from "./lib/csp";
 import { refusesCrossSiteWrite } from "./lib/csrf";
 import { type HostRoute, isAdminHost, ownShopRoute, routeFor, type ShopHosting } from "./lib/host";
 import { CLOSED_ROBOTS, closedRobots, devRedirect, indexableOn, isDevHost, NOINDEX } from "./lib/indexing";
@@ -19,7 +19,7 @@ const LANDING = ["/", "/fr", "/en"] as const;
 
 const LOCALE_COOKIE = cookieName("NEXT_LOCALE");
 
-/** ADR-005 slice 1 (akinaza#534): a write to the API that carries the web session comes from this origin, else 403 (a shop host is same-site: SameSite=Lax does not stop it). */
+/** ADR-005 slice 1 (folioviv#534): a write to the API that carries the web session comes from this origin, else 403 (a shop host is same-site: SameSite=Lax does not stop it). */
 function crossSiteWrite(request: NextRequest): NextResponse | null {
   if (!request.nextUrl.pathname.startsWith("/api/")) {return null;}
   const refused = refusesCrossSiteWrite({ method: request.method, headers: request.headers, origin: process.env.APP_PUBLIC_URL ?? SITE_URL, sessionCookie: SESSION_COOKIE });
@@ -48,8 +48,8 @@ function stampPolicy(forwarded: Headers, route: HostRoute, pathname: string, app
 
 /**
  * Every page exists in English and French (`/en/…`, `/fr/…`); an address without a language goes to the visitor's choice
- * (cookie `NEXT_LOCALE`), else French (Loi 96) unless the browser asks for English and never French. admin.akinaza.com serves only the administration console (lib/host.ts), never
- * indexed; dev.akinaza.com never serves it. The API never passes here.
+ * (cookie `NEXT_LOCALE`), else French (Loi 96) unless the browser asks for English and never French. admin.folioviv.com serves only the administration console (lib/host.ts), never
+ * indexed; dev.folioviv.com never serves it. The API never passes here.
  */
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const host = request.headers.get("host");
@@ -136,8 +136,9 @@ function serve(request: NextRequest, closed: boolean, ownShopHost: boolean, cust
   // A shop's own page is nobody's landing: the app's session never goes there (ADR-005), so no hint can send a visitor away from it.
   const home = admin || shop ? null : landingRedirect(request, { cookie: SESSION_COOKIE, landing: LANDING, home: () => `/${pageLocaleOf(pathname, chosen)}/app`, origin: site });
   if (home) {return NextResponse.redirect(home.headers.get("location") ?? "/", { status: home.status, headers: home.headers });}
-  // A deployment closed to search engines (APP_SEARCH_INDEXING=off): robots.txt disallows everything (the sitemap is still served, noindexed).
-  if (closed && request.nextUrl.pathname === "/robots.txt") {return new NextResponse(CLOSED_ROBOTS, { headers: { "content-type": "text/plain", "x-robots-tag": NOINDEX } });}
+  // A host closed to search engines (indexing not explicitly on for the public host): robots.txt disallows everything (the sitemap is still served, noindexed).
+  // A shop's host falls through to its own closed robots.txt below, which names its own sitemap.
+  if (closed && !shop && request.nextUrl.pathname === "/robots.txt") {return new NextResponse(CLOSED_ROBOTS, { headers: { "content-type": "text/plain", "x-robots-tag": NOINDEX } });}
   // The language of the address, handed to the pages (the 404 has no params): set on the request, never trusted from the client.
   const forwarded = new Headers(request.headers);
   forwarded.set(LOCALE_HEADER, pageLocaleOf(pathname, chosen));
@@ -168,7 +169,7 @@ function serve(request: NextRequest, closed: boolean, ownShopHost: boolean, cust
   return dressed(response, request, { csp, noindex: admin || closed || shopHost, noStore: ownShopHost, hint: !shopHost });
 }
 
-/** A redirect on the public host, not the platform's internal one: admin.akinaza.com stays admin.akinaza.com. */
+/** A redirect on the public host, not the platform's internal one: admin.folioviv.com stays admin.folioviv.com. */
 function redirectOf(request: NextRequest, route: Extract<HostRoute, { kind: "redirect" }>, host: string | null): NextResponse {
   const proto = request.headers.get("x-forwarded-proto") ?? request.nextUrl.protocol.replace(":", "");
   const target = new URL(route.path, host ? `${proto}://${host}` : request.url);

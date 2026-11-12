@@ -24,10 +24,10 @@ jobs:
     if: github.event_name == 'pull_request'
     permissions:
       contents: read
-    uses: krizaka/.github/.github/workflows/tauri-macos.yml@79f6ff6292edefebc59fc968dbc2c203da81c3ea # main
+    uses: krizaka/.github/.github/workflows/tauri-macos.yml@31d45bcdde30a7dfc66ddb15bcb280f11b16faac # main
     with:
       working-directory: apps/desktop
-      product-name: Akinaza
+      product-name: Folioviv
       sign: false
 
   # Tag: signed and notarised in the `release` environment, the secrets passed by name.
@@ -35,10 +35,10 @@ jobs:
     if: github.event_name == 'push'
     permissions:
       contents: write
-    uses: krizaka/.github/.github/workflows/tauri-macos.yml@79f6ff6292edefebc59fc968dbc2c203da81c3ea # main
+    uses: krizaka/.github/.github/workflows/tauri-macos.yml@31d45bcdde30a7dfc66ddb15bcb280f11b16faac # main
     with:
       working-directory: apps/desktop
-      product-name: Akinaza
+      product-name: Folioviv
       sign: true
     secrets:
       APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}

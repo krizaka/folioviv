@@ -1,8 +1,8 @@
 {
-  "name": "@akinaza/db",
+  "name": "@folioviv/db",
   "version": "0.1.0",
   "private": true,
-  "description": "Akinaza's PostgreSQL 16 schema (Drizzle, versioned SQL migrations): shops, staff, services, schedules, clients and their Loi 25 consents, appointments (no double booking, by the database), invoices and payments, expenses, the append-only GST/QST ledger that must balance every invoice — tested on a real PostgreSQL.",
+  "description": "Folioviv's PostgreSQL 16 schema (Drizzle, versioned SQL migrations): shops, staff, services, schedules, clients and their Loi 25 consents, appointments (no double booking, by the database), invoices and payments, expenses, the append-only GST/QST ledger that must balance every invoice — tested on a real PostgreSQL.",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
@@ -26,18 +26,18 @@
     "db:rebuild": "tsx src/rebuild-cli.ts"
   },
   "dependencies": {
-    "@akinaza/core": "workspace:*",
+    "@folioviv/core": "workspace:*",
     "@date-fns/tz": "^1.5.0",
     "@krizaka/api-keys": "0.1.0",
     "@krizaka/auth": "^0.12.0",
     "@krizaka/db": "0.3.0",
     "@krizaka/email-verification": "^0.1.1",
     "@krizaka/intl": "0.3.0",
-    "@krizaka/org": "^0.3.1",
+    "@krizaka/org": "^1.0.0",
     "@krizaka/organize": "0.4.0",
     "@krizaka/privacy": "0.2.0",
     "@krizaka/settings": "0.2.0",
-    "@krizaka/ui": "^3.76.1",
+    "@krizaka/ui": "^4.0.0",
     "@krizaka/webhooks": "0.1.0",
     "date-fns": "^4.4.0",
     "drizzle-orm": "^0.45.4",

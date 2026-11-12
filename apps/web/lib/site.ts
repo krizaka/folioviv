@@ -1,13 +1,13 @@
 /** Addresses of the site — structure, not words (the words are in messages/). */
-export const SITE_URL = "https://www.akinaza.com";
-export const REPO_URL = "https://github.com/krizaka/akinaza";
+export const SITE_URL = "https://www.folioviv.com";
+export const REPO_URL = "https://github.com/krizaka/folioviv";
 /** Krizaka, the publisher: named only in the footer and the legal mentions (the products are independent). */
 export const KRIZAKA_URL = "https://www.krizaka.com";
-export const PRIVACY_UPDATED = "2026-10-26";
+export const PRIVACY_UPDATED = "2026-11-05";
 
-/** The published privacy impact assessment and the register of transfers outside Québec (docs/privacy, akinaza#369). */
-export const EFVP_URL = "https://github.com/krizaka/akinaza/blob/main/docs/privacy/efvp.md";
-export const TRANSFERS_URL = "https://github.com/krizaka/akinaza/blob/main/docs/privacy/transfers.md";
+/** The published privacy impact assessment and the register of transfers outside Québec (docs/privacy, folioviv#369). */
+export const EFVP_URL = "https://github.com/krizaka/folioviv/blob/main/docs/privacy/efvp.md";
+export const TRANSFERS_URL = "https://github.com/krizaka/folioviv/blob/main/docs/privacy/transfers.md";
 /** The version of the terms of use (its date): kept in the audit trail when a subscription is started, so the accepted version is known. */
 export const TERMS_VERSION = "2026-10-27";
 export const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? "0.1.0";
@@ -20,7 +20,6 @@ export type PageId = (typeof PAGES)[number];
 export const pagePath = (locale: "en" | "fr", page: PageId) => (page === "home" ? `/${locale}` : `/${locale}/${page}`);
 
 /** Krizaka's contact form (the final, localized address: no redirect hop for crawlers), Folioviv pre-selected. */
-export function contactHref(locale: "en" | "fr"): string {
-  // The commercial names only: no code name in a public address (krizaka-internal#2630).
-  return `${KRIZAKA_URL}/${locale}/contact?topic=folioviv&source=folioviv-app`;
+export function contactHref(source: string, locale: "en" | "fr"): string {
+  return `${KRIZAKA_URL}/${locale}/contact?topic=folioviv&source=${encodeURIComponent(source)}`;
 }
