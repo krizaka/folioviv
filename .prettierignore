@@ -14,6 +14,3 @@ CHANGELOG.md
 # vendored byte for byte from krizaka/sovkora (pinned by sha256)
 apps/web/lib/sovkora-contract/compliance-check-run.schema.json
 fixtures/sample-file/
-# Touched by the open folioviv#722 (PR #722): formatted once it has landed, then these two lines go.
-apps/web/lib/transfers.test.ts
-docs/privacy/transfers.json
