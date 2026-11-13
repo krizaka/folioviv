@@ -16,9 +16,22 @@ permissions:
 jobs:
   journeys:
     uses: krizaka/.github/.github/workflows/journeys.yml@c291e5f3da409bc20e651d260316d5d9302cb2cc # main
+    # CI_SLEEP (README, « CI sleep »): the journeys sleep, and `journeys-asleep` below reports the required check in their place.
+    if: ${{ vars.CI_SLEEP != 'true' }}
     permissions:
       contents: read
     with:
       setup-command: "bash scripts/ci-journeys-start.sh"
       personas: "camille.tremblay@demo"
       command: "PLAYWRIGHT_JSON_OUTPUT_NAME=$PWD/journeys-report.json pnpm exec playwright test -c apps/web/e2e/journeys/playwright.config.mjs --project=critical"
+
+  # The required check is `journeys / gate`, a name only the called workflow produces. A caller skipped by `if:` reports as « journeys »,
+  # so this literal-named job reports `journeys / gate` (green) while the switch is on, and is skipped otherwise.
+  journeys-asleep:
+    name: journeys / gate
+    if: ${{ vars.CI_SLEEP == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - run: echo "CI_SLEEP is on, the critical journeys sleep until it is set to false"
