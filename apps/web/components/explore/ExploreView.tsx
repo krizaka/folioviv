@@ -479,7 +479,7 @@ function Explorer({ locale, words }: Readonly<{ locale: string; words: ExploreWo
               origin={origin}
               center={center}
               zoom={camera?.zoom ?? null}
-              onMoveEnd={(next) => void setCamera(next)}
+              onMoveEnd={(at, level) => void setCamera(at, level)}
               locale={locale}
               label={words.map.label}
               youLabel={words.map.you}

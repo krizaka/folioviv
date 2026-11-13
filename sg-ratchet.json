@@ -25,7 +25,7 @@
     "no-hand-ms-one-hour": 0,
     "no-hand-rolled-upload": 4,
     "no-hand-typed-family-name": 4,
-    "no-hand-written-validation-regex": 25,
+    "no-hand-written-validation-regex": 24,
     "no-hardcoded-default-media": 0,
     "no-locale-ternary": 12,
     "no-long-function": 105,
