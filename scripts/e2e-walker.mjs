@@ -16,6 +16,8 @@ import { mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 
+import { drawWalkPhoto } from "./lib/demo-walk.mjs";
+
 const require = createRequire(import.meta.url);
 const { chromium } = require("playwright-core");
 
@@ -263,25 +265,7 @@ try {
   await card.getByRole("form", { name: W.reportTitle("Miso") }).waitFor();
   await caption(w.page, W.captions.report);
   // A photo for the report: an illustration drawn on the spot (a demo, not a stock picture of someone's dog).
-  const photo = await w.page.evaluate(() => {
-    const canvas = document.createElement("canvas");
-    canvas.width = 1280;
-    canvas.height = 960;
-    const g = canvas.getContext("2d");
-    const sky = g.createLinearGradient(0, 0, 0, 960);
-    sky.addColorStop(0, "#9ad0ff");
-    sky.addColorStop(1, "#d9f0c8");
-    g.fillStyle = sky;
-    g.fillRect(0, 0, 1280, 960);
-    g.fillStyle = "#4f9d4a";
-    g.fillRect(0, 700, 1280, 260);
-    g.font = "360px serif";
-    g.fillText("🐕", 300, 700);
-    g.font = "bold 44px sans-serif";
-    g.fillStyle = "#0c3b1f";
-    g.fillText("Illustration — Folioviv demo", 330, 860);
-    return canvas.toDataURL("image/jpeg", 0.85).split(",")[1];
-  });
+  const photo = await drawWalkPhoto(w.page);
   const photoPath = path.join(OUT, "walk.jpg");
   writeFileSync(photoPath, Buffer.from(photo, "base64"));
   for (const dog of ["Tofu", "Miso"]) {

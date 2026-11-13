@@ -13,25 +13,18 @@ import { JourneyFrame } from "@/components/journey/JourneyFrame";
 import { pageSession } from "@/lib/access";
 import { searchValue } from "@/lib/booking-defaults";
 import { db } from "@/lib/db";
-import { asLocale, getDictionary, translator } from "@/lib/i18n";
+import { getDictionary, translator } from "@/lib/i18n";
 import { confirmationStep, journeyBase } from "@/lib/journey";
 import { backToHere } from "@/lib/next-url";
 import { accountRoutes } from "@/lib/routes";
+import { readServiceRoute, type ServiceRouteProps } from "@/lib/shop-page";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 /** Step 4 — the confirmation of a booking: when, with whom, where, the price, add to calendar, cancel while the window is open. For its own client only. */
-export default async function ConfirmationPage({
-  params,
-  searchParams,
-}: Readonly<{
-  params: Promise<{ locale: string; slug: string; id: string }>;
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}>) {
-  const { locale: raw, slug, id } = await params;
-  const query = await searchParams;
-  const locale = asLocale(raw);
+export default async function ConfirmationPage(props: ServiceRouteProps) {
+  const { locale, slug, id, query } = await readServiceRoute(props);
   const t = translator(locale);
   const session = await pageSession();
   const here = backToHere(`/${locale}/s/${slug}/service/${id}/confirmation`, query);

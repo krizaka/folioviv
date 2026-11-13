@@ -8,24 +8,16 @@ import { notFound } from "next/navigation";
 import { ButtonLink } from "@/components/ButtonLink";
 import { JourneyFrame } from "@/components/journey/JourneyFrame";
 import { searchValue } from "@/lib/booking-defaults";
-import { asLocale, translator } from "@/lib/i18n";
+import { translator } from "@/lib/i18n";
 import { serviceStep } from "@/lib/journey";
-import { loadPublicShopOrMove, queryString } from "@/lib/shop-page";
+import { loadPublicShopOrMove, queryString, readServiceRoute, type ServiceRouteProps } from "@/lib/shop-page";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 /** Step 2 — a service: duration, price to the cent, what is included, the cancellation rule, who takes it. The address keeps the choices. */
-export default async function ServicePage({
-  params,
-  searchParams,
-}: Readonly<{
-  params: Promise<{ locale: string; slug: string; id: string }>;
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}>) {
-  const { locale: raw, slug, id } = await params;
-  const query = await searchParams;
-  const locale = asLocale(raw);
+export default async function ServicePage(props: ServiceRouteProps) {
+  const { locale, slug, id, query } = await readServiceRoute(props);
   const t = translator(locale);
   const page = await loadPublicShopOrMove(locale, slug, `/service/${id}${queryString(query)}`);
   const step = page

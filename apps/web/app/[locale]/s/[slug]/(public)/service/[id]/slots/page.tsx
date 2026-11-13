@@ -9,25 +9,17 @@ import { ShopSlots } from "@/components/shop/ShopSlots";
 import { StorefrontLive } from "@/components/shop/StorefrontLive";
 import { searchValue } from "@/lib/booking-defaults";
 import { db } from "@/lib/db";
-import { asLocale, translator } from "@/lib/i18n";
+import { translator } from "@/lib/i18n";
 import { resolveChoice, timesStep } from "@/lib/journey";
 import { appSettings } from "@/lib/settings";
-import { loadPublicShopOrMove, queryString } from "@/lib/shop-page";
+import { loadPublicShopOrMove, queryString, readServiceRoute, type ServiceRouteProps } from "@/lib/shop-page";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 /** Step 3 — the times: only those the engine really offers, for this person (or anyone), each a link that opens the booking. */
-export default async function TimesPage({
-  params,
-  searchParams,
-}: Readonly<{
-  params: Promise<{ locale: string; slug: string; id: string }>;
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}>) {
-  const { locale: raw, slug, id } = await params;
-  const query = await searchParams;
-  const locale = asLocale(raw);
+export default async function TimesPage(props: ServiceRouteProps) {
+  const { locale, slug, id, query } = await readServiceRoute(props);
   const t = translator(locale);
   const page = await loadPublicShopOrMove(locale, slug, `/service/${id}/slots${queryString(query)}`);
   if (!page || !page.services.some((s) => s.id === id)) notFound();

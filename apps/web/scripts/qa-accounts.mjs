@@ -36,16 +36,22 @@ export function accountsFromEnv(env) {
   return accounts.map((a) => ({ ...a, email: a.email.trim().toLowerCase(), name: QA_PERSONAS[a.role].displayName }));
 }
 
-async function main() {
+/** A connected `pg` client for `DATABASE_URL` (its TLS settings from `sslmode` and `DATABASE_CA_CERT`), for the tester scripts. */
+export async function connectFromEnv(env) {
   const { default: pg } = await import("pg");
-  const url = new URL(process.env.DATABASE_URL ?? "");
+  const url = new URL(env.DATABASE_URL ?? "");
   const tls = ["require", "verify-ca", "verify-full"].includes(url.searchParams.get("sslmode") ?? "");
   url.searchParams.delete("sslmode");
   const client = new pg.Client({
     connectionString: url.toString(),
-    ...(tls ? { ssl: { ca: process.env.DATABASE_CA_CERT?.replace(/\\n/g, "\n"), rejectUnauthorized: true } } : {}),
+    ...(tls ? { ssl: { ca: env.DATABASE_CA_CERT?.replaceAll(String.raw`\n`, "\n"), rejectUnauthorized: true } } : {}),
   });
   await client.connect();
+  return client;
+}
+
+async function main() {
+  const client = await connectFromEnv(process.env);
   try {
     for (const a of accountsFromEnv(process.env)) {
       await client.query(

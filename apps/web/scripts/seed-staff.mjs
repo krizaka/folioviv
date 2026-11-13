@@ -6,7 +6,7 @@
 //
 //   DATABASE_URL=… DATABASE_CA_CERT=… QA_STAFF_EMAIL=… QA_STAFF_PASSWORD=… [QA_STAFF_SHOP=cedre-ciseaux] [QA_STAFF_ROLE=staff] \
 //     node scripts/seed-staff.mjs
-import { hashPassword } from "./qa-accounts.mjs";
+import { connectFromEnv, hashPassword } from "./qa-accounts.mjs";
 
 const ROLES = ["owner", "manager", "staff"];
 
@@ -23,15 +23,7 @@ export function staffFromEnv(env) {
 
 async function main() {
   const member = staffFromEnv(process.env);
-  const { default: pg } = await import("pg");
-  const url = new URL(process.env.DATABASE_URL ?? "");
-  const tls = ["require", "verify-ca", "verify-full"].includes(url.searchParams.get("sslmode") ?? "");
-  url.searchParams.delete("sslmode");
-  const client = new pg.Client({
-    connectionString: url.toString(),
-    ...(tls ? { ssl: { ca: process.env.DATABASE_CA_CERT?.replace(/\\n/g, "\n"), rejectUnauthorized: true } } : {}),
-  });
-  await client.connect();
+  const client = await connectFromEnv(process.env);
   try {
     const [shop] = (await client.query("SELECT id FROM shops WHERE slug = $1", [member.shopSlug])).rows;
     if (!shop) throw new Error(`no shop ${member.shopSlug}`);

@@ -15,6 +15,7 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
+import { newPhoneContext } from "./lib/demo-walk.mjs";
 import { ffmpeg, glide, listenScreencast, spanOf, writeConcatList } from "./lib/take.mjs";
 
 export const PHONE = { width: 390, height: 844 };
@@ -64,26 +65,7 @@ async function main() {
   const mark = (name) => beats.push({ name, at: Number(now().toFixed(3)) });
 
   const browser = await chromium.launch();
-  const context = await browser.newContext({
-    viewport: PHONE,
-    deviceScaleFactor: SCALE,
-    locale: LOCALE === "fr" ? "fr-CA" : "en-CA",
-    timezoneId: "America/Toronto",
-    isMobile: true,
-    hasTouch: true,
-    colorScheme: "dark",
-  });
-  await context.addInitScript(() => {
-    try {
-      localStorage.setItem("kz-theme", "dark");
-    } catch {
-      /* none */
-    }
-    // The development server's own indicator is not the product.
-    const style = document.createElement("style");
-    style.textContent = "nextjs-portal{display:none!important}";
-    document.addEventListener("DOMContentLoaded", () => document.head.append(style));
-  });
+  const context = await newPhoneContext(browser, { viewport: PHONE, scale: SCALE, locale: LOCALE });
   const page = await context.newPage();
   page.on("response", (res) => {
     const url = new URL(res.url());
@@ -227,9 +209,8 @@ async function main() {
     calls.every((c) => c.status < 500),
     "no API call answered with a server error",
   );
-  process.stdout.write(
-    `take: ${path.join(OUT, files.mp4)}\nbeats: ${beats.map((b) => `${b.name}@${b.at}`).join(" ")}\n`,
-  );
+  const beatList = beats.map((b) => `${b.name}@${b.at}`).join(" ");
+  process.stdout.write(`take: ${path.join(OUT, files.mp4)}\nbeats: ${beatList}\n`);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

@@ -4,6 +4,7 @@ import { permanentRedirect } from "next/navigation";
 import { cache } from "react";
 
 import { db } from "@/lib/db";
+import { asLocale } from "@/lib/i18n";
 
 /**
  * A published shop by its address; null when the address is malformed or there is none (the page answers 404). Read once per
@@ -39,4 +40,15 @@ export async function loadPublicShopOrMove(locale: string, slug: string, rest = 
 export function queryString(query: Record<string, string | string[] | undefined>): string {
   const pairs = Object.entries(query).flatMap(([k, v]) => [v ?? []].flat().map((x) => [k, x] as [string, string]));
   return pairs.length ? `?${new URLSearchParams(pairs).toString()}` : "";
+}
+
+/** What every step of the booking journey receives: the shop's address, the service and the choices kept in the query. */
+export type ServiceRouteProps = Readonly<{
+  params: Promise<{ locale: string; slug: string; id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}>;
+
+export async function readServiceRoute({ params, searchParams }: ServiceRouteProps) {
+  const { locale, slug, id } = await params;
+  return { locale: asLocale(locale), slug, id, query: await searchParams };
 }

@@ -5,6 +5,8 @@
 // is created and linked to her sign-in when it is missing. Idempotent: a re-run finds the same client and the same appointment.
 //
 //   DATABASE_URL=… DATABASE_CA_CERT=… [QA_STAFF_EMAIL=…] [QA_STAFF_SHOP=cedre-ciseaux] [QA_STAFF_HOUR=16] node scripts/seed-staff-day.mjs
+import { connectFromEnv } from "./qa-accounts.mjs";
+
 const CLIENT = { fullName: "Léa Fictive (démo)", email: "lea.fictive@folioviv.test" };
 const DEFAULT_HOUR = 16;
 
@@ -19,15 +21,7 @@ export function staffDayFromEnv(env) {
 
 async function main() {
   const wanted = staffDayFromEnv(process.env);
-  const { default: pg } = await import("pg");
-  const url = new URL(process.env.DATABASE_URL ?? "");
-  const tls = ["require", "verify-ca", "verify-full"].includes(url.searchParams.get("sslmode") ?? "");
-  url.searchParams.delete("sslmode");
-  const client = new pg.Client({
-    connectionString: url.toString(),
-    ...(tls ? { ssl: { ca: process.env.DATABASE_CA_CERT?.replace(/\\n/g, "\n"), rejectUnauthorized: true } } : {}),
-  });
-  await client.connect();
+  const client = await connectFromEnv(process.env);
   try {
     const [shop] = (await client.query("SELECT id, timezone FROM shops WHERE slug = $1", [wanted.shopSlug])).rows;
     if (!shop) throw new Error(`no shop ${wanted.shopSlug}`);

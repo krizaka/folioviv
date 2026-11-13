@@ -17,6 +17,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 
+import { drawWalkPhoto, newPhoneContext } from "./lib/demo-walk.mjs";
 import { ffmpeg, glide, listenScreencast, spanOf, writeConcatList } from "./lib/take.mjs";
 
 const require = createRequire(import.meta.url);
@@ -93,20 +94,7 @@ async function signInAs(context, who) {
 }
 
 const browser = await chromium.launch();
-const context = await browser.newContext({
-  viewport: PHONE,
-  deviceScaleFactor: SCALE,
-  locale: LOCALE === "fr" ? "fr-CA" : "en-CA",
-  timezoneId: "America/Toronto",
-  isMobile: true,
-  hasTouch: true,
-  colorScheme: "dark",
-});
-await context.addInitScript(() => {
-  try {
-    localStorage.setItem("kz-theme", "dark");
-  } catch {}
-});
+const context = await newPhoneContext(browser, { viewport: PHONE, scale: SCALE, locale: LOCALE });
 const page = await context.newPage();
 page.on("response", (res) => {
   const url = new URL(res.url());
@@ -196,25 +184,7 @@ try {
   const box = card.getByRole("form", { name: W.reportTitle(client.dog) });
   await box.waitFor();
   mark("report");
-  const photo = await page.evaluate(() => {
-    const canvas = document.createElement("canvas");
-    canvas.width = 1280;
-    canvas.height = 960;
-    const g = canvas.getContext("2d");
-    const sky = g.createLinearGradient(0, 0, 0, 960);
-    sky.addColorStop(0, "#9ad0ff");
-    sky.addColorStop(1, "#d9f0c8");
-    g.fillStyle = sky;
-    g.fillRect(0, 0, 1280, 960);
-    g.fillStyle = "#4f9d4a";
-    g.fillRect(0, 700, 1280, 260);
-    g.font = "360px serif";
-    g.fillText("🐕", 300, 700);
-    g.font = "bold 44px sans-serif";
-    g.fillStyle = "#0c3b1f";
-    g.fillText("Illustration — Folioviv demo", 330, 860);
-    return canvas.toDataURL("image/jpeg", 0.85).split(",")[1];
-  });
+  const photo = await drawWalkPhoto(page);
   const photoPath = path.join(OUT, "walk.jpg");
   writeFileSync(photoPath, Buffer.from(photo, "base64"));
   await box
