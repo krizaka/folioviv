@@ -10,6 +10,7 @@ import { readEnv } from "./env";
 import { founderCap, founderEntry, founderOfferCopy, onSale } from "./founder-offer";
 import { format } from "./i18n";
 import { FOUNDER, PRICES } from "./pricing";
+import { compact } from "./test-source";
 
 const read = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 const NOW = new Date("2026-11-01T12:00:00Z");
@@ -98,7 +99,7 @@ describe("the founder gate reads the cap from the catalogue (folioviv#371)", () 
   });
   it("the checkout sells only the amount the catalogue shows, and records the version it sold", () => {
     const src = read("app/api/billing/checkout/route.ts");
-    expect(src).toMatch(/\.amount !== entry\.amountCents\) \{?throw refuse\(503, "PRICE_NOT_READY"/);
+    expect(compact(src)).toContain(compact('.amount !== entry.amountCents){throw refuse(503, "PRICE_NOT_READY"'));
     expect(src).toMatch(/recordOfferedVersion\(query, account\.id, entry\.versionId\)/);
   });
 });

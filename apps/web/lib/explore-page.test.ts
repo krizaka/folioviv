@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { pagePath, PAGES } from "./site";
+import { compact } from "./test-source";
 
 const read = (p: string) => readFileSync(join(__dirname, "..", p), "utf8");
 const view = read("components/explore/ExploreView.tsx");
@@ -19,7 +20,7 @@ describe("Explorer is a public page (folioviv#235)", () => {
 
   it("is in the crawl that audits every public page in both themes, both languages and every width (check-overflow, axe)", () => {
     const audit = readFileSync(join(root, "scripts/check-overflow.mjs"), "utf8");
-    expect(audit).toMatch(/"\/en\/explore", "\/fr\/explore"/);
+    expect(compact(audit)).toContain(compact('"/en/explore", "/fr/explore"'));
   });
 
   it("is a server page with the shared bar, the shared footer and its words said on the server", () => {
@@ -33,7 +34,7 @@ describe("Explorer is a public page (folioviv#235)", () => {
 
 describe("the map is lazy and the position is never kept", () => {
   it("loads the map as its own chunk, only when it is shown (list first on a phone)", () => {
-    expect(view).toMatch(/dynamic\(\(\) => import\("\.\/ExploreMap"\), \{ ssr: false/);
+    expect(compact(view)).toContain(compact('dynamic(() => import("./ExploreMap"), { ssr: false'));
     expect(view).not.toMatch(/from "@krizaka\/ui\/map"|maplibre/);
     expect(view).toContain('wide || view === "map"');
     expect(map).toContain('from "@krizaka/ui/map"');

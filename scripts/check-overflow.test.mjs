@@ -2,6 +2,8 @@ import { readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 
+import { compact } from "../apps/web/lib/test-source";
+
 import {
   A11Y,
   A11Y_WIDTHS,
@@ -70,10 +72,10 @@ describe("the dev-preview crawl (ui.themes-devices)", () => {
 
   it("takes the notice off the frame's screen in CSS, from the height FrameSlot measures", () => {
     const css = readFileSync(new URL("../apps/web/app/globals.css", import.meta.url), "utf8");
-    expect(css).toMatch(
-      /\[data-app-frame-slot\] > \.min-h-dvh \{ min-height: calc\(100dvh - var\(--kz-top-chrome-h, 0px\)\)/,
+    expect(compact(css)).toContain(
+      compact("[data-app-frame-slot] > .min-h-dvh { min-height: calc(100dvh - var(--kz-top-chrome-h, 0px))"),
     );
-    expect(css).toMatch(/\.md\\:h-dvh \{ height: calc\(100dvh - var\(--kz-top-chrome-h/);
+    expect(compact(css)).toContain(compact(".md\\:h-dvh { height: calc(100dvh - var(--kz-top-chrome-h"));
     for (const f of ["ShopFrame", "AppFrame"])
       expect(readFileSync(new URL(`../apps/web/components/app/${f}.tsx`, import.meta.url), "utf8")).toContain(
         "<FrameSlot>",

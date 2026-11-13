@@ -2,6 +2,8 @@ import { readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 
+import { compact } from "../apps/web/lib/test-source";
+
 import {
   ACCOUNT_PAGES,
   BROWSER,
@@ -50,7 +52,7 @@ describe("the hydration crawl (one rendering for the server and the browser, K0)
       'report("h1"',
       'report("overflow"',
     ])
-      expect(source).toContain(needle);
+      expect(compact(source)).toContain(compact(needle));
   });
 
   it("recognises React's hydration errors, minified or not", () => {
@@ -77,7 +79,7 @@ describe("the hydration crawl (one rendering for the server and the browser, K0)
       "/api/auth/sign-in",
       'localStorage.setItem("kz-theme"',
     ])
-      expect(source).toContain(needle);
+      expect(compact(source)).toContain(compact(needle));
   });
 
   it("crawls the first record of a list, never its creation page nor a deeper address", () => {
@@ -136,7 +138,7 @@ describe("the hydration crawl (one rendering for the server and the browser, K0)
     );
     // The client space (K7) renders its heading before the empty state, with or without a file (ClientHome.test.tsx counts the h1).
     expect(acct).toContain("<ClientHome");
-    expect(home).toMatch(/<PageHeader[\s\S]*files\.length === 0 \? <EmptyState/);
+    expect(compact(home)).toMatch(/<PageHeader.*files\.length===0\?<EmptyState/);
     expect(correct).toContain("<PageHeader");
   });
 });
