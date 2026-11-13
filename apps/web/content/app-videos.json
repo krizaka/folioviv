@@ -5,34 +5,34 @@
     {
       "platform": "android",
       "flow": "today-books",
-      "seconds": 6.9,
-      "capturedAt": "2026-11-12T13:59:45.783Z",
+      "seconds": 13.7,
+      "capturedAt": "2026-11-13T13:26:29.200Z",
       "files": {
-        "webm": "sites/folioviv/download/android-today-books.96ccad710b.webm",
-        "mp4": "sites/folioviv/download/android-today-books.599ddef66f.mp4",
-        "poster": "sites/folioviv/download/android-today-books.bb7c8a6f41.jpg"
+        "webm": "sites/folioviv/download/android-today-books.8a6a4792a5.webm",
+        "mp4": "sites/folioviv/download/android-today-books.1b4a151ef0.mp4",
+        "poster": "sites/folioviv/download/android-today-books.858482c617.jpg"
       }
     },
     {
       "platform": "web",
       "flow": "composer",
       "seconds": 10.2,
-      "capturedAt": "2026-11-12T13:59:30.721Z",
+      "capturedAt": "2026-11-13T13:25:54.131Z",
       "files": {
-        "webm": "sites/folioviv/download/web-composer.08f7219544.webm",
-        "mp4": "sites/folioviv/download/web-composer.bfa0ba29a8.mp4",
-        "poster": "sites/folioviv/download/web-composer.c3f9318d3a.jpg"
+        "webm": "sites/folioviv/download/web-composer.70f54681f3.webm",
+        "mp4": "sites/folioviv/download/web-composer.75fa00ebfc.mp4",
+        "poster": "sites/folioviv/download/web-composer.bc302ed144.jpg"
       }
     },
     {
       "platform": "web",
       "flow": "storefront",
-      "seconds": 15.6,
-      "capturedAt": "2026-11-12T13:59:39.277Z",
+      "seconds": 14.9,
+      "capturedAt": "2026-11-13T13:26:11.445Z",
       "files": {
-        "webm": "sites/folioviv/download/web-storefront.af28ba190d.webm",
-        "mp4": "sites/folioviv/download/web-storefront.0776940b67.mp4",
-        "poster": "sites/folioviv/download/web-storefront.f35e8b4f5d.jpg"
+        "webm": "sites/folioviv/download/web-storefront.02326b7c5d.webm",
+        "mp4": "sites/folioviv/download/web-storefront.234ff2ef9f.mp4",
+        "poster": "sites/folioviv/download/web-storefront.406186f09b.jpg"
       }
     }
   ]
