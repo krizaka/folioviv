@@ -120,6 +120,12 @@ What runs in the Actions tab of this repository.
 - **Visual regression** (`visual.yml`): Compares the main pages with their baselines; a required check. Runs on every pull request, in the merge queue.
 <!-- krizaka:workflows:end -->
 
+### CI sleep
+
+- **Sleeps** while the repository variable `CI_SLEEP` is `true`: every scheduled run, the critical journeys, the visual comparison, the mobile app's checks and flows, the desktop app, the download videos, the Scorecard, the Rust guards, the pricing journey, and the image and build legs of CI. Their required checks still report (skipped passes, or a stand-in job).
+- **Never sleeps**: lint, typecheck and tests of a pull request, SonarCloud, duplication, the `CI gate`, the secret and workflow scans, Dependabot auto-merge, the merge-resolution and docs-map checks.
+- **Wake it**: `gh variable set CI_SLEEP --body false -R krizaka/folioviv` (unset or `false` is today's behaviour). `scripts/ci-sleep.test.mjs` fails when a workflow neither carries the condition nor is listed as staying awake.
+
 ## License
 
 [FSL-1.1-ALv2](LICENSE.md) (Functional Source License, Apache-2.0 future licence) © Technologies Krizaka Inc. — read,

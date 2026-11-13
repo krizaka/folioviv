@@ -29,7 +29,7 @@ describe("the phone's Maestro flows in CI", () => {
     expect(ci).toMatch(/\n {2}mobile-e2e:\n/);
     expect(ci).toMatch(/uses: krizaka\/\.github\/\.github\/workflows\/mobile-e2e\.yml@[0-9a-f]{40}/);
     expect(ci).toMatch(/\n {2}pull_request:\n(?! {4}paths)/); // no path filter: a required check must always report
-    expect(ci).not.toMatch(/continue-on-error|if: false|\n {4}if:/);
+    expect(ci).not.toMatch(/continue-on-error|if: false|\n {4}if: (?!\$\{\{ vars\.CI_SLEEP != 'true' \}\}\n {4}runs-on)/); // the only job condition is the CI_SLEEP one of expo-sdk
     expect(ci).toContain("setup-command: bash scripts/ci-mobile-backend.sh");
   });
 

@@ -17,6 +17,8 @@ jobs:
     permissions:
       contents: read
     with:
+      # CI_SLEEP (README, « CI sleep »): no file is relevant, the org's changes gate skips the comparison and the check still reports (« skipped » passes).
+      relevant: ${{ vars.CI_SLEEP == 'true' && '^$' || '.' }}
       package-manager: pnpm
       start-script: scripts/ci-visual-start.sh
       test-command: pnpm exec playwright test -c apps/web/e2e/visual/playwright.config.mjs

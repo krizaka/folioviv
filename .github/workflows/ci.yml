@@ -32,7 +32,9 @@ jobs:
         apps/*/coverage/lcov.info
         packages/*/coverage/lcov.info
       test-script: test:coverage
-      container: true      # the image is built on every PR that can break it (Dockerfile, manifests, lockfiles, COPY paths)
+      # CI_SLEEP (README, « CI sleep »): the image build and the build + SEO/overflow leg sleep; lint, typecheck, tests, Sonar, duplication and the CI gate keep running.
+      container: ${{ vars.CI_SLEEP != 'true' }}      # the image is built on every PR that can break it (Dockerfile, manifests, lockfiles, COPY paths)
+      build-script: ${{ vars.CI_SLEEP != 'true' && 'build' || '' }}
       container-dockerfile: deploy/docker/Dockerfile
       container-image: app:ci
       # What App Platform passes as build arguments: indexing off (a dev build), a placeholder commit.
@@ -56,6 +58,6 @@ jobs:
         APP_SEARCH_INDEXING=on
       playwright: chromium
       # SEO family contract on the built site, sign-up closed, no horizontal overflow (scripts/ci-after-build.sh).
-      after-build: scripts/ci-after-build.sh
+      after-build: ${{ vars.CI_SLEEP != 'true' && 'scripts/ci-after-build.sh' || '' }}
       # Files no test or build reads skip the heavy jobs (docs/, policy text, templates, the README's images). Fails open.
       ignore: '^docs/|^\.changeset/|^(LICENSE|SECURITY|CODE_OF_CONDUCT|SUPPORT)(\.md)?$|^\.github/(ISSUE_TEMPLATE/|assets/|pull_request_template\.md$|FUNDING\.yml$|dependabot\.yml$)'

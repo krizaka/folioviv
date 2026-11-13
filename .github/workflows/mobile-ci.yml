@@ -27,7 +27,8 @@ jobs:
       working-directory: apps/mobile
       lockfile-directory: .
       install-command: pnpm install --frozen-lockfile
-      relevant: '^(apps/mobile/|packages/(core|client)/|pnpm-lock\.yaml$|\.github/workflows/mobile-ci\.yml$)'
+      # CI_SLEEP (README, « CI sleep »): `^$` matches no file, so the org's changes gate skips the heavy jobs and the gate still reports.
+      relevant: ${{ vars.CI_SLEEP == 'true' && '^$' || '^(apps/mobile/|packages/(core|client)/|pnpm-lock\.yaml$|\.github/workflows/mobile-ci\.yml$)' }}
       extra-scripts: |
         export
 
@@ -47,13 +48,14 @@ jobs:
       setup-command: bash scripts/ci-mobile-backend.sh
       reverse-ports: "3000"
       allow-cleartext: true
-      relevant: '^(apps/(mobile|web)/|packages/|pnpm-lock\.yaml$|scripts/ci-mobile-backend\.sh$|\.github/workflows/mobile-ci\.yml$)'
+      relevant: ${{ vars.CI_SLEEP == 'true' && '^$' || '^(apps/(mobile|web)/|packages/|pnpm-lock\.yaml$|scripts/ci-mobile-backend\.sh$|\.github/workflows/mobile-ci\.yml$)' }}
       env: |
         EXPO_PUBLIC_APP_URL=http://localhost:3000
         EXPO_PUBLIC_APP_ENV=dev
 
   expo-sdk:
     name: Expo SDK and Xcode image
+    if: ${{ vars.CI_SLEEP != 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:

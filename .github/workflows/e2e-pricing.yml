@@ -17,6 +17,7 @@ permissions:
 jobs:
   pricing:
     name: Pricing journey (dev)
+    if: ${{ vars.CI_SLEEP != 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
