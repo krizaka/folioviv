@@ -9,7 +9,13 @@ import { loadPublicShop, movedShopPath } from "@/lib/shop-page";
  * keep the move of a former address (a 308 with the rest of the path). Only the public pages are in this group: a client's
  * booking confirmation (`../service/[id]/confirmation`) stays reachable on an unpublished shop, with its own session checks.
  */
-export default async function ShopLayout({ children, params }: { children: React.ReactNode; params: Promise<{ locale: string; slug: string }> }) {
+export default async function ShopLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: Promise<{ locale: string; slug: string }>;
+}) {
   const { locale, slug } = await params;
   if (!(await loadPublicShop(slug)) && !(await movedShopPath(locale, slug))) notFound();
   return children;

@@ -1,5 +1,19 @@
 import { shopTypeOf } from "@folioviv/core";
-import { type Actor, type AuditTrail, type Clock, createWorkspace, dbWorkspaceStore, filterSql, type KindConfig, type Query, type StatusSet, type Transaction, type ViewFilters, type WorkspaceDecl, workspaceMigration } from "@krizaka/organize";
+import {
+  type Actor,
+  type AuditTrail,
+  type Clock,
+  createWorkspace,
+  dbWorkspaceStore,
+  filterSql,
+  type KindConfig,
+  type Query,
+  type StatusSet,
+  type Transaction,
+  type ViewFilters,
+  type WorkspaceDecl,
+  workspaceMigration,
+} from "@krizaka/organize";
 
 import { INVOICE_STATUS_SET, KIND_DEFAULTS, presetVariant } from "./workspace-defaults";
 
@@ -37,7 +51,8 @@ export const WORKSPACE: WorkspaceDecl = {
 
 export const WORKSPACE_KINDS = ["client", "invoice"] as const;
 export type WorkspaceKind = (typeof WORKSPACE_KINDS)[number];
-export const isWorkspaceKind = (value: unknown): value is WorkspaceKind => (WORKSPACE_KINDS as readonly unknown[]).includes(value);
+export const isWorkspaceKind = (value: unknown): value is WorkspaceKind =>
+  (WORKSPACE_KINDS as readonly unknown[]).includes(value);
 
 /** The status set of a kind (only the invoice has one, and it is derived). */
 export const statusSetOf = (kind: WorkspaceKind): StatusSet | null => (kind === "invoice" ? INVOICE_STATUS_SET : null);
@@ -45,13 +60,16 @@ export const statusSetOf = (kind: WorkspaceKind): StatusSet | null => (kind === 
 /** The trail, in the shop's `audit_log`: one line per entity, in the transaction of the change, with the shop in its detail. */
 export const auditTrailOf = (shopId: string): AuditTrail => ({
   async record(query, entry) {
-    await query("INSERT INTO audit_log (actor_id, actor_label, action, target_id, detail) VALUES ($1, $2, $3, $4, $5)", [
-      entry.actorId,
-      entry.actorLabel,
-      entry.action,
-      entry.target?.id ?? null,
-      JSON.stringify({ ...entry.detail, shopId, ...(entry.target ? { targetType: entry.target.type } : {}) }),
-    ]);
+    await query(
+      "INSERT INTO audit_log (actor_id, actor_label, action, target_id, detail) VALUES ($1, $2, $3, $4, $5)",
+      [
+        entry.actorId,
+        entry.actorLabel,
+        entry.action,
+        entry.target?.id ?? null,
+        JSON.stringify({ ...entry.detail, shopId, ...(entry.target ? { targetType: entry.target.type } : {}) }),
+      ],
+    );
   },
 });
 
@@ -62,10 +80,19 @@ export interface WorkspaceDeps {
 
 /** The workspace layer over the app's transactions, its trail carrying the shop it speaks for. */
 export const workspaceOf = (deps: WorkspaceDeps, shopId: string) =>
-  createWorkspace({ transaction: deps.transaction, storeFor: (tx) => dbWorkspaceStore(tx, WORKSPACE), clock: deps.clock, audit: auditTrailOf(shopId) });
+  createWorkspace({
+    transaction: deps.transaction,
+    storeFor: (tx) => dbWorkspaceStore(tx, WORKSPACE),
+    clock: deps.clock,
+    audit: auditTrailOf(shopId),
+  });
 
 /** Who acts: the signed-in account, under its address, with its role in the shop. */
-export const actorOf = (account: { id: string; email: string }, role: string): Actor => ({ id: account.id, label: account.email, role });
+export const actorOf = (account: { id: string; email: string }, role: string): Actor => ({
+  id: account.id,
+  label: account.email,
+  role,
+});
 
 /**
  * The first time a shop uses the workspace: the administrator's defaults are written to the database (never overwriting), then the
@@ -86,17 +113,31 @@ export async function ensureShopWorkspace(deps: WorkspaceDeps, shopId: string): 
   const locale = shop.locale === "en" ? "en" : "fr";
   for (const defaults of KIND_DEFAULTS) {
     const { config } = await workspace.config.seed(defaults);
-    await workspace.tags.seed(shopId, defaults.kind, presetVariant(trade, locale, (variant) => variant in config.tags.presets));
+    await workspace.tags.seed(
+      shopId,
+      defaults.kind,
+      presetVariant(trade, locale, (variant) => variant in config.tags.presets),
+    );
   }
-  await deps.transaction((tx) => tx("UPDATE shops SET organized_at = $2 WHERE id = $1 AND organized_at IS NULL", [shopId, deps.clock.now()]));
+  await deps.transaction((tx) =>
+    tx("UPDATE shops SET organized_at = $2 WHERE id = $1 AND organized_at IS NULL", [shopId, deps.clock.now()]),
+  );
 }
 
 /** What a list needs of a view: the ids of the shop's entities the filters keep (`null`: no filter, keep everything). */
-export async function idsMatching(query: Query, kind: WorkspaceKind, shopId: string, filters: ViewFilters, status: StatusSet | null = statusSetOf(kind)): Promise<string[] | null> {
+export async function idsMatching(
+  query: Query,
+  kind: WorkspaceKind,
+  shopId: string,
+  filters: ViewFilters,
+  status: StatusSet | null = statusSetOf(kind),
+): Promise<string[] | null> {
   const { sql, params } = filterSql(WORKSPACE, kind, filters, { from: 2, status });
   if (sql === "") return null;
   const table = WORKSPACE.kinds[kind]!.table;
-  return (await query<{ id: string }>(`SELECT e.id FROM ${table} e WHERE e.shop_id = $1${sql}`, [shopId, ...params])).map((r) => r.id);
+  return (
+    await query<{ id: string }>(`SELECT e.id FROM ${table} e WHERE e.shop_id = $1${sql}`, [shopId, ...params])
+  ).map((r) => r.id);
 }
 
 /** How many of the shop's entities wear each of its tags (the number on a binder divider). */

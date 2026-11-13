@@ -41,7 +41,11 @@ export default async function Home({ params }: Readonly<{ params: Promise<{ loca
   const feed = await homeFeed(locale);
   const hero = heroActions(locale, Boolean(await pageSession().catch(() => null)));
   // The three jobs are the real components of the app, drawn with demo data (folioviv#470): below the fold, never the LCP.
-  const previews = { book: <BookPreview locale={locale} />, invoice: <InvoicePreview locale={locale} />, books: <BooksPreview locale={locale} /> };
+  const previews = {
+    book: <BookPreview locale={locale} />,
+    invoice: <InvoicePreview locale={locale} />,
+    books: <BooksPreview locale={locale} />,
+  };
   return (
     <>
       <link rel="preload" as="image" href={heroTake(locale).poster} fetchPriority="high" />
@@ -95,7 +99,18 @@ export default async function Home({ params }: Readonly<{ params: Promise<{ loca
                 </Button>
               }
             >
-              <NeighbourhoodFeed initial={feed} locale={locale} words={{ filterLabel: d.feed.filterLabel, all: d.feed.all, boardLabel: d.feed.boardLabel, visit: d.feed.visit, empty: d.feed.empty, error: d.feed.error }} />
+              <NeighbourhoodFeed
+                initial={feed}
+                locale={locale}
+                words={{
+                  filterLabel: d.feed.filterLabel,
+                  all: d.feed.all,
+                  boardLabel: d.feed.boardLabel,
+                  visit: d.feed.visit,
+                  empty: d.feed.empty,
+                  error: d.feed.error,
+                }}
+              />
             </Section>
           )}
           <Section id="trust" spacing="sm">

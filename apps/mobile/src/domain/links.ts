@@ -6,7 +6,8 @@ export type Locale = "fr" | "en";
 export const LOCALES: readonly Locale[] = ["fr", "en"];
 export const DEFAULT_LOCALE: Locale = "fr";
 
-export const asLocale = (value: string | null | undefined): Locale => LOCALES.find((l) => l === value?.slice(0, 2)) ?? DEFAULT_LOCALE;
+export const asLocale = (value: string | null | undefined): Locale =>
+  LOCALES.find((l) => l === value?.slice(0, 2)) ?? DEFAULT_LOCALE;
 
 const app = (locale: Locale, ...parts: string[]) => ["", locale, "app", ...parts].join("/");
 const query = (params: Record<string, string | undefined>) => {
@@ -33,7 +34,8 @@ export const routes = {
   today: (locale: Locale, shop: string, day?: string) => `${app(locale, shop, "today")}${query({ day })}`,
   clients: (locale: Locale, shop: string, search?: string) => `${app(locale, shop, "clients")}${query({ q: search })}`,
   invoices: (locale: Locale, shop: string) => app(locale, shop, "invoices"),
-  newInvoice: (locale: Locale, shop: string, client?: string) => `${app(locale, shop, "invoices", "new")}${query({ client })}`,
+  newInvoice: (locale: Locale, shop: string, client?: string) =>
+    `${app(locale, shop, "invoices", "new")}${query({ client })}`,
   books: (locale: Locale, shop: string, period?: string) => `${app(locale, shop, "books")}${query({ period })}`,
   figures: (locale: Locale, shop: string) => app(locale, shop, "figures"),
   boutique: (locale: Locale, shop: string) => app(locale, shop, "settings"),

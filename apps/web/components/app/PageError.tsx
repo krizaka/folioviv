@@ -13,7 +13,15 @@ export function PageError({ reset }: Readonly<{ reset: () => void }>) {
   const { say } = useSay();
   return (
     <div role="alert" className="flex flex-col gap-4">
-      <Alert tone="danger" title={say("states.page.title")} action={<Button size="sm" variant="secondary" onClick={reset}>{say("states.retry")}</Button>}>
+      <Alert
+        tone="danger"
+        title={say("states.page.title")}
+        action={
+          <Button size="sm" variant="secondary" onClick={reset}>
+            {say("states.retry")}
+          </Button>
+        }
+      >
         {say("states.page.body")}
       </Alert>
     </div>

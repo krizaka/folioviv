@@ -13,9 +13,19 @@ export const dynamic = "force-dynamic";
 export function POST(req: Request) {
   return handle(async () => {
     const { session, shop } = await requireShop(req, "catalogue");
-    const { version, keepDraft } = await readJson(req, z.object({ version: z.number().int().min(1), keepDraft: z.boolean().optional() }));
+    const { version, keepDraft } = await readJson(
+      req,
+      z.object({ version: z.number().int().min(1), keepDraft: z.boolean().optional() }),
+    );
     const restored = await rollbackShopPage(db(), shop.id, version, session.account.id, { keepDraft });
-    await audit({ action: "shop.page_rolled_back", actorId: session.account.id, actorLabel: session.account.email, targetId: shop.id, detail: { from: version, version: restored.version, draftReset: restored.draftReset }, headers: req.headers });
+    await audit({
+      action: "shop.page_rolled_back",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: shop.id,
+      detail: { from: version, version: restored.version, draftReset: restored.draftReset },
+      headers: req.headers,
+    });
     await announcePage(shop.id);
     return Response.json(restored);
   });

@@ -28,7 +28,12 @@ export async function searchShop(db: Db, shopId: string, query: string): Promise
   if (!q) return { clients: [], invoices: [] };
   const like = contains(q);
   const [files, bills] = await Promise.all([
-    db.select({ id: clients.id, fullName: clients.fullName }).from(clients).where(and(eq(clients.shopId, shopId), isNull(clients.erasedAt), ilike(clients.fullName, like))).orderBy(clients.fullName).limit(PER_KIND),
+    db
+      .select({ id: clients.id, fullName: clients.fullName })
+      .from(clients)
+      .where(and(eq(clients.shopId, shopId), isNull(clients.erasedAt), ilike(clients.fullName, like)))
+      .orderBy(clients.fullName)
+      .limit(PER_KIND),
     db
       .select({ id: invoices.id, number: invoices.number, client: clients.fullName })
       .from(invoices)
@@ -46,7 +51,11 @@ const OWED: ReadonlySet<string> = new Set([INVOICE_STATE.due, INVOICE_STATE.part
  * The rail's counts: the appointments of `day` (the shop's calendar day; a staff member's own when `staffAccountId` is given),
  * cancelled ones aside, and the invoices still to collect — due, partly paid or overdue, from `invoiceState`, the list's rule.
  */
-export async function frameCounts(db: Db, shopId: string, scope: { day: string; staffAccountId?: string }): Promise<{ appointments: number; toCollect: number }> {
+export async function frameCounts(
+  db: Db,
+  shopId: string,
+  scope: { day: string; staffAccountId?: string },
+): Promise<{ appointments: number; toCollect: number }> {
   const [[day], bills] = await Promise.all([
     db
       .select({ n: sql<number>`count(*)::int` })
@@ -57,11 +66,26 @@ export async function frameCounts(db: Db, shopId: string, scope: { day: string; 
           eq(appointments.shopId, shopId),
           sql`${appointments.status} <> 'cancelled'`,
           sql`(lower(${appointments.during}) AT TIME ZONE ${shops.timezone})::date = ${scope.day}::date`,
-          scope.staffAccountId ? sql`${appointments.staffId} IN (SELECT ${staff.id} FROM ${staff} WHERE ${staff.accountId} = ${scope.staffAccountId})` : undefined,
+          scope.staffAccountId
+            ? sql`${appointments.staffId} IN (SELECT ${staff.id} FROM ${staff} WHERE ${staff.accountId} = ${scope.staffAccountId})`
+            : undefined,
         ),
       ),
     listInvoices(db, shopId),
   ]);
-  const toCollect = bills.filter((i) => OWED.has(invoiceState({ totalCents: i.totalCents, paidCents: i.paidCents, dueOn: i.dueOn, isCredit: i.creditOf !== null, superseded: i.superseded }, scope.day))).length;
+  const toCollect = bills.filter((i) =>
+    OWED.has(
+      invoiceState(
+        {
+          totalCents: i.totalCents,
+          paidCents: i.paidCents,
+          dueOn: i.dueOn,
+          isCredit: i.creditOf !== null,
+          superseded: i.superseded,
+        },
+        scope.day,
+      ),
+    ),
+  ).length;
   return { appointments: day?.n ?? 0, toCollect };
 }

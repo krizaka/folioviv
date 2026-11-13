@@ -16,7 +16,20 @@ export function GET(req: Request, { params }: { params: Promise<{ id: string }> 
     const booking = await bookingDetail(db(), account.id, idParam((await params).id), now);
     if (!booking) throw refuse(404, "NOT_FOUND", "Not found");
     const name = account.locale === "fr" ? booking.service.nameFr : booking.service.nameEn;
-    const ics = buildIcs({ uid: booking.id, start: booking.startsAt, end: booking.endsAt, summary: `${name} — ${booking.shop.name}`, location: booking.shop.address, now });
-    return new Response(ics, { headers: { "Content-Type": "text/calendar; charset=utf-8", "Content-Disposition": 'attachment; filename="folioviv-booking.ics"', "Cache-Control": "no-store" } });
+    const ics = buildIcs({
+      uid: booking.id,
+      start: booking.startsAt,
+      end: booking.endsAt,
+      summary: `${name} — ${booking.shop.name}`,
+      location: booking.shop.address,
+      now,
+    });
+    return new Response(ics, {
+      headers: {
+        "Content-Type": "text/calendar; charset=utf-8",
+        "Content-Disposition": 'attachment; filename="folioviv-booking.ics"',
+        "Cache-Control": "no-store",
+      },
+    });
   });
 }

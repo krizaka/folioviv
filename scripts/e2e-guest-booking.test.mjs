@@ -5,7 +5,16 @@ const source = readFileSync(new URL("./e2e-guest-booking.mjs", import.meta.url),
 
 describe("e2e-guest-booking (a client with no account books)", () => {
   it("walks the whole path as an anonymous visitor: shop, service, time, details, code by e-mail, receipt", () => {
-    for (const step of ["/slots", "/confirm?", "data-guest-summary", "W.send", "codeFor(EMAIL)", "confirmation", "data-booked-stamp"]) expect(source).toContain(step);
+    for (const step of [
+      "/slots",
+      "/confirm?",
+      "data-guest-summary",
+      "W.send",
+      "codeFor(EMAIL)",
+      "confirmation",
+      "data-booked-stamp",
+    ])
+      expect(source).toContain(step);
   });
 
   it("holds the rules of the step: no sign-in wall, the consent box never pre-ticked, the cancellation rule shown before booking", () => {

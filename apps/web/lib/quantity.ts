@@ -12,4 +12,5 @@ export function parseQuantity(typed: string): number | null {
 }
 
 /** A quantity for a reader of `locale`: `7,5` or `7.5`, at most two decimals, no trailing zero. */
-export const formatQuantity = (quantity: number, locale: "fr" | "en"): string => new Intl.NumberFormat(locale === "fr" ? "fr-CA" : "en-CA", { maximumFractionDigits: 2 }).format(quantity);
+export const formatQuantity = (quantity: number, locale: "fr" | "en"): string =>
+  new Intl.NumberFormat(locale === "fr" ? "fr-CA" : "en-CA", { maximumFractionDigits: 2 }).format(quantity);

@@ -10,7 +10,11 @@ import { MEDIA_CDN } from "./tour";
  */
 
 /** The only third parties a page may frame: the players of a TikTok, a YouTube Short and an Instagram reel, behind a click (packages/core/src/community.ts `externalReel`). */
-export const EMBED_FRAME_HOSTS = ["https://www.youtube-nocookie.com", "https://www.tiktok.com", "https://www.instagram.com"];
+export const EMBED_FRAME_HOSTS = [
+  "https://www.youtube-nocookie.com",
+  "https://www.tiktok.com",
+  "https://www.instagram.com",
+];
 
 const DEV_CONNECT = " ws: http://localhost:* http://127.0.0.1:*";
 
@@ -63,7 +67,9 @@ export function contentSecurityPolicy({ nonce, production, upgradeInsecure, appO
   const check = captcha ? ` ${CAPTCHA_HOST}` : "";
   const strict = nonce !== undefined;
   const dev = production ? "" : " 'unsafe-eval'";
-  const script = strict ? `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${check}${dev}` : `script-src 'self' 'unsafe-inline'${check}${dev}`;
+  const script = strict
+    ? `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${check}${dev}`
+    : `script-src 'self' 'unsafe-inline'${check}${dev}`;
   return [
     strict ? "default-src 'none'" : "default-src 'self'",
     script,

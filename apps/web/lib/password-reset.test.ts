@@ -22,19 +22,27 @@ describe("a forgotten password, on @krizaka/auth", () => {
     expect(audit).not.toHaveBeenCalled();
     queries.rows = [{ id: "a1", email: "lea@example.test" }];
     await requestPasswordReset(resets, "lea@example.test", now, headers);
-    expect(audit).toHaveBeenCalledWith(expect.objectContaining({ action: "auth.password_reset_requested", actorId: "a1" }));
+    expect(audit).toHaveBeenCalledWith(
+      expect.objectContaining({ action: "auth.password_reset_requested", actorId: "a1" }),
+    );
   });
 
   it("answers INVALID_TOKEN for a link the block refuses, and the block's own refusal with its code", async () => {
     const invalid = { requestPasswordReset: vi.fn(), resetPassword: vi.fn(async () => "INVALID" as const) };
-    await expect(resetPassword(invalid, "ae1.x", "a long enough password", now, headers)).rejects.toMatchObject({ status: 400, body: { code: "INVALID_TOKEN" } });
+    await expect(resetPassword(invalid, "ae1.x", "a long enough password", now, headers)).rejects.toMatchObject({
+      status: 400,
+      body: { code: "INVALID_TOKEN" },
+    });
     const weak = {
       requestPasswordReset: vi.fn(),
       resetPassword: vi.fn(async () => {
         throw new AccountError(400, "PASSWORD_TOO_SHORT", "At least 12 characters");
       }),
     };
-    await expect(resetPassword(weak, "ae1.x", "short", now, headers)).rejects.toMatchObject({ status: 400, body: { code: "PASSWORD_TOO_SHORT" } });
+    await expect(resetPassword(weak, "ae1.x", "short", now, headers)).rejects.toMatchObject({
+      status: 400,
+      body: { code: "PASSWORD_TOO_SHORT" },
+    });
   });
 
   it("audits the account whose password the link changed", async () => {

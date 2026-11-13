@@ -13,7 +13,9 @@ describe("the shop directory", () => {
 
   it("keeps a shop a minute and an unknown address ten seconds (a new shop is reachable at once), asking once in between", async () => {
     let clock = 0;
-    const lookup = vi.fn(async (slug: string): Promise<ShopVerdict> => (slug === "salon" ? { kind: "shop" } : { kind: "none" }));
+    const lookup = vi.fn(async (slug: string): Promise<ShopVerdict> =>
+      slug === "salon" ? { kind: "shop" } : { kind: "none" },
+    );
     const verdictOf = createShopDirectory(lookup, () => clock);
     expect(await verdictOf("salon")).toEqual({ kind: "shop" });
     expect(await verdictOf("nobody")).toEqual({ kind: "none" });
@@ -31,7 +33,10 @@ describe("the shop directory", () => {
   });
 
   it("never caches a failed lookup and never refuses because of it (the page layer answers 404 for an unknown shop all the same)", async () => {
-    const lookup = vi.fn<(slug: string) => Promise<ShopVerdict>>().mockRejectedValueOnce(new Error("down")).mockResolvedValueOnce({ kind: "shop" });
+    const lookup = vi
+      .fn<(slug: string) => Promise<ShopVerdict>>()
+      .mockRejectedValueOnce(new Error("down"))
+      .mockResolvedValueOnce({ kind: "shop" });
     const verdictOf = createShopDirectory(lookup);
     expect(await verdictOf("salon")).toEqual({ kind: "unknown" });
     expect(await verdictOf("salon")).toEqual({ kind: "shop" });
@@ -40,7 +45,9 @@ describe("the shop directory", () => {
   it("holds at most a thousand addresses: a flood of random labels costs misses, not memory", async () => {
     const lookup = vi.fn(async (): Promise<ShopVerdict> => ({ kind: "none" }));
     const verdictOf = createShopDirectory(lookup, () => 0);
-    for (let i = 0; i < 1100; i++) {await verdictOf(`label-${i}`);}
+    for (let i = 0; i < 1100; i++) {
+      await verdictOf(`label-${i}`);
+    }
     lookup.mockClear();
     await verdictOf("label-1099");
     expect(lookup).not.toHaveBeenCalled();

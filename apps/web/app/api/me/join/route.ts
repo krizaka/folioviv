@@ -16,6 +16,8 @@ export function POST(req: Request) {
     const session = await requireSession(req);
     limit("join", req, session.account.id, [20, 600]);
     const { shopId, ...input } = await readJson(req, body);
-    return Response.json(await joinShop(db(), session.account.id, session.account.email, shopId, input), { status: 201 });
+    return Response.json(await joinShop(db(), session.account.id, session.account.email, shopId, input), {
+      status: 201,
+    });
   });
 }

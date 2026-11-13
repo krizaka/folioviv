@@ -16,13 +16,22 @@ import { issueInvoice, recordExpense } from "./shop-ops";
  * figures, the clients are fictional companies. Through the same operations the product uses; idempotent per owner account.
  */
 export const KRIZAKA = {
-  shop: { name: "Krizaka (démo)", legalName: "Technologies Krizaka inc. (démo)", address: "1 rue Exemple, Montréal QC H2X 1Y1 (adresse fictive)", slug: "krizaka-demo", ownerName: "Éric", businessType: "professional" as const },
+  shop: {
+    name: "Krizaka (démo)",
+    legalName: "Technologies Krizaka inc. (démo)",
+    address: "1 rue Exemple, Montréal QC H2X 1Y1 (adresse fictive)",
+    slug: "krizaka-demo",
+    ownerName: "Éric",
+    businessType: "professional" as const,
+  },
   taglineFr: "Un studio de logiciel à Montréal : développement, design et conseil, facturés à l'heure ou au forfait.",
   taglineEn: "A software studio in Montréal: development, design and consulting, billed by the hour or by the project.",
   profile: {
     area: "Montréal",
-    bioFr: "Krizaka est un studio de logiciel de Montréal. Ceci est la démonstration de Folioviv sur les livres d'un studio de services : données fictives, montants de démonstration, numéros de taxes factices.",
-    bioEn: "Krizaka is a software studio in Montréal. This is Folioviv's demonstration on the books of a services studio: fictional data, demo amounts, made-up tax numbers.",
+    bioFr:
+      "Krizaka est un studio de logiciel de Montréal. Ceci est la démonstration de Folioviv sur les livres d'un studio de services : données fictives, montants de démonstration, numéros de taxes factices.",
+    bioEn:
+      "Krizaka is a software studio in Montréal. This is Folioviv's demonstration on the books of a services studio: fictional data, demo amounts, made-up tax numbers.",
     publicEmail: "bonjour@krizaka-demo.example",
     seatUnitFr: "personnes",
     seatUnitEn: "people",
@@ -32,24 +41,79 @@ export const KRIZAKA = {
   qstNumber: "1234567890TQ0001",
   invoicePrefix: "KZ",
   services: [
-    { nameFr: "Développement logiciel (à l'heure)", nameEn: "Software development (hourly)", durationMinutes: 60, priceCents: 15_000, capacity: 1 },
+    {
+      nameFr: "Développement logiciel (à l'heure)",
+      nameEn: "Software development (hourly)",
+      durationMinutes: 60,
+      priceCents: 15_000,
+      capacity: 1,
+    },
     { nameFr: "Design (à l'heure)", nameEn: "Design (hourly)", durationMinutes: 60, priceCents: 12_000, capacity: 1 },
-    { nameFr: "Conseil et architecture (à l'heure)", nameEn: "Consulting and architecture (hourly)", durationMinutes: 60, priceCents: 18_000, capacity: 1 },
-    { nameFr: "Atelier de cadrage (forfait)", nameEn: "Scoping workshop (flat fee)", durationMinutes: 180, priceCents: 60_000, capacity: 1 },
-    { nameFr: "Soutien et maintenance (forfait mensuel)", nameEn: "Support and maintenance (monthly flat fee)", durationMinutes: 60, priceCents: 50_000, capacity: 1 },
+    {
+      nameFr: "Conseil et architecture (à l'heure)",
+      nameEn: "Consulting and architecture (hourly)",
+      durationMinutes: 60,
+      priceCents: 18_000,
+      capacity: 1,
+    },
+    {
+      nameFr: "Atelier de cadrage (forfait)",
+      nameEn: "Scoping workshop (flat fee)",
+      durationMinutes: 180,
+      priceCents: 60_000,
+      capacity: 1,
+    },
+    {
+      nameFr: "Soutien et maintenance (forfait mensuel)",
+      nameEn: "Support and maintenance (monthly flat fee)",
+      durationMinutes: 60,
+      priceCents: 50_000,
+      capacity: 1,
+    },
   ],
   hours: [1, 2, 3, 4, 5].map((weekday) => ({ weekday, startsAt: "09:00", endsAt: "17:00" })),
   clients: [
-    { email: "contact.studiolumen@folioviv.test", name: "Studio Lumen inc. (démo)", phone: "514-555-0111", language: "fr" as const },
-    { email: "contact.atelierboreal@folioviv.test", name: "Atelier Boréal inc. (démo)", phone: "514-555-0112", language: "fr" as const },
-    { email: "contact.nordstudio@folioviv.test", name: "Nord Studio Montréal Ltd. (demo)", phone: "514-555-0113", language: "en" as const },
+    {
+      email: "contact.studiolumen@folioviv.test",
+      name: "Studio Lumen inc. (démo)",
+      phone: "514-555-0111",
+      language: "fr" as const,
+    },
+    {
+      email: "contact.atelierboreal@folioviv.test",
+      name: "Atelier Boréal inc. (démo)",
+      phone: "514-555-0112",
+      language: "fr" as const,
+    },
+    {
+      email: "contact.nordstudio@folioviv.test",
+      name: "Nord Studio Montréal Ltd. (demo)",
+      phone: "514-555-0113",
+      language: "en" as const,
+    },
   ],
 };
 
 /** Éric's second business (multi-shop): a small design studio, to try the switch between shops. Demo data like the first. */
 export const KRIZAKA_SECOND = {
-  shop: { name: "Krizaka Atelier (démo)", legalName: "Atelier Krizaka inc. (démo)", address: "2 rue Exemple, Montréal QC H2X 1Y2 (adresse fictive)", slug: "krizaka-atelier", ownerName: "Éric", businessType: "professional" as const, area: "Montréal", bioFr: "Le second commerce d'Éric dans la démonstration : un petit atelier de design. Données fictives.", bioEn: "Éric's second business in the demonstration: a small design workshop. Fictional data." },
-  service: { nameFr: "Séance de design (à l'heure)", nameEn: "Design session (hourly)", durationMinutes: 60, priceCents: 11_000, capacity: 1 },
+  shop: {
+    name: "Krizaka Atelier (démo)",
+    legalName: "Atelier Krizaka inc. (démo)",
+    address: "2 rue Exemple, Montréal QC H2X 1Y2 (adresse fictive)",
+    slug: "krizaka-atelier",
+    ownerName: "Éric",
+    businessType: "professional" as const,
+    area: "Montréal",
+    bioFr: "Le second commerce d'Éric dans la démonstration : un petit atelier de design. Données fictives.",
+    bioEn: "Éric's second business in the demonstration: a small design workshop. Fictional data.",
+  },
+  service: {
+    nameFr: "Séance de design (à l'heure)",
+    nameEn: "Design session (hourly)",
+    durationMinutes: 60,
+    priceCents: 11_000,
+    capacity: 1,
+  },
   hours: [2, 4].map((weekday) => ({ weekday, startsAt: "10:00", endsAt: "16:00" })),
 };
 
@@ -70,24 +134,72 @@ export async function renameFormerClients(db: Db): Promise<void> {
     await db.transaction(async (tx) => {
       const [taken] = await tx.select({ id: accounts.id }).from(accounts).where(eq(accounts.email, to.email));
       if (!taken) await tx.update(accounts).set({ email: to.email }).where(eq(accounts.email, from.email));
-      const files = await tx.update(clients).set({ email: to.email, fullName: to.name }).where(and(eq(clients.email, from.email), eq(clients.fullName, from.name))).returning({ id: clients.id });
-      for (const f of files) await tx.update(dependants).set({ name: to.name }).where(and(eq(dependants.clientId, f.id), eq(dependants.name, from.name)));
+      const files = await tx
+        .update(clients)
+        .set({ email: to.email, fullName: to.name })
+        .where(and(eq(clients.email, from.email), eq(clients.fullName, from.name)))
+        .returning({ id: clients.id });
+      for (const f of files)
+        await tx
+          .update(dependants)
+          .set({ name: to.name })
+          .where(and(eq(dependants.clientId, f.id), eq(dependants.name, from.name)));
     });
   }
 }
 
 /** Plausible monthly hours (demo amounts), by client and month back: enough variety to make the books worth reading. */
 const HOURS: Record<string, [string, number][][]> = {
-  "Studio Lumen inc. (démo)": [[["dev", 24], ["support", 1]], [["dev", 32], ["support", 1]], [["dev", 18], ["support", 1]]],
-  "Atelier Boréal inc. (démo)": [[["design", 20]], [["design", 14], ["workshop", 1]], [["design", 26]]],
-  "Nord Studio Montréal Ltd. (demo)": [[["consulting", 8]], [["consulting", 12], ["dev", 10]], [["consulting", 6]]],
+  "Studio Lumen inc. (démo)": [
+    [
+      ["dev", 24],
+      ["support", 1],
+    ],
+    [
+      ["dev", 32],
+      ["support", 1],
+    ],
+    [
+      ["dev", 18],
+      ["support", 1],
+    ],
+  ],
+  "Atelier Boréal inc. (démo)": [
+    [["design", 20]],
+    [
+      ["design", 14],
+      ["workshop", 1],
+    ],
+    [["design", 26]],
+  ],
+  "Nord Studio Montréal Ltd. (demo)": [
+    [["consulting", 8]],
+    [
+      ["consulting", 12],
+      ["dev", 10],
+    ],
+    [["consulting", 6]],
+  ],
 };
 
 /** The business's own costs: a month of hosting, tools and insurance, the GST/QST paid giving input tax credits and refunds. */
-async function seedBooks(db: Db, shopId: string, clientIds: Record<string, { id: string; language: "fr" | "en" }>, now: Date): Promise<void> {
-  if ((await db.select({ id: invoices.id }).from(invoices).where(eq(invoices.shopId, shopId)).limit(1)).length > 0) return;
-  const day = (monthsBack: number, d: number) => `${localDay(addMonths(now, -monthsBack), "America/Toronto").slice(0, 8)}${String(d).padStart(2, "0")}`;
-  const nameOf: Record<string, string> = { dev: "Software development (hourly)", design: "Design (hourly)", consulting: "Consulting and architecture (hourly)", workshop: "Scoping workshop (flat fee)", support: "Support and maintenance (monthly flat fee)" };
+async function seedBooks(
+  db: Db,
+  shopId: string,
+  clientIds: Record<string, { id: string; language: "fr" | "en" }>,
+  now: Date,
+): Promise<void> {
+  if ((await db.select({ id: invoices.id }).from(invoices).where(eq(invoices.shopId, shopId)).limit(1)).length > 0)
+    return;
+  const day = (monthsBack: number, d: number) =>
+    `${localDay(addMonths(now, -monthsBack), "America/Toronto").slice(0, 8)}${String(d).padStart(2, "0")}`;
+  const nameOf: Record<string, string> = {
+    dev: "Software development (hourly)",
+    design: "Design (hourly)",
+    consulting: "Consulting and architecture (hourly)",
+    workshop: "Scoping workshop (flat fee)",
+    support: "Support and maintenance (monthly flat fee)",
+  };
   for (let back = 3; back >= 1; back--) {
     for (const [name, client] of Object.entries(clientIds)) {
       const plan = HOURS[name]![3 - back]!;
@@ -98,12 +210,29 @@ async function seedBooks(db: Db, shopId: string, clientIds: Record<string, { id:
         issuedOn: day(back, 27),
         lines: plan.map(([key, quantity]) => {
           const spec = KRIZAKA.services.find((s) => s.nameEn === nameOf[key]!)!;
-          return { description: `${spec.nameFr} / ${spec.nameEn}`, quantity, unitPriceCents: spec.priceCents, category: "standard" as const };
+          return {
+            description: `${spec.nameFr} / ${spec.nameEn}`,
+            quantity,
+            unitPriceCents: spec.priceCents,
+            category: "standard" as const,
+          };
         }),
       });
     }
-    const costs: [string, number, number][] = [["Hébergement infonuagique (démo)", 8_500, 12], ["Logiciels et abonnements (démo)", 12_000, 15], ...(back === 2 ? ([["Assurance responsabilité (démo)", 31_000, 5]] as [string, number, number][]) : [])];
-    for (const [supplier, subtotalCents, d] of costs) await recordExpense(db, { shopId, supplier, paidOn: day(back, d), subtotalCents, gstCents: applyRate(subtotalCents, GST), qstCents: applyRate(subtotalCents, QST) });
+    const costs: [string, number, number][] = [
+      ["Hébergement infonuagique (démo)", 8_500, 12],
+      ["Logiciels et abonnements (démo)", 12_000, 15],
+      ...(back === 2 ? ([["Assurance responsabilité (démo)", 31_000, 5]] as [string, number, number][]) : []),
+    ];
+    for (const [supplier, subtotalCents, d] of costs)
+      await recordExpense(db, {
+        shopId,
+        supplier,
+        paidOn: day(back, d),
+        subtotalCents,
+        gstCents: applyRate(subtotalCents, GST),
+        qstCents: applyRate(subtotalCents, QST),
+      });
   }
 }
 
@@ -121,12 +250,26 @@ export async function seedKrizaka(db: Db, now: Date): Promise<{ shopId: string; 
     for (const w of KRIZAKA.hours) await addWindow(db, shopId, w);
     await saveShopPage(db, owner.id, { ...page, published: true });
   }
-  await db.update(shops).set({ registrant: true, gstNumber: KRIZAKA.gstNumber, qstNumber: KRIZAKA.qstNumber, invoicePrefix: KRIZAKA.invoicePrefix }).where(eq(shops.id, shopId));
+  await db
+    .update(shops)
+    .set({
+      registrant: true,
+      gstNumber: KRIZAKA.gstNumber,
+      qstNumber: KRIZAKA.qstNumber,
+      invoicePrefix: KRIZAKA.invoicePrefix,
+    })
+    .where(eq(shops.id, shopId));
   const clientIds: Record<string, { id: string; language: "fr" | "en" }> = {};
   for (const c of KRIZAKA.clients) {
     const [acc] = await db.select().from(accounts).where(eq(accounts.email, c.email));
     if (!acc) throw new Error(`no account ${c.email}: create the accounts first`);
-    const { clientId } = await joinShop(db, acc.id, acc.email, shopId, { fullName: c.name, phone: c.phone, language: c.language, consentService: true, consentReminders: false });
+    const { clientId } = await joinShop(db, acc.id, acc.email, shopId, {
+      fullName: c.name,
+      phone: c.phone,
+      language: c.language,
+      consentService: true,
+      consentReminders: false,
+    });
     clientIds[c.name] = { id: clientId, language: c.language };
   }
   await seedBooks(db, shopId, clientIds, now);
@@ -142,15 +285,32 @@ export async function seedKrizaka(db: Db, now: Date): Promise<{ shopId: string; 
 
 /** Éric's shops as items of « organize »: a description, an avatar, a tag, and the two in one collection (idempotent). */
 async function organizeShops(db: Db, ownerId: string): Promise<void> {
-  const o = organizeOver(async (sql, params) => (await (db as unknown as { $client: { query: (s: string, p: unknown[]) => Promise<{ rows: unknown[] }> } }).$client.query(sql, params as unknown[])).rows);
+  const o = organizeOver(
+    async (sql, params) =>
+      (
+        await (
+          db as unknown as { $client: { query: (s: string, p: unknown[]) => Promise<{ rows: unknown[] }> } }
+        ).$client.query(sql, params as unknown[])
+      ).rows,
+  );
   const mine = await shopsOfOwner(db, ownerId);
   const first = mine.find((x) => x.slug === KRIZAKA.shop.slug);
   const second = mine.find((x) => x.slug === KRIZAKA_SECOND.shop.slug);
   if (!first || !second || first.description) return;
-  const tag = (await o.tags.list(ownerId)).find((x) => x.name === "démo") ?? (await o.tags.create(ownerId, { name: "démo", color: "violet" }));
-  const group = (await o.collections.list(ownerId)).find((c) => c.name === "Studios") ?? (await o.collections.create(ownerId, { name: "Studios", description: "Les deux commerces d'Éric dans la démonstration." }));
+  const tag =
+    (await o.tags.list(ownerId)).find((x) => x.name === "démo") ??
+    (await o.tags.create(ownerId, { name: "démo", color: "violet" }));
+  const group =
+    (await o.collections.list(ownerId)).find((c) => c.name === "Studios") ??
+    (await o.collections.create(ownerId, {
+      name: "Studios",
+      description: "Les deux commerces d'Éric dans la démonstration.",
+    }));
   const shop = o.profile("shop");
-  for (const [row, text, seed] of [[first, "Le studio de logiciel : développement, design et conseil.", SHOP_AVATAR_SEEDS[0]], [second, "Le petit atelier de design.", SHOP_AVATAR_SEEDS[2]]] as const) {
+  for (const [row, text, seed] of [
+    [first, "Le studio de logiciel : développement, design et conseil.", SHOP_AVATAR_SEEDS[0]],
+    [second, "Le petit atelier de design.", SHOP_AVATAR_SEEDS[2]],
+  ] as const) {
     await shop.describe(ownerId, row.id, text);
     await shop.setAvatar(ownerId, row.id, seed, { allowedSeeds: SHOP_AVATAR_SEEDS });
     await o.tags.assign(ownerId, "shop", row.id, [tag.id]);

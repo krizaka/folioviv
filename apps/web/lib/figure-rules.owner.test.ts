@@ -7,7 +7,18 @@ import { appSettings } from "./settings";
 vi.mock("@/lib/settings", () => ({ appSettings: vi.fn() }));
 const shopFigureOverrides = vi.fn();
 
-const settings = (tunable: boolean) => vi.mocked(appSettings).mockReturnValue({ get: vi.fn(async (key: string) => (key === "figures.ownerTunable" ? tunable : key === "figures.actions" ? ["chase", "taxes", "slot"] : DEFAULT_FIGURE_THRESHOLDS[key.replace("figures.", "") as keyof typeof DEFAULT_FIGURE_THRESHOLDS])) } as never);
+const settings = (tunable: boolean) =>
+  vi
+    .mocked(appSettings)
+    .mockReturnValue({
+      get: vi.fn(async (key: string) =>
+        key === "figures.ownerTunable"
+          ? tunable
+          : key === "figures.actions"
+            ? ["chase", "taxes", "slot"]
+            : DEFAULT_FIGURE_THRESHOLDS[key.replace("figures.", "") as keyof typeof DEFAULT_FIGURE_THRESHOLDS],
+      ),
+    } as never);
 
 describe("the thresholds a shop's figures are judged by (#260)", () => {
   afterEach(() => vi.clearAllMocks());
@@ -16,7 +27,11 @@ describe("the thresholds a shop's figures are judged by (#260)", () => {
     settings(true);
     shopFigureOverrides.mockResolvedValue({ overdueWatchPct: 5, taxPeriodSoonDays: 30 });
     const { thresholds } = await figureRules(shopFigureOverrides);
-    expect(thresholds).toMatchObject({ overdueWatchPct: 5, taxPeriodSoonDays: 30, marginWatchPct: DEFAULT_FIGURE_THRESHOLDS.marginWatchPct });
+    expect(thresholds).toMatchObject({
+      overdueWatchPct: 5,
+      taxPeriodSoonDays: 30,
+      marginWatchPct: DEFAULT_FIGURE_THRESHOLDS.marginWatchPct,
+    });
     expect(shopFigureOverrides).toHaveBeenCalledTimes(1);
   });
 

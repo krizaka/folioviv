@@ -13,7 +13,11 @@ const OWED: ReadonlySet<string> = new Set([INVOICE_STATE.due, INVOICE_STATE.part
  * Aujourd'hui's board (D4): the binder's counts, the activity strip and « À encaisser », read from the bookings, the invoices and
  * the payments of one shop — integer cents, the shop's calendar days (its time zone). `day` is the shop's today.
  */
-export async function todayBoard(db: Db, shopId: string, { day, period }: { day: string; period: BoardPeriod }): Promise<TodayBoard> {
+export async function todayBoard(
+  db: Db,
+  shopId: string,
+  { day, period }: { day: string; period: BoardPeriod },
+): Promise<TodayBoard> {
   const tz = sql`(SELECT timezone FROM shops WHERE id = ${shopId})`;
   const [week, toBill, series, bills] = await Promise.all([
     db.execute(sql`
@@ -40,17 +44,44 @@ export async function todayBoard(db: Db, shopId: string, { day, period }: { day:
   const rows = series.rows as { day: string; invoiced: number; collected: number; appointments: number }[];
   const owed = bills
     .map((i) => {
-      const standing = { totalCents: i.totalCents, paidCents: i.paidCents, dueOn: i.dueOn, isCredit: i.creditOf !== null, superseded: i.superseded };
+      const standing = {
+        totalCents: i.totalCents,
+        paidCents: i.paidCents,
+        dueOn: i.dueOn,
+        isCredit: i.creditOf !== null,
+        superseded: i.superseded,
+      };
       return { invoice: i, state: invoiceState(standing, day), left: remainingCents(standing) };
     })
     .filter((o) => OWED.has(o.state));
   const late = owed.filter((o) => o.state === INVOICE_STATE.overdue);
-  const first = [...late].sort((a, b) => (a.invoice.dueOn ?? "").localeCompare(b.invoice.dueOn ?? ""))[0] ?? [...owed].sort((a, b) => (a.invoice.dueOn ?? "9999").localeCompare(b.invoice.dueOn ?? "9999"))[0];
+  const first =
+    [...late].sort((a, b) => (a.invoice.dueOn ?? "").localeCompare(b.invoice.dueOn ?? ""))[0] ??
+    [...owed].sort((a, b) => (a.invoice.dueOn ?? "9999").localeCompare(b.invoice.dueOn ?? "9999"))[0];
   return {
     week: (week.rows[0] as { n: number } | undefined)?.n ?? 0,
     toBill: (toBill.rows as TodayBoard["toBill"]).map((a) => ({ ...a, startsAt: new Date(a.startsAt).toISOString() })),
-    activity: { days: rows.map((r) => r.day), invoicedCents: rows.map((r) => r.invoiced), collectedCents: rows.map((r) => r.collected), appointments: rows.map((r) => r.appointments) },
-    balance: { owedCents: owed.reduce((n, o) => n + o.left, 0), overdueCents: late.reduce((n, o) => n + o.left, 0), count: owed.length, overdueCount: late.length },
-    chase: first ? { id: first.invoice.id, number: first.invoice.number, client: first.invoice.client, dueOn: first.invoice.dueOn, remainingCents: first.left, overdue: first.state === INVOICE_STATE.overdue } : null,
+    activity: {
+      days: rows.map((r) => r.day),
+      invoicedCents: rows.map((r) => r.invoiced),
+      collectedCents: rows.map((r) => r.collected),
+      appointments: rows.map((r) => r.appointments),
+    },
+    balance: {
+      owedCents: owed.reduce((n, o) => n + o.left, 0),
+      overdueCents: late.reduce((n, o) => n + o.left, 0),
+      count: owed.length,
+      overdueCount: late.length,
+    },
+    chase: first
+      ? {
+          id: first.invoice.id,
+          number: first.invoice.number,
+          client: first.invoice.client,
+          dueOn: first.invoice.dueOn,
+          remainingCents: first.left,
+          overdue: first.state === INVOICE_STATE.overdue,
+        }
+      : null,
   };
 }

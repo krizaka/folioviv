@@ -10,8 +10,28 @@ const SLUG = "pattes-saint-henri";
 const MAIL_PORT = Number(process.env.E2E_MAIL_PORT ?? 3299);
 const FAIL_BASE = process.env.JOURNEY_FAIL_BASE ?? "http://localhost:3001";
 const W = {
-  en: { name: "Your name", email: "E-mail", phone: "Phone", consent: /^I agree that/, send: "Send me the code", code: "Code", confirm: "Confirm my booking", booked: "You are booked", dog: "Name" },
-  fr: { name: "Votre nom", email: "Courriel", phone: "Téléphone", consent: /^J'accepte que/, send: "M'envoyer le code", code: "Code", confirm: "Confirmer ma réservation", booked: "C'est réservé", dog: "Nom" },
+  en: {
+    name: "Your name",
+    email: "E-mail",
+    phone: "Phone",
+    consent: /^I agree that/,
+    send: "Send me the code",
+    code: "Code",
+    confirm: "Confirm my booking",
+    booked: "You are booked",
+    dog: "Name",
+  },
+  fr: {
+    name: "Votre nom",
+    email: "Courriel",
+    phone: "Téléphone",
+    consent: /^J'accepte que/,
+    send: "M'envoyer le code",
+    code: "Code",
+    confirm: "Confirmer ma réservation",
+    booked: "C'est réservé",
+    dog: "Nom",
+  },
 };
 
 const mailbox = testMailbox(MAIL_PORT);
@@ -33,7 +53,16 @@ async function reachGuestStep(page, base, locale) {
 
 /** Cloudflare's test widget solves itself in a moment: the form can be sent once it has handed its token over. */
 async function captchaSolved(page) {
-  await expect.poll(() => page.locator('input[name="cf-turnstile-response"]').inputValue().catch(() => ""), { timeout: 30_000, message: "the security check hands its token over" }).not.toBe("");
+  await expect
+    .poll(
+      () =>
+        page
+          .locator('input[name="cf-turnstile-response"]')
+          .inputValue()
+          .catch(() => ""),
+      { timeout: 30_000, message: "the security check hands its token over" },
+    )
+    .not.toBe("");
 }
 
 async function fillDetails(page, locale, email) {
@@ -47,7 +76,10 @@ async function fillDetails(page, locale, email) {
 }
 
 for (const locale of ["en", "fr"]) {
-  test(`guest booking, ${locale}: anonymous visitor to slot, e-mail code, confirmed, receipt`, async ({ page, baseURL }) => {
+  test(`guest booking, ${locale}: anonymous visitor to slot, e-mail code, confirmed, receipt`, async ({
+    page,
+    baseURL,
+  }) => {
     const w = W[locale];
     const email = `e2e-guest-${locale}-${Date.now()}@folioviv.test`;
     await reachGuestStep(page, baseURL, locale);

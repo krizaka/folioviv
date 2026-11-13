@@ -29,7 +29,12 @@ export default async function Terms({ params }: Readonly<{ params: Promise<{ loc
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdHtml(siteJsonLd(locale)) }} />
       <SiteHeader locale={locale} current="terms" />
       <main id="content" className="pt-20" data-lawyer-review="pending" data-terms-version={TERMS_VERSION}>
-        <PageHero back={{ href: pagePath(locale, "home"), label: t.meta.siteName }} linkAs={Link} title={t.terms.title} lead={format(t.terms.version, { version: TERMS_VERSION })} />
+        <PageHero
+          back={{ href: pagePath(locale, "home"), label: t.meta.siteName }}
+          linkAs={Link}
+          title={t.terms.title}
+          lead={format(t.terms.version, { version: TERMS_VERSION })}
+        />
         <Page>
           <Alert tone="warning">{t.terms.status}</Alert>
           {t.terms.sections.map((s) => (

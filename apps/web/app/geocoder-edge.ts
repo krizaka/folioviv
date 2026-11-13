@@ -15,8 +15,14 @@ export function geocoder(): GeocodingPort | null {
   if (!e.APP_GEOCODER_URL) return null;
   const key = `${e.APP_GEOCODER_URL}|${e.APP_GEOCODER_ATTRIBUTION_TEXT}|${e.APP_GEOCODER_ATTRIBUTION_URL}`;
   if (instance?.key !== key) {
-    const attribution = { text: e.APP_GEOCODER_ATTRIBUTION_TEXT ?? new URL(e.APP_GEOCODER_URL).hostname, href: e.APP_GEOCODER_ATTRIBUTION_URL ?? e.APP_GEOCODER_URL };
-    instance = { key, port: cachedGeocoder(httpGeocoder({ url: e.APP_GEOCODER_URL, attribution }), { ttlMs: TTL_MS, max: MAX_ENTRIES }) };
+    const attribution = {
+      text: e.APP_GEOCODER_ATTRIBUTION_TEXT ?? new URL(e.APP_GEOCODER_URL).hostname,
+      href: e.APP_GEOCODER_ATTRIBUTION_URL ?? e.APP_GEOCODER_URL,
+    };
+    instance = {
+      key,
+      port: cachedGeocoder(httpGeocoder({ url: e.APP_GEOCODER_URL, attribution }), { ttlMs: TTL_MS, max: MAX_ENTRIES }),
+    };
   }
   return instance.port;
 }

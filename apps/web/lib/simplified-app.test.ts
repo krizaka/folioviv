@@ -34,8 +34,32 @@ describe("the owner's app keeps only what the job needs (krizaka/folioviv#161)",
 
   it("the invoice form asks for a client, services and an optional line: no language, date or terms fields, no helper texts", () => {
     const form = read("components/app/InvoiceForm.tsx");
-    for (const gone of ['name="language"', 'name="issuedOn"', 'name="terms"', "quantityHint", "termsHint", "invoices.new.taxes"]) expect(form, gone).not.toContain(gone);
-    for (const m of [en, fr]) for (const key of ["language", "languages", "issuedOn", "terms", "termsDefault", "termsOnReceipt", "termsNet", "termsHint", "quantityHint", "taxes", "day", "month", "year"]) expect(m.console.invoices.new, key).not.toHaveProperty(key);
+    for (const gone of [
+      'name="language"',
+      'name="issuedOn"',
+      'name="terms"',
+      "quantityHint",
+      "termsHint",
+      "invoices.new.taxes",
+    ])
+      expect(form, gone).not.toContain(gone);
+    for (const m of [en, fr])
+      for (const key of [
+        "language",
+        "languages",
+        "issuedOn",
+        "terms",
+        "termsDefault",
+        "termsOnReceipt",
+        "termsNet",
+        "termsHint",
+        "quantityHint",
+        "taxes",
+        "day",
+        "month",
+        "year",
+      ])
+        expect(m.console.invoices.new, key).not.toHaveProperty(key);
   });
 
   it("books: the figures and their lines, no banner repeating the footnote, no pager for seven lines, no per-line helper text", () => {
@@ -57,7 +81,19 @@ describe("the owner's app keeps only what the job needs (krizaka/folioviv#161)",
   });
 
   it("the shop's pages ask the role table, never the owner: no page reads shopOfOwner", () => {
-    const pages = ["(account)/page.tsx", "(account)/layout.tsx", "(account)/profile/page.tsx", "[shop]/layout.tsx", "[shop]/today/page.tsx", "[shop]/clients/page.tsx", "[shop]/clients/[id]/page.tsx", "[shop]/invoices/page.tsx", "[shop]/invoices/[id]/page.tsx", "[shop]/invoices/new/page.tsx", "[shop]/books/page.tsx"];
+    const pages = [
+      "(account)/page.tsx",
+      "(account)/layout.tsx",
+      "(account)/profile/page.tsx",
+      "[shop]/layout.tsx",
+      "[shop]/today/page.tsx",
+      "[shop]/clients/page.tsx",
+      "[shop]/clients/[id]/page.tsx",
+      "[shop]/invoices/page.tsx",
+      "[shop]/invoices/[id]/page.tsx",
+      "[shop]/invoices/new/page.tsx",
+      "[shop]/books/page.tsx",
+    ];
     for (const page of pages) expect(read(`${APP}/${page}`), page).not.toContain("shopOfOwner");
   });
 });

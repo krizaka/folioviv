@@ -40,7 +40,10 @@ describe("each figure, from known invoices (integer cents, the ledger's own rule
     expect(f.qstCollected.value).toBe(2_993); // 998 + 1 995 + 499 − 499
     expect(f.gstToRemit.value).toBe(1_000); // 1 500 − (400 + 100)
     expect(f.qstToRemit.value).toBe(1_995); // 2 993 − (798 + 200)
-    expect(f.gstToRemit.formula).toEqual([{ label: "gstOnInvoices", value: 1_500, unit: "cents" }, { label: "gstOnExpenses", value: 500, unit: "cents", op: "−" }]);
+    expect(f.gstToRemit.formula).toEqual([
+      { label: "gstOnInvoices", value: 1_500, unit: "cents" },
+      { label: "gstOnExpenses", value: 500, unit: "cents", op: "−" },
+    ]);
     expect(f.gstToRemit.sources).toEqual([
       { kind: "invoice", ids: ["inv-a", "inv-b", "inv-x", "inv-cn"], count: 4 },
       { kind: "expense", ids: ["exp-1", "exp-2"], count: 2 },
@@ -49,7 +52,10 @@ describe("each figure, from known invoices (integer cents, the ledger's own rule
 
   it("agrees, to the cent, with the ledger functions it is built on", () => {
     const i = input();
-    const entries = [...i.invoices.filter((x) => x.issuedOn >= PERIOD.start).flatMap(invoiceEntries), ...i.expenses.filter((e) => e.paidOn >= PERIOD.start).flatMap(expenseEntries)];
+    const entries = [
+      ...i.invoices.filter((x) => x.issuedOn >= PERIOD.start).flatMap(invoiceEntries),
+      ...i.expenses.filter((e) => e.paidOn >= PERIOD.start).flatMap(expenseEntries),
+    ];
     const f = figures();
     expect(f.gstToRemit.value).toBe(balance(entries, "gst").net);
     expect(f.qstToRemit.value).toBe(balance(entries, "qst").net);
@@ -76,7 +82,14 @@ describe("each figure, from known invoices (integer cents, the ledger's own rule
   it("has no state to judge without data: info, never a made-up green", () => {
     const f = figures({ invoices: [], payments: [], expenses: [], appointments: [] });
     expect(f.invoiced.state).toBe(FIGURE_STATE.info);
-    for (const id of [FIGURE_ID.collected, FIGURE_ID.toCollect, FIGURE_ID.margin, FIGURE_ID.noShows, FIGURE_ID.appointments]) expect(f[id].state, id).toBe(FIGURE_STATE.info);
+    for (const id of [
+      FIGURE_ID.collected,
+      FIGURE_ID.toCollect,
+      FIGURE_ID.margin,
+      FIGURE_ID.noShows,
+      FIGURE_ID.appointments,
+    ])
+      expect(f[id].state, id).toBe(FIGURE_STATE.info);
     expect(f.margin.rate).toBeNull();
     expect(f.gstToRemit.value).toBe(0);
   });
@@ -95,7 +108,19 @@ describe("each figure, from known invoices (integer cents, the ledger's own rule
   });
 
   it("cuts the source ids of a huge period, and says how many rows there were", () => {
-    const many = Array.from({ length: MAX_SOURCE_IDS + 50 }, (_, i) => ({ id: `i${i}`, number: `F${i}`, issuedOn: "2026-10-05", dueOn: null, subtotalCents: 100, gstCents: 5, qstCents: 10, totalCents: 115, paidCents: 115, isCredit: false, superseded: false }));
+    const many = Array.from({ length: MAX_SOURCE_IDS + 50 }, (_, i) => ({
+      id: `i${i}`,
+      number: `F${i}`,
+      issuedOn: "2026-10-05",
+      dueOn: null,
+      subtotalCents: 100,
+      gstCents: 5,
+      qstCents: 10,
+      totalCents: 115,
+      paidCents: 115,
+      isCredit: false,
+      superseded: false,
+    }));
     const f = figures({ invoices: many }).invoiced;
     expect(f.sources[0]!.ids).toHaveLength(MAX_SOURCE_IDS);
     expect(f.sources[0]!.count).toBe(MAX_SOURCE_IDS + 50);
@@ -112,7 +137,11 @@ describe("the lexique each figure points to", () => {
     const known = new Set(LEXICON.map((t) => t.id));
     expect(known.size).toBe(LEXICON.length);
     for (const figure of Object.values(f)) for (const id of figure.lexicon) expect(known.has(id), id).toBe(true);
-    expect(LEXICON.filter((t) => t.accountant).map((t) => t.id).sort()).toEqual(["declarationPeriod", "margin", "tpsTvq"]);
+    expect(
+      LEXICON.filter((t) => t.accountant)
+        .map((t) => t.id)
+        .sort(),
+    ).toEqual(["declarationPeriod", "margin", "tpsTvq"]);
   });
 });
 
@@ -138,8 +167,23 @@ describe("percent and judge", () => {
 describe("the thresholds cannot contradict themselves", () => {
   it("keeps the defaults as they are, and orders alert behind watch", () => {
     expect(sanitizeThresholds(DEFAULT_FIGURE_THRESHOLDS)).toEqual(DEFAULT_FIGURE_THRESHOLDS);
-    const odd = sanitizeThresholds({ ...DEFAULT_FIGURE_THRESHOLDS, collectedWatchPct: 50, collectedAlertPct: 70, overdueWatchPct: 40, overdueAlertPct: 5, marginWatchPct: 140, noShowAlertPct: -3 });
-    expect(odd).toMatchObject({ collectedWatchPct: 50, collectedAlertPct: 50, overdueWatchPct: 40, overdueAlertPct: 40, marginWatchPct: 100, noShowAlertPct: 5 });
+    const odd = sanitizeThresholds({
+      ...DEFAULT_FIGURE_THRESHOLDS,
+      collectedWatchPct: 50,
+      collectedAlertPct: 70,
+      overdueWatchPct: 40,
+      overdueAlertPct: 5,
+      marginWatchPct: 140,
+      noShowAlertPct: -3,
+    });
+    expect(odd).toMatchObject({
+      collectedWatchPct: 50,
+      collectedAlertPct: 50,
+      overdueWatchPct: 40,
+      overdueAlertPct: 40,
+      marginWatchPct: 100,
+      noShowAlertPct: 5,
+    });
   });
 });
 
@@ -153,8 +197,13 @@ describe("the declaration period", () => {
     expect(declarationPeriod("2028-02-29", FILING.monthly)).toEqual({ start: "2028-02-01", end: "2028-02-29" });
   });
   it("has a previous one", () => {
-    expect(previousPeriod({ start: "2026-10-01", end: "2026-12-31" }, FILING.quarterly)).toEqual({ start: "2026-07-01", end: "2026-09-30" });
-    expect(previousPeriod({ start: "2026-01-01", end: "2026-01-31" }, FILING.monthly)).toEqual({ start: "2025-12-01", end: "2025-12-31" });
+    expect(previousPeriod({ start: "2026-10-01", end: "2026-12-31" }, FILING.quarterly)).toEqual({
+      start: "2026-07-01",
+      end: "2026-09-30",
+    });
+    expect(previousPeriod({ start: "2026-01-01", end: "2026-01-31" }, FILING.monthly)).toEqual({
+      start: "2025-12-01",
+      end: "2025-12-31",
+    });
   });
 });
-

@@ -9,13 +9,21 @@ import { GET } from "./route";
 
 vi.mock("@/lib/access", () => ({ requireShop: vi.fn() }));
 vi.mock("@/lib/db", () => ({ db: vi.fn(() => ({})) }));
-vi.mock("@folioviv/db", async (original) => ({ ...(await original<typeof import("@folioviv/db")>()), prepareShopReturn: vi.fn(), shopDay: vi.fn() }));
+vi.mock("@folioviv/db", async (original) => ({
+  ...(await original<typeof import("@folioviv/db")>()),
+  prepareShopReturn: vi.fn(),
+  shopDay: vi.fn(),
+}));
 
 const get = (query = "") => GET(new Request(`http://localhost/api/walker/books${query}`));
 
 describe("« Livres » for the apps (D8): the period's prepared GST/QST, never a filing", () => {
   beforeEach(() => {
-    vi.mocked(requireShop).mockResolvedValue({ shop: { id: "s1" }, role: "owner", session: { account: { id: "a1" } } } as never);
+    vi.mocked(requireShop).mockResolvedValue({
+      shop: { id: "s1" },
+      role: "owner",
+      session: { account: { id: "a1" } },
+    } as never);
     vi.mocked(shopDay).mockResolvedValue("2026-10-25");
     vi.mocked(prepareShopReturn).mockResolvedValue({ lines: [], gstNetCents: 1_250, qstNetCents: -2_494 } as never);
   });
@@ -27,7 +35,12 @@ describe("« Livres » for the apps (D8): the period's prepared GST/QST, never a
     const body = booksAnswer.parse(await res.json());
     expect(vi.mocked(requireShop).mock.calls[0]![1]).toBe("reports");
     expect(vi.mocked(prepareShopReturn).mock.calls[0]!.slice(1)).toEqual(["s1", "2026-07-01", "2026-09-30"]);
-    expect(body).toMatchObject({ period: { id: "2026-Q3" }, gst: { netCents: 1_250, outcome: "remit" }, qst: { netCents: 2_494, outcome: "claim" }, preparedOnly: true });
+    expect(body).toMatchObject({
+      period: { id: "2026-Q3" },
+      gst: { netCents: 1_250, outcome: "remit" },
+      qst: { netCents: 2_494, outcome: "claim" },
+      preparedOnly: true,
+    });
     expect(body.choices[0]).toBe("2026-Q3");
     expect(res.headers.get("cache-control")).toContain("no-store");
   });

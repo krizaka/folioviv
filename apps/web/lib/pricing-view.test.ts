@@ -14,15 +14,31 @@ const read = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), "u
 const NOW = new Date("2026-11-01T12:00:00Z");
 const ADMIN = { id: null, label: "admin@example.com" };
 const inForce = () => pricesInForce(NOW);
-const view = async (prices?: Awaited<ReturnType<typeof inForce>>, locale: "en" | "fr" = "en", founderOnSale = false) => pricingPlans(publicCatalogue(await (prices ?? (await inForce())).catalogue(NOW)), locale, { founderOnSale });
+const view = async (prices?: Awaited<ReturnType<typeof inForce>>, locale: "en" | "fr" = "en", founderOnSale = false) =>
+  pricingPlans(publicCatalogue(await (prices ?? (await inForce())).catalogue(NOW)), locale, { founderOnSale });
 
 describe("the public pricing page reads the catalogue (folioviv#380)", () => {
   it("shows Starter at 29 $ (three free months), Pro at 69 $ and Association at 1 $, with the fees of the catalogue: 0 % on cards, the capped debit fee", async () => {
     const [starter, scale, association, ...rest] = await view();
     expect(rest).toEqual([]);
-    expect([starter!.id, starter!.price, scale!.id, scale!.price, association!.id, association!.price]).toEqual(["starter", "$29", "scale", "$69", "association", "$1"]);
-    expect(starter!.features.find((f) => f.id === "fees")!.vars).toEqual({ cardRate: "0%", debitRate: "0.5%", debitCap: "$15" });
-    expect(scale!.features.find((f) => f.id === "fees")!.vars).toEqual({ cardRate: "0%", debitRate: "0.25%", debitCap: "$10" });
+    expect([starter!.id, starter!.price, scale!.id, scale!.price, association!.id, association!.price]).toEqual([
+      "starter",
+      "$29",
+      "scale",
+      "$69",
+      "association",
+      "$1",
+    ]);
+    expect(starter!.features.find((f) => f.id === "fees")!.vars).toEqual({
+      cardRate: "0%",
+      debitRate: "0.5%",
+      debitCap: "$15",
+    });
+    expect(scale!.features.find((f) => f.id === "fees")!.vars).toEqual({
+      cardRate: "0%",
+      debitRate: "0.25%",
+      debitCap: "$10",
+    });
     expect((await view(undefined, "fr"))[0]!.price!.replace(/\s/g, " ")).toBe("29 $");
   });
 
@@ -84,17 +100,26 @@ describe("the public pricing page reads the catalogue (folioviv#380)", () => {
     const plans = await view();
     expect(plans[0]!.features.filter((f) => f.soon).map((f) => f.id)).toEqual(["payments", "fees"]);
     expect(plans[2]!.features.filter((f) => f.soon).map((f) => f.id)).toEqual(["payments", "fees"]);
-    expect(plans[1]!.features.filter((f) => f.soon).map((f) => f.id)).toEqual(["payments", "fees", "contract", "transfers"]);
+    expect(plans[1]!.features.filter((f) => f.soon).map((f) => f.id)).toEqual([
+      "payments",
+      "fees",
+      "contract",
+      "transfers",
+    ]);
     for (const f of plans.flatMap((p) => p.features.filter((x) => x.soon && x.id !== "fees"))) {
       expect(f.vars, f.id).toEqual({});
-      for (const t of [en, fr]) {expect(t.pricing.features[f.id], f.id).not.toMatch(/\d+\s?[%$]|\$\s?\d|\{/);}
+      for (const t of [en, fr]) {
+        expect(t.pricing.features[f.id], f.id).not.toMatch(/\d+\s?[%$]|\$\s?\d|\{/);
+      }
     }
   });
 
   it("lists as running only what runs: client payments, their fees, the contract and the transfers are all planned (folioviv#440)", async () => {
     for (const plan of await view()) {
       const running = plan.features.filter((f) => !f.soon).map((f) => f.id);
-      for (const planned of ["payments", "fees", "contract", "transfers"] as const) {expect(running, `${plan.id} ${planned}`).not.toContain(planned);}
+      for (const planned of ["payments", "fees", "contract", "transfers"] as const) {
+        expect(running, `${plan.id} ${planned}`).not.toContain(planned);
+      }
     }
   });
 
@@ -143,18 +168,38 @@ describe("the free months and the Association plan, in words (founder request 20
     const [starter, , association] = await view(undefined, "fr");
     const trial = format(fr.pricing.trialMonths, { months: starter!.trial!.months! });
     expect(trial).toBe("3 mois offerts");
-    expect(format(fr.pricing.trialLine, { trial, price: starter!.price! }).replace(/\s/g, " ")).toBe("3 mois offerts, puis 29 $ par mois, taxes en sus. Vous saisissez votre carte pour commencer : rien n’est facturé pendant la période offerte, et vous pouvez résilier avant sa fin.");
-    expect(format(fr.pricing.associationLine, { months: association!.trial!.months!, price: association!.price! }).replace(/\s/g, " ")).toMatch(/^Associations : 3 mois gratuits, puis 1 \$ par mois, taxes en sus\./);
+    expect(format(fr.pricing.trialLine, { trial, price: starter!.price! }).replace(/\s/g, " ")).toBe(
+      "3 mois offerts, puis 29 $ par mois, taxes en sus. Vous saisissez votre carte pour commencer : rien n’est facturé pendant la période offerte, et vous pouvez résilier avant sa fin.",
+    );
+    expect(
+      format(fr.pricing.associationLine, { months: association!.trial!.months!, price: association!.price! }).replace(
+        /\s/g,
+        " ",
+      ),
+    ).toMatch(/^Associations : 3 mois gratuits, puis 1 \$ par mois, taxes en sus\./);
     const [en1, , enAssociation] = await view(undefined, "en");
     expect(format(en.pricing.trialMonths, { months: en1!.trial!.months! })).toBe("3 months free");
-    expect(format(en.pricing.associationLine, { months: 3, price: enAssociation!.price! })).toMatch(/^Associations: 3 months free, then \$1 a month plus taxes\./);
+    expect(format(en.pricing.associationLine, { months: 3, price: enAssociation!.price! })).toMatch(
+      /^Associations: 3 months free, then \$1 a month plus taxes\./,
+    );
   });
 
   it("every text with a price states the taxes, and none presses the visitor (no countdown, no scarcity)", () => {
     for (const t of [en, fr]) {
-      const texts = [t.pricing.trialLine, t.pricing.associationLine, t.pricing.associationLineDays, t.console.account.subscription.planHint, t.console.account.subscription.planHintTrial, t.console.account.subscription.associationHint];
-      for (const text of texts) {expect(text, text).toMatch(/plus taxes|taxes en sus/);}
-      expect(JSON.stringify([t.pricing, t.console.account.subscription])).not.toMatch(/last chance|hurry|ends (today|soon)|only \d+ left|dernière chance|vite|plus que \d+|se termine bientôt/i);
+      const texts = [
+        t.pricing.trialLine,
+        t.pricing.associationLine,
+        t.pricing.associationLineDays,
+        t.console.account.subscription.planHint,
+        t.console.account.subscription.planHintTrial,
+        t.console.account.subscription.associationHint,
+      ];
+      for (const text of texts) {
+        expect(text, text).toMatch(/plus taxes|taxes en sus/);
+      }
+      expect(JSON.stringify([t.pricing, t.console.account.subscription])).not.toMatch(
+        /last chance|hurry|ends (today|soon)|only \d+ left|dernière chance|vite|plus que \d+|se termine bientôt/i,
+      );
     }
   });
 
@@ -169,26 +214,35 @@ describe("the free months and the Association plan, in words (founder request 20
 });
 
 describe("the Subscription page and /pricing sell the same plans (krizaka-internal#1913)", () => {
-  it.each(["en", "fr"] as const)("every plan of the Subscription page is a plan of /pricing, with its price and free months (%s)", async (locale) => {
-    const pricing = await view(undefined, locale, true);
-    const sold = subscriptionPlans(pricing);
-    expect(sold.map((p) => p.id)).toEqual(["starter", "scale", "association"]);
-    for (const plan of sold) {
-      const shown = pricing.find((p) => p.id === plan.id)!;
-      expect({ price: plan.price, trial: plan.trial }).toEqual({ price: shown.price, trial: shown.trial });
-    }
-    expect(sold.find((p) => p.id === "starter")).toMatchObject({ trial: { months: 3, days: 90 } });
-  });
+  it.each(["en", "fr"] as const)(
+    "every plan of the Subscription page is a plan of /pricing, with its price and free months (%s)",
+    async (locale) => {
+      const pricing = await view(undefined, locale, true);
+      const sold = subscriptionPlans(pricing);
+      expect(sold.map((p) => p.id)).toEqual(["starter", "scale", "association"]);
+      for (const plan of sold) {
+        const shown = pricing.find((p) => p.id === plan.id)!;
+        expect({ price: plan.price, trial: plan.trial }).toEqual({ price: shown.price, trial: shown.trial });
+      }
+      expect(sold.find((p) => p.id === "starter")).toMatchObject({ trial: { months: 3, days: 90 } });
+    },
+  );
 
   it("a plan in preparation is not sold, and the founder flag does not hide the plans on the Subscription page", () => {
     expect(subscriptionPlans([{ id: "scale", price: null, limit: null, trial: null, features: [] }])).toEqual([]);
-    expect(read("app/[locale]/(app)/app/(account)/profile/subscription/page.tsx")).not.toMatch(/canStart = e\.APP_FOUNDER_OFFER_ENABLED/);
+    expect(read("app/[locale]/(app)/app/(account)/profile/subscription/page.tsx")).not.toMatch(
+      /canStart = e\.APP_FOUNDER_OFFER_ENABLED/,
+    );
   });
 });
 
 describe("a signed-in owner is sent to Subscription, not to « Open my shop » (krizaka-internal#1913)", () => {
   it("leads an owner and the Association plan to Subscription, a visitor to the demo", () => {
-    expect([planAction(true, false), planAction(false, true), planAction(false, false)]).toEqual(["subscription", "subscription", "visit"]);
+    expect([planAction(true, false), planAction(false, true), planAction(false, false)]).toEqual([
+      "subscription",
+      "subscription",
+      "visit",
+    ]);
   });
 
   it("words the owner's action in both languages", () => {
@@ -197,7 +251,12 @@ describe("a signed-in owner is sent to Subscription, not to « Open my shop » (
 });
 
 describe("no card is asked while nothing is on sale (krizaka-internal#1913, audit decision)", () => {
-  const wired = { signupEnabled: true, paymentsProvider: "stripe", paymentsSecretKey: "sk_test_x", paymentsWebhookSecret: "whsec_x" };
+  const wired = {
+    signupEnabled: true,
+    paymentsProvider: "stripe",
+    paymentsSecretKey: "sk_test_x",
+    paymentsWebhookSecret: "whsec_x",
+  };
 
   it("sells only when sign-up is open and the payment provider is wired", () => {
     expect(salesOpen(wired)).toBe(true);
@@ -210,7 +269,10 @@ describe("no card is asked while nothing is on sale (krizaka-internal#1913, audi
   it("swaps the free-period answer for the planned one, in both languages, only while not selling", () => {
     for (const t of [en, fr]) {
       const planned = t.pricing.faqFreePeriodPlanned;
-      expect(t.pricing.faq.some((f) => f.q === planned.q), "the planned answer replaces an existing question").toBe(true);
+      expect(
+        t.pricing.faq.some((f) => f.q === planned.q),
+        "the planned answer replaces an existing question",
+      ).toBe(true);
       expect(faqFor(t.pricing.faq, planned, true)).toEqual(t.pricing.faq);
       const closed = faqFor(t.pricing.faq, planned, false);
       expect(closed.some((f) => /card|carte/i.test(f.a) && !/no card|aucune carte/i.test(f.a))).toBe(false);
@@ -221,7 +283,10 @@ describe("no card is asked while nothing is on sale (krizaka-internal#1913, audi
     expect(en.pricing.plannedLine).toContain("no card");
     expect(fr.pricing.plannedLine).toContain("aucune carte");
     expect(fr.pricing.plannedPerMonth).toContain("prévu");
-    expect([en.console.account.subscription.changePlan, fr.console.account.subscription.changePlan]).toEqual(["Change plan", "Changer de forfait"]);
+    expect([en.console.account.subscription.changePlan, fr.console.account.subscription.changePlan]).toEqual([
+      "Change plan",
+      "Changer de forfait",
+    ]);
   });
 
   it("keeps a signed-in owner out of the public page: /pricing sends her to Subscription, in the app shell", () => {

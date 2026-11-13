@@ -10,7 +10,11 @@ const windows = [
   { weekday: 1, startsAt: "13:00", endsAt: "17:00" },
 ];
 const visit = (from: string, to: string) => ({ startsAt: at(from), endsAt: at(to) });
-const day = { windows, visits: [visit("10:00", "10:45"), visit("10:45", "11:30"), visit("14:00", "15:00")], offUntil: null };
+const day = {
+  windows,
+  visits: [visit("10:00", "10:45"), visit("10:45", "11:30"), visit("14:00", "15:00")],
+  offUntil: null,
+};
 
 describe("where a member of the team stands, for the public page (folioviv#209)", () => {
   it("before opening, they start at the first window", () => {
@@ -30,14 +34,22 @@ describe("where a member of the team stands, for the public page (folioviv#209)"
   it("at lunch, back at the next window; after closing, done; a day without hours, away", () => {
     expect(memberStateAt(day, at("12:20"), TZ)).toEqual({ kind: "startsAt", time: "13:00" });
     expect(memberStateAt(day, at("17:00"), TZ)).toEqual({ kind: "done" });
-    expect(memberStateAt({ ...day, windows: [{ weekday: 2, startsAt: "09:00", endsAt: "17:00" }] }, at("10:15"), TZ)).toEqual({ kind: "away" });
+    expect(
+      memberStateAt({ ...day, windows: [{ weekday: 2, startsAt: "09:00", endsAt: "17:00" }] }, at("10:15"), TZ),
+    ).toEqual({ kind: "away" });
   });
 
   it("on time off, until its last day — whatever the hours say", () => {
-    expect(memberStateAt({ ...day, offUntil: "2026-10-27" }, at("10:15"), TZ)).toEqual({ kind: "off", until: "2026-10-27" });
+    expect(memberStateAt({ ...day, offUntil: "2026-10-27" }, at("10:15"), TZ)).toEqual({
+      kind: "off",
+      until: "2026-10-27",
+    });
   });
 
   it("a visit running past the window's end says the window's end", () => {
-    expect(memberStateAt({ ...day, visits: [visit("16:30", "17:40")] }, at("16:45"), TZ)).toEqual({ kind: "busy", until: "17:00" });
+    expect(memberStateAt({ ...day, visits: [visit("16:30", "17:40")] }, at("16:45"), TZ)).toEqual({
+      kind: "busy",
+      until: "17:00",
+    });
   });
 });

@@ -24,7 +24,11 @@ test("retime plays the marked waits faster and leaves the rest alone", () => {
 
 test("vtt gives each beat its sentence in the language asked, never a cue without words", () => {
   const words = { a: { en: "First.", fr: "D'abord." }, b: { en: "Then.", fr: "Ensuite." }, c: { en: "" } };
-  const beats = [{ id: "a", at: 0 }, { id: "b", at: 4 }, { id: "c", at: 8 }];
+  const beats = [
+    { id: "a", at: 0 },
+    { id: "b", at: 4 },
+    { id: "c", at: 8 },
+  ];
   const en = vtt(beats, words, "en", 10);
   assert.match(en, /^WEBVTT/);
   assert.match(en, /00:00:00\.000 --> 00:00:03\.900\nFirst\./);
@@ -41,7 +45,10 @@ test("spanOf is the time from the first frame to the last, 0 without frames", ()
 test("writeConcatList holds each frame until the next one and ends on the last file", () => {
   const dir = mkdtempSync(path.join(tmpdir(), "take-"));
   try {
-    const frames = [{ t: 1, data: Buffer.from("a").toString("base64") }, { t: 1.5, data: Buffer.from("b").toString("base64") }];
+    const frames = [
+      { t: 1, data: Buffer.from("a").toString("base64") },
+      { t: 1.5, data: Buffer.from("b").toString("base64") },
+    ];
     const list = readFileSync(writeConcatList(frames, dir), "utf8").split("\n");
     assert.deepEqual(readdirSync(dir).sort(), ["00000.jpg", "00001.jpg", "list.txt"]);
     assert.equal(readFileSync(path.join(dir, "00001.jpg"), "utf8"), "b");

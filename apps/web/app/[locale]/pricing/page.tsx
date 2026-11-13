@@ -27,13 +27,20 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function Pricing({ params }: Readonly<{ params: Promise<{ locale: string }> }>) {
   const locale = asLocale((await params).locale);
   const t = getDictionary(locale);
-  if (await pageSession().catch(() => null)) {redirect(accountRoutes(locale).section("subscription"));}
+  if (await pageSession().catch(() => null)) {
+    redirect(accountRoutes(locale).section("subscription"));
+  }
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdHtml(siteJsonLd(locale)) }} />
       <SiteHeader locale={locale} current="pricing" />
       <main id="content" className="pt-20">
-        <PageHero back={{ href: pagePath(locale, "home"), label: t.meta.siteName }} linkAs={Link} title={t.pricing.access.title} lead={t.pricing.access.lead}>
+        <PageHero
+          back={{ href: pagePath(locale, "home"), label: t.meta.siteName }}
+          linkAs={Link}
+          title={t.pricing.access.title}
+          lead={t.pricing.access.lead}
+        >
           <ButtonLink href={contactHref("folioviv-pricing", locale)} variant="primary" size="lg">
             {t.pricing.access.cta}
           </ButtonLink>

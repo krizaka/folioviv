@@ -21,15 +21,28 @@ export const dynamic = "force-dynamic";
 export const generateMetadata = titleOf("invoices");
 
 /** The issued invoices (each opens as a document), and the one primary action: a new invoice, on its own address. */
-export default async function Invoices({ params, searchParams }: Readonly<{ params: Promise<{ locale: string; shop: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }>) {
+export default async function Invoices({
+  params,
+  searchParams,
+}: Readonly<{
+  params: Promise<{ locale: string; shop: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}>) {
   const { locale: rawLocale, shop: shopId } = await params;
   const locale = asLocale(rawLocale);
   const { shop, session, role } = await memberShop(shopId, "invoices");
   const t = getDictionary(locale).console.invoices;
-  const [all, organized] = await Promise.all([listInvoices(db(), shop.id), organizeData(shop.id, "invoice", session.account, role, await searchParams)]);
+  const [all, organized] = await Promise.all([
+    listInvoices(db(), shop.id),
+    organizeData(shop.id, "invoice", session.account, role, await searchParams),
+  ]);
   // The tags, the state (derived from the ledger, `stateSql`), the dates, the number and the saved views narrow the rows in SQL.
   const issued = organized.ids ? all.filter((i) => organized.ids!.has(i.id)) : all;
-  const tags = await tagsOfRows(shop.id, "invoice", issued.map((i) => i.id));
+  const tags = await tagsOfRows(
+    shop.id,
+    "invoice",
+    issued.map((i) => i.id),
+  );
   const mail = await invoiceMailSettings(db(), shop.id);
   return (
     <div className="flex flex-col gap-5">
@@ -52,7 +65,23 @@ export default async function Invoices({ params, searchParams }: Readonly<{ para
             defaultMessage={mail?.shop.message}
             organize={organized.data}
             tagsByInvoice={tags}
-            invoices={issued.map((i) => ({ id: i.id, number: i.number, client: i.client, clientId: i.clientId, clientEmail: i.clientEmail, issuedOn: i.issuedOn, dueOn: i.dueOn, language: i.language, creditOf: i.creditOf, subtotalCents: i.subtotalCents, gstCents: i.gstCents, qstCents: i.qstCents, totalCents: i.totalCents, paidCents: i.paidCents, superseded: i.superseded }))}
+            invoices={issued.map((i) => ({
+              id: i.id,
+              number: i.number,
+              client: i.client,
+              clientId: i.clientId,
+              clientEmail: i.clientEmail,
+              issuedOn: i.issuedOn,
+              dueOn: i.dueOn,
+              language: i.language,
+              creditOf: i.creditOf,
+              subtotalCents: i.subtotalCents,
+              gstCents: i.gstCents,
+              qstCents: i.qstCents,
+              totalCents: i.totalCents,
+              paidCents: i.paidCents,
+              superseded: i.superseded,
+            }))}
           />
         )}
       </section>

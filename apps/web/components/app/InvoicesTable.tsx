@@ -4,7 +4,13 @@ import { INVOICE_STATE, invoiceState, remainingCents } from "@folioviv/core";
 import { Alert } from "@krizaka/ui/alert";
 import { Badge } from "@krizaka/ui/badge";
 import { Button } from "@krizaka/ui/button";
-import { DataTable, type DataTableColumn, DataTableColumnsMenu, DataTableExport, DataTableFilters } from "@krizaka/ui/data-table";
+import {
+  DataTable,
+  type DataTableColumn,
+  DataTableColumnsMenu,
+  DataTableExport,
+  DataTableFilters,
+} from "@krizaka/ui/data-table";
 import { StatusChip } from "@krizaka/ui/status-chip";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -42,12 +48,20 @@ export interface InvoiceRowView {
   superseded: boolean;
 }
 
-const standing = (i: InvoiceRowView) => ({ totalCents: i.totalCents, paidCents: i.paidCents, dueOn: i.dueOn, isCredit: !!i.creditOf, superseded: i.superseded });
+const standing = (i: InvoiceRowView) => ({
+  totalCents: i.totalCents,
+  paidCents: i.paidCents,
+  dueOn: i.dueOn,
+  isCredit: !!i.creditOf,
+  superseded: i.superseded,
+});
 
 /** The order of the list (D2): the overdue first — what to chase —, then the newest. */
 export function byUrgency<T extends InvoiceRowView>(invoices: readonly T[], today: string): T[] {
   const overdue = (i: T) => (invoiceState(standing(i), today) === INVOICE_STATE.overdue ? 0 : 1);
-  return [...invoices].sort((a, b) => overdue(a) - overdue(b) || b.issuedOn.localeCompare(a.issuedOn) || b.number.localeCompare(a.number));
+  return [...invoices].sort(
+    (a, b) => overdue(a) - overdue(b) || b.issuedOn.localeCompare(a.issuedOn) || b.number.localeCompare(a.number),
+  );
 }
 
 /** The ways a balance is cashed in one tap from the list (the invoice page records any other). */
@@ -60,10 +74,26 @@ const QUICK_METHODS = ["cash", "card", "transfer"] as const;
  * A card per invoice on a phone.
  */
 type Wash = ReturnType<typeof useWash>;
-type InvoiceColumnsContext = { say: Say; locale: SayLocale; routes: ShopRoutes; today: string; wash: Wash; organize?: OrganizeData; tagsByInvoice: Record<string, TagLite[]> };
+type InvoiceColumnsContext = {
+  say: Say;
+  locale: SayLocale;
+  routes: ShopRoutes;
+  today: string;
+  wash: Wash;
+  organize?: OrganizeData;
+  tagsByInvoice: Record<string, TagLite[]>;
+};
 
 /** Built outside the component: the cells are render functions, not components of the table's parent. */
-const invoiceColumns = ({ say, locale, routes, today, wash, organize, tagsByInvoice }: InvoiceColumnsContext): DataTableColumn<InvoiceRowView>[] => {
+const invoiceColumns = ({
+  say,
+  locale,
+  routes,
+  today,
+  wash,
+  organize,
+  tagsByInvoice,
+}: InvoiceColumnsContext): DataTableColumn<InvoiceRowView>[] => {
   const day = (d: string) => formatDate(`${d}T12:00:00Z`, locale, "UTC");
   return [
     {
@@ -76,13 +106,28 @@ const invoiceColumns = ({ say, locale, routes, today, wash, organize, tagsByInvo
       filter: "text",
       value: (i) => i.number,
       cell: (i) => (
-        <Link className="font-mono font-semibold text-fg-accent underline" href={routes.invoice(i.id)} aria-label={say("invoices.list.open", { number: i.number })} {...wash(i.id)}>
+        <Link
+          className="font-mono font-semibold text-fg-accent underline"
+          href={routes.invoice(i.id)}
+          aria-label={say("invoices.list.open", { number: i.number })}
+          {...wash(i.id)}
+        >
           {i.number}
         </Link>
       ),
       subtitle: (i) => (i.creditOf ? say("invoices.list.credit") : i.language.toUpperCase()),
     },
-    { id: "client", header: say("invoices.table.client"), type: "title", card: "label", sortable: true, filter: "text", minWidth: 240, value: (i) => i.client ?? "", cell: (i) => i.client ?? say("invoices.list.noClient") },
+    {
+      id: "client",
+      header: say("invoices.table.client"),
+      type: "title",
+      card: "label",
+      sortable: true,
+      filter: "text",
+      minWidth: 240,
+      value: (i) => i.client ?? "",
+      cell: (i) => i.client ?? say("invoices.list.noClient"),
+    },
     {
       id: "state",
       header: say("invoices.table.state"),
@@ -104,12 +149,55 @@ const invoiceColumns = ({ say, locale, routes, today, wash, organize, tagsByInvo
         );
       },
     },
-    ...(organize ? [{ id: "tags", header: say("organize.columns.tags"), priority: 2 as const, value: (i: InvoiceRowView) => (tagsByInvoice[i.id] ?? []).map((t) => t.name).join(", "), cell: (i: InvoiceRowView) => <TagChips tags={tagsByInvoice[i.id]} /> }] : []),
-    { id: "issued", header: say("invoices.table.issued"), type: "date", sortable: true, priority: 2, value: (i) => i.issuedOn, cell: (i) => day(i.issuedOn) },
-    { id: "due", header: say("invoices.table.due"), type: "date", priority: 3, hideable: true, value: (i) => i.dueOn ?? "", cell: (i) => (i.dueOn ? day(i.dueOn) : "—") },
-    { id: "total", header: say("invoices.table.total"), type: "number", sortable: true, value: (i) => i.totalCents, cell: (i) => formatMoney(i.totalCents, locale) },
-    { id: "remaining", header: say("invoices.table.remaining"), type: "number", sortable: true, priority: 3, hideable: true, value: (i) => remainingCents(standing(i)), cell: (i) => formatMoney(remainingCents(standing(i)), locale) },
-  ];};
+    ...(organize
+      ? [
+          {
+            id: "tags",
+            header: say("organize.columns.tags"),
+            priority: 2 as const,
+            value: (i: InvoiceRowView) => (tagsByInvoice[i.id] ?? []).map((t) => t.name).join(", "),
+            cell: (i: InvoiceRowView) => <TagChips tags={tagsByInvoice[i.id]} />,
+          },
+        ]
+      : []),
+    {
+      id: "issued",
+      header: say("invoices.table.issued"),
+      type: "date",
+      sortable: true,
+      priority: 2,
+      value: (i) => i.issuedOn,
+      cell: (i) => day(i.issuedOn),
+    },
+    {
+      id: "due",
+      header: say("invoices.table.due"),
+      type: "date",
+      priority: 3,
+      hideable: true,
+      value: (i) => i.dueOn ?? "",
+      cell: (i) => (i.dueOn ? day(i.dueOn) : "—"),
+    },
+    {
+      id: "total",
+      header: say("invoices.table.total"),
+      type: "number",
+      sortable: true,
+      value: (i) => i.totalCents,
+      cell: (i) => formatMoney(i.totalCents, locale),
+    },
+    {
+      id: "remaining",
+      header: say("invoices.table.remaining"),
+      type: "number",
+      sortable: true,
+      priority: 3,
+      hideable: true,
+      value: (i) => remainingCents(standing(i)),
+      cell: (i) => formatMoney(remainingCents(standing(i)), locale),
+    },
+  ];
+};
 
 function selectionTags({ organize, selected }: { organize: OrganizeData; selected: string[] }) {
   return function SelectionActions({ clear }: Readonly<{ clear: () => void }>) {
@@ -117,7 +205,19 @@ function selectionTags({ organize, selected }: { organize: OrganizeData; selecte
   };
 }
 
-export function InvoicesTable({ invoices, today, defaultMessage = "", organize, tagsByInvoice = {} }: Readonly<{ invoices: InvoiceRowView[]; today: string; defaultMessage?: string; organize?: OrganizeData; tagsByInvoice?: Record<string, TagLite[]> }>) {
+export function InvoicesTable({
+  invoices,
+  today,
+  defaultMessage = "",
+  organize,
+  tagsByInvoice = {},
+}: Readonly<{
+  invoices: InvoiceRowView[];
+  today: string;
+  defaultMessage?: string;
+  organize?: OrganizeData;
+  tagsByInvoice?: Record<string, TagLite[]>;
+}>) {
   const pathname = usePathname() ?? "";
   const [selected, setSelected] = useState<string[]>([]);
   const { say, locale } = useSay();
@@ -126,8 +226,15 @@ export function InvoicesTable({ invoices, today, defaultMessage = "", organize, 
   const labels = useTableLabels();
   const ordered = useMemo(() => byUrgency(invoices, today), [invoices, today]);
   // D11: a row whose state, payments or amount changed since the page's previous read washes once (nothing on arrival).
-  const wash = useWash(ordered, (i) => i.id, (i) => `${invoiceState(standing(i), today)}:${i.paidCents}:${i.totalCents}`);
-  const columns = useMemo(() => invoiceColumns({ say, locale, routes, today, wash, organize, tagsByInvoice }), [say, locale, routes, today, wash, organize, tagsByInvoice]);
+  const wash = useWash(
+    ordered,
+    (i) => i.id,
+    (i) => `${invoiceState(standing(i), today)}:${i.paidCents}:${i.totalCents}`,
+  );
+  const columns = useMemo(
+    () => invoiceColumns({ say, locale, routes, today, wash, organize, tagsByInvoice }),
+    [say, locale, routes, today, wash, organize, tagsByInvoice],
+  );
 
   const detail = (i: InvoiceRowView) => {
     const state = invoiceState(standing(i), today);
@@ -151,7 +258,9 @@ export function InvoicesTable({ invoices, today, defaultMessage = "", organize, 
           ))}
         </dl>
         <div className="flex flex-wrap gap-2">
-          {i.clientId && i.clientEmail ? <InvoiceSendAction invoiceId={i.id} email={i.clientEmail} defaultMessage={defaultMessage} /> : null}
+          {i.clientId && i.clientEmail ? (
+            <InvoiceSendAction invoiceId={i.id} email={i.clientEmail} defaultMessage={defaultMessage} />
+          ) : null}
           <ButtonLink href={routes.invoice(i.id)} variant="secondary" size="sm">
             {say("invoices.detail.open")}
           </ButtonLink>
@@ -162,8 +271,19 @@ export function InvoicesTable({ invoices, today, defaultMessage = "", organize, 
           ) : null}
           {left > 0
             ? QUICK_METHODS.map((method) => (
-                <Button key={method} size="sm" variant="ghost" disabled={call.pending} onClick={() => call.run(`/api/walker/invoices/${i.id}/payments`, { json: { method, amountCents: left } })}>
-                  {say("invoices.detail.cash", { method: say(`invoices.methods.${method}`), amount: formatMoney(left, locale) })}
+                <Button
+                  key={method}
+                  size="sm"
+                  variant="ghost"
+                  disabled={call.pending}
+                  onClick={() =>
+                    call.run(`/api/walker/invoices/${i.id}/payments`, { json: { method, amountCents: left } })
+                  }
+                >
+                  {say("invoices.detail.cash", {
+                    method: say(`invoices.methods.${method}`),
+                    amount: formatMoney(left, locale),
+                  })}
                 </Button>
               ))
             : null}

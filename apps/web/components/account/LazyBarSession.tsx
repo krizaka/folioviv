@@ -23,6 +23,28 @@ export function LazyBarSession(props: { locale: "en" | "fr"; words: BarWords; pl
   const ready = useSyncExternalStore(subscribeLoad, loaded, () => false);
   // With the proxy's hint (a session exists, krizaka-ui#827) the reserved place is the account's own size: « Sign in » never shows for an instant.
   const hinted = useSessionHint();
-  const waiting = hinted ? <span data-testid="bar-session" data-session="pending" data-hint="signed-in" aria-hidden="true" className="inline-block size-9 rounded-full bg-surface-2" /> : <SignedOutActions locale={props.locale} placement={props.placement} signupOpen={false} signIn={props.words.signIn} tryIt={props.words.tryIt} />;
-  return ready ? <Suspense fallback={waiting}><BarSession {...props} /></Suspense> : waiting;
+  const waiting = hinted ? (
+    <span
+      data-testid="bar-session"
+      data-session="pending"
+      data-hint="signed-in"
+      aria-hidden="true"
+      className="inline-block size-9 rounded-full bg-surface-2"
+    />
+  ) : (
+    <SignedOutActions
+      locale={props.locale}
+      placement={props.placement}
+      signupOpen={false}
+      signIn={props.words.signIn}
+      tryIt={props.words.tryIt}
+    />
+  );
+  return ready ? (
+    <Suspense fallback={waiting}>
+      <BarSession {...props} />
+    </Suspense>
+  ) : (
+    waiting
+  );
 }

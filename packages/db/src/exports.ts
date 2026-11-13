@@ -55,10 +55,16 @@ type Raw = Record<string, unknown>;
 const rowsOf = (result: { rows: unknown[] }) => result.rows as Raw[];
 
 /** Appointments by start then id, oldest first. */
-export async function* exportAppointments(db: Db, shopId: string, batch = EXPORT_BATCH): AsyncGenerator<AppointmentExportRow[]> {
+export async function* exportAppointments(
+  db: Db,
+  shopId: string,
+  batch = EXPORT_BATCH,
+): AsyncGenerator<AppointmentExportRow[]> {
   let after: { at: string; id: string } | null = null;
   for (;;) {
-    const cursor: ReturnType<typeof sql> = after ? sql`AND (lower(a.during), a.id) > (${after.at}::timestamptz, ${after.id}::uuid)` : sql``;
+    const cursor: ReturnType<typeof sql> = after
+      ? sql`AND (lower(a.during), a.id) > (${after.at}::timestamptz, ${after.id}::uuid)`
+      : sql``;
     const rows = rowsOf(
       await db.execute(sql`
         SELECT a.id, lower(a.during)::text AS starts_at, upper(a.during)::text AS ends_at, a.status, s.name_fr, s.name_en, s.price_cents, st.name AS staff,
@@ -93,7 +99,9 @@ export async function* exportAppointments(db: Db, shopId: string, batch = EXPORT
 export async function* exportClients(db: Db, shopId: string, batch = EXPORT_BATCH): AsyncGenerator<ClientExportRow[]> {
   let after: { name: string; id: string } | null = null;
   for (;;) {
-    const cursor: ReturnType<typeof sql> = after ? sql`AND (c.full_name, c.id) > (${after.name}, ${after.id}::uuid)` : sql``;
+    const cursor: ReturnType<typeof sql> = after
+      ? sql`AND (c.full_name, c.id) > (${after.name}, ${after.id}::uuid)`
+      : sql``;
     const rows = rowsOf(
       await db.execute(sql`
         SELECT c.id, c.full_name, c.email, c.phone, c.language, c.created_at::text AS created_at,
@@ -120,10 +128,16 @@ export async function* exportClients(db: Db, shopId: string, batch = EXPORT_BATC
 }
 
 /** Invoices (and credit notes) by issue date, then number: the order of the books. */
-export async function* exportInvoices(db: Db, shopId: string, batch = EXPORT_BATCH): AsyncGenerator<InvoiceExportRow[]> {
+export async function* exportInvoices(
+  db: Db,
+  shopId: string,
+  batch = EXPORT_BATCH,
+): AsyncGenerator<InvoiceExportRow[]> {
   let after: { on: string; number: string } | null = null;
   for (;;) {
-    const cursor: ReturnType<typeof sql> = after ? sql`AND (i.issued_on, i.number) > (${after.on}::date, ${after.number})` : sql``;
+    const cursor: ReturnType<typeof sql> = after
+      ? sql`AND (i.issued_on, i.number) > (${after.on}::date, ${after.number})`
+      : sql``;
     const rows = rowsOf(
       await db.execute(sql`
         SELECT i.id, i.number, i.issued_on::text AS issued_on, i.due_on::text AS due_on, i.language, o.number AS credit_of_number,

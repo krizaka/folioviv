@@ -18,7 +18,16 @@ const OUT = process.env.E2E_OUT;
 if (OUT) mkdirSync(OUT, { recursive: true });
 
 // The words of the interface, in the language of the run (the same strings as messages/<locale>.json, `explore.filters`).
-const W = { en: { clearAll: "Clear all", text: "Name or service", kind: "Kind of service", salons: "Salons", remove: /^Remove/ }, fr: { clearAll: "Tout effacer", text: "Nom ou service", kind: "Type de service", salons: "Salons", remove: /^Retirer/ } }[LOCALE];
+const W = {
+  en: { clearAll: "Clear all", text: "Name or service", kind: "Kind of service", salons: "Salons", remove: /^Remove/ },
+  fr: {
+    clearAll: "Tout effacer",
+    text: "Nom ou service",
+    kind: "Type de service",
+    salons: "Salons",
+    remove: /^Retirer/,
+  },
+}[LOCALE];
 const failures = [];
 const check = (ok, what) => {
   console.log(`${ok ? "ok  " : "FAIL"} ${what}`);
@@ -26,7 +35,13 @@ const check = (ok, what) => {
 };
 
 const browser = await chromium.launch();
-const context = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, locale: LOCALE === "fr" ? "fr-CA" : "en-CA" });
+const context = await browser.newContext({
+  viewport: { width: 390, height: 844 },
+  deviceScaleFactor: 2,
+  isMobile: true,
+  hasTouch: true,
+  locale: LOCALE === "fr" ? "fr-CA" : "en-CA",
+});
 const page = await context.newPage();
 await page.addInitScript(() => {
   globalThis.__shift = 0;
@@ -74,7 +89,9 @@ await page.goBack();
 await page.goForward();
 check(search().get("q") === "coif" && search().get("kind") === "salon", "back and forward keep the search");
 await page.getByRole("button", { name: W.clearAll }).click();
-await page.waitForFunction(() => !new URL(location.href).searchParams.has("kind") && !new URL(location.href).searchParams.has("q"));
+await page.waitForFunction(
+  () => !new URL(location.href).searchParams.has("kind") && !new URL(location.href).searchParams.has("q"),
+);
 check(!search().has("kind") && !search().has("q"), "« Clear all » empties the address");
 await shoot("3-cleared");
 

@@ -29,41 +29,123 @@ describe("a services business issues an invoice from its own services (real Post
         { description: "Support (forfait) / Support (flat fee)", quantity: 1, unitPriceCents: 50_000 },
       ],
     });
-    expect(invoice).toMatchObject({ number: "F-00001", subtotalCents: 350_000, gstCents: 17_500, qstCents: 34_913, totalCents: 402_413 });
-    expect(totals.lines[0]).toMatchObject({ description: "Coloration / Colour", quantity: 10, unitPriceCents: 15_000, amountCents: 150_000 });
+    expect(invoice).toMatchObject({
+      number: "F-00001",
+      subtotalCents: 350_000,
+      gstCents: 17_500,
+      qstCents: 34_913,
+      totalCents: 402_413,
+    });
+    expect(totals.lines[0]).toMatchObject({
+      description: "Coloration / Colour",
+      quantity: 10,
+      unitPriceCents: 15_000,
+      amountCents: 150_000,
+    });
   });
 
   it("lets a line keep its own price over the service's (a negotiated rate)", async () => {
     const s = await salon(t.db);
-    const { totals } = await issueShopInvoice(t.db, s.shop.id, { language: "en", issuedOn: "2026-10-21", lines: [{ serviceId: s.services.cut.id, quantity: 2, unitPriceCents: 4_000 }] });
+    const { totals } = await issueShopInvoice(t.db, s.shop.id, {
+      language: "en",
+      issuedOn: "2026-10-21",
+      lines: [{ serviceId: s.services.cut.id, quantity: 2, unitPriceCents: 4_000 }],
+    });
     expect(totals.lines[0]).toMatchObject({ unitPriceCents: 4_000, amountCents: 8_000 });
   });
 
   it("refuses a service or a client of another shop, an empty invoice, a free-text line without a price, a quantity finer than a hundredth", async () => {
     const a = await salon(t.db);
     const b = await salon(t.db);
-    expect(await refusal(issueShopInvoice(t.db, a.shop.id, { language: "fr", issuedOn: "2026-10-21", lines: [{ serviceId: b.services.cut.id, quantity: 1 }] }))).toMatch(/AK_SERVICE_UNKNOWN/);
-    expect(await refusal(issueShopInvoice(t.db, a.shop.id, { clientId: b.client.id, language: "fr", issuedOn: "2026-10-21", lines: [{ serviceId: a.services.cut.id, quantity: 1 }] }))).toMatch(/AK_CLIENT_UNKNOWN/);
+    expect(
+      await refusal(
+        issueShopInvoice(t.db, a.shop.id, {
+          language: "fr",
+          issuedOn: "2026-10-21",
+          lines: [{ serviceId: b.services.cut.id, quantity: 1 }],
+        }),
+      ),
+    ).toMatch(/AK_SERVICE_UNKNOWN/);
+    expect(
+      await refusal(
+        issueShopInvoice(t.db, a.shop.id, {
+          clientId: b.client.id,
+          language: "fr",
+          issuedOn: "2026-10-21",
+          lines: [{ serviceId: a.services.cut.id, quantity: 1 }],
+        }),
+      ),
+    ).toMatch(/AK_CLIENT_UNKNOWN/);
     expect(invoiceInputSchema.safeParse({ language: "fr", issuedOn: "2026-10-21", lines: [] }).success).toBe(false);
-    expect(invoiceInputSchema.safeParse({ language: "fr", issuedOn: "2026-10-21", lines: [{ description: "x", quantity: 1 }] }).success).toBe(true);
-    expect(await refusal(issueShopInvoice(t.db, a.shop.id, { language: "fr", issuedOn: "2026-10-21", lines: [{ description: "Travail", quantity: 1 }] }))).toMatch(/AK_LINE_PRICE/);
-    expect(invoiceInputSchema.safeParse({ language: "fr", issuedOn: "2026-10-21", lines: [{ description: "x", quantity: 7.555, unitPriceCents: 100 }] }).success).toBe(false);
-    expect(invoiceInputSchema.safeParse({ language: "fr", issuedOn: "2026-10-21", lines: [{ description: "x", quantity: 7.5, unitPriceCents: 100 }] }).success).toBe(true); // krizaka/folioviv#111
-    expect(invoiceInputSchema.safeParse({ language: "fr", issuedOn: "21/10/2026", lines: [{ description: "x", quantity: 1, unitPriceCents: 100 }] }).success).toBe(false);
+    expect(
+      invoiceInputSchema.safeParse({
+        language: "fr",
+        issuedOn: "2026-10-21",
+        lines: [{ description: "x", quantity: 1 }],
+      }).success,
+    ).toBe(true);
+    expect(
+      await refusal(
+        issueShopInvoice(t.db, a.shop.id, {
+          language: "fr",
+          issuedOn: "2026-10-21",
+          lines: [{ description: "Travail", quantity: 1 }],
+        }),
+      ),
+    ).toMatch(/AK_LINE_PRICE/);
+    expect(
+      invoiceInputSchema.safeParse({
+        language: "fr",
+        issuedOn: "2026-10-21",
+        lines: [{ description: "x", quantity: 7.555, unitPriceCents: 100 }],
+      }).success,
+    ).toBe(false);
+    expect(
+      invoiceInputSchema.safeParse({
+        language: "fr",
+        issuedOn: "2026-10-21",
+        lines: [{ description: "x", quantity: 7.5, unitPriceCents: 100 }],
+      }).success,
+    ).toBe(true); // krizaka/folioviv#111
+    expect(
+      invoiceInputSchema.safeParse({
+        language: "fr",
+        issuedOn: "21/10/2026",
+        lines: [{ description: "x", quantity: 1, unitPriceCents: 100 }],
+      }).success,
+    ).toBe(false);
   });
 
   it("lists the shop's invoices newest first, with the client, and reads one with its lines — never another shop's", async () => {
     const a = await salon(t.db);
     const b = await salon(t.db);
-    const first = await issueShopInvoice(t.db, a.shop.id, { clientId: a.client.id, language: "fr", issuedOn: "2026-10-01", lines: [{ serviceId: a.services.cut.id, quantity: 1 }] });
-    const second = await issueShopInvoice(t.db, a.shop.id, { language: "en", issuedOn: "2026-10-02", lines: [{ serviceId: a.services.cut.id, quantity: 3 }] });
-    await issueShopInvoice(t.db, b.shop.id, { language: "fr", issuedOn: "2026-10-03", lines: [{ serviceId: b.services.cut.id, quantity: 1 }] });
+    const first = await issueShopInvoice(t.db, a.shop.id, {
+      clientId: a.client.id,
+      language: "fr",
+      issuedOn: "2026-10-01",
+      lines: [{ serviceId: a.services.cut.id, quantity: 1 }],
+    });
+    const second = await issueShopInvoice(t.db, a.shop.id, {
+      language: "en",
+      issuedOn: "2026-10-02",
+      lines: [{ serviceId: a.services.cut.id, quantity: 3 }],
+    });
+    await issueShopInvoice(t.db, b.shop.id, {
+      language: "fr",
+      issuedOn: "2026-10-03",
+      lines: [{ serviceId: b.services.cut.id, quantity: 1 }],
+    });
     const list = await listInvoices(t.db, a.shop.id);
     expect(list.map((i) => i.number)).toEqual(["F-00002", "F-00001"]);
     expect(list[1]).toMatchObject({ client: "Camille Tremblay", totalCents: 5_174 });
     expect(list[0]!.client).toBeNull();
     const detail = await invoiceDetail(t.db, a.shop.id, first.invoice.id);
-    expect(detail).toMatchObject({ number: "F-00001", language: "fr", client: { fullName: "Camille Tremblay" }, shop: { legalName: "Salon Laurier inc.", gstNumber: "123456789RT0001", qstNumber: "1234567890TQ0001" } });
+    expect(detail).toMatchObject({
+      number: "F-00001",
+      language: "fr",
+      client: { fullName: "Camille Tremblay" },
+      shop: { legalName: "Salon Laurier inc.", gstNumber: "123456789RT0001", qstNumber: "1234567890TQ0001" },
+    });
     expect(detail!.lines).toHaveLength(1);
     expect(await invoiceDetail(t.db, b.shop.id, second.invoice.id)).toBeNull();
   });
@@ -74,7 +156,11 @@ describe("the due date and the payment terms of an invoice (krizaka/folioviv#113
 
   it("issues under the shop's own terms (30 days by default) and keeps the due date they give", async () => {
     const s = await salon(t.db);
-    const { invoice } = await issueShopInvoice(t.db, s.shop.id, { language: "fr", issuedOn: "2026-10-21", lines: line(s) });
+    const { invoice } = await issueShopInvoice(t.db, s.shop.id, {
+      language: "fr",
+      issuedOn: "2026-10-21",
+      lines: line(s),
+    });
     expect(invoice).toMatchObject({ termsDays: 30, dueOn: "2026-11-20" });
     expect(await invoiceDetail(t.db, s.shop.id, invoice.id)).toMatchObject({ termsDays: 30, dueOn: "2026-11-20" });
     expect((await listInvoices(t.db, s.shop.id))[0]).toMatchObject({ dueOn: "2026-11-20" });
@@ -88,61 +174,141 @@ describe("the due date and the payment terms of an invoice (krizaka/folioviv#113
     const second = await issueShopInvoice(t.db, s.shop.id, { language: "en", issuedOn: "2026-10-21", lines: line(s) });
     expect(first.invoice).toMatchObject({ termsDays: 15, dueOn: "2026-11-05" });
     expect(second.invoice).toMatchObject({ termsDays: 45, dueOn: "2026-12-05" });
-    expect(await invoiceDetail(t.db, s.shop.id, first.invoice.id)).toMatchObject({ termsDays: 15, dueOn: "2026-11-05" });
+    expect(await invoiceDetail(t.db, s.shop.id, first.invoice.id)).toMatchObject({
+      termsDays: 15,
+      dueOn: "2026-11-05",
+    });
   });
 
   it("lets one invoice ask for other terms, including due on receipt", async () => {
     const s = await salon(t.db);
-    const net60 = await issueShopInvoice(t.db, s.shop.id, { language: "fr", issuedOn: "2026-10-21", termsDays: 60, lines: line(s) });
-    const onReceipt = await issueShopInvoice(t.db, s.shop.id, { language: "fr", issuedOn: "2026-10-21", termsDays: 0, lines: line(s) });
+    const net60 = await issueShopInvoice(t.db, s.shop.id, {
+      language: "fr",
+      issuedOn: "2026-10-21",
+      termsDays: 60,
+      lines: line(s),
+    });
+    const onReceipt = await issueShopInvoice(t.db, s.shop.id, {
+      language: "fr",
+      issuedOn: "2026-10-21",
+      termsDays: 0,
+      lines: line(s),
+    });
     expect(net60.invoice).toMatchObject({ termsDays: 60, dueOn: "2026-12-20" });
     expect(onReceipt.invoice).toMatchObject({ termsDays: 0, dueOn: "2026-10-21" });
-    expect(invoiceInputSchema.safeParse({ language: "fr", issuedOn: "2026-10-21", termsDays: 400, lines: [{ description: "x", quantity: 1, unitPriceCents: 100 }] }).success).toBe(false);
+    expect(
+      invoiceInputSchema.safeParse({
+        language: "fr",
+        issuedOn: "2026-10-21",
+        termsDays: 400,
+        lines: [{ description: "x", quantity: 1, unitPriceCents: 100 }],
+      }).success,
+    ).toBe(false);
   });
 
   it("the ledger does not move: the same taxes, whatever the terms", async () => {
     const s = await salon(t.db);
-    const a = await issueShopInvoice(t.db, s.shop.id, { language: "fr", issuedOn: "2026-10-21", termsDays: 0, lines: line(s) });
-    const b = await issueShopInvoice(t.db, s.shop.id, { language: "fr", issuedOn: "2026-10-21", termsDays: 60, lines: line(s) });
-    const entries = async (id: string) => (await t.db.select({ tax: taxLedger.tax, cents: taxLedger.amountCents }).from(taxLedger).where(eq(taxLedger.sourceId, id))).sort((x, y) => x.tax.localeCompare(y.tax));
+    const a = await issueShopInvoice(t.db, s.shop.id, {
+      language: "fr",
+      issuedOn: "2026-10-21",
+      termsDays: 0,
+      lines: line(s),
+    });
+    const b = await issueShopInvoice(t.db, s.shop.id, {
+      language: "fr",
+      issuedOn: "2026-10-21",
+      termsDays: 60,
+      lines: line(s),
+    });
+    const entries = async (id: string) =>
+      (
+        await t.db
+          .select({ tax: taxLedger.tax, cents: taxLedger.amountCents })
+          .from(taxLedger)
+          .where(eq(taxLedger.sourceId, id))
+      ).sort((x, y) => x.tax.localeCompare(y.tax));
     expect(await entries(a.invoice.id)).toEqual(await entries(b.invoice.id));
-    expect(await entries(a.invoice.id)).toEqual([{ tax: "gst", cents: 225 }, { tax: "qst", cents: 449 }]);
+    expect(await entries(a.invoice.id)).toEqual([
+      { tax: "gst", cents: 225 },
+      { tax: "qst", cents: 449 },
+    ]);
   });
 
   it("a credit note is not due: it carries no terms", async () => {
     const s = await salon(t.db);
-    const { invoice } = await issueShopInvoice(t.db, s.shop.id, { language: "fr", issuedOn: "2026-10-21", lines: line(s) });
+    const { invoice } = await issueShopInvoice(t.db, s.shop.id, {
+      language: "fr",
+      issuedOn: "2026-10-21",
+      lines: line(s),
+    });
     const credit = await creditNote(t.db, invoice.id, "2026-10-22");
     expect(credit.invoice).toMatchObject({ termsDays: null, dueOn: null });
   });
 
   it("the database refuses a due date that does not follow from the terms, and terms out of bounds", async () => {
     const s = await salon(t.db);
-    const insert = (terms: number, due: string) => t.pool.query(`INSERT INTO invoices (shop_id, number, language, issued_on, terms_days, due_on, subtotal_cents, gst_cents, qst_cents, total_cents) VALUES ('${s.shop.id}', 'X-${terms}', 'fr', '2026-10-21', ${terms}, '${due}', 0, 0, 0, 0)`);
+    const insert = (terms: number, due: string) =>
+      t.pool.query(
+        `INSERT INTO invoices (shop_id, number, language, issued_on, terms_days, due_on, subtotal_cents, gst_cents, qst_cents, total_cents) VALUES ('${s.shop.id}', 'X-${terms}', 'fr', '2026-10-21', ${terms}, '${due}', 0, 0, 0, 0)`,
+      );
     expect(await refusal(insert(30, "2026-10-01"))).toMatch(/invoices_terms/);
     expect(await refusal(insert(30, "2026-11-19"))).toMatch(/invoices_terms/);
     expect(await refusal(insert(400, "2027-11-25"))).toMatch(/invoices_terms/);
-    expect(await refusal(t.pool.query(`INSERT INTO invoices (shop_id, number, language, issued_on, terms_days, subtotal_cents, gst_cents, qst_cents, total_cents) VALUES ('${s.shop.id}', 'X-n', 'fr', '2026-10-21', 30, 0, 0, 0, 0)`))).toMatch(/invoices_(terms|due_set)/); // terms without a due date
-    expect(await refusal(t.pool.query(`UPDATE shops SET payment_terms_days = 366 WHERE id = '${s.shop.id}'`))).toMatch(/shops_payment_terms/);
+    expect(
+      await refusal(
+        t.pool.query(
+          `INSERT INTO invoices (shop_id, number, language, issued_on, terms_days, subtotal_cents, gst_cents, qst_cents, total_cents) VALUES ('${s.shop.id}', 'X-n', 'fr', '2026-10-21', 30, 0, 0, 0, 0)`,
+        ),
+      ),
+    ).toMatch(/invoices_(terms|due_set)/); // terms without a due date
+    expect(await refusal(t.pool.query(`UPDATE shops SET payment_terms_days = 366 WHERE id = '${s.shop.id}'`))).toMatch(
+      /shops_payment_terms/,
+    );
   });
 
   it("the database refuses a plain invoice without its terms and due day, and lets a credit note go without (was migration 0055's guard)", async () => {
     const s = await salon(t.db);
     const plain = (n: string, credit: string | null) =>
-      t.pool.query(`INSERT INTO invoices (shop_id, number, language, issued_on, credit_of, subtotal_cents, gst_cents, qst_cents, total_cents) VALUES ('${s.shop.id}', '${n}', 'fr', '2026-10-21', ${credit ? `'${credit}'` : "NULL"}, 0, 0, 0, 0) RETURNING id`);
+      t.pool.query(
+        `INSERT INTO invoices (shop_id, number, language, issued_on, credit_of, subtotal_cents, gst_cents, qst_cents, total_cents) VALUES ('${s.shop.id}', '${n}', 'fr', '2026-10-21', ${credit ? `'${credit}'` : "NULL"}, 0, 0, 0, 0) RETURNING id`,
+      );
     expect(await refusal(plain("D-1", null))).toMatch(/invoices_due_set/);
-    const { invoice } = await issueShopInvoice(t.db, s.shop.id, { language: "fr", issuedOn: "2026-10-21", lines: line(s) });
+    const { invoice } = await issueShopInvoice(t.db, s.shop.id, {
+      language: "fr",
+      issuedOn: "2026-10-21",
+      lines: line(s),
+    });
     expect((await plain("D-2", invoice.id)).rows).toHaveLength(1);
   });
 
   it("the owner's rules carry the shop's terms", async () => {
     const s = await salon(t.db);
     await t.db.insert(shopRules).values({ shopId: s.shop.id });
-    await saveRules(t.db, s.shop.id, { cancellationHours: 24, bookingHorizonDays: 60, slotStepMinutes: 30, minNoticeMinutes: 120, reportLinkDays: 30, paymentTermsDays: 0 });
+    await saveRules(t.db, s.shop.id, {
+      cancellationHours: 24,
+      bookingHorizonDays: 60,
+      slotStepMinutes: 30,
+      minNoticeMinutes: 120,
+      reportLinkDays: 30,
+      paymentTermsDays: 0,
+    });
     expect((await t.db.select().from(shops).where(eq(shops.id, s.shop.id)))[0]!.paymentTermsDays).toBe(0);
-    const { invoice } = await issueShopInvoice(t.db, s.shop.id, { language: "fr", issuedOn: "2026-10-21", lines: line(s) });
+    const { invoice } = await issueShopInvoice(t.db, s.shop.id, {
+      language: "fr",
+      issuedOn: "2026-10-21",
+      lines: line(s),
+    });
     expect(invoice).toMatchObject({ termsDays: 0, dueOn: "2026-10-21" });
-    await expect(saveRules(t.db, s.shop.id, { cancellationHours: 24, bookingHorizonDays: 60, slotStepMinutes: 30, minNoticeMinutes: 120, reportLinkDays: 30, paymentTermsDays: 366 })).rejects.toThrow();
+    await expect(
+      saveRules(t.db, s.shop.id, {
+        cancellationHours: 24,
+        bookingHorizonDays: 60,
+        slotStepMinutes: 30,
+        minNoticeMinutes: 120,
+        reportLinkDays: 30,
+        paymentTermsDays: 366,
+      }),
+    ).rejects.toThrow();
   });
 });
 
@@ -155,13 +321,23 @@ describe("fractional quantities on an invoice: 7.5 hours (krizaka/folioviv#111)"
 
   it("bills 7.5 hours at $150.00: $1 125.00, GST $56.25, QST $112.22 — on the invoice, in the lines and in the ledger", async () => {
     const s = await hourly();
-    const { invoice, totals } = await issueShopInvoice(t.db, s.shop.id, { language: "en", issuedOn: "2026-10-21", lines: [{ serviceId: s.services.colour.id, quantity: 7.5 }] });
+    const { invoice, totals } = await issueShopInvoice(t.db, s.shop.id, {
+      language: "en",
+      issuedOn: "2026-10-21",
+      lines: [{ serviceId: s.services.colour.id, quantity: 7.5 }],
+    });
     expect(invoice).toMatchObject({ subtotalCents: 112_500, gstCents: 5_625, qstCents: 11_222, totalCents: 129_347 });
     expect(totals.lines[0]).toMatchObject({ quantity: 7.5, quantityHundredths: 750, amountCents: 112_500 });
     const detail = await invoiceDetail(t.db, s.shop.id, invoice.id);
     expect(detail!.lines[0]).toMatchObject({ quantityHundredths: 750, unitPriceCents: 15_000, amountCents: 112_500 });
-    const ledger = await t.db.select({ tax: taxLedger.tax, cents: taxLedger.amountCents }).from(taxLedger).where(eq(taxLedger.sourceId, invoice.id));
-    expect(ledger.sort((a, b) => a.tax.localeCompare(b.tax))).toEqual([{ tax: "gst", cents: 5_625 }, { tax: "qst", cents: 11_222 }]);
+    const ledger = await t.db
+      .select({ tax: taxLedger.tax, cents: taxLedger.amountCents })
+      .from(taxLedger)
+      .where(eq(taxLedger.sourceId, invoice.id));
+    expect(ledger.sort((a, b) => a.tax.localeCompare(b.tax))).toEqual([
+      { tax: "gst", cents: 5_625 },
+      { tax: "qst", cents: 11_222 },
+    ]);
   });
 
   it("rounds each line half away from zero and still taxes the invoice once", async () => {
@@ -169,7 +345,11 @@ describe("fractional quantities on an invoice: 7.5 hours (krizaka/folioviv#111)"
     const { invoice, totals } = await issueShopInvoice(t.db, s.shop.id, {
       language: "fr",
       issuedOn: "2026-10-21",
-      lines: [{ description: "Séance / Session", quantity: 1.5, unitPriceCents: 4_999 }, { description: "Atelier / Workshop", quantity: 0.25, unitPriceCents: 12_000 }, { description: "Forfait / Package", quantity: 1, unitPriceCents: 50_000 }],
+      lines: [
+        { description: "Séance / Session", quantity: 1.5, unitPriceCents: 4_999 },
+        { description: "Atelier / Workshop", quantity: 0.25, unitPriceCents: 12_000 },
+        { description: "Forfait / Package", quantity: 1, unitPriceCents: 50_000 },
+      ],
     });
     expect(totals.lines.map((l) => l.amountCents)).toEqual([7_499, 3_000, 50_000]); // 74.985 → 74.99
     expect(invoice.subtotalCents).toBe(60_499);
@@ -178,23 +358,42 @@ describe("fractional quantities on an invoice: 7.5 hours (krizaka/folioviv#111)"
   });
 
   it("refuses a quantity that is zero, finer than a hundredth, or beyond 10 000 — at the door", () => {
-    const line = (quantity: number) => invoiceInputSchema.safeParse({ language: "fr", issuedOn: "2026-10-21", lines: [{ description: "x", quantity, unitPriceCents: 100 }] }).success;
+    const line = (quantity: number) =>
+      invoiceInputSchema.safeParse({
+        language: "fr",
+        issuedOn: "2026-10-21",
+        lines: [{ description: "x", quantity, unitPriceCents: 100 }],
+      }).success;
     expect([0, -1, 0.001, 7.555, 10_000.01, Number.NaN].map(line)).toEqual([false, false, false, false, false, false]);
     expect([0.01, 0.1, 1.1, 7.5, 7.25, 10_000].map(line)).toEqual([true, true, true, true, true, true]);
   });
 
   it("a credit note mirrors a fractional invoice: negative hours, the same cents", async () => {
     const s = await hourly();
-    const { invoice } = await issueShopInvoice(t.db, s.shop.id, { language: "fr", issuedOn: "2026-10-21", lines: [{ serviceId: s.services.colour.id, quantity: 7.5 }] });
+    const { invoice } = await issueShopInvoice(t.db, s.shop.id, {
+      language: "fr",
+      issuedOn: "2026-10-21",
+      lines: [{ serviceId: s.services.colour.id, quantity: 7.5 }],
+    });
     const credit = await creditNote(t.db, invoice.id, "2026-10-22");
     expect(credit.invoice).toMatchObject({ subtotalCents: -112_500, gstCents: -5_625, qstCents: -11_222 });
-    expect((await invoiceDetail(t.db, s.shop.id, credit.invoice.id))!.lines[0]).toMatchObject({ quantityHundredths: -750, amountCents: -112_500 });
+    expect((await invoiceDetail(t.db, s.shop.id, credit.invoice.id))!.lines[0]).toMatchObject({
+      quantityHundredths: -750,
+      amountCents: -112_500,
+    });
   });
 
   it("the database refuses a line whose amount is not round(quantity × price), and a zero quantity", async () => {
     const s = await hourly();
-    const { invoice } = await issueShopInvoice(t.db, s.shop.id, { language: "fr", issuedOn: "2026-10-21", lines: [{ serviceId: s.services.colour.id, quantity: 1 }] });
-    const insert = (qty: number, amount: number) => t.pool.query(`INSERT INTO invoice_lines (invoice_id, position, description, quantity_hundredths, unit_price_cents, tax_category, amount_cents) VALUES ('${invoice.id}', 9, 'x', ${qty}, 15000, 'standard', ${amount})`);
+    const { invoice } = await issueShopInvoice(t.db, s.shop.id, {
+      language: "fr",
+      issuedOn: "2026-10-21",
+      lines: [{ serviceId: s.services.colour.id, quantity: 1 }],
+    });
+    const insert = (qty: number, amount: number) =>
+      t.pool.query(
+        `INSERT INTO invoice_lines (invoice_id, position, description, quantity_hundredths, unit_price_cents, tax_category, amount_cents) VALUES ('${invoice.id}', 9, 'x', ${qty}, 15000, 'standard', ${amount})`,
+      );
     expect(await refusal(insert(750, 112_499))).toMatch(/invoice_lines_amount/);
     expect(await refusal(insert(0, 0))).toMatch(/invoice_lines_(quantity|amount)/);
   });
@@ -204,9 +403,20 @@ describe("an invoice's page reads what was received against it (D2: its state fr
   it("gives the detail its paid amount, so the page's chip is the list's invoiceState", async () => {
     const { recordPayment } = await import("./invoice-payments");
     const s = await salon(t.db);
-    const { invoice } = await issueShopInvoice(t.db, s.shop.id, { clientId: s.client.id, language: "fr", issuedOn: "2026-10-21", lines: [{ serviceId: s.services.cut.id, quantity: 1 }] });
+    const { invoice } = await issueShopInvoice(t.db, s.shop.id, {
+      clientId: s.client.id,
+      language: "fr",
+      issuedOn: "2026-10-21",
+      lines: [{ serviceId: s.services.cut.id, quantity: 1 }],
+    });
     expect((await invoiceDetail(t.db, s.shop.id, invoice.id))!.paidCents).toBe(0);
-    await recordPayment(t.db, s.shop.id, invoice.id, { method: "cash", amountCents: 1_000 }, new Date("2026-10-22T15:00:00Z"));
+    await recordPayment(
+      t.db,
+      s.shop.id,
+      invoice.id,
+      { method: "cash", amountCents: 1_000 },
+      new Date("2026-10-22T15:00:00Z"),
+    );
     expect((await invoiceDetail(t.db, s.shop.id, invoice.id))!.paidCents).toBe(1_000);
   });
 });

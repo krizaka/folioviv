@@ -37,7 +37,9 @@ function run(command, workspace) {
   const config = join(ROOT, ".dependency-cruiser.cjs");
   // node itself runs the tool by its path (no PATH lookup): the root installs @krizaka/config, and the tool finds depcruise from `cwd`.
   const tool = join(ROOT, "node_modules", "@krizaka", "config", "bin", "krizaka-known-violations.mjs");
-  return spawnSync(process.execPath, [tool, command, "--config", config, ...folders], { cwd, stdio: "inherit" }).status ?? 1;
+  return (
+    spawnSync(process.execPath, [tool, command, "--config", config, ...folders], { cwd, stdio: "inherit" }).status ?? 1
+  );
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

@@ -19,7 +19,9 @@ describe("the demo shops' page (folioviv#403, #404)", () => {
     expect(all).toHaveLength(18);
     expect(new Set(all.map((s) => s.url)).size).toBe(all.length);
     for (const s of all) {
-      expect(s.url).toMatch(/^https:\/\/krizaka-assets\.b-cdn\.net\/sites\/folioviv\/demo\/[a-z-]+\.[0-9a-f]{10}\.webp$/);
+      expect(s.url).toMatch(
+        /^https:\/\/krizaka-assets\.b-cdn\.net\/sites\/folioviv\/demo\/[a-z-]+\.[0-9a-f]{10}\.webp$/,
+      );
       expect(s.altFr?.length).toBeGreaterThan(5);
       expect(s.altEn?.length).toBeGreaterThan(5);
     }
@@ -43,7 +45,9 @@ describe("the demo shops' page (folioviv#403, #404)", () => {
     expect(shop.media.gallery).toHaveLength(9);
     expect((await publishedShopPage(t.db, shop.shop.id)).page.preset.id).toBe("salon-vitrine");
     // The salon shows the mosaic (folioviv#481), so the dev seed and the deployed demo draw it; the page is otherwise its starter.
-    const gallery = (await publishedShopPage(t.db, shop.shop.id)).page.sections.filter((section) => section.type === "gallery");
+    const gallery = (await publishedShopPage(t.db, shop.shop.id)).page.sections.filter(
+      (section) => section.type === "gallery",
+    );
     expect(gallery.map((section) => section.variant)).toEqual(["mosaic"]);
     const second = await seedDemoPages(t.db);
     expect(second[0]!.published).toBe(false);

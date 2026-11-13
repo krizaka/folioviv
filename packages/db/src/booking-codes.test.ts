@@ -25,11 +25,21 @@ describe("a visitor's pending booking (real PostgreSQL 16)", () => {
     const issuing = createEmailVerification({ store: dbCodeStore(t.db), secret, now: () => at });
     const confirming = createEmailVerification({ store: dbCodeStore(t.db), secret, now: () => at });
     const issued = await issuing.issue({ address: "visitor@example.test", payload: { serviceId: "s" } });
-    const wrongAddress = await confirming.confirm({ challengeId: issued.challengeId, address: "someone@example.test", code: issued.code });
+    const wrongAddress = await confirming.confirm({
+      challengeId: issued.challengeId,
+      address: "someone@example.test",
+      code: issued.code,
+    });
     expect(wrongAddress.ok).toBe(false);
-    const ok = await confirming.confirm<{ serviceId: string }>({ challengeId: issued.challengeId, address: "visitor@example.test", code: issued.code });
+    const ok = await confirming.confirm<{ serviceId: string }>({
+      challengeId: issued.challengeId,
+      address: "visitor@example.test",
+      code: issued.code,
+    });
     expect(ok).toEqual({ ok: true, payload: { serviceId: "s" } });
-    expect(await confirming.confirm({ challengeId: issued.challengeId, address: "visitor@example.test", code: issued.code })).toMatchObject({ ok: false, reason: "unknown" });
+    expect(
+      await confirming.confirm({ challengeId: issued.challengeId, address: "visitor@example.test", code: issued.code }),
+    ).toMatchObject({ ok: false, reason: "unknown" });
   });
 
   it("never keeps the code, and the purge drops what expired", async () => {
@@ -37,7 +47,11 @@ describe("a visitor's pending booking (real PostgreSQL 16)", () => {
     const issued = await verification.issue({ address: "gone@example.test", payload: {} });
     const rows = await t.pool.query("SELECT proof, payload FROM booking_codes WHERE id = $1", [issued.challengeId]);
     expect(JSON.stringify(rows.rows)).not.toContain(issued.code);
-    const later = createEmailVerification({ store: dbCodeStore(t.db), secret, now: () => new Date(at.getTime() + 20 * 60_000) });
+    const later = createEmailVerification({
+      store: dbCodeStore(t.db),
+      secret,
+      now: () => new Date(at.getTime() + 20 * 60_000),
+    });
     expect(await later.purge()).toBeGreaterThanOrEqual(1);
     expect((await t.pool.query("SELECT 1 FROM booking_codes WHERE id = $1", [issued.challengeId])).rowCount).toBe(0);
   });

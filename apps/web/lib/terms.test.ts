@@ -48,11 +48,35 @@ describe("the terms of use (folioviv#379)", () => {
   it("covers what the issue requires, with the law cited", () => {
     const text = (d: typeof fr) => d.terms.sections.map((s) => `${s.h} ${format(s.p, publisherVars())}`).join("\n");
     const french = text(fr);
-    for (const needle of ["Loi sur la protection du consommateur", "Code civil du Québec", "L.Q. 2021, c. 25", "renouvelle", "résilier", "ne détient jamais de fonds", "ne produit, ne signe et ne transmet aucune déclaration", "Québec", "tribunaux", "3149", "2125", "1474", "Charte de la langue française"]) {
+    for (const needle of [
+      "Loi sur la protection du consommateur",
+      "Code civil du Québec",
+      "L.Q. 2021, c. 25",
+      "renouvelle",
+      "résilier",
+      "ne détient jamais de fonds",
+      "ne produit, ne signe et ne transmet aucune déclaration",
+      "Québec",
+      "tribunaux",
+      "3149",
+      "2125",
+      "1474",
+      "Charte de la langue française",
+    ]) {
       expect(french, needle).toContain(needle);
     }
     const english = text(en);
-    for (const needle of ["Consumer Protection Act", "Civil Code of Québec", "S.Q. 2021, c. 25", "never holds funds", "never produces, signs or transmits a return", "art. 3149", "art. 2125", "art. 1474", "French prevails"]) {
+    for (const needle of [
+      "Consumer Protection Act",
+      "Civil Code of Québec",
+      "S.Q. 2021, c. 25",
+      "never holds funds",
+      "never produces, signs or transmits a return",
+      "art. 3149",
+      "art. 2125",
+      "art. 1474",
+      "French prevails",
+    ]) {
       expect(english, needle).toContain(needle);
     }
   });
@@ -60,11 +84,31 @@ describe("the terms of use (folioviv#379)", () => {
   it("reserves Krizaka's rights: IP, licence limited to the subscription, no resale or white label, marks (folioviv#409)", () => {
     const text = (d: typeof fr) => d.terms.sections.map((s) => `${s.h} ${format(s.p, publisherVars())}`).join("\n");
     const french = text(fr);
-    for (const needle of ["appartiennent à Technologies Krizaka Inc.", "Pour la durée de votre abonnement seulement", "non cessible et non sous-licenciable", "marque blanche", "service concurrent", "Loi sur le droit d'auteur", "Loi sur les marques de commerce", "TRADEMARKS.md", "sa propre licence"]) {
+    for (const needle of [
+      "appartiennent à Technologies Krizaka Inc.",
+      "Pour la durée de votre abonnement seulement",
+      "non cessible et non sous-licenciable",
+      "marque blanche",
+      "service concurrent",
+      "Loi sur le droit d'auteur",
+      "Loi sur les marques de commerce",
+      "TRADEMARKS.md",
+      "sa propre licence",
+    ]) {
       expect(french, needle).toContain(needle);
     }
     const english = text(en);
-    for (const needle of ["belong to Technologies Krizaka Inc.", "For the length of your subscription only", "non-transferable, non-sublicensable", "white label", "competing service", "Copyright Act", "Trademarks Act", "TRADEMARKS.md", "its own licence"]) {
+    for (const needle of [
+      "belong to Technologies Krizaka Inc.",
+      "For the length of your subscription only",
+      "non-transferable, non-sublicensable",
+      "white label",
+      "competing service",
+      "Copyright Act",
+      "Trademarks Act",
+      "TRADEMARKS.md",
+      "its own licence",
+    ]) {
       expect(english, needle).toContain(needle);
     }
   });

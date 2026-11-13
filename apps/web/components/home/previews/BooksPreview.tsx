@@ -10,7 +10,8 @@ const KEY_LINES = ["101", "109", "209"] as const;
 export function BooksPreview({ locale }: Readonly<{ locale: Locale }>) {
   const d = getDictionary(locale);
   const t = d.landing;
-  const amount = (line: (typeof KEY_LINES)[number]) => formatMoney(DEMO_RETURN.find((r) => r.line === line)?.cents ?? 0, locale);
+  const amount = (line: (typeof KEY_LINES)[number]) =>
+    formatMoney(DEMO_RETURN.find((r) => r.line === line)?.cents ?? 0, locale);
   const label = (line: (typeof KEY_LINES)[number]) => d.console.books.lines[line].label;
   return (
     <PreviewFrame

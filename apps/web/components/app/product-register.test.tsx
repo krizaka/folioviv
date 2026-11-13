@@ -22,7 +22,10 @@ const en = bindProduct(enRaw);
 const fr = bindProduct(frRaw);
 
 vi.mock("@/app/actions/remember-shop", () => ({ rememberShop: () => Promise.resolve() }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: () => undefined, replace: () => undefined, push: () => undefined }), usePathname: () => "/fr/app" }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: () => undefined, replace: () => undefined, push: () => undefined }),
+  usePathname: () => "/fr/app",
+}));
 
 /**
  * The product register (krizaka/folioviv#327 and #352, ADR-006): Plus Jakarta Sans for titles (`--kz-font-product-display`, from
@@ -39,7 +42,10 @@ const CAHIER_FACES = /Young Serif|Courier Prime|Krizaka Cahier/;
 function productSurfaceValue(css: string, prop: string): string | undefined {
   const rules = [...css.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/([^{}]+)\{([^{}]*)\}/g)];
   const own = rules.filter(([, selector]) => /^:is\(\[data-surface="product"\][^)]*\)$/.test(selector!.trim()));
-  return own.map(([, , body]) => new RegExp(`${prop}\\s*:\\s*([^;]+);`).exec(body!)?.[1]?.trim()).filter(Boolean).at(-1);
+  return own
+    .map(([, , body]) => new RegExp(`${prop}\\s*:\\s*([^;]+);`).exec(body!)?.[1]?.trim())
+    .filter(Boolean)
+    .at(-1);
 }
 
 describe("the faces of the product register", () => {
@@ -69,7 +75,13 @@ describe("the faces of the product register", () => {
   });
 
   it("names no Cahier face in the app's own code", () => {
-    for (const file of ["../../app/globals.css", "./ShopFrame.tsx", "./InvoiceDocument.tsx", "./BooksLines.tsx", "./InvoicesTable.tsx"]) {
+    for (const file of [
+      "../../app/globals.css",
+      "./ShopFrame.tsx",
+      "./InvoiceDocument.tsx",
+      "./BooksLines.tsx",
+      "./InvoicesTable.tsx",
+    ]) {
       expect(source(file), file).not.toMatch(CAHIER_FACES);
       expect(source(file), file).not.toMatch(/font-cahier/);
     }
@@ -97,17 +109,42 @@ const wrap = (locale: "en" | "fr", node: React.ReactNode) =>
   );
 
 const invoice = (number: string, patch: Partial<InvoiceRowView> = {}): InvoiceRowView => ({
-  id: `i-${number}`, number, client: "Studio Lumen inc. (démo)", issuedOn: "2026-10-01", dueOn: "2026-10-31", language: "fr", creditOf: null,
-  subtotalCents: 360_000, gstCents: 18_000, qstCents: 35_910, totalCents: 413_910, paidCents: 0, superseded: false, ...patch,
+  id: `i-${number}`,
+  number,
+  client: "Studio Lumen inc. (démo)",
+  issuedOn: "2026-10-01",
+  dueOn: "2026-10-31",
+  language: "fr",
+  creditOf: null,
+  subtotalCents: 360_000,
+  gstCents: 18_000,
+  qstCents: 35_910,
+  totalCents: 413_910,
+  paidCents: 0,
+  superseded: false,
+  ...patch,
 });
 const lines: BooksLineView[] = [
-  { line: "101", amountCents: 1_234_500, computed: false, sources: [{ kind: "invoice", id: "i1", label: "KZ-0001", amountCents: 1_234_500 }] },
+  {
+    line: "101",
+    amountCents: 1_234_500,
+    computed: false,
+    sources: [{ kind: "invoice", id: "i1", label: "KZ-0001", amountCents: 1_234_500 }],
+  },
   { line: "106", amountCents: 61_725, computed: true, sources: [] },
 ];
 
 describe("tabular digits on every amount (Factures, Livres)", () => {
   it.each(["fr", "en"] as const)("the invoices list, in %s", (locale) => {
-    const found = amounts(wrap(locale, <InvoicesTable invoices={[invoice("KZ-0001"), invoice("KZ-0002", { paidCents: 100_000 })]} today="2026-10-23" />));
+    const found = amounts(
+      wrap(
+        locale,
+        <InvoicesTable
+          invoices={[invoice("KZ-0001"), invoice("KZ-0002", { paidCents: 100_000 })]}
+          today="2026-10-23"
+        />,
+      ),
+    );
     expect(found.length).toBeGreaterThan(0);
     for (const a of found) expect(a.className, a.text).toMatch(/\btabular-nums\b/);
   });
@@ -123,7 +160,9 @@ describe("tabular digits on every amount (Factures, Livres)", () => {
 
   it.each(["fr", "en"] as const)("an invoice, in %s", (language) => {
     const doc = invoiceFixture({ language });
-    const found = amounts(renderToStaticMarkup(<InvoiceDocument invoice={doc} locale={language} backHref="/fr/app/x/invoices" />));
+    const found = amounts(
+      renderToStaticMarkup(<InvoiceDocument invoice={doc} locale={language} backHref="/fr/app/x/invoices" />),
+    );
     expect(found.length).toBeGreaterThanOrEqual(5);
     for (const a of found) {
       expect(a.className, a.text).toMatch(/\btabular-nums\b/);
@@ -132,6 +171,8 @@ describe("tabular digits on every amount (Factures, Livres)", () => {
   });
 
   it("the books' stats", () => {
-    expect(renderToStaticMarkup(<Stat label="TPS" value="617,25 $" />)).toMatch(/class="[^"]*\btabular-nums\b[^"]*">617,25 \$</);
+    expect(renderToStaticMarkup(<Stat label="TPS" value="617,25 $" />)).toMatch(
+      /class="[^"]*\btabular-nums\b[^"]*">617,25 \$</,
+    );
   });
 });

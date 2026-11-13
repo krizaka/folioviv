@@ -12,7 +12,10 @@ const LINE = {
 } as const;
 
 describe("Loi 25: the person in charge is published by role (the president), at confidentialite@", () => {
-  for (const [lang, m] of [["en", en], ["fr", fr]] as const) {
+  for (const [lang, m] of [
+    ["en", en],
+    ["fr", fr],
+  ] as const) {
     it(`${lang}: the president, the address, no person's name, no home address, no contact@`, () => {
       const text = format(m.privacy.officer.text, publisherVars());
       expect(text).toContain(LINE[lang]);

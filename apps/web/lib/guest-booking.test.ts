@@ -11,7 +11,12 @@ describe("a guest booking's two bodies", () => {
   it("cannot be sent without the booking consent, and never assumes the reminders", () => {
     expect(guestStart.safeParse({ ...ids, ...person, consentService: false }).success).toBe(false);
     const ok = guestStart.parse({ ...ids, ...person, consentService: true });
-    expect(ok).toMatchObject({ fullName: "Camille Roy", email: "camille@example.test", consentReminders: false, language: "fr" });
+    expect(ok).toMatchObject({
+      fullName: "Camille Roy",
+      email: "camille@example.test",
+      consentReminders: false,
+      language: "fr",
+    });
   });
 
   it("takes exactly six digits for the code", () => {
@@ -23,7 +28,11 @@ describe("a guest booking's two bodies", () => {
   });
 
   it("says why a code was refused, with the tries left", () => {
-    expect(codeRefusal({ ok: false, reason: "invalid", attemptsLeft: 3 })).toEqual({ status: 400, code: "CODE_INVALID", attemptsLeft: 3 });
+    expect(codeRefusal({ ok: false, reason: "invalid", attemptsLeft: 3 })).toEqual({
+      status: 400,
+      code: "CODE_INVALID",
+      attemptsLeft: 3,
+    });
     expect(codeRefusal({ ok: false, reason: "locked" })).toEqual({ status: 429, code: "CODE_LOCKED" });
     expect(codeRefusal({ ok: false, reason: "expired" }).code).toBe("CODE_EXPIRED");
     expect(codeRefusal({ ok: false, reason: "unknown" }).status).toBe(410);

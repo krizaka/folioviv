@@ -18,7 +18,14 @@ export function PagePreview({ src, published }: Readonly<{ src: string; publishe
   const [device, setDevice] = useState<"phone" | "desktop">("phone");
   return (
     <aside aria-label={say("studio.preview.title")} className="flex min-w-0 flex-col gap-3 xl:sticky xl:top-4">
-      <Button variant="secondary" size="md" className="xl:hidden" aria-expanded={open} aria-controls={panel} onClick={() => setOpen((v) => !v)}>
+      <Button
+        variant="secondary"
+        size="md"
+        className="xl:hidden"
+        aria-expanded={open}
+        aria-controls={panel}
+        onClick={() => setOpen((v) => !v)}
+      >
         {say(open ? "studio.preview.hide" : "studio.preview.show")}
       </Button>
       <div id={panel} className={open ? "flex flex-col gap-3" : "hidden flex-col gap-3 xl:flex"}>
@@ -26,7 +33,15 @@ export function PagePreview({ src, published }: Readonly<{ src: string; publishe
           <h2 className="m-0 font-display text-base font-bold text-fg">{say("studio.preview.title")}</h2>
           <div className="flex gap-2">
             {(["phone", "desktop"] as const).map((d) => (
-              <Button key={d} variant={device === d ? "primary" : "ghost"} size="sm" aria-pressed={device === d} onClick={() => setDevice(d)}>{say(`studio.preview.${d}`)}</Button>
+              <Button
+                key={d}
+                variant={device === d ? "primary" : "ghost"}
+                size="sm"
+                aria-pressed={device === d}
+                onClick={() => setDevice(d)}
+              >
+                {say(`studio.preview.${d}`)}
+              </Button>
             ))}
           </div>
         </div>
@@ -36,10 +51,15 @@ export function PagePreview({ src, published }: Readonly<{ src: string; publishe
             src={src}
             loading="lazy"
             referrerPolicy="same-origin"
-            className={cn("h-[40rem] max-w-full rounded-lg border border-border-default bg-surface-1", device === "phone" ? "w-[390px]" : "w-full")}
+            className={cn(
+              "h-[40rem] max-w-full rounded-lg border border-border-default bg-surface-1",
+              device === "phone" ? "w-[390px]" : "w-full",
+            )}
           />
         ) : (
-          <p className="m-0 rounded-lg border border-border-default p-4 text-sm text-fg-secondary">{say("studio.preview.unpublished")}</p>
+          <p className="m-0 rounded-lg border border-border-default p-4 text-sm text-fg-secondary">
+            {say("studio.preview.unpublished")}
+          </p>
         )}
       </div>
     </aside>

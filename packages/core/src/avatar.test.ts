@@ -15,10 +15,13 @@ describe("a person without a photo wears the org JSON's default picture (foliovi
     expect(avatarChoice({ avatarSeed: "4" })).toBe("silhouette-4");
   });
 
-  it.each([null, undefined, "", "9", "x", "gone-from-the-set"])("assigns one from the id when the seed is %j, and the picker checks none", (seed) => {
-    expect(pictureOf({ id: "a-1", avatarSeed: seed })?.id).toBe(defaultFor("person", "a-1")?.id);
-    expect(avatarChoice({ avatarSeed: seed })).toBe("");
-  });
+  it.each([null, undefined, "", "9", "x", "gone-from-the-set"])(
+    "assigns one from the id when the seed is %j, and the picker checks none",
+    (seed) => {
+      expect(pictureOf({ id: "a-1", avatarSeed: seed })?.id).toBe(defaultFor("person", "a-1")?.id);
+      expect(avatarChoice({ avatarSeed: seed })).toBe("");
+    },
+  );
 
   it("is deterministic per id, and the address is the org's Bunny one, not a copy", () => {
     const a = avatarSrc({ id: "eric" });

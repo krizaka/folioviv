@@ -16,7 +16,14 @@ export function POST(req: Request, { params }: { params: Promise<{ id: string }>
     limit("walker-report-send", req, session.account.id, [60, 600]);
     const bookingId = idParam((await params).id);
     const result = await sendWalkReport(db(), shop.id, bookingId, requestNow(), mailSettings());
-    await audit({ action: "report.sent", actorId: session.account.id, actorLabel: session.account.email, targetId: result.reportId, detail: { mail: result.status }, headers: req.headers });
+    await audit({
+      action: "report.sent",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: result.reportId,
+      detail: { mail: result.status },
+      headers: req.headers,
+    });
     return Response.json(result);
   });
 }

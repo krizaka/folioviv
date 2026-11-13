@@ -6,7 +6,17 @@ import { accounts, services as servicesTable, shops, shopZones, staff as staffTa
 import stHenri from "./demo-st-henri.json";
 import { seedDemoCommunity } from "./demo-community";
 import { applyTemplate, saveShopPageConfig, shopPageConfigOf } from "./shop-page";
-import { addStaff, addWindow, addZone, saveRules, type ServiceInput, saveService, saveShopMedia, saveShopPage, shopOfOwner } from "./service-shop";
+import {
+  addStaff,
+  addWindow,
+  addZone,
+  saveRules,
+  type ServiceInput,
+  saveService,
+  saveShopMedia,
+  saveShopPage,
+  shopOfOwner,
+} from "./service-shop";
 
 /**
  * The fictional demo shops (krizaka/folioviv#144), each as DATA: a hair salon in Saint-Henri, a tattoo and photo studio in the
@@ -23,7 +33,12 @@ export interface DemoShop {
   profile: { area: string; bioFr: string; bioEn: string; publicPhone: string; publicEmail: string };
   /** Who works here: the owner first (the shop's first person), then the others, each with their own weekly hours. */
   team: { name: string; hours: { weekday: number; startsAt: string; endsAt: string }[] }[];
-  services: (ServiceInput & { descriptionFr: string; descriptionEn: string; includedFr: string[]; includedEn: string[] })[];
+  services: (ServiceInput & {
+    descriptionFr: string;
+    descriptionEn: string;
+    includedFr: string[];
+    includedEn: string[];
+  })[];
   rules: Partial<ShopRules>;
   /** The trade, which picks the default images the page shows where the shop has none (#267). */
   shopType: ShopType;
@@ -34,18 +49,27 @@ export interface DemoShop {
   zone?: { name: string; lat: number; lng: number };
 }
 
-const days = (weekdays: number[], startsAt: string, endsAt: string) => weekdays.map((weekday) => ({ weekday, startsAt, endsAt }));
+const days = (weekdays: number[], startsAt: string, endsAt: string) =>
+  weekdays.map((weekday) => ({ weekday, startsAt, endsAt }));
 
 export const DEMO_SHOPS: DemoShop[] = [
   {
     ownerEmail: "maelle.cedre@folioviv.test",
-    shop: { name: "Salon Cèdre & Ciseaux", legalName: "Salon Cèdre & Ciseaux (démo)", address: "4100 rue Notre-Dame O., Montréal QC H4C 1R8", slug: "cedre-ciseaux", ownerName: "Maëlle" },
+    shop: {
+      name: "Salon Cèdre & Ciseaux",
+      legalName: "Salon Cèdre & Ciseaux (démo)",
+      address: "4100 rue Notre-Dame O., Montréal QC H4C 1R8",
+      slug: "cedre-ciseaux",
+      ownerName: "Maëlle",
+    },
     taglineFr: "Un salon de quartier à Saint-Henri : coupe, couleur et barbe, avec la personne de votre choix.",
     taglineEn: "A neighbourhood salon in Saint-Henri: cuts, colour and beard care, with the person of your choice.",
     profile: {
       area: "Saint-Henri, Montréal",
-      bioFr: "Trois coiffeurs, un salon lumineux sur Notre-Dame Ouest. Vous choisissez la personne, ou « n'importe qui » pour la première heure libre. Commerce fictif pour la démonstration de Folioviv — aucune personne réelle.",
-      bioEn: "Three stylists, one bright salon on Notre-Dame West. Choose the person, or « anyone » for the first free time. A fictional shop that demonstrates Folioviv — no real person.",
+      bioFr:
+        "Trois coiffeurs, un salon lumineux sur Notre-Dame Ouest. Vous choisissez la personne, ou « n'importe qui » pour la première heure libre. Commerce fictif pour la démonstration de Folioviv — aucune personne réelle.",
+      bioEn:
+        "Three stylists, one bright salon on Notre-Dame West. Choose the person, or « anyone » for the first free time. A fictional shop that demonstrates Folioviv — no real person.",
       publicPhone: "514-555-0110",
       publicEmail: "bonjour@cedre-ciseaux.example",
     },
@@ -55,11 +79,64 @@ export const DEMO_SHOPS: DemoShop[] = [
       { name: "Jade", hours: [...days([2, 3], "12:00", "20:00"), ...days([6], "09:00", "16:00")] },
     ],
     services: [
-      { nameFr: "Coupe courte", nameEn: "Short cut", durationMinutes: 30, priceCents: 4_500, capacity: 1, descriptionFr: "Coupe aux ciseaux ou à la tondeuse, finition au rasoir.", descriptionEn: "Scissor or clipper cut, razor finish.", includedFr: ["Consultation", "Lavage", "Coiffage"], includedEn: ["Consultation", "Wash", "Styling"] },
-      { nameFr: "Coupe et brushing", nameEn: "Cut and blow-dry", durationMinutes: 60, priceCents: 7_500, capacity: 1, descriptionFr: "Une coupe sur mesure et un brushing qui tient.", descriptionEn: "A tailored cut and a blow-dry that lasts.", includedFr: ["Consultation", "Lavage", "Coupe", "Brushing"], includedEn: ["Consultation", "Wash", "Cut", "Blow-dry"] },
-      { nameFr: "Barbe", nameEn: "Beard", durationMinutes: 20, priceCents: 2_500, capacity: 1, descriptionFr: "Taille et contours, serviette chaude.", descriptionEn: "Trim and edges, hot towel.", includedFr: ["Taille", "Contours", "Serviette chaude"], includedEn: ["Trim", "Edges", "Hot towel"] },
-      { nameFr: "Couleur complète", nameEn: "Full colour", durationMinutes: 150, priceCents: 16_000, capacity: 1, priceVaries: true, descriptionFr: "Une longue séance : le prix dépend de la longueur et de la densité, confirmé à la consultation.", descriptionEn: "A long session: the price depends on length and density, confirmed at the consultation.", includedFr: ["Consultation couleur", "Application", "Soin", "Brushing"], includedEn: ["Colour consultation", "Application", "Treatment", "Blow-dry"] },
-      { nameFr: "Balayage", nameEn: "Balayage", durationMinutes: 180, priceCents: 22_000, capacity: 1, priceVaries: true, descriptionFr: "Éclaircissement progressif, pour un résultat naturel.", descriptionEn: "Gradual lightening for a natural result.", includedFr: ["Consultation couleur", "Balayage", "Soin", "Coiffage"], includedEn: ["Colour consultation", "Balayage", "Treatment", "Styling"] },
+      {
+        nameFr: "Coupe courte",
+        nameEn: "Short cut",
+        durationMinutes: 30,
+        priceCents: 4_500,
+        capacity: 1,
+        descriptionFr: "Coupe aux ciseaux ou à la tondeuse, finition au rasoir.",
+        descriptionEn: "Scissor or clipper cut, razor finish.",
+        includedFr: ["Consultation", "Lavage", "Coiffage"],
+        includedEn: ["Consultation", "Wash", "Styling"],
+      },
+      {
+        nameFr: "Coupe et brushing",
+        nameEn: "Cut and blow-dry",
+        durationMinutes: 60,
+        priceCents: 7_500,
+        capacity: 1,
+        descriptionFr: "Une coupe sur mesure et un brushing qui tient.",
+        descriptionEn: "A tailored cut and a blow-dry that lasts.",
+        includedFr: ["Consultation", "Lavage", "Coupe", "Brushing"],
+        includedEn: ["Consultation", "Wash", "Cut", "Blow-dry"],
+      },
+      {
+        nameFr: "Barbe",
+        nameEn: "Beard",
+        durationMinutes: 20,
+        priceCents: 2_500,
+        capacity: 1,
+        descriptionFr: "Taille et contours, serviette chaude.",
+        descriptionEn: "Trim and edges, hot towel.",
+        includedFr: ["Taille", "Contours", "Serviette chaude"],
+        includedEn: ["Trim", "Edges", "Hot towel"],
+      },
+      {
+        nameFr: "Couleur complète",
+        nameEn: "Full colour",
+        durationMinutes: 150,
+        priceCents: 16_000,
+        capacity: 1,
+        priceVaries: true,
+        descriptionFr:
+          "Une longue séance : le prix dépend de la longueur et de la densité, confirmé à la consultation.",
+        descriptionEn: "A long session: the price depends on length and density, confirmed at the consultation.",
+        includedFr: ["Consultation couleur", "Application", "Soin", "Brushing"],
+        includedEn: ["Colour consultation", "Application", "Treatment", "Blow-dry"],
+      },
+      {
+        nameFr: "Balayage",
+        nameEn: "Balayage",
+        durationMinutes: 180,
+        priceCents: 22_000,
+        capacity: 1,
+        priceVaries: true,
+        descriptionFr: "Éclaircissement progressif, pour un résultat naturel.",
+        descriptionEn: "Gradual lightening for a natural result.",
+        includedFr: ["Consultation couleur", "Balayage", "Soin", "Coiffage"],
+        includedEn: ["Colour consultation", "Balayage", "Treatment", "Styling"],
+      },
     ],
     shopType: "salon",
     template: "salon-vitrine",
@@ -67,13 +144,21 @@ export const DEMO_SHOPS: DemoShop[] = [
   },
   {
     ownerEmail: "ines.encrevive@folioviv.test",
-    shop: { name: "Encre Vive Studio", legalName: "Encre Vive Studio (démo)", address: "5300 boul. Saint-Laurent, Montréal QC H2T 1S1", slug: "encre-vive", ownerName: "Inès" },
+    shop: {
+      name: "Encre Vive Studio",
+      legalName: "Encre Vive Studio (démo)",
+      address: "5300 boul. Saint-Laurent, Montréal QC H2T 1S1",
+      slug: "encre-vive",
+      ownerName: "Inès",
+    },
     taglineFr: "Tatouage et photo dans le Mile End : on se rencontre d'abord, on dessine ensuite.",
     taglineEn: "Tattoo and photo in the Mile End: we meet first, we draw after.",
     profile: {
       area: "Mile End, Montréal",
-      bioFr: "Deux tatoueurs et une photographe dans un studio du Mile End. Commencez par une consultation gratuite de 20 minutes. Commerce fictif pour la démonstration de Folioviv — aucune personne réelle.",
-      bioEn: "Two tattoo artists and a photographer in a Mile End studio. Start with a free 20-minute consultation. A fictional shop that demonstrates Folioviv — no real person.",
+      bioFr:
+        "Deux tatoueurs et une photographe dans un studio du Mile End. Commencez par une consultation gratuite de 20 minutes. Commerce fictif pour la démonstration de Folioviv — aucune personne réelle.",
+      bioEn:
+        "Two tattoo artists and a photographer in a Mile End studio. Start with a free 20-minute consultation. A fictional shop that demonstrates Folioviv — no real person.",
       publicPhone: "514-555-0120",
       publicEmail: "bonjour@encre-vive.example",
     },
@@ -83,10 +168,52 @@ export const DEMO_SHOPS: DemoShop[] = [
       { name: "Anouk", hours: days([2, 4, 6], "10:00", "16:00") },
     ],
     services: [
-      { nameFr: "Consultation gratuite", nameEn: "Free consultation", durationMinutes: 20, priceCents: 0, capacity: 1, descriptionFr: "On parle de votre idée, de l'emplacement et du temps nécessaire. Aucun engagement.", descriptionEn: "We talk about your idea, the placement and the time it takes. No commitment.", includedFr: ["Écoute de votre idée", "Estimation de la durée"], includedEn: ["Listening to your idea", "A time estimate"] },
-      { nameFr: "Petit tatouage (2 h)", nameEn: "Small tattoo (2 h)", durationMinutes: 120, priceCents: 24_000, capacity: 1, priceVaries: true, descriptionFr: "Un motif simple et petit, après la consultation. Le prix final est confirmé au dessin.", descriptionEn: "A simple, small design, after the consultation. The final price is confirmed at the drawing.", includedFr: ["Dessin", "Tatouage", "Soins après"], includedEn: ["Drawing", "Tattoo", "Aftercare"] },
-      { nameFr: "Séance de tatouage (4 h)", nameEn: "Tattoo session (4 h)", durationMinutes: 240, priceCents: 48_000, capacity: 1, priceVaries: true, descriptionFr: "Une longue séance pour un motif plus grand. Le prix final est confirmé au dessin.", descriptionEn: "A long session for a larger design. The final price is confirmed at the drawing.", includedFr: ["Dessin", "Tatouage", "Soins après"], includedEn: ["Drawing", "Tattoo", "Aftercare"] },
-      { nameFr: "Séance photo portrait (60 min)", nameEn: "Portrait photo session (60 min)", durationMinutes: 60, priceCents: 18_000, capacity: 1, descriptionFr: "Un portrait en studio, lumière naturelle et artificielle.", descriptionEn: "A studio portrait, natural and studio light.", includedFr: ["Séance en studio", "10 photos retouchées", "Galerie en ligne"], includedEn: ["Studio session", "10 retouched photos", "Online gallery"] },
+      {
+        nameFr: "Consultation gratuite",
+        nameEn: "Free consultation",
+        durationMinutes: 20,
+        priceCents: 0,
+        capacity: 1,
+        descriptionFr: "On parle de votre idée, de l'emplacement et du temps nécessaire. Aucun engagement.",
+        descriptionEn: "We talk about your idea, the placement and the time it takes. No commitment.",
+        includedFr: ["Écoute de votre idée", "Estimation de la durée"],
+        includedEn: ["Listening to your idea", "A time estimate"],
+      },
+      {
+        nameFr: "Petit tatouage (2 h)",
+        nameEn: "Small tattoo (2 h)",
+        durationMinutes: 120,
+        priceCents: 24_000,
+        capacity: 1,
+        priceVaries: true,
+        descriptionFr: "Un motif simple et petit, après la consultation. Le prix final est confirmé au dessin.",
+        descriptionEn: "A simple, small design, after the consultation. The final price is confirmed at the drawing.",
+        includedFr: ["Dessin", "Tatouage", "Soins après"],
+        includedEn: ["Drawing", "Tattoo", "Aftercare"],
+      },
+      {
+        nameFr: "Séance de tatouage (4 h)",
+        nameEn: "Tattoo session (4 h)",
+        durationMinutes: 240,
+        priceCents: 48_000,
+        capacity: 1,
+        priceVaries: true,
+        descriptionFr: "Une longue séance pour un motif plus grand. Le prix final est confirmé au dessin.",
+        descriptionEn: "A long session for a larger design. The final price is confirmed at the drawing.",
+        includedFr: ["Dessin", "Tatouage", "Soins après"],
+        includedEn: ["Drawing", "Tattoo", "Aftercare"],
+      },
+      {
+        nameFr: "Séance photo portrait (60 min)",
+        nameEn: "Portrait photo session (60 min)",
+        durationMinutes: 60,
+        priceCents: 18_000,
+        capacity: 1,
+        descriptionFr: "Un portrait en studio, lumière naturelle et artificielle.",
+        descriptionEn: "A studio portrait, natural and studio light.",
+        includedFr: ["Séance en studio", "10 photos retouchées", "Galerie en ligne"],
+        includedEn: ["Studio session", "10 retouched photos", "Online gallery"],
+      },
     ],
     shopType: "workshop",
     template: "workshop-histoire",
@@ -94,21 +221,59 @@ export const DEMO_SHOPS: DemoShop[] = [
   },
   {
     ownerEmail: "camille.ferland@folioviv.test",
-    shop: { name: "Ferland Conseil", legalName: "Ferland Conseil (démo)", address: "6800 rue Clark, Montréal QC H2S 3G7", slug: "ferland-conseil", ownerName: "Camille" },
+    shop: {
+      name: "Ferland Conseil",
+      legalName: "Ferland Conseil (démo)",
+      address: "6800 rue Clark, Montréal QC H2S 3G7",
+      slug: "ferland-conseil",
+      ownerName: "Camille",
+    },
     taglineFr: "Conseil indépendant en stratégie numérique : un appel pour se connaître, puis des séances de travail.",
     taglineEn: "Independent digital-strategy consulting: a call to get to know each other, then working sessions.",
     profile: {
       area: "Mile End, Montréal",
-      bioFr: "Une consultante qui travaille à son compte. Chaque séance est facturée au cent près, avec la TPS et la TVQ détaillées. Commerce fictif pour la démonstration de Folioviv — aucune personne réelle.",
-      bioEn: "A self-employed consultant. Every session is invoiced to the cent, with the GST and QST itemised. A fictional shop that demonstrates Folioviv — no real person.",
+      bioFr:
+        "Une consultante qui travaille à son compte. Chaque séance est facturée au cent près, avec la TPS et la TVQ détaillées. Commerce fictif pour la démonstration de Folioviv — aucune personne réelle.",
+      bioEn:
+        "A self-employed consultant. Every session is invoiced to the cent, with the GST and QST itemised. A fictional shop that demonstrates Folioviv — no real person.",
       publicPhone: "514-555-0130",
       publicEmail: "bonjour@ferland-conseil.example",
     },
     team: [{ name: "Camille", hours: days([1, 2, 3, 4], "09:00", "17:00") }],
     services: [
-      { nameFr: "Appel découverte (20 min)", nameEn: "Discovery call (20 min)", durationMinutes: 20, priceCents: 0, capacity: 1, descriptionFr: "Vingt minutes pour comprendre votre besoin. Sans frais.", descriptionEn: "Twenty minutes to understand your need. No charge.", includedFr: ["Écoute du besoin", "Pistes de travail"], includedEn: ["Listening to the need", "Directions to explore"] },
-      { nameFr: "Séance de travail (1 h)", nameEn: "Working session (1 h)", durationMinutes: 60, priceCents: 15_000, capacity: 1, descriptionFr: "Une heure de travail ensemble, avec un compte rendu écrit.", descriptionEn: "One hour of work together, with a written summary.", includedFr: ["Séance en visio ou en personne", "Compte rendu écrit"], includedEn: ["Video or in-person session", "Written summary"] },
-      { nameFr: "Bloc de 3 heures", nameEn: "3-hour block", durationMinutes: 180, priceCents: 40_000, capacity: 1, descriptionFr: "Un bloc d'un seul tenant pour un atelier ou un plan d'action.", descriptionEn: "One uninterrupted block for a workshop or an action plan.", includedFr: ["Atelier ou plan d'action", "Compte rendu écrit"], includedEn: ["Workshop or action plan", "Written summary"] },
+      {
+        nameFr: "Appel découverte (20 min)",
+        nameEn: "Discovery call (20 min)",
+        durationMinutes: 20,
+        priceCents: 0,
+        capacity: 1,
+        descriptionFr: "Vingt minutes pour comprendre votre besoin. Sans frais.",
+        descriptionEn: "Twenty minutes to understand your need. No charge.",
+        includedFr: ["Écoute du besoin", "Pistes de travail"],
+        includedEn: ["Listening to the need", "Directions to explore"],
+      },
+      {
+        nameFr: "Séance de travail (1 h)",
+        nameEn: "Working session (1 h)",
+        durationMinutes: 60,
+        priceCents: 15_000,
+        capacity: 1,
+        descriptionFr: "Une heure de travail ensemble, avec un compte rendu écrit.",
+        descriptionEn: "One hour of work together, with a written summary.",
+        includedFr: ["Séance en visio ou en personne", "Compte rendu écrit"],
+        includedEn: ["Video or in-person session", "Written summary"],
+      },
+      {
+        nameFr: "Bloc de 3 heures",
+        nameEn: "3-hour block",
+        durationMinutes: 180,
+        priceCents: 40_000,
+        capacity: 1,
+        descriptionFr: "Un bloc d'un seul tenant pour un atelier ou un plan d'action.",
+        descriptionEn: "One uninterrupted block for a workshop or an action plan.",
+        includedFr: ["Atelier ou plan d'action", "Compte rendu écrit"],
+        includedEn: ["Workshop or action plan", "Written summary"],
+      },
     ],
     shopType: "consulting",
     template: "consulting-carte",
@@ -135,18 +300,44 @@ async function keepType(db: Db, shopId: string, shopType: ShopType): Promise<voi
 /** The demo's template at the notebook's version (folioviv#316): applied once, and a demo still on `@1` is moved to `@2` (the owner's update, the same way). Through `applyTemplate`, the template's order. */
 async function keepTemplate(db: Db, shopId: string, template: string): Promise<void> {
   const config = await shopPageConfigOf(db, shopId);
-  if (!config.templateId || (config.templateVersion ?? 0) < CAHIER_VERSION) await applyTemplate(db, shopId, { templateId: template, templateVersion: CAHIER_VERSION, keepOrder: false }, [...TEMPLATES, ...TEMPLATES_V2]);
+  if (!config.templateId || (config.templateVersion ?? 0) < CAHIER_VERSION)
+    await applyTemplate(db, shopId, { templateId: template, templateVersion: CAHIER_VERSION, keepOrder: false }, [
+      ...TEMPLATES,
+      ...TEMPLATES_V2,
+    ]);
 }
 
 /** The Saint-Henri demo set (krizaka-internal#1660): shop types, hours, services and price patterns of a field survey, with invented names and positions shifted 150-400 m (`demo-st-henri.json`, generated outside the repository, tested against hashes of the survey's names). Images are the trade's defaults: no photo, no logo. */
-interface StHenriShop { slug: string; name: string; legalName: string; address: string; zone: { name: string; lat: number; lng: number }; shopType: ShopType; template: string; phone: string; taglineFr: string; taglineEn: string; bioFr: string; bioEn: string; hours: { weekday: number; startsAt: string; endsAt: string }[]; services: DemoShop["services"]; rules: Partial<ShopRules> }
+interface StHenriShop {
+  slug: string;
+  name: string;
+  legalName: string;
+  address: string;
+  zone: { name: string; lat: number; lng: number };
+  shopType: ShopType;
+  template: string;
+  phone: string;
+  taglineFr: string;
+  taglineEn: string;
+  bioFr: string;
+  bioEn: string;
+  hours: { weekday: number; startsAt: string; endsAt: string }[];
+  services: DemoShop["services"];
+  rules: Partial<ShopRules>;
+}
 
 export const ST_HENRI_DEMO_SHOPS: DemoShop[] = (stHenri as StHenriShop[]).map((d) => ({
   ownerEmail: `${d.slug}@folioviv.test`,
   shop: { name: d.name, legalName: d.legalName, address: d.address, slug: d.slug, ownerName: "Équipe" },
   taglineFr: d.taglineFr,
   taglineEn: d.taglineEn,
-  profile: { area: "Saint-Henri, Montréal", bioFr: d.bioFr, bioEn: d.bioEn, publicPhone: d.phone, publicEmail: `bonjour@${d.slug}.example` },
+  profile: {
+    area: "Saint-Henri, Montréal",
+    bioFr: d.bioFr,
+    bioEn: d.bioEn,
+    publicPhone: d.phone,
+    publicEmail: `bonjour@${d.slug}.example`,
+  },
   team: [{ name: "Équipe", hours: d.hours }],
   services: d.services,
   rules: d.rules,
@@ -173,7 +364,13 @@ async function shopOfSlug(db: Db, slug: string): Promise<{ id: string } | null> 
 /** Seeds (or refreshes) one demo shop through the product's operations. Idempotent per owner: a second run changes nothing it already holds. */
 export async function seedDemo(db: Db, demo: DemoShop): Promise<{ shopId: string; created: boolean }> {
   const ownerId = await ensureOwner(db, demo.ownerEmail);
-  const page = { ...demo.shop, businessType: "professional" as const, taglineFr: demo.taglineFr, taglineEn: demo.taglineEn, ...demo.profile };
+  const page = {
+    ...demo.shop,
+    businessType: "professional" as const,
+    taglineFr: demo.taglineFr,
+    taglineEn: demo.taglineEn,
+    ...demo.profile,
+  };
   // The shop of this owner, else the one that already holds the address: an older seed (another owner) must be kept, never created again (AK_SLUG_TAKEN).
   const existing = (await shopOfOwner(db, ownerId)) ?? (await shopOfSlug(db, demo.shop.slug));
   if (existing) {
@@ -192,9 +389,20 @@ export async function seedDemo(db: Db, demo: DemoShop): Promise<{ shopId: string
   }
   for (const s of demo.services) await saveService(db, shopId, s);
   // Registered for the GST and the QST (fictional numbers), so a price is shown before taxes and the tax is exact.
-  await db.update(shops).set({ registrant: true, gstNumber: "123456789RT0001", qstNumber: "1234567890TQ0001" }).where(eq(shops.id, shopId));
+  await db
+    .update(shops)
+    .set({ registrant: true, gstNumber: "123456789RT0001", qstNumber: "1234567890TQ0001" })
+    .where(eq(shops.id, shopId));
   const [current] = await db.select().from(shops).where(eq(shops.id, shopId));
-  await saveRules(db, shopId, { cancellationHours: 24, bookingHorizonDays: 60, slotStepMinutes: 30, minNoticeMinutes: 120, reportLinkDays: 30, paymentTermsDays: current!.paymentTermsDays, ...demo.rules });
+  await saveRules(db, shopId, {
+    cancellationHours: 24,
+    bookingHorizonDays: 60,
+    slotStepMinutes: 30,
+    minNoticeMinutes: 120,
+    reportLinkDays: 30,
+    paymentTermsDays: current!.paymentTermsDays,
+    ...demo.rules,
+  });
   if (demo.cover) await saveShopMedia(db, shopId, { cover: { ...demo.cover } });
   await saveShopPage(db, ownerId, { ...page, published: true });
   await keepType(db, shopId, demo.shopType);
@@ -213,11 +421,21 @@ export const DEMO_OWNER_FLAGS: Readonly<Record<string, boolean>> = { "features.c
 /** One `set-setting.mjs` argument list per owner and flag: the demo owners are the seed's own `.test` addresses. */
 export function demoOwnerFlagArgs(shops: readonly DemoShop[] = ALL_DEMO_SHOPS): string[][] {
   return [...new Set(shops.map((d) => d.ownerEmail))].flatMap((email) =>
-    Object.entries(DEMO_OWNER_FLAGS).map(([key, value]) => [key, JSON.stringify(value), "--user", email, "--actor", "seed-demo-flags"]),
+    Object.entries(DEMO_OWNER_FLAGS).map(([key, value]) => [
+      key,
+      JSON.stringify(value),
+      "--user",
+      email,
+      "--actor",
+      "seed-demo-flags",
+    ]),
   );
 }
 
-export async function seedDemoShops(db: Db, shops: readonly DemoShop[] = DEMO_SHOPS): Promise<{ slug: string; shopId: string; created: boolean }[]> {
+export async function seedDemoShops(
+  db: Db,
+  shops: readonly DemoShop[] = DEMO_SHOPS,
+): Promise<{ slug: string; shopId: string; created: boolean }[]> {
   const out = [];
   for (const demo of shops) out.push({ slug: demo.shop.slug, ...(await seedDemo(db, demo)) });
   return out;
@@ -225,6 +443,15 @@ export async function seedDemoShops(db: Db, shops: readonly DemoShop[] = DEMO_SH
 
 /** How many people and services a demo shop holds (for the proof and the tests). */
 export async function demoCounts(db: Db, shopId: string): Promise<{ team: number; services: number }> {
-  const [team, services] = await Promise.all([db.select().from(staffTable).where(and(eq(staffTable.shopId, shopId), eq(staffTable.active, true))), db.select().from(servicesTable).where(and(eq(servicesTable.shopId, shopId), eq(servicesTable.active, true)))]);
+  const [team, services] = await Promise.all([
+    db
+      .select()
+      .from(staffTable)
+      .where(and(eq(staffTable.shopId, shopId), eq(staffTable.active, true))),
+    db
+      .select()
+      .from(servicesTable)
+      .where(and(eq(servicesTable.shopId, shopId), eq(servicesTable.active, true))),
+  ]);
   return { team: team.length, services: services.length };
 }

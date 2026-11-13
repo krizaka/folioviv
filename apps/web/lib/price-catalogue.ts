@@ -11,7 +11,10 @@ import { CATALOGUE } from "./pricing";
 const holder = globalThis as unknown as { __foliovivPrices?: PriceCatalogue };
 
 export function appPrices(): PriceCatalogue {
-  holder.__foliovivPrices ??= priceCatalogue(CATALOGUE, priceStore({ query: async (sql, params) => query(sql, params as unknown[]) as never }));
+  holder.__foliovivPrices ??= priceCatalogue(
+    CATALOGUE,
+    priceStore({ query: async (sql, params) => query(sql, params as unknown[]) as never }),
+  );
   return holder.__foliovivPrices;
 }
 

@@ -7,11 +7,52 @@ import { renderIn } from "@/lib/test-i18n";
 import { NewShop } from "./NewShop";
 
 vi.mock("@/app/actions/remember-shop", () => ({ rememberShop: () => Promise.resolve() }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: () => undefined, replace: () => undefined, push: () => undefined }), usePathname: () => "/en/app/s1/shop/new", useSearchParams: () => new URLSearchParams() }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: () => undefined, replace: () => undefined, push: () => undefined }),
+  usePathname: () => "/en/app/s1/shop/new",
+  useSearchParams: () => new URLSearchParams(),
+}));
 
-const offers = templateChoicesByTrade({ enabled: true, offered: ["consulting-carte", "consulting-histoire", "salon-vitrine", "salon-carte", "pets-histoire", "pets-vitrine", "coaching-vitrine", "coaching-histoire", "workshop-histoire", "workshop-carte", "cleaning-vitrine", "cleaning-carte"], defaults: { salon: "salon-carte", coaching: "coaching-vitrine", workshop: "workshop-histoire", cleaning: "cleaning-vitrine", pets: "pets-histoire", consulting: "consulting-histoire" } }, SHOP_TYPES);
-const text = (h: string) => h.replace(/<[^>]*>/g, " ").replace(/&#x27;/g, "'").replace(/&quot;/g, '"').replace(/&[a-z#0-9]+;/gi, " ").replace(/\s+/g, " ");
-const checked = (html: string, name: string) => html.split("aria-checked=").find((seg) => seg.includes(`>${name}<`))?.startsWith('"true"');
+const offers = templateChoicesByTrade(
+  {
+    enabled: true,
+    offered: [
+      "consulting-carte",
+      "consulting-histoire",
+      "salon-vitrine",
+      "salon-carte",
+      "pets-histoire",
+      "pets-vitrine",
+      "coaching-vitrine",
+      "coaching-histoire",
+      "workshop-histoire",
+      "workshop-carte",
+      "cleaning-vitrine",
+      "cleaning-carte",
+    ],
+    defaults: {
+      salon: "salon-carte",
+      coaching: "coaching-vitrine",
+      workshop: "workshop-histoire",
+      cleaning: "cleaning-vitrine",
+      pets: "pets-histoire",
+      consulting: "consulting-histoire",
+    },
+  },
+  SHOP_TYPES,
+);
+const text = (h: string) =>
+  h
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&#x27;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&[a-z#0-9]+;/gi, " ")
+    .replace(/\s+/g, " ");
+const checked = (html: string, name: string) =>
+  html
+    .split("aria-checked=")
+    .find((seg) => seg.includes(`>${name}<`))
+    ?.startsWith('"true"');
 
 describe("« Add a shop » with the templates offered (#261, step 4)", () => {
   it("asks the trade in place of the business type, and preselects the administrator's default template for it, beside a plain page", () => {
@@ -37,6 +78,7 @@ describe("« Add a shop » with the templates offered (#261, step 4)", () => {
 
   it("speaks French", () => {
     const t = text(renderIn("fr", "professional", <NewShop locale="fr" backHref="/fr/app/s1/shop" offers={offers} />));
-    for (const word of ["Votre métier", "Modèle de page", "Page simple", "Suggéré", "Créer la boutique"]) expect(t).toContain(word);
+    for (const word of ["Votre métier", "Modèle de page", "Page simple", "Suggéré", "Créer la boutique"])
+      expect(t).toContain(word);
   });
 });

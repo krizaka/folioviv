@@ -1,4 +1,11 @@
-import { type BusyRange, type BusyResult, type CalendarSource, CalendarSourceError, parseBusy, type Validators } from "@folioviv/core";
+import {
+  type BusyRange,
+  type BusyResult,
+  type CalendarSource,
+  CalendarSourceError,
+  parseBusy,
+  type Validators,
+} from "@folioviv/core";
 
 import { assertPublicHost, parseCalendarUrl, type Resolver } from "./public-url";
 
@@ -36,7 +43,10 @@ async function readLimited(res: Response): Promise<string> {
 }
 
 async function request(doFetch: typeof fetch, url: URL, validators: Validators): Promise<Response> {
-  const headers: Record<string, string> = { accept: "text/calendar, text/plain;q=0.5", "user-agent": "Folioviv-calendar-sync" };
+  const headers: Record<string, string> = {
+    accept: "text/calendar, text/plain;q=0.5",
+    "user-agent": "Folioviv-calendar-sync",
+  };
   if (validators.etag) headers["if-none-match"] = validators.etag;
   if (validators.lastModified) headers["if-modified-since"] = validators.lastModified;
   try {
@@ -66,13 +76,15 @@ export function icsUrlSource(options: IcsUrlOptions): CalendarSource {
         if (res.status === 304) return { changed: false };
         if (res.status >= 300 && res.status < 400) {
           const next = res.headers.get("location");
-          if (!next || hop >= MAX_REDIRECTS) throw new CalendarSourceError("AK_CAL_UNREACHABLE", false, "too many redirects");
+          if (!next || hop >= MAX_REDIRECTS)
+            throw new CalendarSourceError("AK_CAL_UNREACHABLE", false, "too many redirects");
           url = parseCalendarUrl(new URL(next, url).toString());
           continue;
         }
         failOnStatus(res);
         const text = await readLimited(res);
-        if (!/^\s*BEGIN:VCALENDAR/i.test(text)) throw new CalendarSourceError("AK_CAL_INVALID", false, "not a calendar");
+        if (!/^\s*BEGIN:VCALENDAR/i.test(text))
+          throw new CalendarSourceError("AK_CAL_INVALID", false, "not a calendar");
         return {
           changed: true,
           busy: parseBusy(text, { ...range, timezone: options.timezone }),

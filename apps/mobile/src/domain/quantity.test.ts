@@ -9,6 +9,7 @@ describe("a line's quantity", () => {
   });
 
   it("refuses what would break the totals or be refused by the server", () => {
-    for (const bad of ["0", "-1", "0.001", "1.005", "10000.01", "abc", "", "Infinity"]) expect(parseQuantity(bad)).toBeNull();
+    for (const bad of ["0", "-1", "0.001", "1.005", "10000.01", "abc", "", "Infinity"])
+      expect(parseQuantity(bad)).toBeNull();
   });
 });

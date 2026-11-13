@@ -15,7 +15,16 @@ export const POST = (req: Request) =>
     const session = await requireSession(req);
     limit("accept-invite", req, session.account.id, [20, 3600]);
     const { token } = await readJson(req, z.object({ token: z.string().max(200) }));
-    const joined = await teamAct(() => team().acceptInvitation(token, { id: session.account.id, email: session.account.email }, systemClock.now()));
-    await audit({ action: "team.joined", actorId: session.account.id, actorLabel: session.account.email, targetId: joined.scopeId, detail: { role: joined.role }, headers: req.headers });
+    const joined = await teamAct(() =>
+      team().acceptInvitation(token, { id: session.account.id, email: session.account.email }, systemClock.now()),
+    );
+    await audit({
+      action: "team.joined",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: joined.scopeId,
+      detail: { role: joined.role },
+      headers: req.headers,
+    });
     return Response.json(joined);
   });

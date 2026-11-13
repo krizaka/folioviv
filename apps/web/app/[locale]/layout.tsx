@@ -39,7 +39,10 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 }
 
 /** The root of every page, in the language of the address, dark by default (the visitor's `kz-theme` wins). */
-export default async function LocaleLayout({ children, params }: Readonly<{ children: React.ReactNode; params: Promise<{ locale: string }> }>) {
+export default async function LocaleLayout({
+  children,
+  params,
+}: Readonly<{ children: React.ReactNode; params: Promise<{ locale: string }> }>) {
   const { locale } = await params;
   if (!PAGE_LOCALES.includes(locale as PageLocale)) notFound();
   // The nonce of a shop page's strict policy (proxy.ts sets it on the request): the theme script is the one inline script the page runs.
@@ -49,7 +52,13 @@ export default async function LocaleLayout({ children, params }: Readonly<{ chil
       <head>
         <ThemeScript defaultMode="dark" nonce={nonce} />
       </head>
-      <body className={cn(shopSans.variable, shopDisplay.variable, "kz-shop-fonts min-h-screen bg-surface-0 text-fg antialiased selection:bg-accent selection:text-on-accent")}>
+      <body
+        className={cn(
+          shopSans.variable,
+          shopDisplay.variable,
+          "kz-shop-fonts min-h-screen bg-surface-0 text-fg antialiased selection:bg-accent selection:text-on-accent",
+        )}
+      >
         <ThemeProvider defaultMode="dark">
           <StageNotice locale={uiLocaleOf(locale as PageLocale)} />
           <RoutePageTransition>{children}</RoutePageTransition>

@@ -10,5 +10,8 @@ export const dynamic = "force-dynamic";
 export const GET = (req: Request) =>
   handle(async () => {
     await requireAdmin(req);
-    return Response.json({ pending: await pendingAssociations(db()) }, { headers: { "Cache-Control": "private, no-store" } });
+    return Response.json(
+      { pending: await pendingAssociations(db()) },
+      { headers: { "Cache-Control": "private, no-store" } },
+    );
   });

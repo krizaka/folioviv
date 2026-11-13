@@ -13,7 +13,13 @@ export default defineConfig({
     {
       name: "critical",
       testMatch: "**/*.critical.mjs",
-      use: { baseURL: process.env.BASE_URL ?? "http://localhost:3000", video: "on", viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true },
+      use: {
+        baseURL: process.env.BASE_URL ?? "http://localhost:3000",
+        video: "on",
+        viewport: { width: 390, height: 844 },
+        isMobile: true,
+        hasTouch: true,
+      },
     },
   ],
 });

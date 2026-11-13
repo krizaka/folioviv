@@ -1,16 +1,47 @@
 import { describe, expect, it, vi } from "vitest";
 
-const found = vi.hoisted(() => ({ applied: [] as boolean[], mails: [] as { to: string; locale: string; subject: string; text: string }[], delivered: 0 }));
+const found = vi.hoisted(() => ({
+  applied: [] as boolean[],
+  mails: [] as { to: string; locale: string; subject: string; text: string }[],
+  delivered: 0,
+}));
 vi.mock("@folioviv/db", () => ({
   rejudgeShops: async (_db: unknown, _terms: unknown, o: { apply: boolean }) => (
     found.applied.push(o.apply),
     [
-      { shopId: "s1", name: "Salon Laurier", slug: "login-laurier", matched: "login", ownerId: "o1", ownerEmail: "a@x.test", ownerLocale: "fr" },
-      { shopId: "s2", name: "Toilettage", slug: "secure-toilettage", matched: "secure", ownerId: "o2", ownerEmail: "b@x.test", ownerLocale: "en" },
-      { shopId: "s3", name: "Sans courriel", slug: "wallet-x", matched: "wallet", ownerId: null, ownerEmail: null, ownerLocale: "fr" },
+      {
+        shopId: "s1",
+        name: "Salon Laurier",
+        slug: "login-laurier",
+        matched: "login",
+        ownerId: "o1",
+        ownerEmail: "a@x.test",
+        ownerLocale: "fr",
+      },
+      {
+        shopId: "s2",
+        name: "Toilettage",
+        slug: "secure-toilettage",
+        matched: "secure",
+        ownerId: "o2",
+        ownerEmail: "b@x.test",
+        ownerLocale: "en",
+      },
+      {
+        shopId: "s3",
+        name: "Sans courriel",
+        slug: "wallet-x",
+        matched: "wallet",
+        ownerId: null,
+        ownerEmail: null,
+        ownerLocale: "fr",
+      },
     ]
   ),
-  enqueueMail: async (_db: unknown, m: { to: string; locale: string; subject: string; text: string }) => (found.mails.push(m), `mail-${found.mails.length}`),
+  enqueueMail: async (_db: unknown, m: { to: string; locale: string; subject: string; text: string }) => (
+    found.mails.push(m),
+    `mail-${found.mails.length}`
+  ),
   mailById: async (_db: unknown, id: string) => ({ id }),
 }));
 vi.mock("./brand-name", () => ({ productName: async () => "Folioviv" }));
@@ -35,7 +66,10 @@ describe("the one-off re-judging of the shops that predate the hold (ADR-005, #5
     const report = await rejudgeAndNotify({} as never, { apply: true, now, settings });
     expect(report.notified).toBe(2);
     expect(found.delivered).toBe(2);
-    expect(found.mails.map((m) => [m.to, m.locale])).toEqual([["a@x.test", "fr"], ["b@x.test", "en"]]);
+    expect(found.mails.map((m) => [m.to, m.locale])).toEqual([
+      ["a@x.test", "fr"],
+      ["b@x.test", "en"],
+    ]);
     expect(found.mails[0]!.subject).toContain("Salon Laurier");
     expect(found.mails[0]!.text).toContain("login-laurier");
     expect(found.mails[0]!.text).toContain("https://www.folioviv.com/fr/app/s1/settings/page");

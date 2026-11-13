@@ -15,16 +15,37 @@ export { type Choice, journeyBase, serviceHref, timesHref };
  * from the catalogues, the addresses are built here. Nothing is shown that the engine does not run.
  */
 const lang = (locale: Locale) => (locale === "fr" ? "fr-CA" : "en-CA");
-const money = (cents: number, locale: Locale) => new Intl.NumberFormat(lang(locale), { style: "currency", currency: "CAD" }).format(cents / 100);
-const clock = (instant: Date, timezone: string, locale: Locale) => clockLabel(new Intl.DateTimeFormat("en-CA", { timeZone: timezone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(instant), locale);
-const dayLabel = (day: string, locale: Locale, style: "short" | "long") => new Intl.DateTimeFormat(lang(locale), { timeZone: "UTC", weekday: style, ...(style === "long" ? { day: "numeric", month: "long" } : {}) }).format(new Date(`${day}T12:00:00Z`));
-const dayMonth = (day: string, locale: Locale) => new Intl.DateTimeFormat(lang(locale), { timeZone: "UTC", day: "numeric", month: "short" }).format(new Date(`${day}T12:00:00Z`));
+const money = (cents: number, locale: Locale) =>
+  new Intl.NumberFormat(lang(locale), { style: "currency", currency: "CAD" }).format(cents / 100);
+const clock = (instant: Date, timezone: string, locale: Locale) =>
+  clockLabel(
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: timezone,
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    }).format(instant),
+    locale,
+  );
+const dayLabel = (day: string, locale: Locale, style: "short" | "long") =>
+  new Intl.DateTimeFormat(lang(locale), {
+    timeZone: "UTC",
+    weekday: style,
+    ...(style === "long" ? { day: "numeric", month: "long" } : {}),
+  }).format(new Date(`${day}T12:00:00Z`));
+const dayMonth = (day: string, locale: Locale) =>
+  new Intl.DateTimeFormat(lang(locale), { timeZone: "UTC", day: "numeric", month: "short" }).format(
+    new Date(`${day}T12:00:00Z`),
+  );
 
 /** A published shop always has an address. */
 const slugOf = (page: PublicShop): string => page.shop.slug ?? "";
 
 /** The person and the area the address names, when the shop has them (anything else is « anyone » / the first area). */
-export function resolveChoice(page: PublicShop, raw: { staff?: string | null; zone?: string | null }): { staffId: string | null; zoneId: string | null } {
+export function resolveChoice(
+  page: PublicShop,
+  raw: { staff?: string | null; zone?: string | null },
+): { staffId: string | null; zoneId: string | null } {
   return {
     staffId: page.team.some((m) => m.id === raw.staff) ? (raw.staff ?? null) : null,
     zoneId: page.zones.some((z) => z.id === raw.zone) ? (raw.zone ?? null) : (page.zones[0]?.id ?? null),
@@ -51,7 +72,13 @@ export interface ServiceStep {
 }
 
 /** One service: what it is, what it costs to the cent, the cancellation rule, who may take it. */
-export function serviceStep(input: { page: PublicShop; locale: Locale; serviceId: string; staffId: string | null; zoneId?: string | null }): ServiceStep | null {
+export function serviceStep(input: {
+  page: PublicShop;
+  locale: Locale;
+  serviceId: string;
+  staffId: string | null;
+  zoneId?: string | null;
+}): ServiceStep | null {
   const { page, locale } = input;
   const service = page.services.find((s) => s.id === input.serviceId);
   if (!service) return null;
@@ -59,7 +86,9 @@ export function serviceStep(input: { page: PublicShop; locale: Locale; serviceId
   const { staffId, zoneId } = resolveChoice(page, { staff: input.staffId, zone: input.zoneId });
   const onQuote = isOnQuote(service);
   const free = service.priceCents === 0 && !onQuote;
-  const listed = service.priceVaries ? t("console.journey.fromPrice", { price: money(service.priceCents, locale) }) : money(service.priceCents, locale);
+  const listed = service.priceVaries
+    ? t("console.journey.fromPrice", { price: money(service.priceCents, locale) })
+    : money(service.priceCents, locale);
   const unlisted = free ? t("console.journey.freeService") : listed;
   const price = onQuote ? t("console.journey.onQuote") : unlisted;
   const pick = (fr: string | null, en: string | null) => (locale === "fr" ? fr : en) || null;
@@ -74,9 +103,30 @@ export function serviceStep(input: { page: PublicShop; locale: Locale; serviceId
     cancelRule: t("console.journey.cancelRule", { hours: page.rules.cancellationHours }),
     team:
       page.team.length > 1
-        ? [{ id: "", name: t("console.journey.anyone"), selected: staffId === null, href: serviceHref(locale, slugOf(page), service.id, { zoneId }) }, ...page.team.map((m) => ({ id: m.id, name: m.name, selected: staffId === m.id, href: serviceHref(locale, slugOf(page), service.id, { staffId: m.id, zoneId }) }))]
+        ? [
+            {
+              id: "",
+              name: t("console.journey.anyone"),
+              selected: staffId === null,
+              href: serviceHref(locale, slugOf(page), service.id, { zoneId }),
+            },
+            ...page.team.map((m) => ({
+              id: m.id,
+              name: m.name,
+              selected: staffId === m.id,
+              href: serviceHref(locale, slugOf(page), service.id, { staffId: m.id, zoneId }),
+            })),
+          ]
         : [],
-    zones: page.zones.length > 1 ? page.zones.map((z) => ({ id: z.id, name: z.name, selected: zoneId === z.id, href: serviceHref(locale, slugOf(page), service.id, { staffId, zoneId: z.id }) })) : [],
+    zones:
+      page.zones.length > 1
+        ? page.zones.map((z) => ({
+            id: z.id,
+            name: z.name,
+            selected: zoneId === z.id,
+            href: serviceHref(locale, slugOf(page), service.id, { staffId, zoneId: z.id }),
+          }))
+        : [],
     timesHref: timesHref(locale, slugOf(page), service.id, { staffId, zoneId }),
     backHref: journeyBase(locale, slugOf(page)),
   };
@@ -85,7 +135,13 @@ export function serviceStep(input: { page: PublicShop; locale: Locale; serviceId
 export interface TimesStep {
   title: string;
   who: string | null;
-  days: { id: string; label: string; sub: string; slots: { id: string; label: string; note?: string; href: string }[]; groups: { id: string; label: string; slots: { id: string; label: string; note?: string; href: string }[] }[] }[];
+  days: {
+    id: string;
+    label: string;
+    sub: string;
+    slots: { id: string; label: string; note?: string; href: string }[];
+    groups: { id: string; label: string; slots: { id: string; label: string; note?: string; href: string }[] }[];
+  }[];
   /** The shop's clock, said under the times. */
   footer: string;
   changeHref: string | null;
@@ -93,7 +149,15 @@ export interface TimesStep {
 }
 
 /** The times that are really free for a service and a person (or anyone), each a link that opens the booking with everything chosen. */
-export function timesStep(input: { page: PublicShop; locale: Locale; now: Date; serviceId: string; staffId: string | null; zoneId?: string | null; slots: readonly StaffSlot[] }): TimesStep | null {
+export function timesStep(input: {
+  page: PublicShop;
+  locale: Locale;
+  now: Date;
+  serviceId: string;
+  staffId: string | null;
+  zoneId?: string | null;
+  slots: readonly StaffSlot[];
+}): TimesStep | null {
   const { page, locale, now } = input;
   const service = page.services.find((s) => s.id === input.serviceId);
   if (!service) return null;
@@ -105,15 +169,22 @@ export function timesStep(input: { page: PublicShop; locale: Locale; now: Date; 
   const tomorrow = addLocalDays(today, 1);
   return {
     title: locale === "fr" ? service.nameFr : service.nameEn,
-    who: person ? t("console.journey.with", { name: person.name }) : (page.team.length > 1 && t("console.journey.anyone")) || null,
+    who: person
+      ? t("console.journey.with", { name: person.name })
+      : (page.team.length > 1 && t("console.journey.anyone")) || null,
     footer: t("console.journey.timesFooter", { zone: timezone }),
     days: groupSlotsByDay(input.slots, timezone, { maxDays: 14, maxPerDay: 12 }).map((d) => {
-      const named: Record<string, string> = { [today]: t("console.shopPage.today"), [tomorrow]: t("console.shopPage.tomorrow") };
+      const named: Record<string, string> = {
+        [today]: t("console.shopPage.today"),
+        [tomorrow]: t("console.shopPage.tomorrow"),
+      };
       // A time already inside the cancellation window says so in the list, before the click (the same `canCancel` that words the summary).
       const slot = (s: { startsAt: Date }) => ({
         id: s.startsAt.toISOString(),
         label: clock(s.startsAt, timezone, locale),
-        ...(canCancel(s.startsAt, now, page.rules.cancellationHours) ? {} : { note: t("console.journey.slotInsideWindow") }),
+        ...(canCancel(s.startsAt, now, page.rules.cancellationHours)
+          ? {}
+          : { note: t("console.journey.slotInsideWindow") }),
         href: confirmHref(locale, slugOf(page), service.id, { staffId: person?.id, zoneId }, s.startsAt.toISOString()),
       });
       return {
@@ -121,10 +192,17 @@ export function timesStep(input: { page: PublicShop; locale: Locale; now: Date; 
         label: named[d.day] ?? dayLabel(d.day, locale, "short"),
         sub: dayMonth(d.day, locale),
         slots: d.slots.map(slot),
-        groups: groupByPart(d.slots, (s) => hourIn(s.startsAt, timezone)).map((g) => ({ id: g.part, label: t(`console.journey.parts.${g.part}`), slots: g.items.map(slot) })),
+        groups: groupByPart(d.slots, (s) => hourIn(s.startsAt, timezone)).map((g) => ({
+          id: g.part,
+          label: t(`console.journey.parts.${g.part}`),
+          slots: g.items.map(slot),
+        })),
       };
     }),
-    changeHref: page.team.length > 1 || page.zones.length > 1 ? serviceHref(locale, slugOf(page), service.id, { staffId: person?.id, zoneId }) : null,
+    changeHref:
+      page.team.length > 1 || page.zones.length > 1
+        ? serviceHref(locale, slugOf(page), service.id, { staffId: person?.id, zoneId })
+        : null,
     backHref: serviceHref(locale, slugOf(page), service.id, { staffId: person?.id, zoneId }),
   };
 }
@@ -154,12 +232,26 @@ export function cancellationRule(input: { open: boolean; hours: number; locale: 
 }
 
 /** The exact price down to the total for a shop registered for the taxes (taxes included), the same line on the summary and on the receipt. */
-function taxLineOf(input: { registrant: boolean; priceCents: number; free: boolean; onQuote: boolean; locale: Locale }): string | null {
+function taxLineOf(input: {
+  registrant: boolean;
+  priceCents: number;
+  free: boolean;
+  onQuote: boolean;
+  locale: Locale;
+}): string | null {
   if (!input.registrant || input.free || input.onQuote) {
     return null;
   }
-  const totals = invoiceTotals([{ description: "service", quantity: 1, unitPriceCents: input.priceCents, category: "standard" }], { registrant: true });
-  return translator(input.locale)("console.journey.taxLine", { price: money(totals.subtotalCents, input.locale), gst: money(totals.gstCents, input.locale), qst: money(totals.qstCents, input.locale), total: money(totals.totalCents, input.locale) });
+  const totals = invoiceTotals(
+    [{ description: "service", quantity: 1, unitPriceCents: input.priceCents, category: "standard" }],
+    { registrant: true },
+  );
+  return translator(input.locale)("console.journey.taxLine", {
+    price: money(totals.subtotalCents, input.locale),
+    gst: money(totals.gstCents, input.locale),
+    qst: money(totals.qstCents, input.locale),
+    total: money(totals.totalCents, input.locale),
+  });
 }
 
 /** The confirmation: when, with whom, where, what it costs, the cancellation rule, add to calendar. */
@@ -175,7 +267,16 @@ export function confirmationStep(input: { detail: BookingDetail; locale: Locale 
     when: `${dayLabel(day, locale, "long")} · ${clock(detail.startsAt, detail.timezone, locale)}`,
     who: detail.staffName,
     where: `${detail.shop.name} — ${detail.shop.address}`,
-    price: detail.service.priceCents === 0 ? t("console.journey.freeService") : (taxLineOf({ registrant: detail.shop.registrant, priceCents: detail.service.priceCents, free: false, onQuote: false, locale }) ?? money(detail.service.priceCents, locale)),
+    price:
+      detail.service.priceCents === 0
+        ? t("console.journey.freeService")
+        : (taxLineOf({
+            registrant: detail.shop.registrant,
+            priceCents: detail.service.priceCents,
+            free: false,
+            onQuote: false,
+            locale,
+          }) ?? money(detail.service.priceCents, locale)),
     cancelled: detail.cancelled,
     cancellable: detail.cancellable,
     cancelRule: cancellationRule({ open: detail.cancellable, hours: detail.cancellationHours, locale }),
@@ -197,9 +298,23 @@ export interface GuestStep {
 }
 
 /** What a visitor sees above the details they give: the service, the time they chose, the price with its taxes, the cancellation rule. Nothing is asked before they see it. */
-export function guestStep(input: { page: PublicShop; locale: Locale; serviceId: string; startsAt: Date; now: Date; staffId: string | null; zoneId: string | null }): GuestStep | null {
+export function guestStep(input: {
+  page: PublicShop;
+  locale: Locale;
+  serviceId: string;
+  startsAt: Date;
+  now: Date;
+  staffId: string | null;
+  zoneId: string | null;
+}): GuestStep | null {
   const { page, locale, startsAt } = input;
-  const service = serviceStep({ page, locale, serviceId: input.serviceId, staffId: input.staffId, zoneId: input.zoneId });
+  const service = serviceStep({
+    page,
+    locale,
+    serviceId: input.serviceId,
+    staffId: input.staffId,
+    zoneId: input.zoneId,
+  });
   if (!service) {
     return null;
   }
@@ -212,7 +327,11 @@ export function guestStep(input: { page: PublicShop; locale: Locale; serviceId: 
     who: person ? translator(locale)("console.journey.with", { name: person.name }) : null,
     price: service.price,
     taxLine: service.taxLine,
-    cancelRule: cancellationRule({ open: canCancel(startsAt, input.now, page.rules.cancellationHours), hours: page.rules.cancellationHours, locale }),
+    cancelRule: cancellationRule({
+      open: canCancel(startsAt, input.now, page.rules.cancellationHours),
+      hours: page.rules.cancellationHours,
+      locale,
+    }),
     changeHref: timesHref(locale, slugOf(page), input.serviceId, { staffId, zoneId }),
   };
 }

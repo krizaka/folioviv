@@ -19,12 +19,20 @@ export function useCall() {
   const [pending, setPending] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const run = useCallback(
-    async <T = unknown>(path: string, init: { method?: string; json?: unknown; body?: BodyInit } = {}, options: { refresh?: boolean } = {}): Promise<T | null> => {
+    async <T = unknown>(
+      path: string,
+      init: { method?: string; json?: unknown; body?: BodyInit } = {},
+      options: { refresh?: boolean } = {},
+    ): Promise<T | null> => {
       setPending(true);
       setProblem(null);
       try {
         const target = routes && path.startsWith("/api/walker/") ? routes.api(path) : path;
-        const result = (await krizakaFetch(target, { method: init.method ?? "POST", ...(init.json !== undefined ? { json: init.json } : {}), ...(init.body ? { body: init.body } : {}) })) as T;
+        const result = (await krizakaFetch(target, {
+          method: init.method ?? "POST",
+          ...(init.json !== undefined ? { json: init.json } : {}),
+          ...(init.body ? { body: init.body } : {}),
+        })) as T;
         if (options.refresh !== false) router.refresh();
         return result;
       } catch (error) {

@@ -12,14 +12,34 @@ vi.mock("@/lib/settings", () => ({ appSettings: vi.fn() }));
 const policy = { terms: [{ source: "login" }] };
 vi.mock("@/lib/slug-policy", () => ({ slugPolicy: vi.fn(async () => policy) }));
 vi.mock("@/lib/organize", () => ({ organize: vi.fn() }));
-vi.mock("@folioviv/db", async (original) => ({ ...(await original<typeof import("@folioviv/db")>()), saveShopPage: vi.fn() }));
+vi.mock("@folioviv/db", async (original) => ({
+  ...(await original<typeof import("@folioviv/db")>()),
+  saveShopPage: vi.fn(),
+}));
 
-const page = { name: "Atelier", legalName: "Atelier inc.", address: "1 rue X", slug: "atelier-c", ownerName: "Éric", published: false };
-const post = () => POST(new Request("http://localhost/api/walker/shops", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(page) }));
+const page = {
+  name: "Atelier",
+  legalName: "Atelier inc.",
+  address: "1 rue X",
+  slug: "atelier-c",
+  ownerName: "Éric",
+  published: false,
+};
+const post = () =>
+  POST(
+    new Request("http://localhost/api/walker/shops", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(page),
+    }),
+  );
 
 describe("POST /api/walker/shops goes through the same shop limit (#265)", () => {
   beforeEach(() => {
-    vi.mocked(requireSession).mockResolvedValue({ id: "s", account: { id: "owner", email: "o@example.com", role: "USER", locale: "en" } });
+    vi.mocked(requireSession).mockResolvedValue({
+      id: "s",
+      account: { id: "owner", email: "o@example.com", role: "USER", locale: "en" },
+    });
     vi.mocked(appSettings).mockReturnValue({ get: vi.fn(async () => 3) } as never);
     vi.mocked(saveShopPage).mockResolvedValue({ shopId: "new", created: true, held: false });
   });

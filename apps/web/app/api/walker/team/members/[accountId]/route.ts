@@ -15,7 +15,14 @@ export const PATCH = (req: Request, { params }: Ctx) =>
     const target = idParam((await params).accountId);
     const { role } = await readJson(req, z.object({ role: z.string().max(20) }));
     await teamAct(() => team().setRole(shop.id, { id: session.account.id }, target, role));
-    await audit({ action: "team.role_changed", actorId: session.account.id, actorLabel: session.account.email, targetId: target, detail: { shopId: shop.id, role }, headers: req.headers });
+    await audit({
+      action: "team.role_changed",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: target,
+      detail: { shopId: shop.id, role },
+      headers: req.headers,
+    });
     return Response.json({ ok: true });
   });
 
@@ -25,6 +32,13 @@ export const DELETE = (req: Request, { params }: Ctx) =>
     const { session, shop } = await requireShop(req, "team");
     const target = idParam((await params).accountId);
     await teamAct(() => team().remove(shop.id, { id: session.account.id }, target));
-    await audit({ action: "team.member_removed", actorId: session.account.id, actorLabel: session.account.email, targetId: target, detail: { shopId: shop.id }, headers: req.headers });
+    await audit({
+      action: "team.member_removed",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: target,
+      detail: { shopId: shop.id },
+      headers: req.headers,
+    });
     return Response.json({ ok: true });
   });

@@ -36,7 +36,8 @@ const cookieToken = (header: string | null) =>
 const bearerToken = (header: string | null) => /^bearer (\S+)$/i.exec(header ?? "")?.[1];
 
 /** The session token of a request: the native apps' `Authorization: Bearer` (which wins: an app never replays a stale cookie), else the web's cookie. */
-export const sessionTokenOf = (requestHeaders: Headers): string | undefined => bearerToken(requestHeaders.get("authorization")) ?? cookieToken(requestHeaders.get("cookie"));
+export const sessionTokenOf = (requestHeaders: Headers): string | undefined =>
+  bearerToken(requestHeaders.get("authorization")) ?? cookieToken(requestHeaders.get("cookie"));
 
 /** The API's caller, from the bearer or the session cookie — or 401. */
 export async function requireSession(req: Request): Promise<Session> {
@@ -79,7 +80,8 @@ export async function requireShop(req: Request, permission: ShopPermission) {
   const asked = new URL(req.url).searchParams.get("shopId");
   const member = await shopOfMember(db(), session.account.id, asked ? idParam(asked) : undefined);
   if (!member) throw asked ? refuse(404, "NOT_FOUND", "Not found") : refuse(403, "NO_SHOP", "You do not run a shop");
-  if (!can(SHOP_ROLES, member.role, permission)) throw refuse(403, "FORBIDDEN", "Your role does not allow this", { permission });
+  if (!can(SHOP_ROLES, member.role, permission))
+    throw refuse(403, "FORBIDDEN", "Your role does not allow this", { permission });
   return { session, shop: member.shop, role: member.role };
 }
 

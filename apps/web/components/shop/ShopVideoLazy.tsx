@@ -29,13 +29,16 @@ export function ShopVideoLazy(props: Readonly<TvProps>) {
     if (typeof IntersectionObserver === "undefined") {
       return setNear(true);
     }
-    const io = new IntersectionObserver((entries) => {
-      if (!entries.some((e) => e.isIntersecting)) {
-        return;
-      }
-      setNear(true);
-      io.disconnect();
-    }, { rootMargin: NEAR });
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((e) => e.isIntersecting)) {
+          return;
+        }
+        setNear(true);
+        io.disconnect();
+      },
+      { rootMargin: NEAR },
+    );
     io.observe(el);
   }, []);
   if (near) {
@@ -43,9 +46,26 @@ export function ShopVideoLazy(props: Readonly<TvProps>) {
   }
   const poster = props.playlist[0]?.poster;
   return (
-    <Section id={props.id} title={props.title} lead={props.lead} data-shop-key={props["data-shop-key"]} data-variant="tv">
-      <div ref={watch} aria-hidden="true" data-tv-frame="" className="mx-auto aspect-[4/5] max-h-[36rem] w-full max-w-4xl overflow-hidden border border-border-default bg-surface-2 sm:aspect-[16/10] sm:max-h-none">
-        {poster ? <div role="presentation" className="h-full w-full bg-cover bg-center opacity-70" style={{ backgroundImage: `url(${poster})` }} /> : null}
+    <Section
+      id={props.id}
+      title={props.title}
+      lead={props.lead}
+      data-shop-key={props["data-shop-key"]}
+      data-variant="tv"
+    >
+      <div
+        ref={watch}
+        aria-hidden="true"
+        data-tv-frame=""
+        className="mx-auto aspect-[4/5] max-h-[36rem] w-full max-w-4xl overflow-hidden border border-border-default bg-surface-2 sm:aspect-[16/10] sm:max-h-none"
+      >
+        {poster ? (
+          <div
+            role="presentation"
+            className="h-full w-full bg-cover bg-center opacity-70"
+            style={{ backgroundImage: `url(${poster})` }}
+          />
+        ) : null}
       </div>
     </Section>
   );

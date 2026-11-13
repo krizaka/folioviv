@@ -7,21 +7,25 @@ import { BookPreview } from "./BookPreview";
 import { BooksPreview } from "./BooksPreview";
 import { InvoicePreview } from "./InvoicePreview";
 
-const render = (locale: "en" | "fr") => [BookPreview, InvoicePreview, BooksPreview].map((P) => renderToStaticMarkup(<P locale={locale} />));
+const render = (locale: "en" | "fr") =>
+  [BookPreview, InvoicePreview, BooksPreview].map((P) => renderToStaticMarkup(<P locale={locale} />));
 
 describe("the home's demo cards: one action and its result (folioviv#470, krizaka-internal#683)", () => {
-  it.each(["en", "fr"] as const)("draws the booking, the invoice and the return in %s, hidden from assistive tech", (locale) => {
-    const [book, invoice, books] = render(locale);
-    for (const h of [book, invoice, books]) expect(h).toContain('aria-hidden="true"');
-    expect(book).toContain("13:30");
-    // The result is on the card: the total with its two taxes, the three figures of the return.
-    expect(invoice).toMatch(/265[,.]00/);
-    expect(invoice).toMatch(/528[,.]68/);
-    expect(invoice).toMatch(/6[\s\u202f,.]?093[,.]68/);
-    expect(books).toMatch(/5[\s\u202f,.]?300[,.]00/);
-    expect(books).toMatch(/225[,.]00/);
-    expect(books).toMatch(/448[,.]78/);
-  });
+  it.each(["en", "fr"] as const)(
+    "draws the booking, the invoice and the return in %s, hidden from assistive tech",
+    (locale) => {
+      const [book, invoice, books] = render(locale);
+      for (const h of [book, invoice, books]) expect(h).toContain('aria-hidden="true"');
+      expect(book).toContain("13:30");
+      // The result is on the card: the total with its two taxes, the three figures of the return.
+      expect(invoice).toMatch(/265[,.]00/);
+      expect(invoice).toMatch(/528[,.]68/);
+      expect(invoice).toMatch(/6[\s\u202f,.]?093[,.]68/);
+      expect(books).toMatch(/5[\s\u202f,.]?300[,.]00/);
+      expect(books).toMatch(/225[,.]00/);
+      expect(books).toMatch(/448[,.]78/);
+    },
+  );
 
   it.each(["en", "fr"] as const)("never puts the demo label over the content nor clips the result (%s)", (locale) => {
     const demo = getDictionary(locale).landing.preview.demo;

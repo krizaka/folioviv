@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { pagePath,PAGES } from "./site";
+import { pagePath, PAGES } from "./site";
 
 const read = (p: string) => readFileSync(join(__dirname, "..", p), "utf8");
 const view = read("components/explore/ExploreView.tsx");
@@ -57,7 +57,8 @@ describe("the catalogues say every word of the page in both languages", () => {
   const en = JSON.parse(read("messages/en.json"));
   const fr = JSON.parse(read("messages/fr.json"));
   it("has the same keys, and « Explorer » in the bar", () => {
-    const keys = (o: unknown, p = ""): string[] => (o && typeof o === "object" ? Object.entries(o).flatMap(([k, v]) => keys(v, `${p}.${k}`)) : [p]);
+    const keys = (o: unknown, p = ""): string[] =>
+      o && typeof o === "object" ? Object.entries(o).flatMap(([k, v]) => keys(v, `${p}.${k}`)) : [p];
     expect(keys(fr.explore)).toEqual(keys(en.explore));
     expect(en.chrome.explore).toBe("Explorer");
     expect(fr.chrome.explore).toBe("Explorer");

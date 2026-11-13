@@ -5,7 +5,14 @@ import { isPastDue } from "./payment-terms";
  * correction (#207); paid in full; partly paid; overdue (its due date passed with money still owed); or due. Integer cents,
  * the shop's calendar day as `yyyy-MM-dd`. Pure.
  */
-export const INVOICE_STATE = { credit: "credit", cancelled: "cancelled", paid: "paid", partial: "partial", overdue: "overdue", due: "due" } as const;
+export const INVOICE_STATE = {
+  credit: "credit",
+  cancelled: "cancelled",
+  paid: "paid",
+  partial: "partial",
+  overdue: "overdue",
+  due: "due",
+} as const;
 export type InvoiceState = (typeof INVOICE_STATE)[keyof typeof INVOICE_STATE];
 
 export interface InvoiceStanding {
@@ -27,4 +34,5 @@ export function invoiceState(invoice: InvoiceStanding, today: string): InvoiceSt
 }
 
 /** What is still owed on it (never negative; nothing on a credit note or a cancelled invoice). */
-export const remainingCents = (invoice: InvoiceStanding): number => (invoice.isCredit || invoice.superseded ? 0 : Math.max(0, invoice.totalCents - invoice.paidCents));
+export const remainingCents = (invoice: InvoiceStanding): number =>
+  invoice.isCredit || invoice.superseded ? 0 : Math.max(0, invoice.totalCents - invoice.paidCents);

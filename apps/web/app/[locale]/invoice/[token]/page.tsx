@@ -13,7 +13,10 @@ import { asLocale } from "@/lib/i18n";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { robots: { index: false, follow: false }, referrer: "no-referrer" };
 
-export default async function PublicInvoicePage({ params, searchParams }: Readonly<{ params: Promise<{ locale: string; token: string }>; searchParams: Promise<{ replacement?: string }> }>) {
+export default async function PublicInvoicePage({
+  params,
+  searchParams,
+}: Readonly<{ params: Promise<{ locale: string; token: string }>; searchParams: Promise<{ replacement?: string }> }>) {
   const { locale: raw, token } = await params;
   const locale = asLocale(raw);
   const { replacement } = await searchParams;
@@ -25,8 +28,15 @@ export default async function PublicInvoicePage({ params, searchParams }: Readon
   if (!invoice) notFound();
   return (
     <>
-      <InvoicePublicDocument invoice={invoice} locale={locale} today={localDay(requestNow(), invoice.shop.timezone)} token={token} />
-      <div className="mx-auto w-full max-w-3xl px-5 pb-8 sm:px-8"><PrintInvoiceButton /></div>
+      <InvoicePublicDocument
+        invoice={invoice}
+        locale={locale}
+        today={localDay(requestNow(), invoice.shop.timezone)}
+        token={token}
+      />
+      <div className="mx-auto w-full max-w-3xl px-5 pb-8 sm:px-8">
+        <PrintInvoiceButton />
+      </div>
     </>
   );
 }

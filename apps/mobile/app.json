@@ -6,7 +6,11 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
-    "ios": { "bundleIdentifier": "com.krizaka.folioviv", "supportsTablet": false, "infoPlist": { "ITSAppUsesNonExemptEncryption": false } },
+    "ios": {
+      "bundleIdentifier": "com.krizaka.folioviv",
+      "supportsTablet": false,
+      "infoPlist": { "ITSAppUsesNonExemptEncryption": false }
+    },
     "android": { "package": "com.krizaka.folioviv" },
     "plugins": ["expo-router", "expo-secure-store", "expo-localization", "./plugins/with-release-signing"],
     "experiments": { "typedRoutes": true }

@@ -9,8 +9,15 @@ const day = (id: string, label: string): DayView => {
   const slot = { id: `${id}T14:00:00.000Z`, label: "10 h", href: `/book?start=${id}` };
   return { id, label, sub: id, slots: [slot], groups: [{ id: "morning", label: "Matin", slots: [slot] }] };
 };
-const labels = { label: "Heures disponibles", empty: "Aucune heure", previous: "Semaine précédente", today: "Cette semaine", next: "Semaine suivante" };
-const render = (days: DayView[]) => renderToStaticMarkup(<ShopSlots days={days} labels={labels} locale="fr-CA" footer="Heures de America/Toronto" />);
+const labels = {
+  label: "Heures disponibles",
+  empty: "Aucune heure",
+  previous: "Semaine précédente",
+  today: "Cette semaine",
+  next: "Semaine suivante",
+};
+const render = (days: DayView[]) =>
+  renderToStaticMarkup(<ShopSlots days={days} labels={labels} locale="fr-CA" footer="Heures de America/Toronto" />);
 
 describe("the public times by week and by part of the day (SlotPicker, krizaka-ui#672)", () => {
   it("shows the first week with its days, the part of the day, the week buttons and the clock said", () => {

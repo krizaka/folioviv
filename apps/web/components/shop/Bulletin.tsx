@@ -21,12 +21,7 @@ export function bulletinLayout(count: number): {
  * (the ink is the theme's text). Until `PinnedNote` of @krizaka/ui carries `paper` and `action` (krizaka-ui#828
  * ) the note is drawn here; then this file adopts it.
  */
-const PAPERS = [
-  "bg-warning-soft",
-  "bg-danger-soft",
-  "bg-success-soft",
-  "bg-accent-soft",
-] as const;
+const PAPERS = ["bg-warning-soft", "bg-danger-soft", "bg-success-soft", "bg-accent-soft"] as const;
 
 /** A flyer's look is read from its id, never from chance: the same flyer is the same paper, hold and lean on every render and every device. */
 export function flyerLook(id: string): {
@@ -60,21 +55,14 @@ export function Bulletin({
   return (
     <ul
       aria-label={label}
-      className={cn(
-        "m-0 grid list-none gap-8 p-0",
-        columns === 2 ? "md:grid-cols-2" : "md:grid-cols-3",
-      )}
+      className={cn("m-0 grid list-none gap-8 p-0", columns === 2 ? "md:grid-cols-2" : "md:grid-cols-3")}
       data-bulletin=""
     >
       {flyers.slice(0, shown).map((f) => {
         const look = flyerLook(f.id);
         return (
           <li key={f.id}>
-            <Stuck
-              hold={look.hold}
-              tilt={look.tilt}
-              className="block"
-            >
+            <Stuck hold={look.hold} tilt={look.tilt} className="block">
               <div className="text-border-default drop-shadow-[2px_3px_0_currentColor]">
                 <div
                   data-postit=""
@@ -86,11 +74,7 @@ export function Bulletin({
                   <p className="m-0 text-lg leading-relaxed">{f.text}</p>
                   {f.until || f.shop ? (
                     <div className="mt-auto flex flex-col gap-1">
-                      {f.until ? (
-                        <p className="m-0 text-sm text-fg-secondary">
-                          {f.until}
-                        </p>
-                      ) : null}
+                      {f.until ? <p className="m-0 text-sm text-fg-secondary">{f.until}</p> : null}
                       {f.shop ? (
                         <Link
                           href={f.shop.href}

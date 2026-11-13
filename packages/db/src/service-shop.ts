@@ -1,4 +1,26 @@
-import { addLocalDays, businessTypeSchema, holdSlug, type ProtectedTerm, type MemberDay, timeOffDays, type TimeOffRange, timeOffRanges, canCancel, type DependantInput, dependantInputSchema, localDay, openSlots, popularServiceId, type ShopRules, shopRulesSchema, type Slot, slugSchema, type TakenVisit, vocabularyOf, type WeeklyWindow } from "@folioviv/core";
+import {
+  addLocalDays,
+  businessTypeSchema,
+  holdSlug,
+  type ProtectedTerm,
+  type MemberDay,
+  timeOffDays,
+  type TimeOffRange,
+  timeOffRanges,
+  canCancel,
+  type DependantInput,
+  dependantInputSchema,
+  localDay,
+  openSlots,
+  popularServiceId,
+  type ShopRules,
+  shopRulesSchema,
+  type Slot,
+  slugSchema,
+  type TakenVisit,
+  vocabularyOf,
+  type WeeklyWindow,
+} from "@folioviv/core";
 import { addDays, compareAsc } from "date-fns";
 import { and, asc, between, desc, eq, gte, inArray, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
@@ -10,7 +32,25 @@ import { ShopError } from "./errors";
 import { type CommunityView, communityOf } from "./shop-community";
 import { shopPageConfigOf, type ShopPageConfig } from "./shop-page";
 import { type ShopLanguages, shopLanguagesOf, type StoredTranslation, translationsOf } from "./shop-translations";
-import { appointments, bookings, isPublicShop, memberships, clients, dependants, daysOff, MediaRole, schedules, services, shopFormerSlugs, shopMedia, shopSlugChanges, shopRules, shops, shopZones, staff } from "./schema";
+import {
+  appointments,
+  bookings,
+  isPublicShop,
+  memberships,
+  clients,
+  dependants,
+  daysOff,
+  MediaRole,
+  schedules,
+  services,
+  shopFormerSlugs,
+  shopMedia,
+  shopSlugChanges,
+  shopRules,
+  shops,
+  shopZones,
+  staff,
+} from "./schema";
 import { recordConsent } from "./shop-ops";
 
 /**
@@ -70,7 +110,14 @@ export const serviceInputSchema = z.object({
   includedEn: z.array(text(80)).max(6).optional(),
   priceVaries: z.boolean().optional(),
   /** Where the card leads when the offer lives on another site (https only); null removes it. Omitted = left as it is. */
-  linkUrl: z.string().trim().url().max(500).refine((url) => url.startsWith("https://"), { message: "https only" }).nullable().optional(),
+  linkUrl: z
+    .string()
+    .trim()
+    .url()
+    .max(500)
+    .refine((url) => url.startsWith("https://"), { message: "https only" })
+    .nullable()
+    .optional(),
 });
 export type ServiceInput = z.input<typeof serviceInputSchema>;
 
@@ -93,7 +140,12 @@ export function akCode(error: unknown): string | null {
 
 /** The shop of an owner: the one asked for (it must be theirs), else the default one. Null when there is none. */
 export async function shopOfOwner(db: Db, ownerId: string, shopId?: string) {
-  const [shop] = await db.select().from(shops).where(shopId ? and(eq(shops.ownerId, ownerId), eq(shops.id, shopId)) : eq(shops.ownerId, ownerId)).orderBy(desc(shops.isDefault), asc(shops.createdAt)).limit(1);
+  const [shop] = await db
+    .select()
+    .from(shops)
+    .where(shopId ? and(eq(shops.ownerId, ownerId), eq(shops.id, shopId)) : eq(shops.ownerId, ownerId))
+    .orderBy(desc(shops.isDefault), asc(shops.createdAt))
+    .limit(1);
   return shop ?? null;
 }
 
@@ -106,8 +158,14 @@ export async function shopOfMember(db: Db, accountId: string, shopId?: string) {
     .select({ shop: shops, role: sql<"owner" | "manager" | "staff">`${memberships.role}` })
     .from(memberships)
     .innerJoin(shops, eq(shops.id, memberships.scopeId))
-    .where(shopId ? and(eq(memberships.accountId, accountId), eq(shops.id, shopId)) : eq(memberships.accountId, accountId))
-    .orderBy(sql`(${memberships.role} = 'owner' AND ${shops.isDefault}) DESC`, sql`(${memberships.role} = 'owner') DESC`, asc(shops.createdAt))
+    .where(
+      shopId ? and(eq(memberships.accountId, accountId), eq(shops.id, shopId)) : eq(memberships.accountId, accountId),
+    )
+    .orderBy(
+      sql`(${memberships.role} = 'owner' AND ${shops.isDefault}) DESC`,
+      sql`(${memberships.role} = 'owner') DESC`,
+      asc(shops.createdAt),
+    )
     .limit(1);
   return row ?? null;
 }
@@ -119,7 +177,11 @@ export async function shopsOfMember(db: Db, accountId: string) {
     .from(memberships)
     .innerJoin(shops, eq(shops.id, memberships.scopeId))
     .where(eq(memberships.accountId, accountId))
-    .orderBy(sql`(${memberships.role} = 'owner' AND ${shops.isDefault}) DESC`, sql`(${memberships.role} = 'owner') DESC`, asc(shops.name));
+    .orderBy(
+      sql`(${memberships.role} = 'owner' AND ${shops.isDefault}) DESC`,
+      sql`(${memberships.role} = 'owner') DESC`,
+      asc(shops.name),
+    );
 }
 
 /** The account that runs a shop (null once the account is gone): who its webhooks and keys belong to. */
@@ -130,14 +192,31 @@ export async function ownerOfShop(db: Db, shopId: string): Promise<string | null
 
 /** All the owner's shops, the default first. */
 export async function shopsOfOwner(db: Db, ownerId: string) {
-  return db.select({ id: shops.id, name: shops.name, slug: shops.slug, published: shops.published, isDefault: shops.isDefault, businessType: shops.businessType, description: shops.description, avatar: shops.avatar, collectionId: shops.collectionId }).from(shops).where(eq(shops.ownerId, ownerId)).orderBy(desc(shops.isDefault), asc(shops.createdAt));
+  return db
+    .select({
+      id: shops.id,
+      name: shops.name,
+      slug: shops.slug,
+      published: shops.published,
+      isDefault: shops.isDefault,
+      businessType: shops.businessType,
+      description: shops.description,
+      avatar: shops.avatar,
+      collectionId: shops.collectionId,
+    })
+    .from(shops)
+    .where(eq(shops.ownerId, ownerId))
+    .orderBy(desc(shops.isDefault), asc(shops.createdAt));
 }
 
 /** Makes another of the owner's shops the one the app opens on (one statement: there is always exactly one). */
 export async function setDefaultShop(db: Db, ownerId: string, shopId: string): Promise<void> {
   const own = await shopOfOwner(db, ownerId, shopId);
   if (!own) refuse("AK_SHOP_UNKNOWN");
-  await db.update(shops).set({ isDefault: sql`(${shops.id} = ${shopId})` }).where(eq(shops.ownerId, ownerId));
+  await db
+    .update(shops)
+    .set({ isDefault: sql`(${shops.id} = ${shopId})` })
+    .where(eq(shops.ownerId, ownerId));
 }
 
 /** Creates the owner's shop page (with its first staff member and default rules) or updates it: the default shop, or `shopId`; `additional` adds another shop. A first shop becomes the default. Publishing needs an active service. */
@@ -149,29 +228,66 @@ export interface SlugPolicy {
 }
 
 /** Saves the shop's page. A slug that wears a protected term is HELD (the shop is saved, not public until the administrator clears it); the verdict is taken when the slug changes, so a cleared shop is not held again by saving its other fields. */
-export async function saveShopPage(db: Db, ownerId: string, raw: ShopPageInput, which: { shopId?: string; additional?: false } | { additional: true; /** The most shops the owner may run (the administrator's `limits.shopsPerOwner`): checked here, under a lock, so no route can skip it and two requests cannot both pass. */ maxShops: number } = {}, policy: SlugPolicy = {}): Promise<{ shopId: string; created: boolean; held: boolean }> {
+export async function saveShopPage(
+  db: Db,
+  ownerId: string,
+  raw: ShopPageInput,
+  which:
+    | { shopId?: string; additional?: false }
+    | {
+        additional: true;
+        /** The most shops the owner may run (the administrator's `limits.shopsPerOwner`): checked here, under a lock, so no route can skip it and two requests cannot both pass. */ maxShops: number;
+      } = {},
+  policy: SlugPolicy = {},
+): Promise<{ shopId: string; created: boolean; held: boolean }> {
   const input = shopPageSchema.parse(raw);
   try {
     return await db.transaction(async (tx) => {
       if (which.additional) {
         // One owner, one line at a time: the count and the insert are one decision (a second request waits here until the first has committed).
         await tx.execute(sql`SELECT id FROM accounts WHERE id = ${ownerId} FOR UPDATE`);
-        const [owned] = await tx.select({ n: sql<number>`count(*)::int` }).from(shops).where(eq(shops.ownerId, ownerId));
+        const [owned] = await tx
+          .select({ n: sql<number>`count(*)::int` })
+          .from(shops)
+          .where(eq(shops.ownerId, ownerId));
         if (owned!.n >= which.maxShops) refuse("AK_SHOP_LIMIT");
       }
       const askedId = which.additional ? undefined : which.shopId;
       const ownShops = askedId ? and(eq(shops.ownerId, ownerId), eq(shops.id, askedId)) : eq(shops.ownerId, ownerId);
-      const [existing] = which.additional ? [] : await tx.select().from(shops).where(ownShops).orderBy(desc(shops.isDefault), asc(shops.createdAt)).limit(1).for("update");
+      const [existing] = which.additional
+        ? []
+        : await tx
+            .select()
+            .from(shops)
+            .where(ownShops)
+            .orderBy(desc(shops.isDefault), asc(shops.createdAt))
+            .limit(1)
+            .for("update");
       if (askedId && !existing) refuse("AK_SHOP_UNKNOWN");
       if (input.published) {
-        const count = existing ? (await tx.select({ n: sql<number>`count(*)::int` }).from(services).where(and(eq(services.shopId, existing.id), eq(services.active, true))))[0]!.n : 0;
+        const count = existing
+          ? (
+              await tx
+                .select({ n: sql<number>`count(*)::int` })
+                .from(services)
+                .where(and(eq(services.shopId, existing.id), eq(services.active, true)))
+            )[0]!.n
+          : 0;
         if (count === 0) refuse("AK_NOT_PUBLISHABLE");
       }
       const slugChanged = !existing || existing.slug !== input.slug;
       const renames = existing?.slug != null && existing.slug !== input.slug ? policy.slugChanges : undefined;
       if (existing && renames) {
         // The shop row is locked (FOR UPDATE above): the count and the new row are one decision.
-        const [recent] = await tx.select({ n: sql<number>`count(*)::int` }).from(shopSlugChanges).where(and(eq(shopSlugChanges.shopId, existing.id), sql`${shopSlugChanges.at} > now() - make_interval(days => ${renames.days})`));
+        const [recent] = await tx
+          .select({ n: sql<number>`count(*)::int` })
+          .from(shopSlugChanges)
+          .where(
+            and(
+              eq(shopSlugChanges.shopId, existing.id),
+              sql`${shopSlugChanges.at} > now() - make_interval(days => ${renames.days})`,
+            ),
+          );
         if (recent!.n >= renames.max) refuse("AK_SLUG_RATE_LIMIT");
       }
       const verdict = slugChanged && policy.terms ? holdSlug(input.slug, policy.terms) : undefined;
@@ -206,7 +322,10 @@ export async function saveShopPage(db: Db, ownerId: string, raw: ShopPageInput, 
         await tx.update(staff).set({ name: input.ownerName }).where(eq(staff.id, owner.id));
         return { shopId: existing.id, created: false, held: verdict ? verdict.held : existing.slugHeld };
       }
-      const [shop] = await tx.insert(shops).values({ ...values, ownerId, kind: "services", registrant: false, timezone: "America/Toronto" }).returning({ id: shops.id });
+      const [shop] = await tx
+        .insert(shops)
+        .values({ ...values, ownerId, kind: "services", registrant: false, timezone: "America/Toronto" })
+        .returning({ id: shops.id });
       await tx.insert(staff).values({ shopId: shop!.id, name: input.ownerName });
       await tx.insert(shopRules).values({ shopId: shop!.id });
       return { shopId: shop!.id, created: true, held: verdict?.held ?? false };
@@ -220,11 +339,28 @@ export async function saveShopPage(db: Db, ownerId: string, raw: ShopPageInput, 
 /** An area of the map: where it is centred (WGS 84). */
 export const zonePlaceSchema = z.object({ lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180) });
 
-export async function addZone(db: Db, shopId: string, name: string, place?: z.input<typeof zonePlaceSchema>): Promise<string> {
-  const [position] = await db.select({ n: sql<number>`coalesce(max(${shopZones.position}), 0) + 1` }).from(shopZones).where(eq(shopZones.shopId, shopId));
+export async function addZone(
+  db: Db,
+  shopId: string,
+  name: string,
+  place?: z.input<typeof zonePlaceSchema>,
+): Promise<string> {
+  const [position] = await db
+    .select({ n: sql<number>`coalesce(max(${shopZones.position}), 0) + 1` })
+    .from(shopZones)
+    .where(eq(shopZones.shopId, shopId));
   const at = place ? zonePlaceSchema.parse(place) : null;
   try {
-    const [row] = await db.insert(shopZones).values({ shopId, name: text(80).parse(name), position: position?.n ?? 1, lat: at?.lat ?? null, lng: at?.lng ?? null }).returning({ id: shopZones.id });
+    const [row] = await db
+      .insert(shopZones)
+      .values({
+        shopId,
+        name: text(80).parse(name),
+        position: position?.n ?? 1,
+        lat: at?.lat ?? null,
+        lng: at?.lng ?? null,
+      })
+      .returning({ id: shopZones.id });
     return row!.id;
   } catch (error) {
     if (isUniqueViolation(error, "shop_zones_name_per_shop")) throw new ShopError("AK_ZONE_EXISTS");
@@ -234,7 +370,10 @@ export async function addZone(db: Db, shopId: string, name: string, place?: z.in
 
 /** A zone leaves the offer (visits that happened keep pointing to it). */
 export async function archiveZone(db: Db, shopId: string, zoneId: string): Promise<void> {
-  await db.update(shopZones).set({ active: false }).where(and(eq(shopZones.id, zoneId), eq(shopZones.shopId, shopId)));
+  await db
+    .update(shopZones)
+    .set({ active: false })
+    .where(and(eq(shopZones.id, zoneId), eq(shopZones.shopId, shopId)));
 }
 
 export async function saveService(db: Db, shopId: string, raw: ServiceInput): Promise<string> {
@@ -254,11 +393,22 @@ export async function saveService(db: Db, shopId: string, raw: ServiceInput): Pr
     ...(input.linkUrl === undefined ? {} : { linkUrl: input.linkUrl }),
   };
   if (input.id) {
-    const [row] = await db.update(services).set(values).where(and(eq(services.id, input.id), eq(services.shopId, shopId))).returning({ id: services.id });
+    const [row] = await db
+      .update(services)
+      .set(values)
+      .where(and(eq(services.id, input.id), eq(services.shopId, shopId)))
+      .returning({ id: services.id });
     return row?.id ?? refuse("AK_SERVICE_UNKNOWN");
   }
   // A new offer comes last in the owner's order.
-  const [row] = await db.insert(services).values({ shopId, ...values, position: sql`(SELECT coalesce(max(position) + 1, 0) FROM services WHERE shop_id = ${shopId})` }).returning({ id: services.id });
+  const [row] = await db
+    .insert(services)
+    .values({
+      shopId,
+      ...values,
+      position: sql`(SELECT coalesce(max(position) + 1, 0) FROM services WHERE shop_id = ${shopId})`,
+    })
+    .returning({ id: services.id });
   return row!.id;
 }
 
@@ -266,27 +416,47 @@ export async function saveService(db: Db, shopId: string, raw: ServiceInput): Pr
 export async function reorderServices(db: Db, shopId: string, ids: readonly string[]): Promise<boolean> {
   return db.transaction(async (tx) => {
     await tx.execute(sql`SELECT id FROM shops WHERE id = ${shopId} FOR UPDATE`);
-    const current = await tx.select({ id: services.id }).from(services).where(and(eq(services.shopId, shopId), eq(services.active, true)));
-    if (new Set(ids).size !== ids.length || ids.length !== current.length || !current.every((r) => ids.includes(r.id))) return false;
-    for (const [position, id] of ids.entries()) await tx.update(services).set({ position }).where(and(eq(services.shopId, shopId), eq(services.id, id)));
+    const current = await tx
+      .select({ id: services.id })
+      .from(services)
+      .where(and(eq(services.shopId, shopId), eq(services.active, true)));
+    if (new Set(ids).size !== ids.length || ids.length !== current.length || !current.every((r) => ids.includes(r.id)))
+      return false;
+    for (const [position, id] of ids.entries())
+      await tx
+        .update(services)
+        .set({ position })
+        .where(and(eq(services.shopId, shopId), eq(services.id, id)));
     return true;
   });
 }
 
 async function ownStaff(tx: Db | Tx, shopId: string) {
-  const [member] = await tx.select().from(staff).where(and(eq(staff.shopId, shopId), eq(staff.active, true))).orderBy(asc(staff.createdAt), asc(staff.id)).limit(1);
+  const [member] = await tx
+    .select()
+    .from(staff)
+    .where(and(eq(staff.shopId, shopId), eq(staff.active, true)))
+    .orderBy(asc(staff.createdAt), asc(staff.id))
+    .limit(1);
   return member ?? refuse("AK_STAFF_UNKNOWN");
 }
 
 /** Everyone who works at the shop, the owner first, then in the order they joined. */
 async function activeStaff(tx: Db | Tx, shopId: string) {
-  return tx.select().from(staff).where(and(eq(staff.shopId, shopId), eq(staff.active, true))).orderBy(asc(staff.createdAt), asc(staff.id));
+  return tx
+    .select()
+    .from(staff)
+    .where(and(eq(staff.shopId, shopId), eq(staff.active, true)))
+    .orderBy(asc(staff.createdAt), asc(staff.id));
 }
 
 /** A member of this shop (the owner when none is named). */
 async function staffFor(tx: Db | Tx, shopId: string, staffId?: string | null) {
   if (!staffId) return ownStaff(tx, shopId);
-  const [member] = await tx.select().from(staff).where(and(eq(staff.id, staffId), eq(staff.shopId, shopId), eq(staff.active, true)));
+  const [member] = await tx
+    .select()
+    .from(staff)
+    .where(and(eq(staff.id, staffId), eq(staff.shopId, shopId), eq(staff.active, true)));
   return member ?? refuse("AK_STAFF_UNKNOWN");
 }
 
@@ -302,13 +472,25 @@ export async function addStaff(db: Db, shopId: string, name: string): Promise<st
 const minutes = (clock: string) => Number(clock.slice(0, 2)) * 60 + Number(clock.slice(3, 5));
 
 /** Adds a weekly window of the shop's worker; two windows of one weekday never overlap. */
-export async function addWindow(db: Db, shopId: string, raw: z.input<typeof windowInputSchema>, staffId?: string): Promise<string> {
+export async function addWindow(
+  db: Db,
+  shopId: string,
+  raw: z.input<typeof windowInputSchema>,
+  staffId?: string,
+): Promise<string> {
   const input = windowInputSchema.parse(raw);
   if (minutes(input.endsAt) <= minutes(input.startsAt)) refuse("AK_WINDOW_ORDER");
   const member = await staffFor(db, shopId, staffId);
-  const same = await db.select().from(schedules).where(and(eq(schedules.staffId, member.id), eq(schedules.weekday, input.weekday)));
-  if (same.some((w) => minutes(input.startsAt) < minutes(w.endsAt) && minutes(w.startsAt) < minutes(input.endsAt))) refuse("AK_WINDOW_OVERLAP");
-  const [row] = await db.insert(schedules).values({ staffId: member.id, weekday: input.weekday, startsAt: input.startsAt, endsAt: input.endsAt }).returning({ id: schedules.id });
+  const same = await db
+    .select()
+    .from(schedules)
+    .where(and(eq(schedules.staffId, member.id), eq(schedules.weekday, input.weekday)));
+  if (same.some((w) => minutes(input.startsAt) < minutes(w.endsAt) && minutes(w.startsAt) < minutes(input.endsAt)))
+    refuse("AK_WINDOW_OVERLAP");
+  const [row] = await db
+    .insert(schedules)
+    .values({ staffId: member.id, weekday: input.weekday, startsAt: input.startsAt, endsAt: input.endsAt })
+    .returning({ id: schedules.id });
   return row!.id;
 }
 
@@ -319,7 +501,17 @@ export async function removeWindow(db: Db, shopId: string, windowId: string): Pr
 
 export async function addDayOff(db: Db, shopId: string, day: string, reason?: string, staffId?: string): Promise<void> {
   const member = await staffFor(db, shopId, staffId);
-  await db.insert(daysOff).values({ staffId: member.id, onDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).parse(day), reason: reason?.trim().slice(0, 120) || null }).onConflictDoNothing();
+  await db
+    .insert(daysOff)
+    .values({
+      staffId: member.id,
+      onDate: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/)
+        .parse(day),
+      reason: reason?.trim().slice(0, 120) || null,
+    })
+    .onConflictDoNothing();
 }
 
 export async function removeDayOff(db: Db, shopId: string, day: string): Promise<void> {
@@ -345,10 +537,19 @@ function daysOfRange(range: TimeOffRange): string[] {
  * Time off for any member of the team, as a date range (folioviv#208). Stored as days, so the slots, the opening status and
  * the brief keep reading `days_off`; a range that overlaps another simply joins it (one row per staff and day).
  */
-export async function addTimeOff(db: Db, shopId: string, staffId: string, range: TimeOffRange, reason?: string): Promise<void> {
+export async function addTimeOff(
+  db: Db,
+  shopId: string,
+  staffId: string,
+  range: TimeOffRange,
+  reason?: string,
+): Promise<void> {
   const member = await staffFor(db, shopId, staffId);
   const note = reason?.trim().slice(0, 120) || null;
-  await db.insert(daysOff).values(daysOfRange(range).map((onDate) => ({ staffId: member.id, onDate, reason: note }))).onConflictDoNothing();
+  await db
+    .insert(daysOff)
+    .values(daysOfRange(range).map((onDate) => ({ staffId: member.id, onDate, reason: note })))
+    .onConflictDoNothing();
 }
 
 /** Removes a member's time off over a range (a whole holiday, or the days of it that changed). */
@@ -378,13 +579,26 @@ export async function teamTimeOff(db: Db, shopId: string, fromDay: string): Prom
   const byStaff = new Map<string, typeof rows>();
   for (const row of rows) byStaff.set(row.staffId, [...(byStaff.get(row.staffId) ?? []), row]);
   return [...byStaff.values()]
-    .flatMap((days) => timeOffRanges(days.map((d) => d.onDate)).map((range) => ({ staffId: days[0]!.staffId, name: days[0]!.name, ...range, reason: days.find((d) => d.onDate === range.from)?.reason ?? null })))
+    .flatMap((days) =>
+      timeOffRanges(days.map((d) => d.onDate)).map((range) => ({
+        staffId: days[0]!.staffId,
+        name: days[0]!.name,
+        ...range,
+        reason: days.find((d) => d.onDate === range.from)?.reason ?? null,
+      })),
+    )
     .sort((a, b) => a.from.localeCompare(b.from) || a.name.localeCompare(b.name));
 }
 
 /** Who is off on a day, with the last day of their time off (for Today: « en congé jusqu'au 27 »). */
-export async function offOn(db: Db, shopId: string, day: string): Promise<{ staffId: string; name: string; until: string }[]> {
-  return (await teamTimeOff(db, shopId, day)).filter((t) => t.from <= day).map(({ staffId, name, to }) => ({ staffId, name, until: to }));
+export async function offOn(
+  db: Db,
+  shopId: string,
+  day: string,
+): Promise<{ staffId: string; name: string; until: string }[]> {
+  return (await teamTimeOff(db, shopId, day))
+    .filter((t) => t.from <= day)
+    .map(({ staffId, name, to }) => ({ staffId, name, until: to }));
 }
 
 export interface ShopSetup {
@@ -401,22 +615,49 @@ export interface ShopSetup {
 export async function loadShop(db: Db, shop: typeof shops.$inferSelect): Promise<ShopSetup> {
   const member = await ownStaff(db, shop.id);
   const [zones, svc, windows, off, rules] = await Promise.all([
-    db.select().from(shopZones).where(and(eq(shopZones.shopId, shop.id), eq(shopZones.active, true))).orderBy(asc(shopZones.position)),
-    db.select().from(services).where(and(eq(services.shopId, shop.id), eq(services.active, true))).orderBy(asc(services.position), asc(services.durationMinutes), asc(services.nameEn)),
-    db.select().from(schedules).where(eq(schedules.staffId, member.id)).orderBy(asc(schedules.weekday), asc(schedules.startsAt)),
-    db.select({ id: daysOff.id, onDate: daysOff.onDate, reason: daysOff.reason }).from(daysOff).where(eq(daysOff.staffId, member.id)).orderBy(asc(daysOff.onDate)),
+    db
+      .select()
+      .from(shopZones)
+      .where(and(eq(shopZones.shopId, shop.id), eq(shopZones.active, true)))
+      .orderBy(asc(shopZones.position)),
+    db
+      .select()
+      .from(services)
+      .where(and(eq(services.shopId, shop.id), eq(services.active, true)))
+      .orderBy(asc(services.position), asc(services.durationMinutes), asc(services.nameEn)),
+    db
+      .select()
+      .from(schedules)
+      .where(eq(schedules.staffId, member.id))
+      .orderBy(asc(schedules.weekday), asc(schedules.startsAt)),
+    db
+      .select({ id: daysOff.id, onDate: daysOff.onDate, reason: daysOff.reason })
+      .from(daysOff)
+      .where(eq(daysOff.staffId, member.id))
+      .orderBy(asc(daysOff.onDate)),
     db.select().from(shopRules).where(eq(shopRules.shopId, shop.id)),
   ]);
-  return { shop, staff: { id: member.id, name: member.name }, zones, services: svc, windows, daysOff: off, rules: rules[0] ?? refuse("AK_RULES_UNKNOWN") };
+  return {
+    shop,
+    staff: { id: member.id, name: member.name },
+    zones,
+    services: svc,
+    windows,
+    daysOff: off,
+    rules: rules[0] ?? refuse("AK_RULES_UNKNOWN"),
+  };
 }
 
 /** Overlapping or touching weekly windows of several people, as the shop's opening hours. */
-function mergeWindows(rows: { weekday: number; startsAt: string; endsAt: string }[]): { weekday: number; startsAt: string; endsAt: string }[] {
+function mergeWindows(
+  rows: { weekday: number; startsAt: string; endsAt: string }[],
+): { weekday: number; startsAt: string; endsAt: string }[] {
   const sorted = [...rows].sort((a, b) => a.weekday - b.weekday || a.startsAt.localeCompare(b.startsAt));
   const out: { weekday: number; startsAt: string; endsAt: string }[] = [];
   for (const w of sorted) {
     const last = out[out.length - 1];
-    if (last && last.weekday === w.weekday && w.startsAt <= last.endsAt) last.endsAt = w.endsAt > last.endsAt ? w.endsAt : last.endsAt;
+    if (last && last.weekday === w.weekday && w.startsAt <= last.endsAt)
+      last.endsAt = w.endsAt > last.endsAt ? w.endsAt : last.endsAt;
     else out.push({ weekday: w.weekday, startsAt: w.startsAt, endsAt: w.endsAt });
   }
   return out;
@@ -437,12 +678,42 @@ export interface PublicMedia {
 
 /** What a visitor of the public page may know: no owner account, legal name, street address, tax numbers, staff id or days-off reasons. */
 export interface PublicShop {
-  shop: Pick<typeof shops.$inferSelect, "id" | "name" | "slug" | "timezone" | "taglineFr" | "taglineEn" | "area" | "bioFr" | "bioEn" | "publicPhone" | "publicEmail" | "seatUnitFr" | "seatUnitEn" | "registrant" | "businessType"> & {
+  shop: Pick<
+    typeof shops.$inferSelect,
+    | "id"
+    | "name"
+    | "slug"
+    | "timezone"
+    | "taglineFr"
+    | "taglineEn"
+    | "area"
+    | "bioFr"
+    | "bioEn"
+    | "publicPhone"
+    | "publicEmail"
+    | "seatUnitFr"
+    | "seatUnitEn"
+    | "registrant"
+    | "businessType"
+  > & {
     /** The first name shown for the person who works. */
     ownerName: string;
   };
   zones: Pick<typeof shopZones.$inferSelect, "id" | "name" | "lat" | "lng">[];
-  services: (Pick<typeof services.$inferSelect, "id" | "nameFr" | "nameEn" | "durationMinutes" | "priceCents" | "capacity" | "descriptionFr" | "descriptionEn" | "includedFr" | "includedEn" | "priceVaries"> & { linkUrl?: string | null })[];
+  services: (Pick<
+    typeof services.$inferSelect,
+    | "id"
+    | "nameFr"
+    | "nameEn"
+    | "durationMinutes"
+    | "priceCents"
+    | "capacity"
+    | "descriptionFr"
+    | "descriptionEn"
+    | "includedFr"
+    | "includedEn"
+    | "priceVaries"
+  > & { linkUrl?: string | null })[];
   /** The shop's opening hours: everyone's weekly windows, merged. */
   windows: Pick<typeof schedules.$inferSelect, "weekday" | "startsAt" | "endsAt">[];
   /** Who works here (first names), to choose from; one person = no choice to offer. */
@@ -464,12 +735,19 @@ export interface PublicShop {
 /** The public page of a published shop, by its address; null when there is none (or it is not published). Projected here, once: a caller cannot leak a column. */
 /** Where a former address of a published shop now leads: its current slug, or null (unknown, or the shop is not public). */
 export async function currentSlugOf(db: Db, formerSlug: string): Promise<string | null> {
-  const [row] = await db.select({ slug: shops.slug }).from(shopFormerSlugs).innerJoin(shops, eq(shops.id, shopFormerSlugs.shopId)).where(and(eq(shopFormerSlugs.slug, formerSlug), isPublicShop()));
+  const [row] = await db
+    .select({ slug: shops.slug })
+    .from(shopFormerSlugs)
+    .innerJoin(shops, eq(shops.id, shopFormerSlugs.shopId))
+    .where(and(eq(shopFormerSlugs.slug, formerSlug), isPublicShop()));
   return row?.slug ?? null;
 }
 
 export async function publicShop(db: Db, slug: string): Promise<PublicShop | null> {
-  const [row] = await db.select().from(shops).where(and(eq(shops.slug, slug), isPublicShop()));
+  const [row] = await db
+    .select()
+    .from(shops)
+    .where(and(eq(shops.slug, slug), isPublicShop()));
   return row ? publicShopOf(db, row) : null;
 }
 
@@ -482,7 +760,18 @@ export async function previewShop(db: Db, shopId: string): Promise<PublicShop | 
 async function publicShopOf(db: Db, row: typeof shops.$inferSelect): Promise<PublicShop> {
   const full = await loadShop(db, row);
   const team = await activeStaff(db, row.id);
-  const everyone = team.length > 1 ? await db.select().from(schedules).where(inArray(schedules.staffId, team.map((m) => m.id))) : full.windows;
+  const everyone =
+    team.length > 1
+      ? await db
+          .select()
+          .from(schedules)
+          .where(
+            inArray(
+              schedules.staffId,
+              team.map((m) => m.id),
+            ),
+          )
+      : full.windows;
   const [media, pageConfig, languages, translations, counts, community] = await Promise.all([
     db.select().from(shopMedia).where(eq(shopMedia.shopId, row.id)).orderBy(asc(shopMedia.position)),
     shopPageConfigOf(db, row.id),
@@ -495,22 +784,73 @@ async function publicShopOf(db: Db, row: typeof shops.$inferSelect): Promise<Pub
        GROUP BY a.service_id`),
     communityOf(db, row.id),
   ]);
-  const publicMedia = (m: typeof shopMedia.$inferSelect): PublicMedia => ({ id: m.id, url: m.url, webmUrl: m.webmUrl, mp4Url: m.mp4Url, altFr: m.altFr, altEn: m.altEn, captionFr: m.captionFr, captionEn: m.captionEn, wide: m.wide });
-  const bookingCounts = (counts.rows as { service_id: string; bookings: number }[]).map((r) => ({ serviceId: r.service_id, bookings: r.bookings }));
+  const publicMedia = (m: typeof shopMedia.$inferSelect): PublicMedia => ({
+    id: m.id,
+    url: m.url,
+    webmUrl: m.webmUrl,
+    mp4Url: m.mp4Url,
+    altFr: m.altFr,
+    altEn: m.altEn,
+    captionFr: m.captionFr,
+    captionEn: m.captionEn,
+    wide: m.wide,
+  });
+  const bookingCounts = (counts.rows as { service_id: string; bookings: number }[]).map((r) => ({
+    serviceId: r.service_id,
+    bookings: r.bookings,
+  }));
   return {
-    shop: { id: row.id, name: row.name, slug: row.slug, registrant: row.registrant, timezone: row.timezone, taglineFr: row.taglineFr, taglineEn: row.taglineEn, area: row.area, bioFr: row.bioFr, bioEn: row.bioEn, publicPhone: row.publicPhone, publicEmail: row.publicEmail, seatUnitFr: row.seatUnitFr, seatUnitEn: row.seatUnitEn, businessType: row.businessType, ownerName: full.staff.name },
+    shop: {
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      registrant: row.registrant,
+      timezone: row.timezone,
+      taglineFr: row.taglineFr,
+      taglineEn: row.taglineEn,
+      area: row.area,
+      bioFr: row.bioFr,
+      bioEn: row.bioEn,
+      publicPhone: row.publicPhone,
+      publicEmail: row.publicEmail,
+      seatUnitFr: row.seatUnitFr,
+      seatUnitEn: row.seatUnitEn,
+      businessType: row.businessType,
+      ownerName: full.staff.name,
+    },
     zones: full.zones.map((z) => ({ id: z.id, name: z.name, lat: z.lat, lng: z.lng })),
-    services: full.services.map((s) => ({ id: s.id, nameFr: s.nameFr, nameEn: s.nameEn, durationMinutes: s.durationMinutes, priceCents: s.priceCents, capacity: s.capacity, descriptionFr: s.descriptionFr, descriptionEn: s.descriptionEn, includedFr: s.includedFr, includedEn: s.includedEn, priceVaries: s.priceVaries, linkUrl: s.linkUrl })),
+    services: full.services.map((s) => ({
+      id: s.id,
+      nameFr: s.nameFr,
+      nameEn: s.nameEn,
+      durationMinutes: s.durationMinutes,
+      priceCents: s.priceCents,
+      capacity: s.capacity,
+      descriptionFr: s.descriptionFr,
+      descriptionEn: s.descriptionEn,
+      includedFr: s.includedFr,
+      includedEn: s.includedEn,
+      priceVaries: s.priceVaries,
+      linkUrl: s.linkUrl,
+    })),
     windows: mergeWindows(everyone),
     team: team.map((m) => ({ id: m.id, name: m.name })),
     daysOff: full.daysOff.map((d) => d.onDate),
     rules: { cancellationHours: full.rules.cancellationHours, bookingHorizonDays: full.rules.bookingHorizonDays },
-    media: { cover: media.filter((m) => m.role === MediaRole.Cover).map(publicMedia)[0] ?? null, gallery: media.filter((m) => m.role === MediaRole.Gallery).map(publicMedia) },
+    media: {
+      cover: media.filter((m) => m.role === MediaRole.Cover).map(publicMedia)[0] ?? null,
+      gallery: media.filter((m) => m.role === MediaRole.Gallery).map(publicMedia),
+    },
     pageConfig,
     languages,
     translations,
     community,
-    popularServiceId: popularServiceId(full.services.map((s) => ({ serviceId: s.id, bookings: bookingCounts.find((c) => c.serviceId === s.id)?.bookings ?? 0 }))),
+    popularServiceId: popularServiceId(
+      full.services.map((s) => ({
+        serviceId: s.id,
+        bookings: bookingCounts.find((c) => c.serviceId === s.id)?.bookings ?? 0,
+      })),
+    ),
   };
 }
 
@@ -526,7 +866,15 @@ export async function teamDay(db: Db, shopId: string, now: Date): Promise<Map<st
   const ids = team.map((m) => m.id);
   if (!ids.length) return new Map();
   const [windows, visits, off] = await Promise.all([
-    db.select({ staffId: schedules.staffId, weekday: schedules.weekday, startsAt: schedules.startsAt, endsAt: schedules.endsAt }).from(schedules).where(inArray(schedules.staffId, ids)),
+    db
+      .select({
+        staffId: schedules.staffId,
+        weekday: schedules.weekday,
+        startsAt: schedules.startsAt,
+        endsAt: schedules.endsAt,
+      })
+      .from(schedules)
+      .where(inArray(schedules.staffId, ids)),
     db.execute(sql`
       SELECT staff_id, lower(during) AS starts_at, upper(during) AS ends_at
         FROM appointments
@@ -540,14 +888,21 @@ export async function teamDay(db: Db, shopId: string, now: Date): Promise<Map<st
       m.id,
       {
         windows: windows.filter((w) => w.staffId === m.id),
-        visits: rows.filter((v) => v.staff_id === m.id).map((v) => ({ startsAt: new Date(v.starts_at), endsAt: new Date(v.ends_at) })),
+        visits: rows
+          .filter((v) => v.staff_id === m.id)
+          .map((v) => ({ startsAt: new Date(v.starts_at), endsAt: new Date(v.ends_at) })),
         offUntil: off.find((o) => o.staffId === m.id)?.until ?? null,
       },
     ]),
   );
 }
 
-const httpsUrl = z.string().trim().url().max(500).refine((u) => u.startsWith("https://"), { message: "https only" });
+const httpsUrl = z
+  .string()
+  .trim()
+  .url()
+  .max(500)
+  .refine((u) => u.startsWith("https://"), { message: "https only" });
 export const mediaInputSchema = z.object({
   url: httpsUrl,
   webmUrl: httpsUrl.optional(),
@@ -560,17 +915,46 @@ export const mediaInputSchema = z.object({
 });
 export type MediaInput = z.input<typeof mediaInputSchema>;
 /** What the owner sends: a cover (or none) and up to twelve gallery pictures. */
-export const shopMediaInputSchema = z.object({ cover: mediaInputSchema.nullish(), gallery: z.array(mediaInputSchema).max(12).optional() });
+export const shopMediaInputSchema = z.object({
+  cover: mediaInputSchema.nullish(),
+  gallery: z.array(mediaInputSchema).max(12).optional(),
+});
 
 /** Replaces the shop's cover and gallery (the files are on the media CDN; only their https addresses are kept). */
-export async function saveShopMedia(db: Db, shopId: string, input: { cover?: MediaInput | null; gallery?: MediaInput[] }): Promise<void> {
+export async function saveShopMedia(
+  db: Db,
+  shopId: string,
+  input: { cover?: MediaInput | null; gallery?: MediaInput[] },
+): Promise<void> {
   const cover = input.cover ? mediaInputSchema.parse(input.cover) : null;
-  const gallery = z.array(mediaInputSchema).max(12).parse(input.gallery ?? []);
+  const gallery = z
+    .array(mediaInputSchema)
+    .max(12)
+    .parse(input.gallery ?? []);
   await db.transaction(async (tx) => {
     await tx.delete(shopMedia).where(eq(shopMedia.shopId, shopId));
-    const rows = [...(cover ? [{ ...cover, role: MediaRole.Cover }] : []), ...gallery.map((g) => ({ ...g, role: MediaRole.Gallery }))];
+    const rows = [
+      ...(cover ? [{ ...cover, role: MediaRole.Cover }] : []),
+      ...gallery.map((g) => ({ ...g, role: MediaRole.Gallery })),
+    ];
     if (rows.length === 0) return;
-    await tx.insert(shopMedia).values(rows.map((m, position) => ({ shopId, role: m.role, url: m.url, webmUrl: m.webmUrl ?? null, mp4Url: m.mp4Url ?? null, altFr: m.altFr, altEn: m.altEn, captionFr: m.captionFr ?? null, captionEn: m.captionEn ?? null, wide: m.wide, position })));
+    await tx
+      .insert(shopMedia)
+      .values(
+        rows.map((m, position) => ({
+          shopId,
+          role: m.role,
+          url: m.url,
+          webmUrl: m.webmUrl ?? null,
+          mp4Url: m.mp4Url ?? null,
+          altFr: m.altFr,
+          altEn: m.altEn,
+          captionFr: m.captionFr ?? null,
+          captionEn: m.captionEn ?? null,
+          wide: m.wide,
+          position,
+        })),
+      );
   });
 }
 
@@ -583,7 +967,15 @@ async function takenVisits(tx: Reader, staffId: string, from: Date, to: Date): P
            greatest((SELECT count(*) FROM bookings b WHERE b.appointment_id = a.id AND b.status = 'booked'), CASE WHEN a.client_id IS NULL THEN 0 ELSE 1 END)::int AS seats
       FROM appointments a
      WHERE a.staff_id = ${staffId} AND a.status <> 'cancelled' AND a.during && tstzrange(${from.toISOString()}::timestamptz, ${to.toISOString()}::timestamptz)`);
-  return (result.rows as { service_id: string; zone_id: string | null; starts_at: string; ends_at: string; seats: number }[]).map((r) => ({ serviceId: r.service_id, zoneId: r.zone_id, startsAt: new Date(r.starts_at), endsAt: new Date(r.ends_at), seatsTaken: r.seats }));
+  return (
+    result.rows as { service_id: string; zone_id: string | null; starts_at: string; ends_at: string; seats: number }[]
+  ).map((r) => ({
+    serviceId: r.service_id,
+    zoneId: r.zone_id,
+    startsAt: new Date(r.starts_at),
+    endsAt: new Date(r.ends_at),
+    seatsTaken: r.seats,
+  }));
 }
 
 export interface SlotQuery {
@@ -605,7 +997,10 @@ export type StaffSlot = Slot & { staffId: string };
 export async function listSlots(db: Reader, query: SlotQuery): Promise<StaffSlot[]> {
   const [shop] = await db.select().from(shops).where(eq(shops.id, query.shopId));
   if (!shop) return refuse("AK_SHOP_UNKNOWN");
-  const [service] = await db.select().from(services).where(and(eq(services.id, query.serviceId), eq(services.shopId, shop.id), eq(services.active, true)));
+  const [service] = await db
+    .select()
+    .from(services)
+    .where(and(eq(services.id, query.serviceId), eq(services.shopId, shop.id), eq(services.active, true)));
   if (!service) return refuse("AK_SERVICE_UNKNOWN");
   const members = query.staffId ? [await staffFor(db, shop.id, query.staffId)] : await activeStaff(db, shop.id);
   if (members.length === 0) return refuse("AK_STAFF_UNKNOWN");
@@ -619,10 +1014,17 @@ export async function listSlots(db: Reader, query: SlotQuery): Promise<StaffSlot
   const rangeEnd = addDays(query.now, daysBetween(today, fromDay) + days + 2);
   const byStart = new Map<number, StaffSlot>();
   for (const member of members) {
-    const [windows, off] = await Promise.all([db.select().from(schedules).where(eq(schedules.staffId, member.id)), db.select({ d: daysOff.onDate }).from(daysOff).where(eq(daysOff.staffId, member.id))]);
+    const [windows, off] = await Promise.all([
+      db.select().from(schedules).where(eq(schedules.staffId, member.id)),
+      db.select({ d: daysOff.onDate }).from(daysOff).where(eq(daysOff.staffId, member.id)),
+    ]);
     const visits = await takenVisits(db, member.id, rangeStart, rangeEnd);
     const busy = await busyBetween(db, shop.id, member.id, { from: rangeStart, to: rangeEnd });
-    const asWindows: WeeklyWindow[] = windows.map((w) => ({ weekday: w.weekday, startsAt: w.startsAt.slice(0, 5), endsAt: w.endsAt.slice(0, 5) }));
+    const asWindows: WeeklyWindow[] = windows.map((w) => ({
+      weekday: w.weekday,
+      startsAt: w.startsAt.slice(0, 5),
+      endsAt: w.endsAt.slice(0, 5),
+    }));
     const open = openSlots({
       timezone: shop.timezone,
       now: query.now,
@@ -665,13 +1067,35 @@ export const joinInputSchema = z.object({
 });
 
 /** A signed-in person opens their file at a shop (once): their name, a phone, the consents they chose. */
-export async function joinShop(db: Db, accountId: string, accountEmail: string, shopId: string, raw: z.input<typeof joinInputSchema>): Promise<{ clientId: string; created: boolean }> {
+export async function joinShop(
+  db: Db,
+  accountId: string,
+  accountEmail: string,
+  shopId: string,
+  raw: z.input<typeof joinInputSchema>,
+): Promise<{ clientId: string; created: boolean }> {
   const input = joinInputSchema.parse(raw);
-  const [shop] = await db.select({ id: shops.id }).from(shops).where(and(eq(shops.id, shopId), isPublicShop()));
+  const [shop] = await db
+    .select({ id: shops.id })
+    .from(shops)
+    .where(and(eq(shops.id, shopId), isPublicShop()));
   if (!shop) return refuse("AK_SHOP_UNKNOWN");
-  const [existing] = await db.select({ id: clients.id, erasedAt: clients.erasedAt }).from(clients).where(and(eq(clients.shopId, shopId), eq(clients.accountId, accountId)));
+  const [existing] = await db
+    .select({ id: clients.id, erasedAt: clients.erasedAt })
+    .from(clients)
+    .where(and(eq(clients.shopId, shopId), eq(clients.accountId, accountId)));
   if (existing) return { clientId: existing.id, created: false };
-  const [row] = await db.insert(clients).values({ shopId, accountId, fullName: input.fullName, email: accountEmail.toLowerCase(), phone: input.phone, language: input.language }).returning({ id: clients.id });
+  const [row] = await db
+    .insert(clients)
+    .values({
+      shopId,
+      accountId,
+      fullName: input.fullName,
+      email: accountEmail.toLowerCase(),
+      phone: input.phone,
+      language: input.language,
+    })
+    .returning({ id: clients.id });
   await recordConsent(db, row!.id, "service", true, CONSENT_TEXT_VERSION);
   await recordConsent(db, row!.id, "reminders", input.consentReminders, CONSENT_TEXT_VERSION);
   return { clientId: row!.id, created: true };
@@ -680,37 +1104,73 @@ export async function joinShop(db: Db, accountId: string, accountEmail: string, 
 /** The client files of an account (one per shop it joined), erased ones excluded. */
 export async function clientFilesOf(db: Db, accountId: string) {
   return db
-    .select({ id: clients.id, fullName: clients.fullName, phone: clients.phone, language: clients.language, shopId: shops.id, shopName: shops.name, shopSlug: shops.slug, businessType: shops.businessType, timezone: shops.timezone })
+    .select({
+      id: clients.id,
+      fullName: clients.fullName,
+      phone: clients.phone,
+      language: clients.language,
+      shopId: shops.id,
+      shopName: shops.name,
+      shopSlug: shops.slug,
+      businessType: shops.businessType,
+      timezone: shops.timezone,
+    })
     .from(clients)
     .innerJoin(shops, eq(shops.id, clients.shopId))
     .where(and(eq(clients.accountId, accountId), isNull(clients.erasedAt)))
     .orderBy(asc(shops.name));
 }
 
-export async function addDependant(db: Db, clientId: string, raw: z.input<typeof dependantInputSchema>): Promise<string> {
+export async function addDependant(
+  db: Db,
+  clientId: string,
+  raw: z.input<typeof dependantInputSchema>,
+): Promise<string> {
   const input: DependantInput = dependantInputSchema.parse(raw);
-  const [client] = await db.select({ shopId: clients.shopId }).from(clients).where(and(eq(clients.id, clientId), isNull(clients.erasedAt)));
+  const [client] = await db
+    .select({ shopId: clients.shopId })
+    .from(clients)
+    .where(and(eq(clients.id, clientId), isNull(clients.erasedAt)));
   if (!client) return refuse("AK_CLIENT_UNKNOWN");
-  const [row] = await db.insert(dependants).values({ shopId: client.shopId, clientId, kind: input.kind, name: input.name, profile: input.profile }).returning({ id: dependants.id });
+  const [row] = await db
+    .insert(dependants)
+    .values({ shopId: client.shopId, clientId, kind: input.kind, name: input.name, profile: input.profile })
+    .returning({ id: dependants.id });
   return row!.id;
 }
 
 /** The entry that stands for a client who books for themselves (a business that has no dogs): made once, named like the client. */
 async function selfDependant(db: Tx, client: { id: string; shopId: string; fullName: string }): Promise<string> {
-  const [existing] = await db.select({ id: dependants.id }).from(dependants).where(and(eq(dependants.clientId, client.id), eq(dependants.kind, "other"), isNull(dependants.erasedAt))).orderBy(asc(dependants.createdAt)).limit(1);
+  const [existing] = await db
+    .select({ id: dependants.id })
+    .from(dependants)
+    .where(and(eq(dependants.clientId, client.id), eq(dependants.kind, "other"), isNull(dependants.erasedAt)))
+    .orderBy(asc(dependants.createdAt))
+    .limit(1);
   if (existing) return existing.id;
-  const [row] = await db.insert(dependants).values({ shopId: client.shopId, clientId: client.id, kind: "other", name: client.fullName }).returning({ id: dependants.id });
+  const [row] = await db
+    .insert(dependants)
+    .values({ shopId: client.shopId, clientId: client.id, kind: "other", name: client.fullName })
+    .returning({ id: dependants.id });
   return row!.id;
 }
 
 export async function dependantsOf(db: Db, clientId: string) {
-  return db.select().from(dependants).where(and(eq(dependants.clientId, clientId), isNull(dependants.erasedAt))).orderBy(asc(dependants.name));
+  return db
+    .select()
+    .from(dependants)
+    .where(and(eq(dependants.clientId, clientId), isNull(dependants.erasedAt)))
+    .orderBy(asc(dependants.name));
 }
 
 /** Seals a client's access notes (keys, door codes) with the application's key; `null` clears them. */
 export async function setAccessNotes(db: Db, key: Buffer, clientId: string, notes: string | null): Promise<void> {
   const clean = notes?.trim() ? text(500).parse(notes) : null;
-  const [row] = await db.update(clients).set({ accessNotesEnc: clean === null ? null : sealField(clean, key, clientId) }).where(and(eq(clients.id, clientId), isNull(clients.erasedAt))).returning({ id: clients.id });
+  const [row] = await db
+    .update(clients)
+    .set({ accessNotesEnc: clean === null ? null : sealField(clean, key, clientId) })
+    .where(and(eq(clients.id, clientId), isNull(clients.erasedAt)))
+    .returning({ id: clients.id });
   if (!row) refuse("AK_CLIENT_UNKNOWN");
 }
 
@@ -736,26 +1196,52 @@ export interface BookInput {
  * bookings queue: the slot must be one the shop offers *now*, then the visit is created (or the group visit joined) and
  * a seat per dependant is taken — the database refuses a full visit or a double booking whatever happens above.
  */
-export async function bookVisit(db: Db, input: BookInput): Promise<{ appointmentId: string; bookingIds: string[]; joined: boolean }> {
+export async function bookVisit(
+  db: Db,
+  input: BookInput,
+): Promise<{ appointmentId: string; bookingIds: string[]; joined: boolean }> {
   if (new Set(input.dependantIds).size !== input.dependantIds.length) refuse("AK_DEPENDANTS_REQUIRED");
   try {
     return await db.transaction(async (tx) => {
-      const [client] = await tx.select().from(clients).where(and(eq(clients.id, input.clientId), isNull(clients.erasedAt)));
+      const [client] = await tx
+        .select()
+        .from(clients)
+        .where(and(eq(clients.id, input.clientId), isNull(clients.erasedAt)));
       if (!client) return refuse("AK_CLIENT_UNKNOWN");
-      const [shop] = await tx.select().from(shops).where(and(eq(shops.id, client.shopId), isPublicShop()));
+      const [shop] = await tx
+        .select()
+        .from(shops)
+        .where(and(eq(shops.id, client.shopId), isPublicShop()));
       if (!shop) return refuse("AK_SHOP_UNKNOWN");
-      const [service] = await tx.select().from(services).where(and(eq(services.id, input.serviceId), eq(services.shopId, shop.id), eq(services.active, true)));
+      const [service] = await tx
+        .select()
+        .from(services)
+        .where(and(eq(services.id, input.serviceId), eq(services.shopId, shop.id), eq(services.active, true)));
       if (!service) return refuse("AK_SERVICE_UNKNOWN");
-      const zones = await tx.select().from(shopZones).where(and(eq(shopZones.shopId, shop.id), eq(shopZones.active, true)));
+      const zones = await tx
+        .select()
+        .from(shopZones)
+        .where(and(eq(shopZones.shopId, shop.id), eq(shopZones.active, true)));
       if (zones.length > 0 && !zones.some((z) => z.id === input.zoneId)) refuse("AK_ZONE_REQUIRED");
       // A pet-care shop books for a dog. Any other business takes the client for themselves: their own entry stands for them.
       let dependantIds = input.dependantIds;
-      if (dependantIds.length === 0) dependantIds = vocabularyOf(shop.businessType).dependants ? refuse("AK_DEPENDANTS_REQUIRED") : [await selfDependant(tx, client)];
+      if (dependantIds.length === 0)
+        dependantIds = vocabularyOf(shop.businessType).dependants
+          ? refuse("AK_DEPENDANTS_REQUIRED")
+          : [await selfDependant(tx, client)];
       if (dependantIds.length > service.capacity) refuse("AK_CAPACITY_FULL");
       if (input.staffId) await staffFor(tx, shop.id, input.staffId);
       // Everyone's row is locked in a fixed order, so two bookings (for anyone, or for the same person) queue.
       await tx.execute(sql`SELECT 1 FROM staff WHERE shop_id = ${shop.id} AND active ORDER BY id FOR UPDATE`);
-      const slots = await listSlots(tx, { shopId: shop.id, serviceId: service.id, zoneId: input.zoneId, now: input.now, fromDay: localDay(input.startsAt, shop.timezone), days: 1, staffId: input.staffId });
+      const slots = await listSlots(tx, {
+        shopId: shop.id,
+        serviceId: service.id,
+        zoneId: input.zoneId,
+        now: input.now,
+        fromDay: localDay(input.startsAt, shop.timezone),
+        days: 1,
+        staffId: input.staffId,
+      });
       const slot = slots.find((s) => s.startsAt.getTime() === input.startsAt.getTime());
       if (!slot) return refuse("AK_SLOT_UNAVAILABLE");
       if (slot.seatsLeft < dependantIds.length) refuse("AK_CAPACITY_FULL");
@@ -768,18 +1254,30 @@ export async function bookVisit(db: Db, input: BookInput): Promise<{ appointment
       } else {
         const [row] = await tx
           .insert(appointments)
-          .values({ shopId: shop.id, staffId: slot.staffId, serviceId: service.id, clientId: service.capacity === 1 ? client.id : null, zoneId: input.zoneId, during: `[${slot.startsAt.toISOString()},${slot.endsAt.toISOString()})` })
+          .values({
+            shopId: shop.id,
+            staffId: slot.staffId,
+            serviceId: service.id,
+            clientId: service.capacity === 1 ? client.id : null,
+            zoneId: input.zoneId,
+            during: `[${slot.startsAt.toISOString()},${slot.endsAt.toISOString()})`,
+          })
           .returning({ id: appointments.id });
         appointmentId = row!.id;
       }
-      const rows = await tx.insert(bookings).values(dependantIds.map((dependantId) => ({ appointmentId, clientId: client.id, dependantId }))).returning({ id: bookings.id });
+      const rows = await tx
+        .insert(bookings)
+        .values(dependantIds.map((dependantId) => ({ appointmentId, clientId: client.id, dependantId })))
+        .returning({ id: bookings.id });
       return { appointmentId, bookingIds: rows.map((r) => r.id), joined: slot.joins };
     });
   } catch (error) {
     const code = akCode(error);
     if (code === "AK_CAPACITY_FULL" || code === "AK_BOOKING_OWNERSHIP") throw new ShopError(code);
-    if ((error as { cause?: { constraint?: string } }).cause?.constraint === "appointments_no_double_booking") throw new ShopError("AK_SLOT_UNAVAILABLE");
-    if ((error as { cause?: { constraint?: string } }).cause?.constraint === "bookings_one_seat") throw new ShopError("AK_ALREADY_BOOKED");
+    if ((error as { cause?: { constraint?: string } }).cause?.constraint === "appointments_no_double_booking")
+      throw new ShopError("AK_SLOT_UNAVAILABLE");
+    if ((error as { cause?: { constraint?: string } }).cause?.constraint === "bookings_one_seat")
+      throw new ShopError("AK_ALREADY_BOOKED");
     throw error;
   }
 }
@@ -791,12 +1289,19 @@ export async function cancelBooking(db: Db, clientId: string, bookingId: string,
       SELECT b.id, b.appointment_id, lower(a.during) AS starts_at, r.cancellation_hours, a.checked_in_at
         FROM bookings b JOIN appointments a ON a.id = b.appointment_id JOIN shop_rules r ON r.shop_id = a.shop_id
        WHERE b.id = ${bookingId} AND b.client_id = ${clientId} AND b.status = 'booked' FOR UPDATE OF b, a`);
-    const row = found.rows[0] as { appointment_id: string; starts_at: string; cancellation_hours: number; checked_in_at: string | null } | undefined;
+    const row = found.rows[0] as
+      | { appointment_id: string; starts_at: string; cancellation_hours: number; checked_in_at: string | null }
+      | undefined;
     if (!row) return refuse("AK_BOOKING_UNKNOWN");
-    if (row.checked_in_at || !canCancel(new Date(row.starts_at), now, row.cancellation_hours)) refuse("AK_CANCEL_TOO_LATE");
+    if (row.checked_in_at || !canCancel(new Date(row.starts_at), now, row.cancellation_hours))
+      refuse("AK_CANCEL_TOO_LATE");
     await tx.update(bookings).set({ status: "cancelled", cancelledAt: now }).where(eq(bookings.id, bookingId));
-    const [left] = await tx.select({ n: sql<number>`count(*)::int` }).from(bookings).where(and(eq(bookings.appointmentId, row.appointment_id), eq(bookings.status, "booked")));
-    if (left!.n === 0) await tx.update(appointments).set({ status: "cancelled" }).where(eq(appointments.id, row.appointment_id));
+    const [left] = await tx
+      .select({ n: sql<number>`count(*)::int` })
+      .from(bookings)
+      .where(and(eq(bookings.appointmentId, row.appointment_id), eq(bookings.status, "booked")));
+    if (left!.n === 0)
+      await tx.update(appointments).set({ status: "cancelled" }).where(eq(appointments.id, row.appointment_id));
   });
 }
 
@@ -811,21 +1316,43 @@ export async function saveRules(db: Db, shopId: string, raw: ShopRules): Promise
 
 /** A client file, if it belongs to the signed-in account (and is not erased). */
 export async function ownClient(db: Db, accountId: string, clientId: string) {
-  const [row] = await db.select().from(clients).where(and(eq(clients.id, clientId), eq(clients.accountId, accountId), isNull(clients.erasedAt)));
+  const [row] = await db
+    .select()
+    .from(clients)
+    .where(and(eq(clients.id, clientId), eq(clients.accountId, accountId), isNull(clients.erasedAt)));
   return row ?? null;
 }
 
 /** A client file of the shop (the walker's). */
 export async function shopClient(db: Db, shopId: string, clientId: string) {
-  const [row] = await db.select().from(clients).where(and(eq(clients.id, clientId), eq(clients.shopId, shopId), isNull(clients.erasedAt)));
+  const [row] = await db
+    .select()
+    .from(clients)
+    .where(and(eq(clients.id, clientId), eq(clients.shopId, shopId), isNull(clients.erasedAt)));
   return row ?? null;
 }
 
 /** The shop's cover and gallery as the owner edits them (a draft shop included: the public read needs a published one). */
-export async function shopMediaOf(db: Db, shopId: string): Promise<{ cover: PublicMedia | null; gallery: PublicMedia[] }> {
+export async function shopMediaOf(
+  db: Db,
+  shopId: string,
+): Promise<{ cover: PublicMedia | null; gallery: PublicMedia[] }> {
   const rows = await db.select().from(shopMedia).where(eq(shopMedia.shopId, shopId)).orderBy(asc(shopMedia.position));
-  const one = (m: typeof shopMedia.$inferSelect): PublicMedia => ({ id: m.id, url: m.url, webmUrl: m.webmUrl, mp4Url: m.mp4Url, altFr: m.altFr, altEn: m.altEn, captionFr: m.captionFr, captionEn: m.captionEn, wide: m.wide });
-  return { cover: rows.filter((m) => m.role === MediaRole.Cover).map(one)[0] ?? null, gallery: rows.filter((m) => m.role === MediaRole.Gallery).map(one) };
+  const one = (m: typeof shopMedia.$inferSelect): PublicMedia => ({
+    id: m.id,
+    url: m.url,
+    webmUrl: m.webmUrl,
+    mp4Url: m.mp4Url,
+    altFr: m.altFr,
+    altEn: m.altEn,
+    captionFr: m.captionFr,
+    captionEn: m.captionEn,
+    wide: m.wide,
+  });
+  return {
+    cover: rows.filter((m) => m.role === MediaRole.Cover).map(one)[0] ?? null,
+    gallery: rows.filter((m) => m.role === MediaRole.Gallery).map(one),
+  };
 }
 
 /** What the confirmation page shows of a booking: when, with whom, where, and whether it can still be cancelled. */
@@ -844,7 +1371,12 @@ export interface BookingDetail {
 }
 
 /** One booking of a signed-in account (never someone else's), as the confirmation page reads it; null when it is not theirs. */
-export async function bookingDetail(db: Db, accountId: string, bookingId: string, now: Date): Promise<BookingDetail | null> {
+export async function bookingDetail(
+  db: Db,
+  accountId: string,
+  bookingId: string,
+  now: Date,
+): Promise<BookingDetail | null> {
   const found = await db.execute(sql`
     SELECT b.id, (b.status = 'cancelled') AS cancelled, lower(a.during) AS starts_at, upper(a.during) AS ends_at, a.checked_in_at,
            s.name AS shop_name, s.slug, s.address, s.public_phone, s.registrant, s.timezone,
@@ -858,7 +1390,26 @@ export async function bookingDetail(db: Db, accountId: string, bookingId: string
       JOIN shop_rules r ON r.shop_id = s.id
      WHERE b.id = ${bookingId}`);
   const r = found.rows[0] as
-    | { id: string; cancelled: boolean; starts_at: string; ends_at: string; checked_in_at: string | null; shop_name: string; slug: string; address: string; public_phone: string | null; registrant: boolean; timezone: string; service_id: string; name_fr: string; name_en: string; duration_minutes: number; price_cents: number; staff_name: string; cancellation_hours: number }
+    | {
+        id: string;
+        cancelled: boolean;
+        starts_at: string;
+        ends_at: string;
+        checked_in_at: string | null;
+        shop_name: string;
+        slug: string;
+        address: string;
+        public_phone: string | null;
+        registrant: boolean;
+        timezone: string;
+        service_id: string;
+        name_fr: string;
+        name_en: string;
+        duration_minutes: number;
+        price_cents: number;
+        staff_name: string;
+        cancellation_hours: number;
+      }
     | undefined;
   if (!r) return null;
   const startsAt = new Date(r.starts_at);
@@ -868,8 +1419,20 @@ export async function bookingDetail(db: Db, accountId: string, bookingId: string
     startsAt,
     endsAt: new Date(r.ends_at),
     timezone: r.timezone,
-    shop: { name: r.shop_name, slug: r.slug, address: r.address, publicPhone: r.public_phone, registrant: r.registrant },
-    service: { id: r.service_id, nameFr: r.name_fr, nameEn: r.name_en, durationMinutes: r.duration_minutes, priceCents: r.price_cents },
+    shop: {
+      name: r.shop_name,
+      slug: r.slug,
+      address: r.address,
+      publicPhone: r.public_phone,
+      registrant: r.registrant,
+    },
+    service: {
+      id: r.service_id,
+      nameFr: r.name_fr,
+      nameEn: r.name_en,
+      durationMinutes: r.duration_minutes,
+      priceCents: r.price_cents,
+    },
     staffName: r.staff_name,
     cancellationHours: r.cancellation_hours,
     cancellable: !r.cancelled && !r.checked_in_at && canCancel(startsAt, now, r.cancellation_hours),

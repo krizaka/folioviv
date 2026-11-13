@@ -8,7 +8,14 @@ export const dynamic = "force-dynamic";
 /** Rename, describe, or make it the default collection (`default: true`). */
 export const PATCH = (req: Request, { params }: { params: Promise<{ id: string }> }) =>
   onItem(req, params, async (owner, id, o) => {
-    const input = await readJson(req, z.object({ name: z.string().optional(), description: z.string().nullable().optional(), default: z.literal(true).optional() }));
+    const input = await readJson(
+      req,
+      z.object({
+        name: z.string().optional(),
+        description: z.string().nullable().optional(),
+        default: z.literal(true).optional(),
+      }),
+    );
     if (input.name !== undefined) await o.profile("collection").rename(owner, id, input.name);
     if (input.description !== undefined) await o.profile("collection").describe(owner, id, input.description);
     if (input.default) await o.collections.setDefault(owner, id);

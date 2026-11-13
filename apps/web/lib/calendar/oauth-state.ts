@@ -24,12 +24,19 @@ export interface OAuthState {
   expires: number;
 }
 
-const mac = (body: string, secret: string) => crypto.createHmac("sha256", `calendar-oauth:${secret}`).update(body).digest("base64url");
+const mac = (body: string, secret: string) =>
+  crypto.createHmac("sha256", `calendar-oauth:${secret}`).update(body).digest("base64url");
 const seconds = (at: Date) => Math.floor(at.valueOf() / 1000);
 
-export function signState(state: Omit<OAuthState, "expires" | "nonce">, secret: string, now: Date): { state: string; nonce: string } {
+export function signState(
+  state: Omit<OAuthState, "expires" | "nonce">,
+  secret: string,
+  now: Date,
+): { state: string; nonce: string } {
   const nonce = crypto.randomBytes(16).toString("base64url");
-  const body = Buffer.from(JSON.stringify({ ...state, nonce, expires: seconds(now) + STATE_TTL_SECONDS } satisfies OAuthState)).toString("base64url");
+  const body = Buffer.from(
+    JSON.stringify({ ...state, nonce, expires: seconds(now) + STATE_TTL_SECONDS } satisfies OAuthState),
+  ).toString("base64url");
   return { state: `${body}.${mac(body, secret)}`, nonce };
 }
 
@@ -57,11 +64,15 @@ export function newPkce(): { verifier: string; challenge: string } {
 export const PKCE_COOKIE = "folioviv_cal_pkce";
 export const pkceCookie = (nonce: string, verifier: string, secure: boolean) =>
   `${PKCE_COOKIE}=${nonce}.${verifier}; Path=/api/calendars/callback; HttpOnly; SameSite=Lax; Max-Age=${STATE_TTL_SECONDS}${secure ? "; Secure" : ""}`;
-export const clearPkceCookie = (secure: boolean) => `${PKCE_COOKIE}=; Path=/api/calendars/callback; HttpOnly; SameSite=Lax; Max-Age=0${secure ? "; Secure" : ""}`;
+export const clearPkceCookie = (secure: boolean) =>
+  `${PKCE_COOKIE}=; Path=/api/calendars/callback; HttpOnly; SameSite=Lax; Max-Age=0${secure ? "; Secure" : ""}`;
 
 /** The verifier of the browser's cookie, if it belongs to this state's nonce. */
 export function verifierFor(cookieHeader: string | null, nonce: string): string | null {
-  const raw = cookieHeader?.split(/;\s*/).find((c) => c.startsWith(`${PKCE_COOKIE}=`))?.slice(PKCE_COOKIE.length + 1);
+  const raw = cookieHeader
+    ?.split(/;\s*/)
+    .find((c) => c.startsWith(`${PKCE_COOKIE}=`))
+    ?.slice(PKCE_COOKIE.length + 1);
   const [given, verifier] = raw?.split(".") ?? [];
   return given === nonce && verifier ? verifier : null;
 }

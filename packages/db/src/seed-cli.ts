@@ -14,4 +14,8 @@ const pool = new pg.Pool(poolConfig(process.env.DATABASE_URL ?? "", process.env.
 await migrate(pool, MIGRATIONS_DIR);
 const result = await seedDemoShop(createDb(pool), email);
 await pool.end();
-console.log(result.created ? `folioviv: demo shop ${result.shopId} created` : `folioviv: the account already has a shop (${result.shopId})`);
+console.log(
+  result.created
+    ? `folioviv: demo shop ${result.shopId} created`
+    : `folioviv: the account already has a shop (${result.shopId})`,
+);

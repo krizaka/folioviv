@@ -24,7 +24,13 @@ describe("the app's links are the web's paths", () => {
 
   it("has the web's five places, in the rail's order: Aujourd'hui, Clients, Factures, Livres, Boutique", () => {
     expect(TABS.map((t) => t.name)).toEqual(["today", "clients", "invoices", "books", "settings"]);
-    expect(TABS.map((t) => t.href("fr", S))).toEqual([routes.today("fr", S), routes.clients("fr", S), routes.invoices("fr", S), routes.books("fr", S), routes.boutique("fr", S)]);
+    expect(TABS.map((t) => t.href("fr", S))).toEqual([
+      routes.today("fr", S),
+      routes.clients("fr", S),
+      routes.invoices("fr", S),
+      routes.books("fr", S),
+      routes.boutique("fr", S),
+    ]);
   });
 
   it("sends the old short addresses to the shop's own: the calendar into Aujourd'hui, the settings to the profile", () => {
@@ -38,6 +44,15 @@ describe("the app's links are the web's paths", () => {
   it("after signing in, resumes the screen a link asked for, and only an app screen", () => {
     expect(safeNext(`/fr/app/${S}/invoices/new?client=c1`, "fr")).toBe(`/fr/app/${S}/invoices/new?client=c1`);
     expect(safeNext(`/en/app/${S}/today?day=2026-10-20`, "fr")).toBe(`/en/app/${S}/today?day=2026-10-20`);
-    for (const bad of [undefined, "", "https://evil.example/fr/app", "//evil.example", "/fr/application", "/fr/app//x", "/admin"]) expect(safeNext(bad, "fr")).toBe("/fr/app");
+    for (const bad of [
+      undefined,
+      "",
+      "https://evil.example/fr/app",
+      "//evil.example",
+      "/fr/application",
+      "/fr/app//x",
+      "/admin",
+    ])
+      expect(safeNext(bad, "fr")).toBe("/fr/app");
   });
 });

@@ -10,8 +10,17 @@ describe("the Explorer query (one schema for the URL, the request and the cache 
   });
 
   it("reads every filter from the query string", () => {
-    expect(parse("q=coif&kind=salon,boutique&open=week&near=-73.58,45.48&within=3&bbox=-74,45,-73,46&limit=30&offset=30")).toEqual({
-      q: "coif", kinds: ["salon", "boutique"], open: "week", near: [-73.58, 45.48], within: 3, bbox: [-74, 45, -73, 46], limit: 30, offset: 30,
+    expect(
+      parse("q=coif&kind=salon,boutique&open=week&near=-73.58,45.48&within=3&bbox=-74,45,-73,46&limit=30&offset=30"),
+    ).toEqual({
+      q: "coif",
+      kinds: ["salon", "boutique"],
+      open: "week",
+      near: [-73.58, 45.48],
+      within: 3,
+      bbox: [-74, 45, -73, 46],
+      limit: 30,
+      offset: 30,
     });
   });
 
@@ -37,7 +46,14 @@ describe("the Explorer query (one schema for the URL, the request and the cache 
   });
 
   it("reduces a search to letters and digits without accents, so no operator or quote reaches the index", () => {
-    expect(searchTokens("Café  « Cèdre » & 'Ciseaux'; DROP TABLE shops --")).toEqual(["cafe", "cedre", "ciseaux", "drop", "table", "shops"]);
+    expect(searchTokens("Café  « Cèdre » & 'Ciseaux'; DROP TABLE shops --")).toEqual([
+      "cafe",
+      "cedre",
+      "ciseaux",
+      "drop",
+      "table",
+      "shops",
+    ]);
     expect(searchTokens("!!! ???")).toEqual([]);
     expect(searchTokens("a b c d e f g h i j k")).toHaveLength(8);
   });

@@ -8,7 +8,9 @@ export const dynamic = "force-dynamic";
 
 /** The owner's collections of shops (the default one is always there). */
 export function GET(req: Request) {
-  return handle(async () => Response.json({ collections: await organize().collections.list((await requireSession(req)).account.id) }));
+  return handle(async () =>
+    Response.json({ collections: await organize().collections.list((await requireSession(req)).account.id) }),
+  );
 }
 
 export function POST(req: Request) {

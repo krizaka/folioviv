@@ -14,11 +14,52 @@ const NOW = new Date("2026-10-19T10:30:00-04:00"); // Monday, 10:30 in Montréal
 
 /** A hair salon: the page must be made of the salon's data — no dog walker's words, no map, no gallery, no bio. */
 const salon: PublicShop = {
-  shop: { id: "s", name: "Salon Laurier", slug: "salon-laurier", timezone: TZ, registrant: true, taglineFr: null, taglineEn: "Cuts and colour, by appointment.", area: null, bioFr: null, bioEn: null, publicPhone: null, publicEmail: null, seatUnitFr: null, seatUnitEn: null, businessType: "professional", ownerName: "Julie" },
+  shop: {
+    id: "s",
+    name: "Salon Laurier",
+    slug: "salon-laurier",
+    timezone: TZ,
+    registrant: true,
+    taglineFr: null,
+    taglineEn: "Cuts and colour, by appointment.",
+    area: null,
+    bioFr: null,
+    bioEn: null,
+    publicPhone: null,
+    publicEmail: null,
+    seatUnitFr: null,
+    seatUnitEn: null,
+    businessType: "professional",
+    ownerName: "Julie",
+  },
   zones: [],
   services: [
-    { id: "cut", nameFr: "Coupe", nameEn: "Haircut", durationMinutes: 45, priceCents: 4_500, capacity: 1, descriptionFr: null, descriptionEn: "A cut and a blow-dry.", includedFr: [], includedEn: ["Shampoo"], priceVaries: false },
-    { id: "colour", nameFr: "Coloration", nameEn: "Colour", durationMinutes: 90, priceCents: 9_500, capacity: 1, descriptionFr: null, descriptionEn: null, includedFr: [], includedEn: [], priceVaries: true },
+    {
+      id: "cut",
+      nameFr: "Coupe",
+      nameEn: "Haircut",
+      durationMinutes: 45,
+      priceCents: 4_500,
+      capacity: 1,
+      descriptionFr: null,
+      descriptionEn: "A cut and a blow-dry.",
+      includedFr: [],
+      includedEn: ["Shampoo"],
+      priceVaries: false,
+    },
+    {
+      id: "colour",
+      nameFr: "Coloration",
+      nameEn: "Colour",
+      durationMinutes: 90,
+      priceCents: 9_500,
+      capacity: 1,
+      descriptionFr: null,
+      descriptionEn: null,
+      includedFr: [],
+      includedEn: [],
+      priceVaries: true,
+    },
   ],
   windows: [2, 3, 4, 5, 6].map((weekday) => ({ weekday, startsAt: "10:00", endsAt: "18:00" })),
   daysOff: [],
@@ -32,18 +73,84 @@ const salon: PublicShop = {
 
 /** A dog walker with everything filled in. */
 const walker: PublicShop = {
-  shop: { id: "w", name: "Pattes de Saint-Henri", slug: "pattes", timezone: TZ, registrant: true, taglineFr: "Des promenades de quartier.", taglineEn: "Neighbourhood dog walks.", area: "Saint-Henri, Montréal", bioFr: "Je m'appelle Léa.", bioEn: "I'm Léa.", publicPhone: "514-555-0100", publicEmail: "bonjour@pattes.example", seatUnitFr: "chiens", seatUnitEn: "dogs", businessType: "pets", ownerName: "Léa" },
-  zones: [{ id: "z1", name: "Saint-Henri", lat: 45.4786, lng: -73.5878 }, { id: "z2", name: "Griffintown", lat: 45.4935, lng: -73.561 }],
+  shop: {
+    id: "w",
+    name: "Pattes de Saint-Henri",
+    slug: "pattes",
+    timezone: TZ,
+    registrant: true,
+    taglineFr: "Des promenades de quartier.",
+    taglineEn: "Neighbourhood dog walks.",
+    area: "Saint-Henri, Montréal",
+    bioFr: "Je m'appelle Léa.",
+    bioEn: "I'm Léa.",
+    publicPhone: "514-555-0100",
+    publicEmail: "bonjour@pattes.example",
+    seatUnitFr: "chiens",
+    seatUnitEn: "dogs",
+    businessType: "pets",
+    ownerName: "Léa",
+  },
+  zones: [
+    { id: "z1", name: "Saint-Henri", lat: 45.4786, lng: -73.5878 },
+    { id: "z2", name: "Griffintown", lat: 45.4935, lng: -73.561 },
+  ],
   services: [
-    { id: "solo", nameFr: "Promenade solo 30 min", nameEn: "Solo walk 30 min", durationMinutes: 30, priceCents: 2_200, capacity: 1, descriptionFr: "Un chien, une marcheuse.", descriptionEn: "One dog.", includedFr: ["Eau fraîche"], includedEn: [], priceVaries: false },
-    { id: "group", nameFr: "Promenade en groupe 60 min", nameEn: "Group walk 60 min", durationMinutes: 60, priceCents: 2_200, capacity: 5, descriptionFr: null, descriptionEn: null, includedFr: [], includedEn: [], priceVaries: false },
+    {
+      id: "solo",
+      nameFr: "Promenade solo 30 min",
+      nameEn: "Solo walk 30 min",
+      durationMinutes: 30,
+      priceCents: 2_200,
+      capacity: 1,
+      descriptionFr: "Un chien, une marcheuse.",
+      descriptionEn: "One dog.",
+      includedFr: ["Eau fraîche"],
+      includedEn: [],
+      priceVaries: false,
+    },
+    {
+      id: "group",
+      nameFr: "Promenade en groupe 60 min",
+      nameEn: "Group walk 60 min",
+      durationMinutes: 60,
+      priceCents: 2_200,
+      capacity: 5,
+      descriptionFr: null,
+      descriptionEn: null,
+      includedFr: [],
+      includedEn: [],
+      priceVaries: false,
+    },
   ],
   windows: [1, 2, 3, 4, 5].map((weekday) => ({ weekday, startsAt: "08:00", endsAt: "17:00" })),
   daysOff: [],
   rules: { cancellationHours: 24, bookingHorizonDays: 60 },
   media: {
-    cover: { id: "c", url: "https://cdn.test/cover.webp", webmUrl: null, mp4Url: null, altFr: "Montréal en automne.", altEn: "Autumn.", captionFr: null, captionEn: null, wide: true },
-    gallery: [{ id: "g", url: "https://cdn.test/g.jpg", webmUrl: null, mp4Url: null, altFr: "Le rapport.", altEn: "The report.", captionFr: "Après la sortie", captionEn: "After", wide: false }],
+    cover: {
+      id: "c",
+      url: "https://cdn.test/cover.webp",
+      webmUrl: null,
+      mp4Url: null,
+      altFr: "Montréal en automne.",
+      altEn: "Autumn.",
+      captionFr: null,
+      captionEn: null,
+      wide: true,
+    },
+    gallery: [
+      {
+        id: "g",
+        url: "https://cdn.test/g.jpg",
+        webmUrl: null,
+        mp4Url: null,
+        altFr: "Le rapport.",
+        altEn: "The report.",
+        captionFr: "Après la sortie",
+        captionEn: "After",
+        wide: false,
+      },
+    ],
   },
   team: [],
   popularServiceId: "group",
@@ -152,12 +259,21 @@ describe("the storefront renders from the shop's data — a dog walker, in Frenc
 describe("the trade's proposed pictures on the public page (#267)", () => {
   const defaults = {
     cover: null,
-    gallery: [1, 2].map((n) => ({ id: `salon-gallery-${n}`, altKey: `defaultMedia.salon.gallery.${n}`, src: `https://cdn.test/g${n}.webp`, sources: [], width: 960, height: 720 })),
+    gallery: [1, 2].map((n) => ({
+      id: `salon-gallery-${n}`,
+      altKey: `defaultMedia.salon.gallery.${n}`,
+      src: `https://cdn.test/g${n}.webp`,
+      sources: [],
+      width: 960,
+      height: 720,
+    })),
     service: [],
   };
 
   it("are headed as pictures of the trade with a note, never as « Photos de {shop} »", () => {
-    const html = renderToStaticMarkup(<Storefront locale="fr" view={buildStorefront({ page: salon, locale: "fr", now: NOW, defaults })} />);
+    const html = renderToStaticMarkup(
+      <Storefront locale="fr" view={buildStorefront({ page: salon, locale: "fr", now: NOW, defaults })} />,
+    );
     expect(html).toContain("Images du métier");
     expect(html).toContain("Images d&#x27;illustration, pas celles de cette boutique");
     expect(html).not.toContain("Photos de Salon Laurier");
@@ -165,7 +281,9 @@ describe("the trade's proposed pictures on the public page (#267)", () => {
   });
 
   it("the shop's own photos keep their heading", () => {
-    const html = renderToStaticMarkup(<Storefront locale="fr" view={buildStorefront({ page: walker, locale: "fr", now: NOW, defaults })} />);
+    const html = renderToStaticMarkup(
+      <Storefront locale="fr" view={buildStorefront({ page: walker, locale: "fr", now: NOW, defaults })} />,
+    );
     expect(html).toContain("Photos de Pattes de Saint-Henri");
     expect(html).not.toContain("Images du métier");
   });
@@ -179,7 +297,9 @@ const ratio = (a: number, b: number) => (Math.max(a, b) + 0.05) / (Math.min(a, b
 
 describe("the facts of a hero, drawn over the shop's photo (folioviv#567)", () => {
   it.each(["en", "fr"] as const)("wear the scrim tone, not a tinted one (%s)", (locale) => {
-    const html = renderToStaticMarkup(<Storefront locale={locale} view={buildStorefront({ page: walker, locale, now: NOW })} />);
+    const html = renderToStaticMarkup(
+      <Storefront locale={locale} view={buildStorefront({ page: walker, locale, now: NOW })} />,
+    );
     const hero = html.slice(0, html.indexOf("</section>")); // the facts are the badges of the first section
     const tones = [...hero.matchAll(/data-tone="([a-z]+)"/g)].map((m) => m[1]);
     expect(tones.length).toBeGreaterThan(0);

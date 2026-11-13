@@ -27,7 +27,18 @@ export interface HeldShop {
 /** The shops whose address is held for review, oldest first: what the administrator's queue lists. */
 export async function heldShops(db: Db): Promise<HeldShop[]> {
   const rows = await db
-    .select({ shopId: shops.id, name: shops.name, slug: shops.slug, term: shops.slugHeldTerm, heldAt: shops.slugHeldAt, ownerId: shops.ownerId, ownerEmail: accounts.email, published: shops.published, note: shops.slugHoldNote, reviewedAt: shops.slugHoldReviewedAt })
+    .select({
+      shopId: shops.id,
+      name: shops.name,
+      slug: shops.slug,
+      term: shops.slugHeldTerm,
+      heldAt: shops.slugHeldAt,
+      ownerId: shops.ownerId,
+      ownerEmail: accounts.email,
+      published: shops.published,
+      note: shops.slugHoldNote,
+      reviewedAt: shops.slugHoldReviewedAt,
+    })
     .from(shops)
     .leftJoin(accounts, eq(accounts.id, shops.ownerId))
     .where(eq(shops.slugHeld, true))
@@ -39,7 +50,14 @@ export async function heldShops(db: Db): Promise<HeldShop[]> {
 export async function clearSlugHold(db: Db, shopId: string): Promise<boolean> {
   const cleared = await db
     .update(shops)
-    .set({ slugClearedFor: sql`${shops.slug}`, slugHeld: false, slugHeldTerm: null, slugHeldAt: null, slugHoldNote: null, slugHoldReviewedAt: sql`now()` })
+    .set({
+      slugClearedFor: sql`${shops.slug}`,
+      slugHeld: false,
+      slugHeldTerm: null,
+      slugHeldAt: null,
+      slugHoldNote: null,
+      slugHoldReviewedAt: sql`now()`,
+    })
     .where(and(eq(shops.id, shopId), eq(shops.slugHeld, true)))
     .returning({ id: shops.id });
   return cleared.length > 0;
@@ -70,17 +88,35 @@ export interface Rejudged {
  * since would catch). An address an administrator already cleared is left alone. Without `apply` it only reports (the dry run); with it the shops are
  * held, in one statement per shop and only if still unheld, and the ones really held are returned (the caller notifies their owners).
  */
-export async function rejudgeShops(db: Db, terms: readonly ProtectedTerm[], options: { apply: boolean }): Promise<Rejudged[]> {
+export async function rejudgeShops(
+  db: Db,
+  terms: readonly ProtectedTerm[],
+  options: { apply: boolean },
+): Promise<Rejudged[]> {
   const rows = await db
-    .select({ shopId: shops.id, name: shops.name, slug: shops.slug, ownerId: shops.ownerId, ownerEmail: accounts.email, ownerLocale: accounts.locale })
+    .select({
+      shopId: shops.id,
+      name: shops.name,
+      slug: shops.slug,
+      ownerId: shops.ownerId,
+      ownerEmail: accounts.email,
+      ownerLocale: accounts.locale,
+    })
     .from(shops)
     .leftJoin(accounts, eq(accounts.id, shops.ownerId))
-    .where(and(eq(shops.slugHeld, false), isNotNull(shops.slug), or(isNull(shops.slugClearedFor), ne(shops.slugClearedFor, shops.slug))))
+    .where(
+      and(
+        eq(shops.slugHeld, false),
+        isNotNull(shops.slug),
+        or(isNull(shops.slugClearedFor), ne(shops.slugClearedFor, shops.slug)),
+      ),
+    )
     .orderBy(asc(shops.createdAt), asc(shops.id));
   const found: Rejudged[] = [];
   for (const row of rows) {
     const verdict = holdSlug(row.slug!, terms);
-    if (verdict.held) found.push({ ...row, slug: row.slug!, matched: verdict.matched, ownerLocale: row.ownerLocale ?? "fr" });
+    if (verdict.held)
+      found.push({ ...row, slug: row.slug!, matched: verdict.matched, ownerLocale: row.ownerLocale ?? "fr" });
   }
   if (!options.apply) return found;
   const applied: Rejudged[] = [];

@@ -35,12 +35,32 @@ export default async function BriefPage({ params }: Readonly<{ params: Promise<{
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title={t.title} description={brief.items.length ? t.lead : t.empty} />
-      <MondayBrief items={brief.items.map((i) => ({ id: i.id, kind: i.kind, subject: i.subject, figures: { ...i.figures }, assumptions: [...i.assumptions] }))} done={brief.done} services={brief.services} publicPage={brief.publicPage} />
+      <MondayBrief
+        items={brief.items.map((i) => ({
+          id: i.id,
+          kind: i.kind,
+          subject: i.subject,
+          figures: { ...i.figures },
+          assumptions: [...i.assumptions],
+        }))}
+        done={brief.done}
+        services={brief.services}
+        publicPage={brief.publicPage}
+      />
       <WhatToDoNow actions={actions} locale={locale} routes={routes} />
       <section aria-labelledby="brief-figures" className="flex flex-col gap-3">
-        <h2 id="brief-figures" className="text-lg font-semibold">{f.title}</h2>
+        <h2 id="brief-figures" className="text-lg font-semibold">
+          {f.title}
+        </h2>
         <p className="text-sm text-fg-muted">{f.lead}</p>
-        <FiguresPanel ids={["invoiced", "collected", "toCollect", "margin", "appointments", "noShows"]} figures={figures} locale={locale} routes={routes} timeZone={shop.timezone} now={now.toISOString()} />
+        <FiguresPanel
+          ids={["invoiced", "collected", "toCollect", "margin", "appointments", "noShows"]}
+          figures={figures}
+          locale={locale}
+          routes={routes}
+          timeZone={shop.timezone}
+          now={now.toISOString()}
+        />
       </section>
       <LexiconSection locale={locale} />
     </div>

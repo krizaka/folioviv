@@ -17,7 +17,9 @@ const read = (path: string) => readFileSync(join(__dirname, "..", path), "utf8")
 /** The booking journey wears a thin paper head and nothing else of the notebook (B45, #315). */
 describe("the booking journey on paper", () => {
   it("puts the paper head on steps 1, 2 and 4, each saying where the visitor stands", () => {
-    expect(read("app/[locale]/s/[slug]/(public)/service/[id]/page.tsx")).toMatch(/head=\{\{ shop: page\.shop\.name, step: t\("console\.journey\.stepOf", \{ step: 1, total: 4/);
+    expect(read("app/[locale]/s/[slug]/(public)/service/[id]/page.tsx")).toMatch(
+      /head=\{\{ shop: page\.shop\.name, step: t\("console\.journey\.stepOf", \{ step: 1, total: 4/,
+    );
     expect(read("app/[locale]/s/[slug]/(public)/service/[id]/slots/page.tsx")).toMatch(/step: 2, total: 4/);
     expect(read("app/[locale]/s/[slug]/service/[id]/confirmation/page.tsx")).toMatch(/step: 4, total: 4/);
   });
@@ -34,6 +36,8 @@ describe("the booking journey on paper", () => {
     for (const word of ["Wall", "Polaroid", "Doodle", "PinnedNote", "paper="]) expect(frame).not.toContain(word);
   });
   it("says every word of the head in both languages", () => {
-    for (const j of [en.console.journey, fr.console.journey]) for (const key of ["stepOf", "stepService", "stepTime", "stepBooked", "edit", "bookedStamp"] as const) expect(j[key]).toBeTruthy();
+    for (const j of [en.console.journey, fr.console.journey])
+      for (const key of ["stepOf", "stepService", "stepTime", "stepBooked", "edit", "bookedStamp"] as const)
+        expect(j[key]).toBeTruthy();
   });
 });

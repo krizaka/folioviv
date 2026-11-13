@@ -5,27 +5,50 @@ import { renderIn } from "@/lib/test-i18n";
 
 import { ProposedImages, type ProposedImagesData } from "./ProposedImages";
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: () => undefined, replace: () => undefined, push: () => undefined }), usePathname: () => "/en/app/s1/shop" }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: () => undefined, replace: () => undefined, push: () => undefined }),
+  usePathname: () => "/en/app/s1/shop",
+}));
 
-const proposal = (id: string) => ({ id, src: `https://cdn.test/${id}.webp`, altFr: `Description ${id}`, altEn: `Alt ${id}` });
+const proposal = (id: string) => ({
+  id,
+  src: `https://cdn.test/${id}.webp`,
+  altFr: `Description ${id}`,
+  altEn: `Alt ${id}`,
+});
 const data = (over: Partial<ProposedImagesData> = {}): ProposedImagesData => ({
   config: { ...defaultShopPageConfig(), shopType: null, useDefaults: true },
   shopType: "pets",
   proposals: {
-    pets: { cover: { ...proposal("pets-cover-1"), webm: "https://cdn.test/l.webm", mp4: "https://cdn.test/l.mp4" }, gallery: [1, 2, 3, 4].map((n) => proposal(`pets-gallery-${n}`)) },
+    pets: {
+      cover: { ...proposal("pets-cover-1"), webm: "https://cdn.test/l.webm", mp4: "https://cdn.test/l.mp4" },
+      gallery: [1, 2, 3, 4].map((n) => proposal(`pets-gallery-${n}`)),
+    },
     salon: { cover: null, gallery: [] },
   },
   media: { cover: null, gallery: [] },
   ...over,
 });
-const text = (h: string) => h.replace(/<[^>]*>/g, " ").replace(/&[a-z#0-9]+;/gi, " ").replace(/\s+/g, " ");
-const render = (d: ProposedImagesData, locale: "en" | "fr" = "en") => renderIn(locale, "pets", <ProposedImages data={d} />);
+const text = (h: string) =>
+  h
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&[a-z#0-9]+;/gi, " ")
+    .replace(/\s+/g, " ");
+const render = (d: ProposedImagesData, locale: "en" | "fr" = "en") =>
+  renderIn(locale, "pets", <ProposedImages data={d} />);
 
 describe("« Images proposées » in the editor (#267)", () => {
   it("offers the trade, the switch, the proposed cover with its loop and the photos, each one click away", () => {
     const html = render(data());
     const t = text(html);
-    for (const word of ["Proposed images", "Your trade", "Show proposed images where I have none", "Use as my cover", "Add to my photos"]) expect(t).toContain(word);
+    for (const word of [
+      "Proposed images",
+      "Your trade",
+      "Show proposed images where I have none",
+      "Use as my cover",
+      "Add to my photos",
+    ])
+      expect(t).toContain(word);
     expect(html.match(/Add to my photos/g)).toHaveLength(4);
     expect(html).toContain("l.webm");
     expect(html).toContain("l.mp4");
@@ -60,7 +83,9 @@ describe("« Images proposées » in the editor (#267)", () => {
   });
 
   it("the switch shows the owner's choice", () => {
-    expect(render(data({ config: { ...defaultShopPageConfig(), useDefaults: false } }))).toContain('aria-checked="false"');
+    expect(render(data({ config: { ...defaultShopPageConfig(), useDefaults: false } }))).toContain(
+      'aria-checked="false"',
+    );
     expect(render(data())).toContain('aria-checked="true"');
   });
 });

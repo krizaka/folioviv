@@ -11,7 +11,9 @@ import { hashPassword } from "./qa-accounts.mjs";
 
 const need = (name, min = 1) => {
   const value = process.env[name];
-  if (!value || value.length < min) {throw new Error(`${name} is missing or shorter than ${min} characters`);}
+  if (!value || value.length < min) {
+    throw new Error(`${name} is missing or shorter than ${min} characters`);
+  }
   return value;
 };
 
@@ -32,7 +34,9 @@ async function main() {
   const pool = new pg.Pool(poolConfig(need("DATABASE_URL"), process.env.DATABASE_CA_CERT, 2));
   try {
     await ensureOwnerStates(pool, password);
-    console.log(`seed-owner-states: ${OWNER_STATE_EMAILS.length} accounts and 2 shops ready (password from the environment, not printed)`);
+    console.log(
+      `seed-owner-states: ${OWNER_STATE_EMAILS.length} accounts and 2 shops ready (password from the environment, not printed)`,
+    );
   } finally {
     await pool.end();
   }

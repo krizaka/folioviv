@@ -93,13 +93,48 @@ export const WORDS = {
 };
 
 const T = {
-  en: { period: "2026-Q3", client: "Client", service: "Service", quantity: "Quantity", addLine: "Add a line", other: "Other line (description)", price: "Unit price", submit: "Issue the invoice", dev: /Software development/, consulting: /Consulting and architecture/, support: /Support and maintenance/, workshop: /Scoping workshop/, nord: /Nord Studio/, lumen: /Studio Lumen/, books: /^Your books$/ },
-  fr: { period: "2026-Q3", client: "Client", service: "Service", quantity: "Quantité", addLine: "Ajouter une ligne", other: "Autre ligne (description)", price: "Prix unitaire", submit: "Émettre la facture", dev: /Développement logiciel/, consulting: /Conseil et architecture/, support: /Soutien et maintenance/, workshop: /Atelier de cadrage/, nord: /Nord Studio/, lumen: /Studio Lumen/, books: /^Vos livres$/ },
+  en: {
+    period: "2026-Q3",
+    client: "Client",
+    service: "Service",
+    quantity: "Quantity",
+    addLine: "Add a line",
+    other: "Other line (description)",
+    price: "Unit price",
+    submit: "Issue the invoice",
+    dev: /Software development/,
+    consulting: /Consulting and architecture/,
+    support: /Support and maintenance/,
+    workshop: /Scoping workshop/,
+    nord: /Nord Studio/,
+    lumen: /Studio Lumen/,
+    books: /^Your books$/,
+  },
+  fr: {
+    period: "2026-Q3",
+    client: "Client",
+    service: "Service",
+    quantity: "Quantité",
+    addLine: "Ajouter une ligne",
+    other: "Autre ligne (description)",
+    price: "Prix unitaire",
+    submit: "Émettre la facture",
+    dev: /Développement logiciel/,
+    consulting: /Conseil et architecture/,
+    support: /Soutien et maintenance/,
+    workshop: /Atelier de cadrage/,
+    nord: /Nord Studio/,
+    lumen: /Studio Lumen/,
+    books: /^Vos livres$/,
+  },
 }[locale];
 
 /** Chooses the option of a native select whose text matches. */
 async function choose(select, pattern) {
-  const value = await select.evaluate((el, src) => [...el.options].find((o) => new RegExp(src).test(o.textContent ?? ""))?.value ?? null, pattern.source);
+  const value = await select.evaluate(
+    (el, src) => [...el.options].find((o) => new RegExp(src).test(o.textContent ?? ""))?.value ?? null,
+    pattern.source,
+  );
   if (value === null) throw new Error(`no option matches ${pattern}`);
   await select.selectOption(value);
 }
@@ -122,7 +157,19 @@ const storageState = await (async () => {
 
 async function clip(id, run) {
   if (!wanted.includes(id)) return;
-  const take = await createTake({ chromium, base: BASE, viewport: VIEWPORT, scale: device === "phone" ? 2 : 1, locale, outDir: path.join(out, device), name: `folioviv-${id}-${locale}`, mobile: device === "phone", storageState, words: WORDS[id], voices: VOICES });
+  const take = await createTake({
+    chromium,
+    base: BASE,
+    viewport: VIEWPORT,
+    scale: device === "phone" ? 2 : 1,
+    locale,
+    outDir: path.join(out, device),
+    name: `folioviv-${id}-${locale}`,
+    mobile: device === "phone",
+    storageState,
+    words: WORDS[id],
+    voices: VOICES,
+  });
   const { page } = take;
   const glide = (dy, ms = 1600) =>
     page.evaluate(
@@ -153,7 +200,9 @@ async function clip(id, run) {
   };
   await run({ take, page, go, glide });
   const meta = await take.finish({ voice });
-  process.stdout.write(`${device}/${locale}/${id}: ${meta.seconds} s, ${meta.activeCaptureFps} fps while moving, ${meta.calls.filter((c) => c.status >= 500).length} server errors\n`);
+  process.stdout.write(
+    `${device}/${locale}/${id}: ${meta.seconds} s, ${meta.activeCaptureFps} fps while moving, ${meta.calls.filter((c) => c.status >= 500).length} server errors\n`,
+  );
 }
 
 await clip("onboarding", async ({ take, page, go, glide }) => {
@@ -191,7 +240,10 @@ await clip("invoice", async ({ take, page, go, glide }) => {
   await choose(page.getByLabel(T.client, { exact: true }), english ? T.nord : T.lumen);
   await page.waitForTimeout(500);
   await choose(page.getByLabel(T.service, { exact: true }).nth(0), english ? T.consulting : T.dev);
-  await page.getByLabel(T.quantity).nth(0).fill(english ? "7.5" : "7,5");
+  await page
+    .getByLabel(T.quantity)
+    .nth(0)
+    .fill(english ? "7.5" : "7,5");
   await page.waitForTimeout(500);
   await page.getByRole("button", { name: T.addLine }).click();
   await choose(page.getByLabel(T.service, { exact: true }).nth(1), english ? T.workshop : T.support);
@@ -209,7 +261,11 @@ await clip("invoice", async ({ take, page, go, glide }) => {
   take.beat("document");
   // The taxes to the cent, on screen: 7.5 × 180 + 600 = 1 950.00 → GST 97.50, QST 194.51 (194.5125); 7,5 × 150 + 500 = 1 625,00 → GST 81,25, QST 162,09 (162.09375).
   const totals = english ? ["1,950.00", "97.50", "194.51", "2,242.01"] : ["1 625,00", "81,25", "162,09", "1 868,34"];
-  for (const figure of totals) await page.getByText(new RegExp(figure.replace(/[.,]/g, "[.,]").replace(/ /g, "\\s"))).first().waitFor({ timeout: 15_000 });
+  for (const figure of totals)
+    await page
+      .getByText(new RegExp(figure.replace(/[.,]/g, "[.,]").replace(/ /g, "\\s")))
+      .first()
+      .waitFor({ timeout: 15_000 });
   await page.waitForTimeout(800);
   await glide(260, 1600);
   await take.speak("document");

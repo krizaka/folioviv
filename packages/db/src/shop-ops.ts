@@ -1,14 +1,48 @@
-import { dueOn, expenseEntries, invoiceEntries, invoiceTotals, type LedgerEntry, type LineInput, prepareReturn, type PreparedReturn, type SlotEvent, termsDaysSchema } from "@folioviv/core";
+import {
+  dueOn,
+  expenseEntries,
+  invoiceEntries,
+  invoiceTotals,
+  type LedgerEntry,
+  type LineInput,
+  prepareReturn,
+  type PreparedReturn,
+  type SlotEvent,
+  termsDaysSchema,
+} from "@folioviv/core";
 import { and, desc, eq, gte, inArray, isNull, lte, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import type { Db, Tx } from "./client";
-import { appointments, bookings, clients, expenses, invoiceLines, invoices, services, shops, taxLedger } from "./schema";
+import {
+  appointments,
+  bookings,
+  clients,
+  expenses,
+  invoiceLines,
+  invoices,
+  services,
+  shops,
+  taxLedger,
+} from "./schema";
 import { ShopError } from "./errors";
 
 const post = (tx: Tx, shopId: string, entries: LedgerEntry[]) =>
   entries.length
-    ? tx.insert(taxLedger).values(entries.map((e) => ({ shopId, period: e.period, tax: e.tax, direction: e.direction, amountCents: e.amountCents, sourceKind: e.source.kind, sourceId: e.source.id, sourceLabel: e.source.label })))
+    ? tx
+        .insert(taxLedger)
+        .values(
+          entries.map((e) => ({
+            shopId,
+            period: e.period,
+            tax: e.tax,
+            direction: e.direction,
+            amountCents: e.amountCents,
+            sourceKind: e.source.kind,
+            sourceId: e.source.id,
+            sourceLabel: e.source.label,
+          })),
+        )
     : Promise.resolve();
 
 /**
@@ -16,7 +50,20 @@ const post = (tx: Tx, shopId: string, entries: LedgerEntry[]) =>
  * (GST/QST once on the taxable base, rounded to the cent), the lines, and the ledger entries — one transaction; the
  * database checks at commit that the lines and the ledger add up to the invoice.
  */
-export async function issueInvoice(db: Db | Tx, input: { shopId: string; clientId?: string | null; appointmentId?: string | null; language: "fr" | "en"; issuedOn: string; lines: LineInput[]; creditOf?: string | null; replaces?: string | null; termsDays?: number | null }) {
+export async function issueInvoice(
+  db: Db | Tx,
+  input: {
+    shopId: string;
+    clientId?: string | null;
+    appointmentId?: string | null;
+    language: "fr" | "en";
+    issuedOn: string;
+    lines: LineInput[];
+    creditOf?: string | null;
+    replaces?: string | null;
+    termsDays?: number | null;
+  },
+) {
   return db.transaction(async (tx) => {
     const [shop] = await tx.select().from(shops).where(eq(shops.id, input.shopId)).for("update");
     if (!shop) throw new Error(`AK_SHOP_UNKNOWN: ${input.shopId}`);
@@ -24,13 +71,54 @@ export async function issueInvoice(db: Db | Tx, input: { shopId: string; clientI
     // The terms the invoice is issued under: the one asked for, else the shop's own; a credit note has none (it cancels, it is not due).
     const termsDays = input.creditOf ? null : (input.termsDays ?? shop.paymentTermsDays);
     const number = `${shop.invoicePrefix}-${String(shop.nextInvoiceNumber).padStart(5, "0")}`;
-    await tx.update(shops).set({ nextInvoiceNumber: shop.nextInvoiceNumber + 1 }).where(eq(shops.id, shop.id));
+    await tx
+      .update(shops)
+      .set({ nextInvoiceNumber: shop.nextInvoiceNumber + 1 })
+      .where(eq(shops.id, shop.id));
     const [invoice] = await tx
       .insert(invoices)
-      .values({ shopId: shop.id, number, clientId: input.clientId ?? null, appointmentId: input.appointmentId ?? null, creditOf: input.creditOf ?? null, replaces: input.replaces ?? null, language: input.language, issuedOn: input.issuedOn, termsDays, dueOn: termsDays === null ? null : dueOn(input.issuedOn, termsDays), subtotalCents: totals.subtotalCents, gstCents: totals.gstCents, qstCents: totals.qstCents, totalCents: totals.totalCents })
+      .values({
+        shopId: shop.id,
+        number,
+        clientId: input.clientId ?? null,
+        appointmentId: input.appointmentId ?? null,
+        creditOf: input.creditOf ?? null,
+        replaces: input.replaces ?? null,
+        language: input.language,
+        issuedOn: input.issuedOn,
+        termsDays,
+        dueOn: termsDays === null ? null : dueOn(input.issuedOn, termsDays),
+        subtotalCents: totals.subtotalCents,
+        gstCents: totals.gstCents,
+        qstCents: totals.qstCents,
+        totalCents: totals.totalCents,
+      })
       .returning();
-    await tx.insert(invoiceLines).values(totals.lines.map((l, i) => ({ invoiceId: invoice!.id, position: i + 1, description: l.description, quantityHundredths: l.quantityHundredths, unitPriceCents: l.unitPriceCents, discountCents: l.discountCents ?? 0, taxCategory: l.category, amountCents: l.amountCents })));
-    await post(tx, shop.id, invoiceEntries({ id: invoice!.id, number, issuedOn: input.issuedOn, gstCents: totals.gstCents, qstCents: totals.qstCents }));
+    await tx
+      .insert(invoiceLines)
+      .values(
+        totals.lines.map((l, i) => ({
+          invoiceId: invoice!.id,
+          position: i + 1,
+          description: l.description,
+          quantityHundredths: l.quantityHundredths,
+          unitPriceCents: l.unitPriceCents,
+          discountCents: l.discountCents ?? 0,
+          taxCategory: l.category,
+          amountCents: l.amountCents,
+        })),
+      );
+    await post(
+      tx,
+      shop.id,
+      invoiceEntries({
+        id: invoice!.id,
+        number,
+        issuedOn: input.issuedOn,
+        gstCents: totals.gstCents,
+        qstCents: totals.qstCents,
+      }),
+    );
     return { invoice: invoice!, totals };
   });
 }
@@ -39,43 +127,106 @@ export async function issueInvoice(db: Db | Tx, input: { shopId: string; clientI
 export async function creditNote(db: Db | Tx, invoiceId: string, issuedOn: string) {
   const [original] = await db.select().from(invoices).where(eq(invoices.id, invoiceId));
   if (!original) throw new Error(`AK_INVOICE_UNKNOWN: ${invoiceId}`);
-  const lines = await db.select().from(invoiceLines).where(eq(invoiceLines.invoiceId, invoiceId)).orderBy(invoiceLines.position);
+  const lines = await db
+    .select()
+    .from(invoiceLines)
+    .where(eq(invoiceLines.invoiceId, invoiceId))
+    .orderBy(invoiceLines.position);
   return issueInvoice(db, {
     shopId: original.shopId,
     clientId: original.clientId,
     language: original.language,
     issuedOn,
     creditOf: original.id,
-    lines: lines.map((l) => ({ description: l.description, quantity: -l.quantityHundredths / 100, unitPriceCents: l.unitPriceCents, discountCents: -l.discountCents, category: l.taxCategory })),
+    lines: lines.map((l) => ({
+      description: l.description,
+      quantity: -l.quantityHundredths / 100,
+      unitPriceCents: l.unitPriceCents,
+      discountCents: -l.discountCents,
+      category: l.taxCategory,
+    })),
   });
 }
 
 /** Records an expense and the input tax credits (GST) and refunds (QST) it gives. */
-export async function recordExpense(db: Db, input: { shopId: string; supplier: string; paidOn: string; subtotalCents: number; gstCents: number; qstCents: number; businessSharePct?: number; receiptRef?: string }) {
+export async function recordExpense(
+  db: Db,
+  input: {
+    shopId: string;
+    supplier: string;
+    paidOn: string;
+    subtotalCents: number;
+    gstCents: number;
+    qstCents: number;
+    businessSharePct?: number;
+    receiptRef?: string;
+  },
+) {
   return db.transaction(async (tx) => {
-    const [expense] = await tx.insert(expenses).values({ ...input, businessSharePct: input.businessSharePct ?? 100 }).returning();
-    await post(tx, input.shopId, expenseEntries({ id: expense!.id, supplier: expense!.supplier, paidOn: expense!.paidOn, gstCents: expense!.gstCents, qstCents: expense!.qstCents, businessSharePct: expense!.businessSharePct }));
+    const [expense] = await tx
+      .insert(expenses)
+      .values({ ...input, businessSharePct: input.businessSharePct ?? 100 })
+      .returning();
+    await post(
+      tx,
+      input.shopId,
+      expenseEntries({
+        id: expense!.id,
+        supplier: expense!.supplier,
+        paidOn: expense!.paidOn,
+        gstCents: expense!.gstCents,
+        qstCents: expense!.qstCents,
+        businessSharePct: expense!.businessSharePct,
+      }),
+    );
     return expense!;
   });
 }
 
 /** Books a service with a staff member; a slot already taken is refused by the database (AK… no double booking). */
-export async function book(db: Db, input: { shopId: string; staffId: string; serviceId: string; clientId?: string | null; startsAt: Date }): Promise<{ id: string; event: SlotEvent }> {
-  const [service] = await db.select().from(services).where(and(eq(services.id, input.serviceId), eq(services.shopId, input.shopId)));
+export async function book(
+  db: Db,
+  input: { shopId: string; staffId: string; serviceId: string; clientId?: string | null; startsAt: Date },
+): Promise<{ id: string; event: SlotEvent }> {
+  const [service] = await db
+    .select()
+    .from(services)
+    .where(and(eq(services.id, input.serviceId), eq(services.shopId, input.shopId)));
   if (!service) throw new Error(`AK_SERVICE_UNKNOWN: ${input.serviceId}`);
   const endsAt = new Date(input.startsAt.getTime() + service.durationMinutes * 60_000);
   const [row] = await db
     .insert(appointments)
-    .values({ shopId: input.shopId, staffId: input.staffId, serviceId: input.serviceId, clientId: input.clientId ?? null, during: `[${input.startsAt.toISOString()},${endsAt.toISOString()})` })
+    .values({
+      shopId: input.shopId,
+      staffId: input.staffId,
+      serviceId: input.serviceId,
+      clientId: input.clientId ?? null,
+      during: `[${input.startsAt.toISOString()},${endsAt.toISOString()})`,
+    })
     .returning({ id: appointments.id });
-  return { id: row!.id, event: { type: "slot", shopId: input.shopId, staffId: input.staffId, startsAt: input.startsAt.toISOString(), endsAt: endsAt.toISOString(), status: "taken" } };
+  return {
+    id: row!.id,
+    event: {
+      type: "slot",
+      shopId: input.shopId,
+      staffId: input.staffId,
+      startsAt: input.startsAt.toISOString(),
+      endsAt: endsAt.toISOString(),
+      status: "taken",
+    },
+  };
 }
 
 // The consents and the erasure of a client are the privacy module's (folioviv#370, privacy.ts): re-exported where they were.
 export { eraseClient, recordConsent } from "./privacy";
 
 /** The prepared GST/QST return of a shop over a period, from its ledger and its invoices (supplies, line 101). */
-export async function prepareShopReturn(db: Db, shopId: string, periodStart: string, periodEnd: string): Promise<PreparedReturn> {
+export async function prepareShopReturn(
+  db: Db,
+  shopId: string,
+  periodStart: string,
+  periodEnd: string,
+): Promise<PreparedReturn> {
   const rows = await db.select().from(taxLedger).where(eq(taxLedger.shopId, shopId));
   const [supplies] = await db
     .select({ cents: sql<number>`coalesce(sum(${invoices.subtotalCents}), 0)::int` })
@@ -85,10 +236,15 @@ export async function prepareShopReturn(db: Db, shopId: string, periodStart: str
     periodStart,
     periodEnd,
     suppliesCents: supplies?.cents ?? 0,
-    entries: rows.map((r) => ({ period: r.period, tax: r.tax, direction: r.direction, amountCents: r.amountCents, source: { kind: r.sourceKind, id: r.sourceId, label: r.sourceLabel } })),
+    entries: rows.map((r) => ({
+      period: r.period,
+      tax: r.tax,
+      direction: r.direction,
+      amountCents: r.amountCents,
+      source: { kind: r.sourceKind, id: r.sourceId, label: r.sourceLabel },
+    })),
   });
 }
-
 
 const iso = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
@@ -107,14 +263,22 @@ export const invoiceInputSchema = z.object({
   termsDays: termsDaysSchema.optional(),
   lines: z
     .array(
-      z.object({
-        serviceId: z.string().uuid().optional(),
-        description: z.string().trim().min(1).max(200).optional(),
-        /** Units billed, to the hundredth (7.5 hours): at least 0.01, at most 10 000. */
-        quantity: z.number().min(0.01).max(10_000).refine((q) => Math.abs(q * 100 - Math.round(q * 100)) < 1e-6, { message: "a quantity has at most two decimals" }),
-        unitPriceCents: z.number().int().min(0).max(100_000_000).optional(),
-        category: z.enum(["standard", "zeroRated", "exempt"]).optional(),
-      }).refine((l) => l.serviceId || l.description, { message: "a line names a service or a description" }),
+      z
+        .object({
+          serviceId: z.string().uuid().optional(),
+          description: z.string().trim().min(1).max(200).optional(),
+          /** Units billed, to the hundredth (7.5 hours): at least 0.01, at most 10 000. */
+          quantity: z
+            .number()
+            .min(0.01)
+            .max(10_000)
+            .refine((q) => Math.abs(q * 100 - Math.round(q * 100)) < 1e-6, {
+              message: "a quantity has at most two decimals",
+            }),
+          unitPriceCents: z.number().int().min(0).max(100_000_000).optional(),
+          category: z.enum(["standard", "zeroRated", "exempt"]).optional(),
+        })
+        .refine((l) => l.serviceId || l.description, { message: "a line names a service or a description" }),
     )
     .min(1)
     .max(40),
@@ -124,28 +288,62 @@ export type InvoiceInput = z.input<typeof invoiceInputSchema>;
 /** One free or service line of an invoice input, resolved against the shop's services (a service of another shop is unknown). */
 async function resolveLine(db: Db | Tx, shopId: string, l: InvoiceInput["lines"][number]): Promise<LineInput> {
   if (!l.serviceId) {
-    if (l.unitPriceCents === undefined) throw new ShopError("AK_LINE_PRICE", "AK_LINE_PRICE: a free line needs a price");
-    return { description: l.description!, quantity: l.quantity, unitPriceCents: l.unitPriceCents, category: l.category ?? "standard" };
+    if (l.unitPriceCents === undefined)
+      throw new ShopError("AK_LINE_PRICE", "AK_LINE_PRICE: a free line needs a price");
+    return {
+      description: l.description!,
+      quantity: l.quantity,
+      unitPriceCents: l.unitPriceCents,
+      category: l.category ?? "standard",
+    };
   }
-  const [service] = await db.select().from(services).where(and(eq(services.id, l.serviceId), eq(services.shopId, shopId)));
+  const [service] = await db
+    .select()
+    .from(services)
+    .where(and(eq(services.id, l.serviceId), eq(services.shopId, shopId)));
   if (!service) throw new ShopError("AK_SERVICE_UNKNOWN", `AK_SERVICE_UNKNOWN: ${l.serviceId}`);
-  return { description: l.description ?? `${service.nameFr} / ${service.nameEn}`, quantity: l.quantity, unitPriceCents: l.unitPriceCents ?? service.priceCents, category: l.category ?? service.taxCategory };
+  return {
+    description: l.description ?? `${service.nameFr} / ${service.nameEn}`,
+    quantity: l.quantity,
+    unitPriceCents: l.unitPriceCents ?? service.priceCents,
+    category: l.category ?? service.taxCategory,
+  };
 }
 
 /** Issues an invoice for the shop from its services and free lines (the same transaction as `issueInvoice`). */
-export async function issueShopInvoice(db: Db | Tx, shopId: string, raw: InvoiceInput, link: { replaces?: string } = {}) {
+export async function issueShopInvoice(
+  db: Db | Tx,
+  shopId: string,
+  raw: InvoiceInput,
+  link: { replaces?: string } = {},
+) {
   const input = invoiceInputSchema.parse(raw);
   if (input.clientId) {
-    const [client] = await db.select({ id: clients.id }).from(clients).where(and(eq(clients.id, input.clientId), eq(clients.shopId, shopId)));
+    const [client] = await db
+      .select({ id: clients.id })
+      .from(clients)
+      .where(and(eq(clients.id, input.clientId), eq(clients.shopId, shopId)));
     if (!client) throw new ShopError("AK_CLIENT_UNKNOWN", `AK_CLIENT_UNKNOWN: ${input.clientId}`);
   }
   if (input.appointmentId) {
-    const [appointment] = await db.select({ id: appointments.id }).from(appointments).where(and(eq(appointments.id, input.appointmentId), eq(appointments.shopId, shopId)));
+    const [appointment] = await db
+      .select({ id: appointments.id })
+      .from(appointments)
+      .where(and(eq(appointments.id, input.appointmentId), eq(appointments.shopId, shopId)));
     if (!appointment) throw new ShopError("AK_APPOINTMENT_UNKNOWN", `AK_APPOINTMENT_UNKNOWN: ${input.appointmentId}`);
   }
   const lines: LineInput[] = [];
   for (const l of input.lines) lines.push(await resolveLine(db, shopId, l));
-  return issueInvoice(db, { shopId, clientId: input.clientId ?? null, appointmentId: input.appointmentId ?? null, language: input.language, issuedOn: input.issuedOn, termsDays: input.termsDays ?? null, lines, replaces: link.replaces ?? null });
+  return issueInvoice(db, {
+    shopId,
+    clientId: input.clientId ?? null,
+    appointmentId: input.appointmentId ?? null,
+    language: input.language,
+    issuedOn: input.issuedOn,
+    termsDays: input.termsDays ?? null,
+    lines,
+    replaces: link.replaces ?? null,
+  });
 }
 
 /**
@@ -155,11 +353,24 @@ export async function issueShopInvoice(db: Db | Tx, shopId: string, raw: Invoice
  */
 export async function replaceInvoice(db: Db, shopId: string, originalId: string, raw: InvoiceInput) {
   return db.transaction(async (tx) => {
-    const [original] = await tx.select().from(invoices).where(and(eq(invoices.id, originalId), eq(invoices.shopId, shopId))).for("update");
+    const [original] = await tx
+      .select()
+      .from(invoices)
+      .where(and(eq(invoices.id, originalId), eq(invoices.shopId, shopId)))
+      .for("update");
     if (!original) throw new ShopError("AK_INVOICE_UNKNOWN", `AK_INVOICE_UNKNOWN: ${originalId}`);
-    if (original.creditOf) throw new ShopError("AK_INVOICE_IS_CREDIT", "AK_INVOICE_IS_CREDIT: a credit note is not corrected");
-    const [credited] = await tx.select({ id: invoices.id }).from(invoices).where(eq(invoices.creditOf, originalId)).limit(1);
-    if (credited) throw new ShopError("AK_INVOICE_ALREADY_CORRECTED", "AK_INVOICE_ALREADY_CORRECTED: this invoice was already credited");
+    if (original.creditOf)
+      throw new ShopError("AK_INVOICE_IS_CREDIT", "AK_INVOICE_IS_CREDIT: a credit note is not corrected");
+    const [credited] = await tx
+      .select({ id: invoices.id })
+      .from(invoices)
+      .where(eq(invoices.creditOf, originalId))
+      .limit(1);
+    if (credited)
+      throw new ShopError(
+        "AK_INVOICE_ALREADY_CORRECTED",
+        "AK_INVOICE_ALREADY_CORRECTED: this invoice was already credited",
+      );
     const input = invoiceInputSchema.parse(raw);
     const credit = await creditNote(tx, originalId, input.issuedOn);
     const replacement = await issueShopInvoice(tx, shopId, input, { replaces: originalId });
@@ -198,13 +409,30 @@ export async function listInvoices(db: Db, shopId: string) {
 /** One invoice with its lines, its client and the supplier's identity (the numbers a buyer needs for input tax credits); null if it is not this shop's. */
 export async function invoiceDetail(db: Db | Tx, shopId: string, invoiceId: string) {
   const [row] = await db
-    .select({ invoice: invoices, client: { fullName: clients.fullName, email: clients.email, phone: clients.phone }, shop: { name: shops.name, legalName: shops.legalName, address: shops.address, timezone: shops.timezone, registrant: shops.registrant, gstNumber: shops.gstNumber, qstNumber: shops.qstNumber, publicEmail: shops.publicEmail } })
+    .select({
+      invoice: invoices,
+      client: { fullName: clients.fullName, email: clients.email, phone: clients.phone },
+      shop: {
+        name: shops.name,
+        legalName: shops.legalName,
+        address: shops.address,
+        timezone: shops.timezone,
+        registrant: shops.registrant,
+        gstNumber: shops.gstNumber,
+        qstNumber: shops.qstNumber,
+        publicEmail: shops.publicEmail,
+      },
+    })
     .from(invoices)
     .innerJoin(shops, eq(shops.id, invoices.shopId))
     .leftJoin(clients, eq(clients.id, invoices.clientId))
     .where(and(eq(invoices.id, invoiceId), eq(invoices.shopId, shopId)));
   if (!row) return null;
-  const lines = await db.select().from(invoiceLines).where(eq(invoiceLines.invoiceId, invoiceId)).orderBy(invoiceLines.position);
+  const lines = await db
+    .select()
+    .from(invoiceLines)
+    .where(eq(invoiceLines.invoiceId, invoiceId))
+    .orderBy(invoiceLines.position);
   const { invoice } = row;
   // The chain of a correction (#207): what this invoice replaces, what replaced it, the credit note that cancelled it.
   const ref = { id: invoices.id, number: invoices.number };
@@ -216,6 +444,30 @@ export async function invoiceDetail(db: Db | Tx, shopId: string, invoiceId: stri
     db.select(ref).from(invoices).where(eq(invoices.creditOf, invoice.id)).limit(1),
   ]);
   // What was received against it: the invoice's page shows the list's state (`invoiceState`, D2).
-  const [{ paidCents } = { paidCents: 0 }] = (await db.execute(sql`SELECT coalesce(sum(amount_cents), 0)::int AS "paidCents" FROM payments WHERE invoice_id = ${invoice.id}`)).rows as { paidCents: number }[];
-  return { id: invoice.id, number: invoice.number, issuedOn: invoice.issuedOn, termsDays: invoice.termsDays, dueOn: invoice.dueOn, language: invoice.language, clientId: invoice.clientId, creditOf: invoice.creditOf, replaces: orNull(replaces), replacedBy: orNull(replacedBy), creditedBy: orNull(creditedBy), subtotalCents: invoice.subtotalCents, gstCents: invoice.gstCents, qstCents: invoice.qstCents, totalCents: invoice.totalCents, paidCents, client: row.client?.fullName ? row.client : null, shop: row.shop, lines };
+  const [{ paidCents } = { paidCents: 0 }] = (
+    await db.execute(
+      sql`SELECT coalesce(sum(amount_cents), 0)::int AS "paidCents" FROM payments WHERE invoice_id = ${invoice.id}`,
+    )
+  ).rows as { paidCents: number }[];
+  return {
+    id: invoice.id,
+    number: invoice.number,
+    issuedOn: invoice.issuedOn,
+    termsDays: invoice.termsDays,
+    dueOn: invoice.dueOn,
+    language: invoice.language,
+    clientId: invoice.clientId,
+    creditOf: invoice.creditOf,
+    replaces: orNull(replaces),
+    replacedBy: orNull(replacedBy),
+    creditedBy: orNull(creditedBy),
+    subtotalCents: invoice.subtotalCents,
+    gstCents: invoice.gstCents,
+    qstCents: invoice.qstCents,
+    totalCents: invoice.totalCents,
+    paidCents,
+    client: row.client?.fullName ? row.client : null,
+    shop: row.shop,
+    lines,
+  };
 }

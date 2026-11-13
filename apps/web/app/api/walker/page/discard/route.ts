@@ -12,7 +12,15 @@ export function POST(req: Request) {
   return handle(async () => {
     const { session, shop } = await requireShop(req, "catalogue");
     const { discarded } = await discardShopPageDraft(db(), shop.id);
-    if (discarded) await audit({ action: "shop.page_draft_discarded", actorId: session.account.id, actorLabel: session.account.email, targetId: shop.id, detail: {}, headers: req.headers });
+    if (discarded)
+      await audit({
+        action: "shop.page_draft_discarded",
+        actorId: session.account.id,
+        actorLabel: session.account.email,
+        targetId: shop.id,
+        detail: {},
+        headers: req.headers,
+      });
     return Response.json({ discarded });
   });
 }

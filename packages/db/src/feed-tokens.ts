@@ -18,7 +18,10 @@ export interface FeedInfo extends FeedRef {
 /** The staff member must belong to the shop: another shop's staff id is "no such feed", the answer of an id that exists nowhere. */
 async function ownStaff(db: Pick<Db, "select">, ref: FeedRef): Promise<boolean> {
   if (ref.staffId === null) return true;
-  const [row] = await db.select({ id: staff.id }).from(staff).where(and(eq(staff.id, ref.staffId), eq(staff.shopId, ref.shopId)));
+  const [row] = await db
+    .select({ id: staff.id })
+    .from(staff)
+    .where(and(eq(staff.id, ref.staffId), eq(staff.shopId, ref.shopId)));
   return row !== undefined;
 }
 
@@ -33,9 +36,22 @@ export async function rotateFeedToken(db: Db, ref: FeedRef, tokenHash: string, n
     // Two rotations of the same feed take turns: the second revokes the first's token, never leaving two live ones.
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`);
     const live = ref.staffId === null ? isNull(feedTokens.staffId) : eq(feedTokens.staffId, ref.staffId);
-    const revoked = await tx.update(feedTokens).set({ revokedAt: now }).where(and(eq(feedTokens.shopId, ref.shopId), live, isNull(feedTokens.revokedAt))).returning({ id: feedTokens.id });
-    const [row] = await tx.insert(feedTokens).values({ shopId: ref.shopId, staffId: ref.staffId, tokenHash, rotatedAt: revoked.length > 0 ? now : null }).returning();
-    return { id: row!.id, shopId: row!.shopId, staffId: row!.staffId, createdAt: row!.createdAt, rotatedAt: row!.rotatedAt };
+    const revoked = await tx
+      .update(feedTokens)
+      .set({ revokedAt: now })
+      .where(and(eq(feedTokens.shopId, ref.shopId), live, isNull(feedTokens.revokedAt)))
+      .returning({ id: feedTokens.id });
+    const [row] = await tx
+      .insert(feedTokens)
+      .values({ shopId: ref.shopId, staffId: ref.staffId, tokenHash, rotatedAt: revoked.length > 0 ? now : null })
+      .returning();
+    return {
+      id: row!.id,
+      shopId: row!.shopId,
+      staffId: row!.staffId,
+      createdAt: row!.createdAt,
+      rotatedAt: row!.rotatedAt,
+    };
   });
 }
 
@@ -43,18 +59,34 @@ export async function rotateFeedToken(db: Db, ref: FeedRef, tokenHash: string, n
 export async function revokeFeedToken(db: Db, ref: FeedRef, now: Date): Promise<boolean> {
   if (!(await ownStaff(db, ref))) return false;
   const live = ref.staffId === null ? isNull(feedTokens.staffId) : eq(feedTokens.staffId, ref.staffId);
-  const revoked = await db.update(feedTokens).set({ revokedAt: now }).where(and(eq(feedTokens.shopId, ref.shopId), live, isNull(feedTokens.revokedAt))).returning({ id: feedTokens.id });
+  const revoked = await db
+    .update(feedTokens)
+    .set({ revokedAt: now })
+    .where(and(eq(feedTokens.shopId, ref.shopId), live, isNull(feedTokens.revokedAt)))
+    .returning({ id: feedTokens.id });
   return revoked.length > 0;
 }
 
 /** The live feeds of a shop (never a token: it is not kept). */
 export async function liveFeeds(db: Db, shopId: string): Promise<FeedInfo[]> {
-  return db.select({ id: feedTokens.id, shopId: feedTokens.shopId, staffId: feedTokens.staffId, createdAt: feedTokens.createdAt, rotatedAt: feedTokens.rotatedAt }).from(feedTokens).where(and(eq(feedTokens.shopId, shopId), isNull(feedTokens.revokedAt)));
+  return db
+    .select({
+      id: feedTokens.id,
+      shopId: feedTokens.shopId,
+      staffId: feedTokens.staffId,
+      createdAt: feedTokens.createdAt,
+      rotatedAt: feedTokens.rotatedAt,
+    })
+    .from(feedTokens)
+    .where(and(eq(feedTokens.shopId, shopId), isNull(feedTokens.revokedAt)));
 }
 
 /** The feed a token's keyed hash opens, if it is live. An unknown, rotated or revoked token is `null`: the same answer, so nothing tells which. */
 export async function feedByTokenHash(db: Db, tokenHash: string): Promise<FeedRef | null> {
-  const [row] = await db.select({ shopId: feedTokens.shopId, staffId: feedTokens.staffId }).from(feedTokens).where(and(eq(feedTokens.tokenHash, tokenHash), isNull(feedTokens.revokedAt)));
+  const [row] = await db
+    .select({ shopId: feedTokens.shopId, staffId: feedTokens.staffId })
+    .from(feedTokens)
+    .where(and(eq(feedTokens.tokenHash, tokenHash), isNull(feedTokens.revokedAt)));
   return row ?? null;
 }
 
@@ -76,17 +108,42 @@ export async function feedEntries(db: Db, feed: FeedRef, from: Date, to: Date): 
 }
 
 /** The same around an instant: `behindDays` before it and `aheadDays` after, counted in calendar days by the database. */
-export async function feedEntriesAround(db: Db, feed: FeedRef, now: Date, behindDays: number, aheadDays: number): Promise<FeedEntry[]> {
+export async function feedEntriesAround(
+  db: Db,
+  feed: FeedRef,
+  now: Date,
+  behindDays: number,
+  aheadDays: number,
+): Promise<FeedEntry[]> {
   const at = sql`${now.toISOString()}::timestamptz`;
-  return entriesBetween(db, feed, sql`${at} - make_interval(days => ${behindDays})`, sql`${at} + make_interval(days => ${aheadDays})`);
+  return entriesBetween(
+    db,
+    feed,
+    sql`${at} - make_interval(days => ${behindDays})`,
+    sql`${at} + make_interval(days => ${aheadDays})`,
+  );
 }
 
 async function entriesBetween(db: Db, feed: FeedRef, from: SQL, to: SQL): Promise<FeedEntry[]> {
   const rows = await db
-    .select({ id: appointments.id, status: appointments.status, nameFr: services.nameFr, nameEn: services.nameEn, start: sql<string>`lower(${appointments.during})`, end: sql<string>`upper(${appointments.during})` })
+    .select({
+      id: appointments.id,
+      status: appointments.status,
+      nameFr: services.nameFr,
+      nameEn: services.nameEn,
+      start: sql<string>`lower(${appointments.during})`,
+      end: sql<string>`upper(${appointments.during})`,
+    })
     .from(appointments)
     .innerJoin(services, eq(services.id, appointments.serviceId))
-    .where(and(eq(appointments.shopId, feed.shopId), feed.staffId === null ? undefined : eq(appointments.staffId, feed.staffId), sql`${appointments.status} <> 'cancelled'`, sql`${appointments.during} && tstzrange(${from}, ${to})`))
+    .where(
+      and(
+        eq(appointments.shopId, feed.shopId),
+        feed.staffId === null ? undefined : eq(appointments.staffId, feed.staffId),
+        sql`${appointments.status} <> 'cancelled'`,
+        sql`${appointments.during} && tstzrange(${from}, ${to})`,
+      ),
+    )
     .orderBy(sql`lower(${appointments.during})`);
   if (rows.length === 0) return [];
   const ids = rows.map((r) => r.id);
@@ -109,19 +166,45 @@ async function entriesBetween(db: Db, feed: FeedRef, from: SQL, to: SQL): Promis
     endsAt: new Date(r.end),
     status: r.status as FeedEntry["status"],
     service: { fr: r.nameFr, en: r.nameEn },
-    firstNames: [...new Set(who.filter((w) => w.appointmentId === r.id && w.erasedAt === null).map((w) => firstNameOf(w.fullName)).filter(Boolean))],
+    firstNames: [
+      ...new Set(
+        who
+          .filter((w) => w.appointmentId === r.id && w.erasedAt === null)
+          .map((w) => firstNameOf(w.fullName))
+          .filter(Boolean),
+      ),
+    ],
   }));
 }
 
 /** The feed's title in a calendar app: « <product> · Salon Laurier » or « <product> · Salon Laurier · Julie ». */
 export async function feedTitle(db: Db, feed: FeedRef, product: string): Promise<string> {
   const [shop] = await db.select({ name: shops.name }).from(shops).where(eq(shops.id, feed.shopId));
-  const [person] = feed.staffId ? await db.select({ name: staff.name }).from(staff).where(and(eq(staff.id, feed.staffId), eq(staff.shopId, feed.shopId))) : [];
+  const [person] = feed.staffId
+    ? await db
+        .select({ name: staff.name })
+        .from(staff)
+        .where(and(eq(staff.id, feed.staffId), eq(staff.shopId, feed.shopId)))
+    : [];
   return [product, shop?.name, person?.name].filter(Boolean).join(" · ");
 }
 
 /** The people a member may open a feed for: every active staff member for who runs the shop's bookings, only their own row otherwise. */
-export async function feedPeople(db: Db, shopId: string, own: { staffAccountId?: string }): Promise<{ id: string; name: string }[]> {
-  const rows = await db.select({ id: staff.id, name: staff.name }).from(staff).where(and(eq(staff.shopId, shopId), eq(staff.active, true), own.staffAccountId ? eq(staff.accountId, own.staffAccountId) : undefined)).orderBy(asc(staff.name));
+export async function feedPeople(
+  db: Db,
+  shopId: string,
+  own: { staffAccountId?: string },
+): Promise<{ id: string; name: string }[]> {
+  const rows = await db
+    .select({ id: staff.id, name: staff.name })
+    .from(staff)
+    .where(
+      and(
+        eq(staff.shopId, shopId),
+        eq(staff.active, true),
+        own.staffAccountId ? eq(staff.accountId, own.staffAccountId) : undefined,
+      ),
+    )
+    .orderBy(asc(staff.name));
   return rows;
 }

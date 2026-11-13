@@ -1,64 +1,13 @@
 {
   "tables": {
-    "organize.client_status": [
-      "changed_at",
-      "changed_by",
-      "entity_id",
-      "state"
-    ],
-    "organize.client_tag": [
-      "entity_id",
-      "kind",
-      "tag_id"
-    ],
-    "organize.invoice_status": [
-      "changed_at",
-      "changed_by",
-      "entity_id",
-      "state"
-    ],
-    "organize.invoice_tag": [
-      "entity_id",
-      "kind",
-      "tag_id"
-    ],
-    "organize.kind_config": [
-      "config",
-      "kind",
-      "updated_at",
-      "updated_by",
-      "version"
-    ],
-    "organize.tag": [
-      "created_at",
-      "id",
-      "kind",
-      "marker",
-      "name",
-      "origin",
-      "scope_id"
-    ],
-    "organize.view": [
-      "author_id",
-      "created_at",
-      "filters",
-      "id",
-      "kind",
-      "name",
-      "scope_id",
-      "shared"
-    ],
-    "privacy.consent": [
-      "at",
-      "granted",
-      "id",
-      "means",
-      "purpose",
-      "seq",
-      "subject_id",
-      "subject_kind",
-      "version"
-    ],
+    "organize.client_status": ["changed_at", "changed_by", "entity_id", "state"],
+    "organize.client_tag": ["entity_id", "kind", "tag_id"],
+    "organize.invoice_status": ["changed_at", "changed_by", "entity_id", "state"],
+    "organize.invoice_tag": ["entity_id", "kind", "tag_id"],
+    "organize.kind_config": ["config", "kind", "updated_at", "updated_by", "version"],
+    "organize.tag": ["created_at", "id", "kind", "marker", "name", "origin", "scope_id"],
+    "organize.view": ["author_id", "created_at", "filters", "id", "kind", "name", "scope_id", "shared"],
+    "privacy.consent": ["at", "granted", "id", "means", "purpose", "seq", "subject_id", "subject_kind", "version"],
     "privacy.incident": [
       "assessment",
       "aware_at",
@@ -122,14 +71,7 @@
       "secret_hash",
       "superseded_at"
     ],
-    "public.app_settings": [
-      "key",
-      "scope",
-      "scope_id",
-      "updated_at",
-      "updated_by",
-      "value"
-    ],
+    "public.app_settings": ["key", "scope", "scope_id", "updated_at", "updated_by", "value"],
     "public.appointments": [
       "checked_in_at",
       "checked_out_at",
@@ -155,54 +97,12 @@
       "status",
       "submitted_at"
     ],
-    "public.audit_log": [
-      "action",
-      "actor_id",
-      "actor_label",
-      "at",
-      "detail",
-      "id",
-      "ip",
-      "target_id"
-    ],
-    "public.booking_codes": [
-      "attempts",
-      "created_at",
-      "expires_at",
-      "id",
-      "payload",
-      "proof"
-    ],
-    "public.bookings": [
-      "appointment_id",
-      "cancelled_at",
-      "client_id",
-      "created_at",
-      "dependant_id",
-      "id",
-      "status"
-    ],
-    "public.brief_actions": [
-      "done_at",
-      "kind",
-      "recommendation_id",
-      "result",
-      "shop_id"
-    ],
-    "public.brief_deliveries": [
-      "items",
-      "sent_at",
-      "shop_id",
-      "unsubscribe_sha256",
-      "week"
-    ],
-    "public.busy_intervals": [
-      "connection_id",
-      "during",
-      "id",
-      "shop_id",
-      "staff_id"
-    ],
+    "public.audit_log": ["action", "actor_id", "actor_label", "at", "detail", "id", "ip", "target_id"],
+    "public.booking_codes": ["attempts", "created_at", "expires_at", "id", "payload", "proof"],
+    "public.bookings": ["appointment_id", "cancelled_at", "client_id", "created_at", "dependant_id", "id", "status"],
+    "public.brief_actions": ["done_at", "kind", "recommendation_id", "result", "shop_id"],
+    "public.brief_deliveries": ["items", "sent_at", "shop_id", "unsubscribe_sha256", "week"],
+    "public.busy_intervals": ["connection_id", "during", "id", "shop_id", "staff_id"],
     "public.calendar_connections": [
       "consent_text_version",
       "consented_at",
@@ -222,33 +122,9 @@
       "staff_id",
       "state"
     ],
-    "public.client_notes": [
-      "author_account_id",
-      "author_name",
-      "body",
-      "client_id",
-      "created_at",
-      "id",
-      "shop_id"
-    ],
-    "public.client_request_files": [
-      "bytes",
-      "created_at",
-      "id",
-      "kind",
-      "request_id",
-      "url"
-    ],
-    "public.client_requests": [
-      "client_id",
-      "created_at",
-      "id",
-      "note",
-      "service_id",
-      "staff_id",
-      "title",
-      "zone_id"
-    ],
+    "public.client_notes": ["author_account_id", "author_name", "body", "client_id", "created_at", "id", "shop_id"],
+    "public.client_request_files": ["bytes", "created_at", "id", "kind", "request_id", "url"],
+    "public.client_requests": ["client_id", "created_at", "id", "note", "service_id", "staff_id", "title", "zone_id"],
     "public.clients": [
       "access_notes_enc",
       "account_id",
@@ -262,44 +138,11 @@
       "phone",
       "shop_id"
     ],
-    "public.collections": [
-      "avatar",
-      "created_at",
-      "description",
-      "id",
-      "is_default",
-      "name",
-      "owner_id"
-    ],
-    "public.collections_tags": [
-      "collection_id",
-      "tag_id"
-    ],
-    "public.days_off": [
-      "id",
-      "on_date",
-      "reason",
-      "staff_id"
-    ],
-    "public.dependants": [
-      "client_id",
-      "created_at",
-      "erased_at",
-      "id",
-      "kind",
-      "name",
-      "profile",
-      "shop_id"
-    ],
-    "public.email_changes": [
-      "account_id",
-      "created_at",
-      "expires_at",
-      "id",
-      "new_email",
-      "token_hash",
-      "used_at"
-    ],
+    "public.collections": ["avatar", "created_at", "description", "id", "is_default", "name", "owner_id"],
+    "public.collections_tags": ["collection_id", "tag_id"],
+    "public.days_off": ["id", "on_date", "reason", "staff_id"],
+    "public.dependants": ["client_id", "created_at", "erased_at", "id", "kind", "name", "profile", "shop_id"],
+    "public.email_changes": ["account_id", "created_at", "expires_at", "id", "new_email", "token_hash", "used_at"],
     "public.expenses": [
       "business_share_pct",
       "created_at",
@@ -312,15 +155,7 @@
       "subtotal_cents",
       "supplier"
     ],
-    "public.feed_tokens": [
-      "created_at",
-      "id",
-      "revoked_at",
-      "rotated_at",
-      "shop_id",
-      "staff_id",
-      "token_hash"
-    ],
+    "public.feed_tokens": ["created_at", "id", "revoked_at", "rotated_at", "shop_id", "staff_id", "token_hash"],
     "public.invitations": [
       "created_at",
       "email",
@@ -371,12 +206,7 @@
       "terms_days",
       "total_cents"
     ],
-    "public.krizaka_module_versions": [
-      "applied_at",
-      "checksum",
-      "module",
-      "version"
-    ],
+    "public.krizaka_module_versions": ["applied_at", "checksum", "module", "version"],
     "public.mail_outbox": [
       "attempts",
       "body_text",
@@ -395,33 +225,10 @@
       "template",
       "to_email"
     ],
-    "public.memberships": [
-      "account_id",
-      "created_at",
-      "invited_by",
-      "role",
-      "scope_id"
-    ],
-    "public.password_resets": [
-      "account_id",
-      "created_at",
-      "expires_at",
-      "id",
-      "token_hash",
-      "used_at"
-    ],
-    "public.payment_events": [
-      "id",
-      "received_at",
-      "type"
-    ],
-    "public.payments": [
-      "amount_cents",
-      "id",
-      "invoice_id",
-      "method",
-      "received_at"
-    ],
+    "public.memberships": ["account_id", "created_at", "invited_by", "role", "scope_id"],
+    "public.password_resets": ["account_id", "created_at", "expires_at", "id", "token_hash", "used_at"],
+    "public.payment_events": ["id", "received_at", "type"],
+    "public.payments": ["amount_cents", "id", "invoice_id", "method", "received_at"],
     "public.price_versions": [
       "actor_id",
       "actor_label",
@@ -432,13 +239,7 @@
       "key",
       "price"
     ],
-    "public.schedules": [
-      "ends_at",
-      "id",
-      "staff_id",
-      "starts_at",
-      "weekday"
-    ],
+    "public.schedules": ["ends_at", "id", "staff_id", "starts_at", "weekday"],
     "public.services": [
       "active",
       "capacity",
@@ -457,26 +258,8 @@
       "shop_id",
       "tax_category"
     ],
-    "public.sessions": [
-      "account_id",
-      "created_at",
-      "expires_at",
-      "id",
-      "ip",
-      "token_hash",
-      "user_agent"
-    ],
-    "public.settings_audit": [
-      "actor_id",
-      "actor_label",
-      "after",
-      "at",
-      "before",
-      "id",
-      "key",
-      "scope",
-      "scope_id"
-    ],
+    "public.sessions": ["account_id", "created_at", "expires_at", "id", "ip", "token_hash", "user_agent"],
+    "public.settings_audit": ["actor_id", "actor_label", "after", "at", "before", "id", "key", "scope", "scope_id"],
     "public.shop_announcements": [
       "created_at",
       "ends_on",
@@ -501,22 +284,9 @@
       "updated_at",
       "verified_at"
     ],
-    "public.shop_figure_rules": [
-      "overrides",
-      "shop_id",
-      "updated_at"
-    ],
-    "public.shop_former_slugs": [
-      "retired_at",
-      "shop_id",
-      "slug"
-    ],
-    "public.shop_languages": [
-      "enabled",
-      "shop_id",
-      "source_locale",
-      "updated_at"
-    ],
+    "public.shop_figure_rules": ["overrides", "shop_id", "updated_at"],
+    "public.shop_former_slugs": ["retired_at", "shop_id", "slug"],
+    "public.shop_languages": ["enabled", "shop_id", "source_locale", "updated_at"],
     "public.shop_media": [
       "alt_en",
       "alt_fr",
@@ -616,25 +386,10 @@
       "tagline_fr",
       "timezone"
     ],
-    "public.shop_slug_changes": [
-      "at",
-      "id",
-      "shop_id"
-    ],
-    "public.shop_social_links": [
-      "platform",
-      "shop_id",
-      "url"
-    ],
-    "public.shop_tags": [
-      "shop_id",
-      "tag_id"
-    ],
-    "public.shop_translation_runs": [
-      "day",
-      "runs",
-      "shop_id"
-    ],
+    "public.shop_slug_changes": ["at", "id", "shop_id"],
+    "public.shop_social_links": ["platform", "shop_id", "url"],
+    "public.shop_tags": ["shop_id", "tag_id"],
+    "public.shop_translation_runs": ["day", "runs", "shop_id"],
     "public.shop_translations": [
       "created_at",
       "field",
@@ -649,11 +404,7 @@
       "text",
       "updated_at"
     ],
-    "public.shop_wall": [
-      "shop_id",
-      "texture",
-      "updated_at"
-    ],
+    "public.shop_wall": ["shop_id", "texture", "updated_at"],
     "public.shop_wall_items": [
       "alt_en",
       "alt_fr",
@@ -673,15 +424,7 @@
       "y",
       "z"
     ],
-    "public.shop_zones": [
-      "active",
-      "id",
-      "lat",
-      "lng",
-      "name",
-      "position",
-      "shop_id"
-    ],
+    "public.shop_zones": ["active", "id", "lat", "lng", "name", "position", "shop_id"],
     "public.shops": [
       "address",
       "area",
@@ -731,20 +474,8 @@
       "tagline_fr",
       "timezone"
     ],
-    "public.staff": [
-      "account_id",
-      "active",
-      "created_at",
-      "id",
-      "name",
-      "shop_id"
-    ],
-    "public.tags": [
-      "color",
-      "id",
-      "name",
-      "owner_id"
-    ],
+    "public.staff": ["account_id", "active", "created_at", "id", "name", "shop_id"],
+    "public.tags": ["color", "id", "name", "owner_id"],
     "public.tax_ledger": [
       "amount_cents",
       "direction",
@@ -793,17 +524,9 @@
       "secret_sealed",
       "url"
     ],
-    "public.webhook_received": [
-      "event_id",
-      "received_at",
-      "source"
-    ]
+    "public.webhook_received": ["event_id", "received_at", "source"]
   },
   "config": {
-    "public.price_versions": [
-      "folioviv.founder",
-      "folioviv.scale",
-      "folioviv.starter"
-    ]
+    "public.price_versions": ["folioviv.founder", "folioviv.scale", "folioviv.starter"]
   }
 }

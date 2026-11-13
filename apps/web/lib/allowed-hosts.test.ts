@@ -7,26 +7,65 @@ import { proxy } from "../proxy";
 import { isAllowedHost } from "./allowed-hosts";
 
 // The shop directory asks the running server: this test answers for it.
-vi.mock("./shop-directory", async (original) => ({ ...(await original<typeof import("./shop-directory")>()), shopVerdict: vi.fn(async () => ({ kind: "shop" })) }));
+vi.mock("./shop-directory", async (original) => ({
+  ...(await original<typeof import("./shop-directory")>()),
+  shopVerdict: vi.fn(async () => ({ kind: "shop" })),
+}));
 
-const production = { NODE_ENV: "production", APP_PUBLIC_URL: "https://www.folioviv.com", APP_DEV_HOST: "dev.folioviv.com" };
+const production = {
+  NODE_ENV: "production",
+  APP_PUBLIC_URL: "https://www.folioviv.com",
+  APP_DEV_HOST: "dev.folioviv.com",
+};
 
 /** ADR-005 slice 4 (#536): a request names only a host this deployment serves; any other answers 421, before anything is built from it. */
 describe("the hosts a deployment serves", () => {
   it("the public host, its apex, the dev host, the console and a shop's own subdomain", () => {
-    for (const host of ["www.folioviv.com", "folioviv.com", "dev.folioviv.com", "admin.folioviv.com", "pattes-saint-henri.folioviv.com", "WWW.Folioviv.com", "www.folioviv.com:443"]) {
+    for (const host of [
+      "www.folioviv.com",
+      "folioviv.com",
+      "dev.folioviv.com",
+      "admin.folioviv.com",
+      "pattes-saint-henri.folioviv.com",
+      "WWW.Folioviv.com",
+      "www.folioviv.com:443",
+    ]) {
       expect(isAllowedHost(host, production), host).toBe(true);
     }
   });
   it("nothing else: a stranger, a look-alike, a nested label, a platform name, an address, no host", () => {
-    for (const host of ["evil.example", "folioviv.com.evil.example", "www.folioviv.com.evil.example", "evilfolioviv.com", "a.b.folioviv.com", "ab.folioviv.com", "bad_slug.folioviv.com", "api.folioviv.com", "127.0.0.1", "[::1]", "localhost", "", null, undefined]) {
+    for (const host of [
+      "evil.example",
+      "folioviv.com.evil.example",
+      "www.folioviv.com.evil.example",
+      "evilfolioviv.com",
+      "a.b.folioviv.com",
+      "ab.folioviv.com",
+      "bad_slug.folioviv.com",
+      "api.folioviv.com",
+      "127.0.0.1",
+      "[::1]",
+      "localhost",
+      "",
+      null,
+      undefined,
+    ]) {
       expect(isAllowedHost(host, production), String(host)).toBe(false);
     }
   });
   it("with a shop domain declared: <slug>.<shop domain>, the domain itself and its www; never a nested label or another domain", () => {
     const env = { ...production, APP_SHOP_DOMAIN: "folioviv.shop" };
-    for (const host of ["salon-laurier.folioviv.shop", "folioviv.shop", "www.folioviv.shop"]) {expect(isAllowedHost(host, env), host).toBe(true);}
-    for (const host of ["a.b.folioviv.shop", "ab.folioviv.shop", "salon.folioviv.shop.evil.example", "salon.folioviv.sh"]) {expect(isAllowedHost(host, env), host).toBe(false);}
+    for (const host of ["salon-laurier.folioviv.shop", "folioviv.shop", "www.folioviv.shop"]) {
+      expect(isAllowedHost(host, env), host).toBe(true);
+    }
+    for (const host of [
+      "a.b.folioviv.shop",
+      "ab.folioviv.shop",
+      "salon.folioviv.shop.evil.example",
+      "salon.folioviv.sh",
+    ]) {
+      expect(isAllowedHost(host, env), host).toBe(false);
+    }
     // Undeclared: the shop domain is a stranger.
     expect(isAllowedHost("salon-laurier.folioviv.shop", production)).toBe(false);
   });
@@ -40,8 +79,12 @@ describe("the hosts a deployment serves", () => {
     expect(isAllowedHost("x.preview.example.org", env)).toBe(false);
   });
   it("localhost only where it is declared or in development, never by default in production", () => {
-    expect(isAllowedHost("localhost:3000", { NODE_ENV: "development", APP_PUBLIC_URL: "https://www.folioviv.com" })).toBe(true);
-    expect(isAllowedHost("localhost:3000", { NODE_ENV: "production", APP_PUBLIC_URL: "http://localhost:3000" })).toBe(true);
+    expect(
+      isAllowedHost("localhost:3000", { NODE_ENV: "development", APP_PUBLIC_URL: "https://www.folioviv.com" }),
+    ).toBe(true);
+    expect(isAllowedHost("localhost:3000", { NODE_ENV: "production", APP_PUBLIC_URL: "http://localhost:3000" })).toBe(
+      true,
+    );
     expect(isAllowedHost("localhost:3000", production)).toBe(false);
   });
 });
@@ -77,7 +120,9 @@ describe("the proxy answers an unknown host 421", () => {
 describe("the servers CI starts", () => {
   it("each declares the origin it answers to (else the host guard answers its own crawler 421)", () => {
     for (const script of ["ci-after-build.sh", "ci-mobile-backend.sh", "ci-visual-start.sh"]) {
-      expect(readFileSync(new URL(`../../../scripts/${script}`, import.meta.url), "utf8"), script).toMatch(/^export APP_PUBLIC_URL=http:\/\/localhost:3000/m);
+      expect(readFileSync(new URL(`../../../scripts/${script}`, import.meta.url), "utf8"), script).toMatch(
+        /^export APP_PUBLIC_URL=http:\/\/localhost:3000/m,
+      );
     }
   });
 });

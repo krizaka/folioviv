@@ -15,7 +15,9 @@ import { choice, defineSettings, flag, GLOBAL_ONLY, integer, postgresSettings, S
 const args = process.argv.slice(2);
 const [key, raw] = args;
 if (!key || raw === undefined) {
-  console.error("usage: tsx scripts/set-setting.mjs <key> <json-value> [--kind flag|choice|subset|integer] [--actor <label>]");
+  console.error(
+    "usage: tsx scripts/set-setting.mjs <key> <json-value> [--kind flag|choice|subset|integer] [--actor <label>]",
+  );
   process.exit(2);
 }
 const option = (name, fallback) => {
@@ -23,7 +25,16 @@ const option = (name, fallback) => {
   return at >= 0 && args[at + 1] ? args[at + 1] : fallback;
 };
 const value = JSON.parse(raw);
-const kind = option("--kind", typeof value === "boolean" ? "flag" : typeof value === "number" ? "integer" : Array.isArray(value) ? "subset" : "choice");
+const kind = option(
+  "--kind",
+  typeof value === "boolean"
+    ? "flag"
+    : typeof value === "number"
+      ? "integer"
+      : Array.isArray(value)
+        ? "subset"
+        : "choice",
+);
 const actor = option("--actor", "set-setting.mjs");
 const user = option("--user", "").trim().toLowerCase();
 const group = key.split(".")[0];
@@ -39,7 +50,8 @@ export function definitionFor(k, v, person = false) {
       if (!Number.isInteger(v)) throw new Error("an integer takes a whole number");
       return integer(group, v, { min: v, max: v, unit: "" }, GLOBAL_ONLY);
     case "subset":
-      if (!Array.isArray(v) || !v.length || !v.every((x) => typeof x === "string")) throw new Error("a subset takes a non-empty array of strings");
+      if (!Array.isArray(v) || !v.length || !v.every((x) => typeof x === "string"))
+        throw new Error("a subset takes a non-empty array of strings");
       return subset(group, v, v, GLOBAL_ONLY);
     case "choice":
       if (typeof v !== "string") throw new Error("a choice takes a string");
@@ -54,13 +66,26 @@ if (!url) throw new Error("DATABASE_URL is missing");
 const pool = new pg.Pool(poolConfig(url, process.env.DATABASE_CA_CERT, 2));
 try {
   const registry = defineSettings({ [key]: definitionFor(kind, value, Boolean(user)) });
-  const service = postgresSettings(registry, { query: async (sql, params) => (await pool.query(sql, params)).rows, clock: () => performance.now() });
-  const account = actor.includes("@") ? (await pool.query("SELECT id FROM accounts WHERE email = $1", [actor.trim().toLowerCase()])).rows[0] : undefined;
+  const service = postgresSettings(registry, {
+    query: async (sql, params) => (await pool.query(sql, params)).rows,
+    clock: () => performance.now(),
+  });
+  const account = actor.includes("@")
+    ? (await pool.query("SELECT id FROM accounts WHERE email = $1", [actor.trim().toLowerCase()])).rows[0]
+    : undefined;
   const person = user ? (await pool.query("SELECT id FROM accounts WHERE email = $1", [user])).rows[0] : undefined;
   if (user && !person) throw new Error(`no account ${user}`);
-  await service.set({ id: account?.id ?? null, label: actor }, person ? { scope: "user", id: person.id } : { scope: "global", id: "" }, key, value, new Date());
+  await service.set(
+    { id: account?.id ?? null, label: actor },
+    person ? { scope: "user", id: person.id } : { scope: "global", id: "" },
+    key,
+    value,
+    new Date(),
+  );
   const whose = person ? " for " + user : "";
-  console.log(`set-setting: ${key} = ${raw}${whose} (${kind}, by ${account ? "the account " + actor : actor + ", no account"})`);
+  console.log(
+    `set-setting: ${key} = ${raw}${whose} (${kind}, by ${account ? "the account " + actor : actor + ", no account"})`,
+  );
 } finally {
   await pool.end();
 }

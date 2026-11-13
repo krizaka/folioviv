@@ -24,13 +24,41 @@ export type PriceKey = typeof FOUNDER | typeof STARTER | typeof SCALE | typeof A
 
 export const PRICE_SEED = [
   /** The founder offer: setup included, the first businesses only (`founderCap`); the administrator ends it by making it `internal`. A founder keeps the version it was sold at. */
-  { product: "folioviv", plan: "founder", unit: UNIT.month, amountCents: 3900, availability: AVAILABILITY.founderLimited, limits: { founderCap: 20, cardFeeBps: 0, directDebitBps: 50, directDebitCapCents: 1500 } },
+  {
+    product: "folioviv",
+    plan: "founder",
+    unit: UNIT.month,
+    amountCents: 3900,
+    availability: AVAILABILITY.founderLimited,
+    limits: { founderCap: 20, cardFeeBps: 0, directDebitBps: 50, directDebitCapCents: 1500 },
+  },
   /** Starter: the regular plan. */
-  { product: "folioviv", plan: "starter", unit: UNIT.month, amountCents: 4500, availability: AVAILABILITY.public, limits: { cardFeeBps: 0, directDebitBps: 50, directDebitCapCents: 1500 } },
+  {
+    product: "folioviv",
+    plan: "starter",
+    unit: UNIT.month,
+    amountCents: 4500,
+    availability: AVAILABILITY.public,
+    limits: { cardFeeBps: 0, directDebitBps: 50, directDebitCapCents: 1500 },
+  },
   /** Scale B2B: its B2B features are not built yet (worded « soon », never claimed). */
-  { product: "folioviv", plan: "scale", unit: UNIT.month, amountCents: 9900, availability: AVAILABILITY.public, limits: { cardFeeBps: 0, directDebitBps: 25, directDebitCapCents: 1000 } },
+  {
+    product: "folioviv",
+    plan: "scale",
+    unit: UNIT.month,
+    amountCents: 9900,
+    availability: AVAILABILITY.public,
+    limits: { cardFeeBps: 0, directDebitBps: 25, directDebitCapCents: 1000 },
+  },
   /** Association: a registered non-profit, OBNL or charity pays the Starter features 1 $ a month after its free months, once an administrator approved its proof (`lib/plans.ts`). A new entry: no history. */
-  { product: "folioviv", plan: "association", unit: UNIT.month, amountCents: 100, availability: AVAILABILITY.public, limits: { trialDays: 90, cardFeeBps: 0, directDebitBps: 50, directDebitCapCents: 1500 } },
+  {
+    product: "folioviv",
+    plan: "association",
+    unit: UNIT.month,
+    amountCents: 100,
+    availability: AVAILABILITY.public,
+    limits: { trialDays: 90, cardFeeBps: 0, directDebitBps: 50, directDebitCapCents: 1500 },
+  },
 ] as const satisfies readonly PriceSeed[];
 
 export const PRICES = definePrices(PRICE_SEED);
@@ -38,7 +66,14 @@ export const PRICES = definePrices(PRICE_SEED);
 /** Paid options, beside the plans: never sold as a subscription plan (no processor entry), billed with the plan they are added to. */
 export const ADDON_SEED = [
   /** The paid option « your own domain » (ADR-005 §3, #539): no figure in code, the administrator schedules the price; `maxDomains` is the per-shop limit. Enabled per shop from the console only once a price is in force. */
-  { product: "folioviv", plan: "custom-domain", unit: UNIT.month, amountCents: null, availability: AVAILABILITY.internal, limits: { maxDomains: 5 } },
+  {
+    product: "folioviv",
+    plan: "custom-domain",
+    unit: UNIT.month,
+    amountCents: null,
+    availability: AVAILABILITY.internal,
+    limits: { maxDomains: 5 },
+  },
 ] as const satisfies readonly PriceSeed[];
 
 /** The whole catalogue the console edits: the plans and the options. */
@@ -56,7 +91,9 @@ export const PROCESSOR_PLANS = {
 const BPS = 10_000;
 
 const orderCents = (amount: number) => {
-  if (!Number.isInteger(amount) || amount < 0) {throw new RangeError("An order amount is a whole number of cents");}
+  if (!Number.isInteger(amount) || amount < 0) {
+    throw new RangeError("An order amount is a whole number of cents");
+  }
   return amount;
 };
 

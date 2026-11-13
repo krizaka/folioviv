@@ -40,7 +40,10 @@ describe("the protected terms the console edits", () => {
 describe("storedTerms reads the setting the way the settings API answers (#537)", () => {
   it("takes the text out of { value, source }, never « [object Object] »", () => {
     expect(storedTerms({ value: "paypal\nlogin", source: "default" })).toBe("paypal\nlogin");
-    expect(termRows(storedTerms({ value: "paypal", source: "default" }))[0]).toMatchObject({ text: "paypal", kind: "word" });
+    expect(termRows(storedTerms({ value: "paypal", source: "default" }))[0]).toMatchObject({
+      text: "paypal",
+      kind: "word",
+    });
   });
   it("accepts a bare string and falls back to empty", () => {
     expect(storedTerms("a")).toBe("a");

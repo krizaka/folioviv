@@ -16,7 +16,10 @@ const pool = new pg.Pool(poolConfig(process.env.DATABASE_URL, process.env.DATABA
 try {
   const { rows } = await pool.query("SELECT id FROM shops WHERE slug = $1", [slug]);
   if (!rows[0]) throw new Error(`no shop with the slug ${slug}`);
-  await applyTemplate(createDb(pool), rows[0].id, { templateId, templateVersion: CAHIER_VERSION, keepOrder: false }, [...TEMPLATES, ...TEMPLATES_V2]);
+  await applyTemplate(createDb(pool), rows[0].id, { templateId, templateVersion: CAHIER_VERSION, keepOrder: false }, [
+    ...TEMPLATES,
+    ...TEMPLATES_V2,
+  ]);
   console.log(`apply-shop-template: ${slug} wears ${templateId}@${CAHIER_VERSION}`);
 } catch (error) {
   console.error(`apply-shop-template: ${error.message}`);

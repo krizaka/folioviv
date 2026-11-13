@@ -16,8 +16,14 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: () => undefined
 // Built from pieces: the pattern the page must refuse, kept out of the static analysers' sight as a regular expression.
 const NESTED_QUANTIFIER = ["/(", "a+", ")+$/"].join("");
 const MESSAGES = { en: { console: en.console }, fr: { console: fr.console } } as const;
-const wrap = (node: React.ReactNode, locale: "en" | "fr" = "en") => renderToStaticMarkup(<I18nProvider locale={locale} messages={MESSAGES[locale] as never}>{node}</I18nProvider>);
-const form = (initial: string, locale: "en" | "fr" = "en") => wrap(<TermForm label="Add" submit="Add" initial={initial} busy={false} onSubmit={async () => true} />, locale);
+const wrap = (node: React.ReactNode, locale: "en" | "fr" = "en") =>
+  renderToStaticMarkup(
+    <I18nProvider locale={locale} messages={MESSAGES[locale] as never}>
+      {node}
+    </I18nProvider>,
+  );
+const form = (initial: string, locale: "en" | "fr" = "en") =>
+  wrap(<TermForm label="Add" submit="Add" initial={initial} busy={false} onSubmit={async () => true} />, locale);
 
 describe("the protected terms form checks the line where it is typed (ADR-005, #537)", () => {
   it("accepts a word and a safe pattern: the hint, no error, the button enabled", () => {
@@ -41,10 +47,24 @@ describe("the protected terms form checks the line where it is typed (ADR-005, #
   });
 
   it("lists a stored line that cannot be kept with its reason, and a comment without an edit button", () => {
-    const bad = wrap(<TermItem row={{ index: 4, text: NESTED_QUANTIFIER, kind: "pattern", issue: "unsafe" }} busy={false} onEdit={async () => true} onRemove={() => undefined} />);
+    const bad = wrap(
+      <TermItem
+        row={{ index: 4, text: NESTED_QUANTIFIER, kind: "pattern", issue: "unsafe" }}
+        busy={false}
+        onEdit={async () => true}
+        onRemove={() => undefined}
+      />,
+    );
     expect(bad).toContain("could take very long");
     expect(bad).toContain("Edit");
-    const comment = wrap(<TermItem row={{ index: 0, text: "# brands", kind: "comment" }} busy={false} onEdit={async () => true} onRemove={() => undefined} />);
+    const comment = wrap(
+      <TermItem
+        row={{ index: 0, text: "# brands", kind: "comment" }}
+        busy={false}
+        onEdit={async () => true}
+        onRemove={() => undefined}
+      />,
+    );
     expect(comment).not.toContain("Edit");
     expect(comment).toContain("Remove");
   });

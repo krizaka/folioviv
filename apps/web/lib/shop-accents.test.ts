@@ -2,7 +2,7 @@ import { shopPresets } from "@krizaka/tokens/shop-presets";
 import { describe, expect, it } from "vitest";
 
 import { BRAND_ID } from "./brand-id";
-import { accentsByLook,acceptedAccents } from "./shop-accents";
+import { accentsByLook, acceptedAccents } from "./shop-accents";
 
 describe("the accents of a look", () => {
   it("offers the tested list of the look, led by its own accent", () => {

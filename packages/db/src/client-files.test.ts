@@ -19,7 +19,12 @@ const hoursFrom = (h: number) => new Date(NOW.getTime() + h * 3_600_000);
 describe("the client files of a shop", () => {
   it("counts the visits that began, names the last and the next, and sums what was billed minus credit notes", async () => {
     const s = await salon(t.db);
-    const common = { shopId: s.shop.id, staffId: s.staff.julie.id, serviceId: s.services.cut.id, clientId: s.client.id };
+    const common = {
+      shopId: s.shop.id,
+      staffId: s.staff.julie.id,
+      serviceId: s.services.cut.id,
+      clientId: s.client.id,
+    };
     const past = await book(t.db, { ...common, startsAt: hoursFrom(-48) });
     await book(t.db, { ...common, startsAt: hoursFrom(-24) });
     const missed = await book(t.db, { ...common, startsAt: hoursFrom(-12) });
@@ -30,12 +35,29 @@ describe("the client files of a shop", () => {
     await t.db.update(appointments).set({ status: "noShow" }).where(eq(appointments.id, missed.id));
     await t.db.update(appointments).set({ status: "cancelled" }).where(eq(appointments.id, cancelled.id));
     const line = { description: "Haircut", quantity: 1, unitPriceCents: 4_500, category: "standard" as const };
-    const first = await issueInvoice(t.db, { shopId: s.shop.id, clientId: s.client.id, language: "fr", issuedOn: "2026-10-20", lines: [line] });
-    await issueInvoice(t.db, { shopId: s.shop.id, clientId: s.client.id, language: "fr", issuedOn: "2026-10-21", lines: [line] });
+    const first = await issueInvoice(t.db, {
+      shopId: s.shop.id,
+      clientId: s.client.id,
+      language: "fr",
+      issuedOn: "2026-10-20",
+      lines: [line],
+    });
+    await issueInvoice(t.db, {
+      shopId: s.shop.id,
+      clientId: s.client.id,
+      language: "fr",
+      issuedOn: "2026-10-21",
+      lines: [line],
+    });
     await creditNote(t.db, first.invoice.id, "2026-10-22");
 
     const [row] = await clientOverview(t.db, s.shop.id, NOW);
-    expect(row).toMatchObject({ id: s.client.id, fullName: "Camille Tremblay", visits: 2, spentCents: first.totals.totalCents });
+    expect(row).toMatchObject({
+      id: s.client.id,
+      fullName: "Camille Tremblay",
+      visits: 2,
+      spentCents: first.totals.totalCents,
+    });
     expect(row!.lastVisitAt).toBe(hoursFrom(-24).toISOString());
     expect(row!.nextVisitAt).toBe(hoursFrom(26).toISOString());
   });
@@ -53,10 +75,21 @@ describe("the client files of a shop", () => {
   it("opens a file with its visits newest first and its invoices, and refuses another shop's client", async () => {
     const a = await salon(t.db);
     const b = await salon(t.db);
-    const common = { shopId: a.shop.id, staffId: a.staff.marc.id, serviceId: a.services.colour.id, clientId: a.client.id };
+    const common = {
+      shopId: a.shop.id,
+      staffId: a.staff.marc.id,
+      serviceId: a.services.colour.id,
+      clientId: a.client.id,
+    };
     await book(t.db, { ...common, startsAt: hoursFrom(-72) });
     await book(t.db, { ...common, startsAt: hoursFrom(30) });
-    await issueInvoice(t.db, { shopId: a.shop.id, clientId: a.client.id, language: "fr", issuedOn: "2026-10-19", lines: [{ description: "Colour", quantity: 1, unitPriceCents: 9_500, category: "standard" }] });
+    await issueInvoice(t.db, {
+      shopId: a.shop.id,
+      clientId: a.client.id,
+      language: "fr",
+      issuedOn: "2026-10-19",
+      lines: [{ description: "Colour", quantity: 1, unitPriceCents: 9_500, category: "standard" }],
+    });
 
     const file = await clientFile(t.db, a.shop.id, a.client.id);
     expect(file!.client).toMatchObject({ fullName: "Camille Tremblay", language: "fr", hasAccessNotes: false });

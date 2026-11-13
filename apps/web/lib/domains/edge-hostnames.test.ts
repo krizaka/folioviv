@@ -3,7 +3,8 @@ import { describe, expect, it, vi } from "vitest";
 import { edgeHostnames, edgeTarget, tlsOf } from "./edge-hostnames";
 
 const configured = { APP_EDGE_PROVIDER: "cloudflare", APP_EDGE_API_TOKEN: "t", APP_EDGE_ZONE_ID: "z1" };
-const answer = (result: unknown, status = 200) => vi.fn(async () => new Response(JSON.stringify({ success: status < 400, result }), { status }));
+const answer = (result: unknown, status = 200) =>
+  vi.fn(async () => new Response(JSON.stringify({ success: status < 400, result }), { status }));
 
 describe("the edge service behind CustomHostnames (ADR-005 §3, folioviv#539)", () => {
   it("reads only a final « active » as active and only known dead ends as failed; everything else waits", () => {
@@ -29,12 +30,27 @@ describe("the edge service behind CustomHostnames (ADR-005 §3, folioviv#539)", 
     expect(url).toBe("https://api.cloudflare.com/client/v4/zones/z1/custom_hostnames");
     expect(url).not.toContain("t=");
     expect((init.headers as Record<string, string>).authorization).toBe("Bearer t");
-    expect(JSON.parse(init.body as string)).toMatchObject({ hostname: "reservation.monsalon.ca", ssl: { method: "http", type: "dv" } });
+    expect(JSON.parse(init.body as string)).toMatchObject({
+      hostname: "reservation.monsalon.ca",
+      ssl: { method: "http", type: "dv" },
+    });
   });
 
   it("an active hostname needs both the hostname and its certificate active", async () => {
-    expect(await edgeHostnames(configured, answer({ id: "h1", status: "active", ssl: { status: "active" } }) as never)!.status("h1")).toEqual({ id: "h1", tls: "active" });
-    expect((await edgeHostnames(configured, answer({ id: "h1", status: "active", ssl: { status: "pending_issuance" } }) as never)!.status("h1")).tls).toBe("pending");
+    expect(
+      await edgeHostnames(
+        configured,
+        answer({ id: "h1", status: "active", ssl: { status: "active" } }) as never,
+      )!.status("h1"),
+    ).toEqual({ id: "h1", tls: "active" });
+    expect(
+      (
+        await edgeHostnames(
+          configured,
+          answer({ id: "h1", status: "active", ssl: { status: "pending_issuance" } }) as never,
+        )!.status("h1")
+      ).tls,
+    ).toBe("pending");
   });
 
   it("an error from the service is thrown, so the state machine keeps the domain where it is", async () => {

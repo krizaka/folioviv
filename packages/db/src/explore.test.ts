@@ -7,7 +7,10 @@ import { freshDatabase } from "./test/db";
 import { NOW, walkerShop } from "./test/fixtures";
 
 // The list reads the stored availability: the sweep runs first at the same clock, as the server's tick does.
-const exploreShops = async (db: Parameters<typeof read>[0], now: Date) => { await settleAvailability(db, now); return read(db, now); };
+const exploreShops = async (db: Parameters<typeof read>[0], now: Date) => {
+  await settleAvailability(db, now);
+  return read(db, now);
+};
 
 let t: Awaited<ReturnType<typeof freshDatabase>>;
 let w: Awaited<ReturnType<typeof walkerShop>>;

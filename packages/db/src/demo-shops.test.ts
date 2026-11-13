@@ -57,18 +57,33 @@ describe("the three fictional demo shops", () => {
     expect(studio.rules.cancellationHours).toBe(48);
     const consultant = (await publicShop(t.db, "ferland-conseil"))!;
     expect(consultant.team.length).toBe(1);
-    expect(consultant.services.map((s) => s.nameEn)).toEqual(expect.arrayContaining(["Discovery call (20 min)", "Working session (1 h)", "3-hour block"]));
+    expect(consultant.services.map((s) => s.nameEn)).toEqual(
+      expect.arrayContaining(["Discovery call (20 min)", "Working session (1 h)", "3-hour block"]),
+    );
   });
 
   it("really offer times, for anyone and for each person, from their own hours", async () => {
     for (const demo of DEMO_SHOPS) {
       const page = (await publicShop(t.db, demo.shop.slug))!;
       for (const service of page.services) {
-        const anyone = await listSlots(t.db, { shopId: page.shop.id, serviceId: service.id, zoneId: null, now: NOW, days: 14 });
+        const anyone = await listSlots(t.db, {
+          shopId: page.shop.id,
+          serviceId: service.id,
+          zoneId: null,
+          now: NOW,
+          days: 14,
+        });
         expect(anyone.length, `${demo.shop.slug}: ${service.nameEn}`).toBeGreaterThan(0);
       }
       const someone = page.team[page.team.length - 1]!;
-      const own = await listSlots(t.db, { shopId: page.shop.id, serviceId: page.services[0]!.id, zoneId: null, now: NOW, days: 14, staffId: someone.id });
+      const own = await listSlots(t.db, {
+        shopId: page.shop.id,
+        serviceId: page.services[0]!.id,
+        zoneId: null,
+        now: NOW,
+        days: 14,
+        staffId: someone.id,
+      });
       expect(own.every((s) => s.staffId === someone.id)).toBe(true);
       expect(await demoCounts(t.db, page.shop.id)).toEqual({ team: demo.team.length, services: demo.services.length });
     }
@@ -92,7 +107,10 @@ describe("a demo shop always has its own trade, so it never wears another trade'
     const { saveShopPageConfig, shopPageConfigOf } = await import("./shop-page");
     const salon = (await publicShop(t.db, "cedre-ciseaux"))!;
     for (const wrong of [null, "consulting"] as const) {
-      await saveShopPageConfig(t.db, salon.shop.id, { ...(await shopPageConfigOf(t.db, salon.shop.id)), shopType: wrong });
+      await saveShopPageConfig(t.db, salon.shop.id, {
+        ...(await shopPageConfigOf(t.db, salon.shop.id)),
+        shopType: wrong,
+      });
       await seedDemoShops(t.db);
       expect((await shopPageConfigOf(t.db, salon.shop.id)).shopType).toBe("salon");
     }
@@ -122,11 +140,22 @@ describe("the demo shops each wear a template of their trade (#261, step 6)", ()
       expect(template.shopTypes, demo.template).toContain(demo.shopType);
       const page = (await publicShop(t.db, demo.shop.slug))!;
       const config = await shopPageConfigOf(t.db, page.shop.id);
-      expect(config).toMatchObject({ templateId: demo.template, templateVersion: template.version, sectionsCustom: false });
-      expect(config.sections.slice(0, template.sections.length).map((s) => s.id)).toEqual(sectionsFromTemplate(template, config.sections).slice(0, template.sections.length).map((s) => s.id));
+      expect(config).toMatchObject({
+        templateId: demo.template,
+        templateVersion: template.version,
+        sectionsCustom: false,
+      });
+      expect(config.sections.slice(0, template.sections.length).map((s) => s.id)).toEqual(
+        sectionsFromTemplate(template, config.sections)
+          .slice(0, template.sections.length)
+          .map((s) => s.id),
+      );
     }
     await seedDemoShops(t.db);
-    for (const demo of DEMO_SHOPS) expect((await shopPageConfigOf(t.db, (await publicShop(t.db, demo.shop.slug))!.shop.id)).templateId).toBe(demo.template);
+    for (const demo of DEMO_SHOPS)
+      expect((await shopPageConfigOf(t.db, (await publicShop(t.db, demo.shop.slug))!.shop.id)).templateId).toBe(
+        demo.template,
+      );
   });
 });
 
@@ -139,7 +168,10 @@ describe("a dev database seeded by an older version", () => {
       // An older seed: the same address, another owner, no trade and no template.
       const { accounts, shops } = await import("./schema");
       const { eq } = await import("drizzle-orm");
-      const [stranger] = await other.db.insert(accounts).values({ email: "eric@folioviv.test" }).returning({ id: accounts.id });
+      const [stranger] = await other.db
+        .insert(accounts)
+        .values({ email: "eric@folioviv.test" })
+        .returning({ id: accounts.id });
       await other.db.update(shops).set({ ownerId: stranger!.id }).where(eq(shops.id, older[0]!.shopId));
       const again = await seedDemoShops(other.db);
       expect(again[0]!.shopId).toBe(older[0]!.shopId);
@@ -161,7 +193,10 @@ describe("the Saint-Henri demo set on the Explorer map (krizaka-internal#1660)",
     const zones = await t.db.select().from(shopZones);
     for (const d of ST_HENRI_DEMO_SHOPS) {
       const shopId = first.find((s) => s.slug === d.shop.slug)!.shopId;
-      expect(zones.filter((z) => z.shopId === shopId).map((z) => [z.lat, z.lng]), d.shop.slug).toEqual([[d.zone!.lat, d.zone!.lng]]);
+      expect(
+        zones.filter((z) => z.shopId === shopId).map((z) => [z.lat, z.lng]),
+        d.shop.slug,
+      ).toEqual([[d.zone!.lat, d.zone!.lng]]);
     }
   });
 });

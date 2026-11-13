@@ -1,7 +1,12 @@
 import crypto from "node:crypto";
 import { promisify } from "node:util";
 
-const scrypt = promisify(crypto.scrypt) as (password: string, salt: Buffer, keylen: number, options: crypto.ScryptOptions) => Promise<Buffer>;
+const scrypt = promisify(crypto.scrypt) as (
+  password: string,
+  salt: Buffer,
+  keylen: number,
+  options: crypto.ScryptOptions,
+) => Promise<Buffer>;
 
 /** scrypt (N=2^15, r=8, p=1), a 16-byte salt, stored as `scrypt$N$r$p$salt$hash` (base64url). */
 const N = 32768;
@@ -29,7 +34,12 @@ export async function verifyPassword(password: string, stored: string): Promise<
   const [scheme, n, r, p, salt, hash] = stored.split("$");
   if (scheme !== "scrypt" || !salt || !hash || password.length > PASSWORD_MAX_LENGTH) return false;
   const expected = Buffer.from(hash, "base64url");
-  const given = await scrypt(password, Buffer.from(salt, "base64url"), expected.length, { N: Number(n), r: Number(r), p: Number(p), maxmem: 64 * 1024 * 1024 });
+  const given = await scrypt(password, Buffer.from(salt, "base64url"), expected.length, {
+    N: Number(n),
+    r: Number(r),
+    p: Number(p),
+    maxmem: 64 * 1024 * 1024,
+  });
   return given.length === expected.length && crypto.timingSafeEqual(given, expected);
 }
 

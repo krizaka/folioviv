@@ -11,7 +11,9 @@ export const partOfHour = (hour: number): DayPart => {
 
 /** The hour (0–23) of an instant on the shop's clock. */
 export function hourIn(instant: Date, timeZone: string): number {
-  const hour = new Intl.DateTimeFormat("en-CA", { hour: "numeric", hourCycle: "h23", timeZone }).formatToParts(instant).find((p) => p.type === "hour")?.value;
+  const hour = new Intl.DateTimeFormat("en-CA", { hour: "numeric", hourCycle: "h23", timeZone })
+    .formatToParts(instant)
+    .find((p) => p.type === "hour")?.value;
   return Number(hour ?? 0) % 24;
 }
 
@@ -26,5 +28,7 @@ export const weekDays = (monday: string): string[] => Array.from({ length: 7 }, 
 
 /** Groups the times of a day by part, the empty parts left out; the order of the times is kept. */
 export function groupByPart<T>(items: readonly T[], hourOf: (item: T) => number): { part: DayPart; items: T[] }[] {
-  return DAY_PARTS.map((part) => ({ part, items: items.filter((item) => partOfHour(hourOf(item)) === part) })).filter((g) => g.items.length > 0);
+  return DAY_PARTS.map((part) => ({ part, items: items.filter((item) => partOfHour(hourOf(item)) === part) })).filter(
+    (g) => g.items.length > 0,
+  );
 }

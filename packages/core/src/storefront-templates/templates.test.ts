@@ -40,12 +40,15 @@ describe("the storefront template catalogue (#261, step 1)", () => {
   });
 
   it("the layouts follow the wireframes: story first for Histoire, booking first for Carte, services first for Vitrine", () => {
-    const first = (layout: string) => [...new Set(TEMPLATES.filter((t) => t.layout === layout).map((t) => t.sections[0]!.id))];
+    const first = (layout: string) => [
+      ...new Set(TEMPLATES.filter((t) => t.layout === layout).map((t) => t.sections[0]!.id)),
+    ];
     expect(first("histoire")).toEqual(["trust"]);
     expect(first("carte")).toEqual(["services"]);
     expect(first("vitrine")).toEqual(["services"]);
     expect(LAYOUTS).toEqual(["vitrine", "carte", "histoire"]);
-    for (const t of TEMPLATES.filter((x) => x.layout === "carte")) expect(t.sections.find((s) => s.id === "services")!.variant).toBe("list");
+    for (const t of TEMPLATES.filter((x) => x.layout === "carte"))
+      expect(t.sections.find((s) => s.id === "services")!.variant).toBe("list");
   });
 
   it("every media slot a template names is a slot with defaults, and a trade's default exists for each slot it asks for", () => {
@@ -65,7 +68,12 @@ describe("the storefront template catalogue (#261, step 1)", () => {
   it("refuses a malformed template: a repeated section, an unknown variant, a restaurant", () => {
     const base = TEMPLATES[0]!;
     expect(templateSchema.safeParse({ ...base, sections: [...base.sections, base.sections[0]] }).success).toBe(false);
-    expect(templateSchema.safeParse({ ...base, sections: base.sections.map((s) => (s.id === "services" ? { ...s, variant: "carousel" } : s)) }).success).toBe(false);
+    expect(
+      templateSchema.safeParse({
+        ...base,
+        sections: base.sections.map((s) => (s.id === "services" ? { ...s, variant: "carousel" } : s)),
+      }).success,
+    ).toBe(false);
     expect(templateSchema.safeParse({ ...base, shopTypes: ["restaurant"] }).success).toBe(false);
     expect(templateSchema.safeParse({ ...base, version: 0 }).success).toBe(false);
   });
@@ -93,7 +101,10 @@ describe("which template a shop renders with", () => {
     expect(templatesFor("salon", ["salon-carte"]).map((t) => t.id)).toEqual(["salon-carte"]);
     expect(templatesFor("salon", [])).toEqual([]);
     const v2 = { ...TEMPLATES[0]!, version: 2 };
-    expect(templatesFor("salon", undefined, [TEMPLATES[0]!, v2, TEMPLATES[1]!]).find((t) => t.id === "salon-vitrine")!.version).toBe(2);
+    expect(
+      templatesFor("salon", undefined, [TEMPLATES[0]!, v2, TEMPLATES[1]!]).find((t) => t.id === "salon-vitrine")!
+        .version,
+    ).toBe(2);
   });
 
   it("the administrator's default only preselects the picker: the first offered when it is not offered or not set", () => {
@@ -124,7 +135,9 @@ describe("the notebook storefront, version 2 of each template (#304, docs/design
 
   it("a shop on version 1, or with no template, resolves exactly as before; the picker still offers version 1 only", () => {
     expect(resolveTemplate({})).toBeNull();
-    expect(resolveTemplate({ templateId: "salon-vitrine", templateVersion: 1 })).toBe(TEMPLATES.find((t) => t.id === "salon-vitrine"));
+    expect(resolveTemplate({ templateId: "salon-vitrine", templateVersion: 1 })).toBe(
+      TEMPLATES.find((t) => t.id === "salon-vitrine"),
+    );
     expect(templatesFor("salon").map((t) => t.version)).toEqual([1, 1]);
   });
 
@@ -141,7 +154,13 @@ describe("the notebook storefront, version 2 of each template (#304, docs/design
   it("the pen is never a title, a body or a price font (schema test)", () => {
     const base = TEMPLATES_V2[0]!;
     for (const role of ["title", "body", "price"] as const) {
-      const pen = { ...base, textStyles: { ...base.textStyles, [role]: { ...(base.textStyles[role] as object), font: "cahier", weight: 500 } } };
+      const pen = {
+        ...base,
+        textStyles: {
+          ...base.textStyles,
+          [role]: { ...(base.textStyles[role] as object), font: "cahier", weight: 500 },
+        },
+      };
       expect(templateSchema.safeParse(pen).success, role).toBe(false);
     }
   });
@@ -153,13 +172,21 @@ describe("the notebook storefront, version 2 of each template (#304, docs/design
     expect(templateSchema.safeParse({ ...v2, textStyles: v1.textStyles }).success).toBe(false);
     expect(templateSchema.safeParse({ ...v1, cahier: v2.cahier }).success).toBe(false);
     expect(templateSchema.safeParse({ ...v2, cahier: { ...v2.cahier!, heroTilt: 5 } }).success).toBe(false);
-    expect(templateSchema.safeParse({ ...v2, cahier: { ...v2.cahier!, doodles: [1, 2, 3].map(() => ({ kind: "star", near: "wall" })) } }).success).toBe(false);
+    expect(
+      templateSchema.safeParse({
+        ...v2,
+        cahier: { ...v2.cahier!, doodles: [1, 2, 3].map(() => ({ kind: "star", near: "wall" })) },
+      }).success,
+    ).toBe(false);
   });
 
   it("the compact carte head is not tilted; reels are not placed; the index cards, polaroids, hour cards and stamps are the v2 variants", () => {
     for (const t of TEMPLATES_V2) {
       if (t.layout === "carte") expect(t.cahier!.heroTilt, t.id).toBe(0);
-      expect(t.sections.map((s) => s.id), t.id).not.toContain("reels");
+      expect(
+        t.sections.map((s) => s.id),
+        t.id,
+      ).not.toContain("reels");
       expect(t.sections.find((s) => s.id === "services")!.variant).toBe(t.layout === "carte" ? "list" : "index");
       expect(t.sections.find((s) => s.id === "team")!.variant).toBe("polaroid");
       expect(t.sections.find((s) => s.id === "hours")!.variant).toBe("card");

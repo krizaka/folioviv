@@ -12,6 +12,7 @@ const DAY = /^\d{4}-\d{2}-\d{2}$/;
 export const GET = (req: Request) =>
   v1(req, "reports:read", async (shop, url) => {
     const [from, to] = [url.searchParams.get("from") ?? "", url.searchParams.get("to") ?? ""];
-    if (!DAY.test(from) || !DAY.test(to) || from > to) throw refuse(400, "BAD_REQUEST", "from and to are YYYY-MM-DD, from before to");
+    if (!DAY.test(from) || !DAY.test(to) || from > to)
+      throw refuse(400, "BAD_REQUEST", "from and to are YYYY-MM-DD, from before to");
     return { from, to, return: await prepareShopReturn(db(), shop.id, from, to) };
   });

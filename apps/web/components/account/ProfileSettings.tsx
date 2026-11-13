@@ -28,7 +28,8 @@ export interface ProfileView {
   role: string | null;
 }
 
-const patchProfile = (body: Record<string, unknown>) => krizakaFetch("/api/me/profile", { method: "PATCH", json: body }).then(() => undefined);
+const patchProfile = (body: Record<string, unknown>) =>
+  krizakaFetch("/api/me/profile", { method: "PATCH", json: body }).then(() => undefined);
 
 /** Changing the address sends a link to the new one: nothing changes until it is opened. */
 function EmailChange({ pending }: Readonly<{ pending: string | null }>) {
@@ -38,7 +39,9 @@ function EmailChange({ pending }: Readonly<{ pending: string | null }>) {
   const [secret, setSecret] = useState("");
   const [sentTo, setSentTo] = useState<string | null>(pending);
   const [problem, setProblem] = useState<string | null>(null);
-  const request = useMutation({ mutationFn: () => krizakaFetch("/api/me/email", { method: "POST", json: { newEmail: email, password: secret } }) });
+  const request = useMutation({
+    mutationFn: () => krizakaFetch("/api/me/email", { method: "POST", json: { newEmail: email, password: secret } }),
+  });
   if (!open) {
     return (
       <div className="flex flex-col items-end gap-2">
@@ -68,11 +71,23 @@ function EmailChange({ pending }: Readonly<{ pending: string | null }>) {
     >
       <Field.Root>
         <Field.Label htmlFor="new-email">{say("account.email.new")}</Field.Label>
-        <Input id="new-email" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+        <Input
+          id="new-email"
+          type="email"
+          autoComplete="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+        />
       </Field.Root>
       <Field.Root>
         <Field.Label htmlFor="email-password">{say("account.email.password")}</Field.Label>
-        <Input id="email-password" type="password" autoComplete="current-password" value={secret} onChange={(event) => setSecret(event.target.value)} />
+        <Input
+          id="email-password"
+          type="password"
+          autoComplete="current-password"
+          value={secret}
+          onChange={(event) => setSecret(event.target.value)}
+        />
       </Field.Root>
       {problem ? <Alert tone="danger">{problem}</Alert> : null}
       <div className="flex gap-2">
@@ -93,10 +108,19 @@ function EmailChange({ pending }: Readonly<{ pending: string | null }>) {
  */
 export function ProfileSettings({ profile }: Readonly<{ profile: ProfileView }>) {
   const { say, locale } = useSay();
-  const form = useSectionDraft({ name: profile.name ?? "", avatar: avatarChoice(profile) }, (values) => patchProfile({ name: values.name.trim() || null, avatarSeed: values.avatar || null }));
+  const form = useSectionDraft({ name: profile.name ?? "", avatar: avatarChoice(profile) }, (values) =>
+    patchProfile({ name: values.name.trim() || null, avatarSeed: values.avatar || null }),
+  );
   const shown = { id: profile.id, avatarSeed: form.draft.avatar };
   return (
-    <SettingsSection variant="flat" title={say("account.profile.sections.profile")} description={say(profile.role ? "account.profile.profileDescription" : "account.profile.profileDescriptionClient")} save={form.save}>
+    <SettingsSection
+      variant="flat"
+      title={say("account.profile.sections.profile")}
+      description={say(
+        profile.role ? "account.profile.profileDescription" : "account.profile.profileDescriptionClient",
+      )}
+      save={form.save}
+    >
       <SettingsRow
         label={
           <AccountProfileCard
@@ -111,8 +135,18 @@ export function ProfileSettings({ profile }: Readonly<{ profile: ProfileView }>)
           />
         }
       />
-      <SettingsRow label={say("account.name.label")} description={say(profile.role ? "account.name.hint" : "account.name.hintClient")} htmlFor="account-name">
-        <Input id="account-name" value={form.draft.name} maxLength={80} autoComplete="name" onChange={(event) => form.set({ name: event.target.value })} />
+      <SettingsRow
+        label={say("account.name.label")}
+        description={say(profile.role ? "account.name.hint" : "account.name.hintClient")}
+        htmlFor="account-name"
+      >
+        <Input
+          id="account-name"
+          value={form.draft.name}
+          maxLength={80}
+          autoComplete="name"
+          onChange={(event) => form.set({ name: event.target.value })}
+        />
       </SettingsRow>
       <SettingsRow label={say("account.avatar.label")} description={say("account.avatar.hint")}>
         <PictureChoice

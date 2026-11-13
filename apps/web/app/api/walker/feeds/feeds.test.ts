@@ -8,31 +8,66 @@ import { appSettings } from "@/lib/settings";
 
 import { DELETE, GET, POST } from "./route";
 
-vi.mock("@/lib/access", async (original) => ({ ...(await original<typeof import("@/lib/access")>()), requireShop: vi.fn() }));
+vi.mock("@/lib/access", async (original) => ({
+  ...(await original<typeof import("@/lib/access")>()),
+  requireShop: vi.fn(),
+}));
 vi.mock("@/lib/audit", () => ({ audit: vi.fn() }));
 vi.mock("@/lib/db", () => ({ db: vi.fn(() => ({})) }));
 vi.mock("@/lib/settings", () => ({ appSettings: vi.fn() }));
-vi.mock("@folioviv/db", async (original) => ({ ...(await original<typeof import("@folioviv/db")>()), feedPeople: vi.fn(), liveFeeds: vi.fn(), rotateFeedToken: vi.fn(), revokeFeedToken: vi.fn() }));
+vi.mock("@folioviv/db", async (original) => ({
+  ...(await original<typeof import("@folioviv/db")>()),
+  feedPeople: vi.fn(),
+  liveFeeds: vi.fn(),
+  rotateFeedToken: vi.fn(),
+  revokeFeedToken: vi.fn(),
+}));
 
 const STAFF = "11111111-1111-4111-8111-111111111111";
 const OTHER = "22222222-2222-4222-8222-222222222222";
-const send = (route: (req: Request) => Promise<Response>, method: string, json: unknown) => route(new Request("http://localhost/api/walker/feeds", { method, headers: { "content-type": "application/json" }, body: JSON.stringify(json) }));
-const asRole = (role: "owner" | "manager" | "staff") => vi.mocked(requireShop).mockResolvedValue({ role, shop: { id: "s1" }, session: { account: { id: "acc", email: "o@example.com" } } } as never);
+const send = (route: (req: Request) => Promise<Response>, method: string, json: unknown) =>
+  route(
+    new Request("http://localhost/api/walker/feeds", {
+      method,
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(json),
+    }),
+  );
+const asRole = (role: "owner" | "manager" | "staff") =>
+  vi
+    .mocked(requireShop)
+    .mockResolvedValue({
+      role,
+      shop: { id: "s1" },
+      session: { account: { id: "acc", email: "o@example.com" } },
+    } as never);
 
 describe("managing the private feeds (#282)", () => {
   beforeEach(() => {
     asRole("owner");
     vi.mocked(appSettings).mockReturnValue({ get: vi.fn(async () => true) } as never);
     vi.mocked(feedPeople).mockResolvedValue([{ id: STAFF, name: "Julie" }]);
-    vi.mocked(liveFeeds).mockResolvedValue([{ id: "f", shopId: "s1", staffId: null, createdAt: new Date("2026-10-26T12:00:00Z"), rotatedAt: null }]);
-    vi.mocked(rotateFeedToken).mockResolvedValue({ id: "f2", shopId: "s1", staffId: null, createdAt: new Date("2026-10-26T13:00:00Z"), rotatedAt: null });
+    vi.mocked(liveFeeds).mockResolvedValue([
+      { id: "f", shopId: "s1", staffId: null, createdAt: new Date("2026-10-26T12:00:00Z"), rotatedAt: null },
+    ]);
+    vi.mocked(rotateFeedToken).mockResolvedValue({
+      id: "f2",
+      shopId: "s1",
+      staffId: null,
+      createdAt: new Date("2026-10-26T13:00:00Z"),
+      rotatedAt: null,
+    });
     vi.mocked(revokeFeedToken).mockResolvedValue(true);
   });
   afterEach(() => vi.clearAllMocks());
 
   it("says which feeds are live, and never an address", async () => {
     const json = await (await GET(new Request("http://localhost/api/walker/feeds"))).json();
-    expect(json).toMatchObject({ enabled: true, shop: { live: true }, people: [{ id: STAFF, name: "Julie", live: false }] });
+    expect(json).toMatchObject({
+      enabled: true,
+      shop: { live: true },
+      people: [{ id: STAFF, name: "Julie", live: false }],
+    });
     expect(JSON.stringify(json)).not.toMatch(/kf1\.|\/api\/feed\//);
   });
 
@@ -48,7 +83,13 @@ describe("managing the private feeds (#282)", () => {
   });
 
   it("audits a rotation as one", async () => {
-    vi.mocked(rotateFeedToken).mockResolvedValue({ id: "f3", shopId: "s1", staffId: STAFF, createdAt: new Date(), rotatedAt: new Date() });
+    vi.mocked(rotateFeedToken).mockResolvedValue({
+      id: "f3",
+      shopId: "s1",
+      staffId: STAFF,
+      createdAt: new Date(),
+      rotatedAt: new Date(),
+    });
     expect((await send(POST, "POST", { staffId: STAFF })).status).toBe(200);
     expect(audit).toHaveBeenCalledWith(expect.objectContaining({ action: "shop.feed_rotated" }));
   });
@@ -83,7 +124,9 @@ describe("managing the private feeds (#282)", () => {
   it("is a 403 when the administrator switched the feeds off, and offers none", async () => {
     vi.mocked(appSettings).mockReturnValue({ get: vi.fn(async () => false) } as never);
     expect((await send(POST, "POST", {})).status).toBe(403);
-    expect(await (await GET(new Request("http://localhost/api/walker/feeds"))).json()).toMatchObject({ enabled: false });
+    expect(await (await GET(new Request("http://localhost/api/walker/feeds"))).json()).toMatchObject({
+      enabled: false,
+    });
   });
 
   it("answers the guard's refusal (another shop's id, no session)", async () => {

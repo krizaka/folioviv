@@ -16,7 +16,9 @@ describe("the signed state of the OAuth round trip", () => {
   it("is refused when altered, signed with another key, expired, or not a state at all", () => {
     const { state } = signState(input, "secret-key", NOW);
     const [body, sig] = state.split(".") as [string, string];
-    const forged = Buffer.from(JSON.stringify({ ...JSON.parse(Buffer.from(body, "base64url").toString()), accountId: "attacker" })).toString("base64url");
+    const forged = Buffer.from(
+      JSON.stringify({ ...JSON.parse(Buffer.from(body, "base64url").toString()), accountId: "attacker" }),
+    ).toString("base64url");
     expect(verifyState(`${forged}.${sig}`, "secret-key", NOW)).toBeNull();
     expect(verifyState(state, "other-key", NOW)).toBeNull();
     expect(verifyState(state, "secret-key", new Date(NOW.valueOf() + (STATE_TTL_SECONDS + 1) * 1000))).toBeNull();

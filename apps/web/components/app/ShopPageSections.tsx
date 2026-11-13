@@ -28,7 +28,10 @@ function useSectionSave(page: Page | null) {
     locale,
     call,
     saved,
-    i18n: { t: (key: string, vars?: Record<string, unknown>) => say(key, vars as Record<string, string | number> | undefined), locale },
+    i18n: {
+      t: (key: string, vars?: Record<string, unknown>) => say(key, vars as Record<string, string | number> | undefined),
+      locale,
+    },
     save: async (values: Partial<Page>) => {
       setSaved(false);
       setHeld(false);
@@ -40,10 +43,39 @@ function useSectionSave(page: Page | null) {
   };
 }
 
-const EMPTY: Page = { name: "", legalName: "", address: "", slug: "", ownerName: "", taglineFr: "", taglineEn: "", published: false, area: "", bioFr: "", bioEn: "", publicPhone: "", publicEmail: "", seatUnitFr: "", seatUnitEn: "", businessType: "professional" };
+const EMPTY: Page = {
+  name: "",
+  legalName: "",
+  address: "",
+  slug: "",
+  ownerName: "",
+  taglineFr: "",
+  taglineEn: "",
+  published: false,
+  area: "",
+  bioFr: "",
+  bioEn: "",
+  publicPhone: "",
+  publicEmail: "",
+  seatUnitFr: "",
+  seatUnitEn: "",
+  businessType: "professional",
+};
 
 /** The frame of a section: title, one line of what it is for, then its form. */
-function SectionCard({ title, lead, badge, quiet = false, children }: Readonly<{ title: string; lead: string; badge?: React.ReactNode; /** The page's heading above already says the title (« Identity »): the card does not say it again. */ quiet?: boolean; children: React.ReactNode }>) {
+function SectionCard({
+  title,
+  lead,
+  badge,
+  quiet = false,
+  children,
+}: Readonly<{
+  title: string;
+  lead: string;
+  badge?: React.ReactNode;
+  /** The page's heading above already says the title (« Identity »): the card does not say it again. */ quiet?: boolean;
+  children: React.ReactNode;
+}>) {
   return (
     <Card.Root className="p-4">
       {quiet ? null : (
@@ -59,11 +91,19 @@ function SectionCard({ title, lead, badge, quiet = false, children }: Readonly<{
 }
 
 /** The foot of a section's form: what the save answered, then its one button. */
-function SectionFooter({ s, Submit }: Readonly<{ s: ReturnType<typeof useSectionSave>; Submit: React.ComponentType<{ size?: "md"; className?: string; "data-primary"?: boolean; children: React.ReactNode }> }>) {
+function SectionFooter({
+  s,
+  Submit,
+}: Readonly<{
+  s: ReturnType<typeof useSectionSave>;
+  Submit: React.ComponentType<{ size?: "md"; className?: string; "data-primary"?: boolean; children: React.ReactNode }>;
+}>) {
   return (
     <div className="flex flex-col gap-3 sm:col-span-2">
       <SectionStatus s={s} />
-      <Submit size="md" className="w-full sm:w-auto sm:self-start" data-primary>{s.say("shopSetup.sections.save")}</Submit>
+      <Submit size="md" className="w-full sm:w-auto sm:self-start" data-primary>
+        {s.say("shopSetup.sections.save")}
+      </Submit>
     </div>
   );
 }
@@ -80,26 +120,76 @@ function SectionStatus({ s }: Readonly<{ s: ReturnType<typeof useSectionSave> }>
 }
 
 export const identityForm = createKrizakaForm({
-  schema: z.object({ name: z.string().trim().min(1).max(80), businessType: z.enum(BUSINESS_TYPES), legalName: z.string().trim().min(1).max(120), ownerName: z.string().trim().min(1).max(80), slug: z.string().trim().min(3).max(40), address: z.string().trim().min(1).max(200) }),
-  defaultValues: { name: "", businessType: "professional" as BusinessType, legalName: "", ownerName: "", slug: "", address: "" },
+  schema: z.object({
+    name: z.string().trim().min(1).max(80),
+    businessType: z.enum(BUSINESS_TYPES),
+    legalName: z.string().trim().min(1).max(120),
+    ownerName: z.string().trim().min(1).max(80),
+    slug: z.string().trim().min(3).max(40),
+    address: z.string().trim().min(1).max(200),
+  }),
+  defaultValues: {
+    name: "",
+    businessType: "professional" as BusinessType,
+    legalName: "",
+    ownerName: "",
+    slug: "",
+    address: "",
+  },
 });
 
 /** The fields that say who a shop is: shared by the identity section and « Add a shop ». */
 /** `withBusinessType` false: the trade asked beside the form stands for it (« Add a shop » with templates, #261). */
-export function IdentityFields({ form, say, withAddress = false, withBusinessType = true }: Readonly<{ form: ReturnType<typeof identityForm.useForm>; say: ReturnType<typeof useSay>["say"]; withAddress?: boolean; withBusinessType?: boolean }>) {
+export function IdentityFields({
+  form,
+  say,
+  withAddress = false,
+  withBusinessType = true,
+}: Readonly<{
+  form: ReturnType<typeof identityForm.useForm>;
+  say: ReturnType<typeof useSay>["say"];
+  withAddress?: boolean;
+  withBusinessType?: boolean;
+}>) {
   return (
     <>
       <form.TextField name="name" label={say("shopSetup.page.name")} autoComplete="organization" />
-      {withBusinessType ? <form.Select name="businessType" label={say("shopSetup.page.businessType")} hint={say("shopSetup.page.businessTypeHint")} options={BUSINESS_TYPES.map((type) => ({ value: type, label: say(`shopSetup.page.businessTypes.${type}`) }))} /> : null}
-      <form.TextField name="legalName" label={say("shopSetup.page.legalName")} hint={say("shopSetup.sections.identity.legalHint")} />
-      <form.TextField name="ownerName" label={say("shopSetup.page.ownerName")} hint={say("shopSetup.page.ownerNameHint")} autoComplete="given-name" />
+      {withBusinessType ? (
+        <form.Select
+          name="businessType"
+          label={say("shopSetup.page.businessType")}
+          hint={say("shopSetup.page.businessTypeHint")}
+          options={BUSINESS_TYPES.map((type) => ({ value: type, label: say(`shopSetup.page.businessTypes.${type}`) }))}
+        />
+      ) : null}
+      <form.TextField
+        name="legalName"
+        label={say("shopSetup.page.legalName")}
+        hint={say("shopSetup.sections.identity.legalHint")}
+      />
+      <form.TextField
+        name="ownerName"
+        label={say("shopSetup.page.ownerName")}
+        hint={say("shopSetup.page.ownerNameHint")}
+        autoComplete="given-name"
+      />
       {withAddress ? (
         <div className="sm:col-span-2">
-          <form.TextField name="address" label={say("shopSetup.page.address")} hint={say("shopSetup.sections.contact.addressPrivate")} autoComplete="street-address" />
+          <form.TextField
+            name="address"
+            label={say("shopSetup.page.address")}
+            hint={say("shopSetup.sections.contact.addressPrivate")}
+            autoComplete="street-address"
+          />
         </div>
       ) : null}
       <div className="sm:col-span-2">
-        <form.TextField name="slug" label={say("shopSetup.page.slug")} hint={say("shopSetup.page.slugHint")} transform={(v) => v.toLowerCase().replace(/[^a-z0-9-]/g, "-")} />
+        <form.TextField
+          name="slug"
+          label={say("shopSetup.page.slug")}
+          hint={say("shopSetup.page.slugHint")}
+          transform={(v) => v.toLowerCase().replace(/[^a-z0-9-]/g, "-")}
+        />
       </div>
     </>
   );
@@ -108,9 +198,24 @@ export function IdentityFields({ form, say, withAddress = false, withBusinessTyp
 /** Identity: who the shop is. */
 export function IdentitySection({ page }: Readonly<{ page: Page | null }>) {
   const s = useSectionSave(page);
-  const form = identityForm.useForm({ i18n: s.i18n, defaultValues: { name: page?.name ?? "", businessType: page?.businessType ?? "professional", legalName: page?.legalName ?? "", ownerName: page?.ownerName ?? "", slug: page?.slug ?? "", address: page?.address ?? "" }, onSubmit: (v) => s.save(v) });
+  const form = identityForm.useForm({
+    i18n: s.i18n,
+    defaultValues: {
+      name: page?.name ?? "",
+      businessType: page?.businessType ?? "professional",
+      legalName: page?.legalName ?? "",
+      ownerName: page?.ownerName ?? "",
+      slug: page?.slug ?? "",
+      address: page?.address ?? "",
+    },
+    onSubmit: (v) => s.save(v),
+  });
   return (
-    <SectionCard title={s.say("shopSetup.sections.identity.title")} lead={s.say("shopSetup.sections.identity.lead")} quiet>
+    <SectionCard
+      title={s.say("shopSetup.sections.identity.title")}
+      lead={s.say("shopSetup.sections.identity.lead")}
+      quiet
+    >
       <form.Form aria-label={s.say("shopSetup.sections.identity.title")} className="grid gap-4 sm:grid-cols-2">
         <IdentityFields form={form} say={s.say} withAddress={!page} />
         <SectionFooter s={s} Submit={form.Submit} />
@@ -120,27 +225,66 @@ export function IdentitySection({ page }: Readonly<{ page: Page | null }>) {
 }
 
 const textsForm = createKrizakaForm({
-  schema: z.object({ taglineFr: z.string().trim().max(160), taglineEn: z.string().trim().max(160), bioFr: z.string().trim().max(600), bioEn: z.string().trim().max(600), seatUnitFr: z.string().trim().max(30), seatUnitEn: z.string().trim().max(30) }),
+  schema: z.object({
+    taglineFr: z.string().trim().max(160),
+    taglineEn: z.string().trim().max(160),
+    bioFr: z.string().trim().max(600),
+    bioEn: z.string().trim().max(600),
+    seatUnitFr: z.string().trim().max(30),
+    seatUnitEn: z.string().trim().max(30),
+  }),
   defaultValues: { taglineFr: "", taglineEn: "", bioFr: "", bioEn: "", seatUnitFr: "", seatUnitEn: "" },
 });
 
 /** Your page: the texts, French and English side by side. */
 export function TextsSection({ page, shopId }: Readonly<{ page: Page | null; shopId: string }>) {
   const s = useSectionSave(page);
-  const form = textsForm.useForm({ i18n: s.i18n, defaultValues: { taglineFr: page?.taglineFr ?? "", taglineEn: page?.taglineEn ?? "", bioFr: page?.bioFr ?? "", bioEn: page?.bioEn ?? "", seatUnitFr: page?.seatUnitFr ?? "", seatUnitEn: page?.seatUnitEn ?? "" }, onSubmit: (v) => s.save(v) });
+  const form = textsForm.useForm({
+    i18n: s.i18n,
+    defaultValues: {
+      taglineFr: page?.taglineFr ?? "",
+      taglineEn: page?.taglineEn ?? "",
+      bioFr: page?.bioFr ?? "",
+      bioEn: page?.bioEn ?? "",
+      seatUnitFr: page?.seatUnitFr ?? "",
+      seatUnitEn: page?.seatUnitEn ?? "",
+    },
+    onSubmit: (v) => s.save(v),
+  });
   const say = s.say;
   return (
     <SectionCard title={say("shopSetup.sections.texts.title")} lead={say("shopSetup.sections.texts.lead")}>
       <form.Form aria-label={say("shopSetup.sections.texts.title")} className="grid gap-4 sm:grid-cols-2">
         <form.TextField name="taglineFr" label={say("shopSetup.page.taglineFr")} />
         <form.TextField name="taglineEn" label={say("shopSetup.page.taglineEn")} />
-        <form.TextArea name="bioFr" label={say("shopSetup.page.bioFr")} hint={say("shopSetup.page.bioHint")} rows={4} maxLength={600} />
-        <form.TextArea name="bioEn" label={say("shopSetup.page.bioEn")} hint={say("shopSetup.page.bioHint")} rows={4} maxLength={600} />
-        <form.TextField name="seatUnitFr" label={say("shopSetup.page.seatUnitFr")} hint={say("shopSetup.page.seatUnitHint")} />
+        <form.TextArea
+          name="bioFr"
+          label={say("shopSetup.page.bioFr")}
+          hint={say("shopSetup.page.bioHint")}
+          rows={4}
+          maxLength={600}
+        />
+        <form.TextArea
+          name="bioEn"
+          label={say("shopSetup.page.bioEn")}
+          hint={say("shopSetup.page.bioHint")}
+          rows={4}
+          maxLength={600}
+        />
+        <form.TextField
+          name="seatUnitFr"
+          label={say("shopSetup.page.seatUnitFr")}
+          hint={say("shopSetup.page.seatUnitHint")}
+        />
         <form.TextField name="seatUnitEn" label={say("shopSetup.page.seatUnitEn")} />
         <p className="m-0 text-sm text-fg-secondary sm:col-span-2">
           {say("shopSetup.sections.texts.moreLanguages")}{" "}
-          <Link className="font-semibold text-fg-accent underline" href={`${shopRoutes(s.locale, shopId).setup}/languages`}>{say("shopLanguages.open")}</Link>
+          <Link
+            className="font-semibold text-fg-accent underline"
+            href={`${shopRoutes(s.locale, shopId).setup}/languages`}
+          >
+            {say("shopLanguages.open")}
+          </Link>
         </p>
         <SectionFooter s={s} Submit={form.Submit} />
       </form.Form>
@@ -149,46 +293,98 @@ export function TextsSection({ page, shopId }: Readonly<{ page: Page | null; sho
 }
 
 const contactForm = createKrizakaForm({
-  schema: z.object({ address: z.string().trim().min(1).max(200), area: z.string().trim().max(80), publicPhone: z.string().trim().max(40), publicEmail: z.string().trim().max(120) }),
+  schema: z.object({
+    address: z.string().trim().min(1).max(200),
+    area: z.string().trim().max(80),
+    publicPhone: z.string().trim().max(40),
+    publicEmail: z.string().trim().max(120),
+  }),
   defaultValues: { address: "", area: "", publicPhone: "", publicEmail: "" },
 });
 
 /** Contact and place: the street address stays private; what visitors see is the locality, a phone and an e-mail. */
 export function ContactSection({ page }: Readonly<{ page: Page | null }>) {
   const s = useSectionSave(page);
-  const form = contactForm.useForm({ i18n: s.i18n, defaultValues: { address: page?.address ?? "", area: page?.area ?? "", publicPhone: page?.publicPhone ?? "", publicEmail: page?.publicEmail ?? "" }, onSubmit: (v) => s.save(v) });
+  const form = contactForm.useForm({
+    i18n: s.i18n,
+    defaultValues: {
+      address: page?.address ?? "",
+      area: page?.area ?? "",
+      publicPhone: page?.publicPhone ?? "",
+      publicEmail: page?.publicEmail ?? "",
+    },
+    onSubmit: (v) => s.save(v),
+  });
   const say = s.say;
   return (
     <SectionCard title={say("shopSetup.sections.contact.title")} lead={say("shopSetup.sections.contact.lead")}>
       <form.Form aria-label={say("shopSetup.sections.contact.title")} className="grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <form.TextField name="address" label={say("shopSetup.page.address")} hint={say("shopSetup.sections.contact.addressPrivate")} autoComplete="street-address" />
+          <form.TextField
+            name="address"
+            label={say("shopSetup.page.address")}
+            hint={say("shopSetup.sections.contact.addressPrivate")}
+            autoComplete="street-address"
+          />
         </div>
         <div className="sm:col-span-2">
           <form.TextField name="area" label={say("shopSetup.page.area")} hint={say("shopSetup.page.areaHint")} />
         </div>
         <form.TextField name="publicPhone" label={say("shopSetup.page.publicPhone")} type="tel" autoComplete="tel" />
-        <form.TextField name="publicEmail" label={say("shopSetup.page.publicEmail")} type="email" autoComplete="email" />
+        <form.TextField
+          name="publicEmail"
+          label={say("shopSetup.page.publicEmail")}
+          type="email"
+          autoComplete="email"
+        />
         <SectionFooter s={s} Submit={form.Submit} />
       </form.Form>
     </SectionCard>
   );
 }
 
-const publishForm = createKrizakaForm({ schema: z.object({ published: z.boolean() }), defaultValues: { published: false } });
+const publishForm = createKrizakaForm({
+  schema: z.object({ published: z.boolean() }),
+  defaultValues: { published: false },
+});
 
 /** Publish: the switch and the public link, nothing else. */
 export function PublishSection({ page, publicUrl }: Readonly<{ page: Page | null; publicUrl: string | null }>) {
   const s = useSectionSave(page);
-  const form = publishForm.useForm({ i18n: s.i18n, defaultValues: { published: page?.published ?? false }, onSubmit: (v) => s.save(v) });
+  const form = publishForm.useForm({
+    i18n: s.i18n,
+    defaultValues: { published: page?.published ?? false },
+    onSubmit: (v) => s.save(v),
+  });
   const say = s.say;
   return (
-    <SectionCard title={say("shopSetup.sections.publish.title")} lead={say("shopSetup.sections.publish.lead")} badge={<Badge tone={page?.published ? "success" : "neutral"}>{say(page?.published ? "shopSetup.published" : "shopSetup.notPublished")}</Badge>}>
+    <SectionCard
+      title={say("shopSetup.sections.publish.title")}
+      lead={say("shopSetup.sections.publish.lead")}
+      badge={
+        <Badge tone={page?.published ? "success" : "neutral"}>
+          {say(page?.published ? "shopSetup.published" : "shopSetup.notPublished")}
+        </Badge>
+      }
+    >
       <form.Form aria-label={say("shopSetup.sections.publish.title")} className="flex flex-col gap-4">
-        <form.Switch name="published" label={say("shopSetup.page.published")} hint={say("shopSetup.page.publishedHint")} />
-        {publicUrl ? <p className="m-0 text-sm"><a className="font-semibold text-fg-accent underline" href={publicUrl}>{say("shopSetup.viewPage")}</a> <span className="font-mono text-xs text-fg-muted">{publicUrl}</span></p> : null}
+        <form.Switch
+          name="published"
+          label={say("shopSetup.page.published")}
+          hint={say("shopSetup.page.publishedHint")}
+        />
+        {publicUrl ? (
+          <p className="m-0 text-sm">
+            <a className="font-semibold text-fg-accent underline" href={publicUrl}>
+              {say("shopSetup.viewPage")}
+            </a>{" "}
+            <span className="font-mono text-xs text-fg-muted">{publicUrl}</span>
+          </p>
+        ) : null}
         <SectionStatus s={s} />
-        <form.Submit size="md" className="w-full sm:w-auto sm:self-start">{say("shopSetup.sections.save")}</form.Submit>
+        <form.Submit size="md" className="w-full sm:w-auto sm:self-start">
+          {say("shopSetup.sections.save")}
+        </form.Submit>
       </form.Form>
     </SectionCard>
   );

@@ -24,7 +24,12 @@ export default async function Privacy({ params }: Readonly<{ params: Promise<{ l
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdHtml(siteJsonLd(locale)) }} />
       <SiteHeader locale={locale} current="privacy" />
       <main id="content" className="pt-20">
-        <PageHero back={{ href: pagePath(locale, "home"), label: t.meta.siteName }} linkAs={Link} title={t.privacy.title} lead={format(t.privacy.updated, { date: PRIVACY_UPDATED })} />
+        <PageHero
+          back={{ href: pagePath(locale, "home"), label: t.meta.siteName }}
+          linkAs={Link}
+          title={t.privacy.title}
+          lead={format(t.privacy.updated, { date: PRIVACY_UPDATED })}
+        />
         <Page>
           <p className="max-w-3xl text-base leading-relaxed text-fg-secondary">{t.privacy.body}</p>
           <section id="governance" className="mt-8 max-w-3xl">
@@ -47,14 +52,20 @@ export default async function Privacy({ params }: Readonly<{ params: Promise<{ l
             </ul>
             <p className="mt-2 text-base leading-relaxed text-fg-secondary">
               {t.privacy.processors.register}{" "}
-              <a className="underline" href={TRANSFERS_URL}>{t.privacy.processors.registerLink}</a>
+              <a className="underline" href={TRANSFERS_URL}>
+                {t.privacy.processors.registerLink}
+              </a>
               {" · "}
-              <a className="underline" href={EFVP_URL}>{t.privacy.processors.assessmentLink}</a>
+              <a className="underline" href={EFVP_URL}>
+                {t.privacy.processors.assessmentLink}
+              </a>
             </p>
           </section>
           <section id="officer" className="mt-8 max-w-3xl">
             <h2 className="m-0 text-xl font-semibold text-fg">{t.privacy.officer.title}</h2>
-            <p className="mt-2 text-base leading-relaxed text-fg-secondary">{format(t.privacy.officer.text, publisherVars())}</p>
+            <p className="mt-2 text-base leading-relaxed text-fg-secondary">
+              {format(t.privacy.officer.text, publisherVars())}
+            </p>
           </section>
         </Page>
       </main>

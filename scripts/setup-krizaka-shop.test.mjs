@@ -13,7 +13,8 @@ test("Krizaka's page is real: no « demo », no invented price, every product in
     expect(o.descriptionFr).toMatch(/^En développement\./);
     expect(o.descriptionEn).toMatch(/dev\.(verikora|folioviv|sovkora)\.com/);
   }
-  for (const o of OFFERS) expect([o.priceCents, o.priceVaries], `${o.nameEn}: no list price, it reads « On quote »`).toEqual([0, true]);
+  for (const o of OFFERS)
+    expect([o.priceCents, o.priceVaries], `${o.nameEn}: no list price, it reads « On quote »`).toEqual([0, true]);
   expect(OFFERS[3].nameEn).toBe("Krizaka Entreprise");
   expect(JSON.stringify(OFFERS)).not.toMatch(/\$|\d+\s?(€|\$|CAD)/);
 });

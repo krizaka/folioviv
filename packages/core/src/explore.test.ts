@@ -1,8 +1,28 @@
 import { describe, expect, it } from "vitest";
 
-import { distanceBetween, type ExploreShop, filterShops, isOpenNow, NO_FILTERS, quartiersOf, rankByDistance } from "./explore";
+import {
+  distanceBetween,
+  type ExploreShop,
+  filterShops,
+  isOpenNow,
+  NO_FILTERS,
+  quartiersOf,
+  rankByDistance,
+} from "./explore";
 
-const shop = (slug: string, over: Partial<ExploreShop> = {}): ExploreShop => ({ slug, name: slug, kind: "salon", area: null, taglineFr: null, taglineEn: null, quartiers: [], point: null, openNow: false, freeToday: false, ...over });
+const shop = (slug: string, over: Partial<ExploreShop> = {}): ExploreShop => ({
+  slug,
+  name: slug,
+  kind: "salon",
+  area: null,
+  taglineFr: null,
+  taglineEn: null,
+  quartiers: [],
+  point: null,
+  openNow: false,
+  freeToday: false,
+  ...over,
+});
 
 describe("distance", () => {
   it("is zero from a point to itself and about 3.5 km from the Old Port to Saint-Henri", () => {
@@ -28,7 +48,11 @@ describe("open now (in the shop's own zone)", () => {
 });
 
 describe("filters", () => {
-  const list = [shop("a", { kind: "salon", openNow: true }), shop("b", { kind: "boutique", freeToday: true }), shop("c", { kind: "salon", openNow: true, freeToday: true })];
+  const list = [
+    shop("a", { kind: "salon", openNow: true }),
+    shop("b", { kind: "boutique", freeToday: true }),
+    shop("c", { kind: "salon", openNow: true, freeToday: true }),
+  ];
   it("keeps everything with no filter on", () => expect(filterShops(list, NO_FILTERS)).toHaveLength(3));
   it("combines kind, open now and a free slot today", () => {
     expect(filterShops(list, { ...NO_FILTERS, kind: "salon" }).map((s) => s.slug)).toEqual(["a", "c"]);
@@ -39,7 +63,12 @@ describe("filters", () => {
 
 describe("ranking by distance", () => {
   const origin: [number, number] = [-73.58, 45.48];
-  const list = [shop("far", { point: [-73.4, 45.6] }), shop("nopoint"), shop("near", { point: [-73.581, 45.481] }), shop("mid", { point: [-73.55, 45.5] })];
+  const list = [
+    shop("far", { point: [-73.4, 45.6] }),
+    shop("nopoint"),
+    shop("near", { point: [-73.581, 45.481] }),
+    shop("mid", { point: [-73.55, 45.5] }),
+  ];
   it("puts the nearest first and the shops with no position last", () => {
     const r = rankByDistance(list, origin);
     expect(r.map((s) => s.slug)).toEqual(["near", "mid", "far", "nopoint"]);
@@ -52,6 +81,8 @@ describe("ranking by distance", () => {
     expect(r.every((s) => s.distanceMeters === null)).toBe(true);
   });
   it("lists the distinct quartiers, sorted", () => {
-    expect(quartiersOf([shop("a", { quartiers: ["Verdun", "Griffintown"] }), shop("b", { quartiers: ["Verdun"] })])).toEqual(["Griffintown", "Verdun"]);
+    expect(
+      quartiersOf([shop("a", { quartiers: ["Verdun", "Griffintown"] }), shop("b", { quartiers: ["Verdun"] })]),
+    ).toEqual(["Griffintown", "Verdun"]);
   });
 });

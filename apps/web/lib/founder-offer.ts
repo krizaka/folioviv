@@ -21,7 +21,8 @@ export const founderEntry = (catalogue: PriceCatalogue, at: Date) => catalogue.e
 
 /** Whether an entry is on sale: a figure, and offered to everyone or to the first businesses. */
 export const onSale = (entry: Pick<PriceEntry, "availability" | "amountCents">): boolean =>
-  entry.amountCents !== null && (entry.availability === AVAILABILITY.public || entry.availability === AVAILABILITY.founderLimited);
+  entry.amountCents !== null &&
+  (entry.availability === AVAILABILITY.public || entry.availability === AVAILABILITY.founderLimited);
 
 /** The offer's copy, or null when the entry is not on sale (no figure, internal, or in preparation): no guess, no stale price. */
 export function founderOfferCopy(entry: PriceEntry, locale: "en" | "fr"): FounderOfferCopy | null {
@@ -41,7 +42,10 @@ export function founderOfferCopy(entry: PriceEntry, locale: "en" | "fr"): Founde
  * The regular plans as a visitor reads them, from the public view of the catalogue: absent when internal, without a figure
  * while `preparing` (`publicCatalogue` has already dropped it), their price once public.
  */
-export function plansView(entries: readonly PublicPrice[], locale: "en" | "fr"): Record<"starter" | "scale", { price: string | null } | null> {
+export function plansView(
+  entries: readonly PublicPrice[],
+  locale: "en" | "fr",
+): Record<"starter" | "scale", { price: string | null } | null> {
   const view = (key: string) => {
     const entry = entries.find((e) => e.key === key);
     if (!entry) return null;

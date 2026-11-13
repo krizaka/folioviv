@@ -14,7 +14,12 @@ describe.runIf(enabled)("the founder offer's seats", () => {
   let newcomer: string;
 
   const account = async (tag: string) =>
-    (await query<{ id: string }>("INSERT INTO accounts (email, role, password_hash) VALUES ($1, 'USER', 'x') RETURNING id", [`seat-${tag}-${stamp}@folioviv.test`]))[0]!.id;
+    (
+      await query<{ id: string }>(
+        "INSERT INTO accounts (email, role, password_hash) VALUES ($1, 'USER', 'x') RETURNING id",
+        [`seat-${tag}-${stamp}@folioviv.test`],
+      )
+    )[0]!.id;
 
   beforeAll(async () => {
     await migrate();

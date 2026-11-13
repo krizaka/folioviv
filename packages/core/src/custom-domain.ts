@@ -16,7 +16,11 @@ export const DOMAIN_STATE = {
 export type DomainState = (typeof DOMAIN_STATE)[keyof typeof DOMAIN_STATE];
 
 /** The states the periodic tick re-checks. */
-export const CHECKED_STATES: readonly DomainState[] = [DOMAIN_STATE.pendingTxt, DOMAIN_STATE.pendingTls, DOMAIN_STATE.active];
+export const CHECKED_STATES: readonly DomainState[] = [
+  DOMAIN_STATE.pendingTxt,
+  DOMAIN_STATE.pendingTls,
+  DOMAIN_STATE.active,
+];
 
 /** A domain that claims its hostname once its TXT was proven: one shop at a time (the database holds the same rule as a partial unique index). */
 export const CLAIMING_STATES: readonly DomainState[] = [DOMAIN_STATE.pendingTls, DOMAIN_STATE.active];
@@ -33,10 +37,20 @@ export const txtRecordValue = (token: string): string => TXT_VALUE_PREFIX + toke
  * any suffix (`folioviv.shop`, `monsalon.krizaka.com`, `akinaza.ca`), is never accepted as a merchant's domain: it would pass for us.
  * The shop domain itself (`APP_SHOP_DOMAIN`) is refused too: the caller passes it, nothing is typed twice.
  */
-export const OWN_NAMES: readonly string[] = ["krizaka", "folioviv", "verikora", "sovkora", "kridoc", "akinaza", "orazaka", "yomizaka"];
+export const OWN_NAMES: readonly string[] = [
+  "krizaka",
+  "folioviv",
+  "verikora",
+  "sovkora",
+  "kridoc",
+  "akinaza",
+  "orazaka",
+  "yomizaka",
+];
 
 const isOwnName = (raw: string, shopDomain?: string | null): boolean =>
-  raw.split(".").some((label) => OWN_NAMES.includes(label)) || (!!shopDomain && (raw === shopDomain || raw.endsWith(`.${shopDomain}`)));
+  raw.split(".").some((label) => OWN_NAMES.includes(label)) ||
+  (!!shopDomain && (raw === shopDomain || raw.endsWith(`.${shopDomain}`)));
 const LABEL = /^(?!-)[a-z0-9-]{1,63}(?<!-)$/;
 const TLD = /^(?:[a-z]{2,}|xn--[a-z0-9-]+)$/;
 const IPV4 = /^\d{1,3}(?:\.\d{1,3}){3}$/;
@@ -51,13 +65,17 @@ export type HostnameCheck = { ok: true; hostname: string } | { ok: false; reason
  * (`reservation.monsalon.ca`): the edge service does not proxy an apex on every plan. An IP, a platform name or a malformed label is refused.
  */
 export function readHostname(input: string, shopDomain?: string | null): HostnameCheck {
-  const withoutScheme = input.trim().toLowerCase().replace(/^[a-z][a-z0-9+.-]*:\/\//, "");
+  const withoutScheme = input
+    .trim()
+    .toLowerCase()
+    .replace(/^[a-z][a-z0-9+.-]*:\/\//, "");
   const raw = (withoutScheme.split(/[/?#]/)[0] ?? "").replace(/:\d+$/, "").replace(/\.$/, "");
   if (!raw) return { ok: false, reason: "empty" };
   if (IPV4.test(raw) || raw.includes(":") || raw.startsWith("[")) return { ok: false, reason: "ip" };
   const labels = raw.split(".");
   const tld = labels[labels.length - 1] ?? "";
-  if (raw.length > MAX_HOSTNAME || labels.length < 2 || !labels.every((l) => LABEL.test(l)) || !TLD.test(tld)) return { ok: false, reason: "invalid" };
+  if (raw.length > MAX_HOSTNAME || labels.length < 2 || !labels.every((l) => LABEL.test(l)) || !TLD.test(tld))
+    return { ok: false, reason: "invalid" };
   if (isOwnName(raw, shopDomain?.trim().toLowerCase())) return { ok: false, reason: "platform" };
   if (labels.length < MIN_LABELS) return { ok: false, reason: "apex" };
   return { ok: true, hostname: raw };
@@ -140,11 +158,18 @@ export async function checkDomain(
   domain: DomainSnapshot & { hostname: string; token: string },
   ports: { dns: TxtResolver; hostnames: CustomHostnames; now: Date; limits: DomainLimits },
 ): Promise<DomainStep> {
-  const keep: DomainStep = { state: domain.state, attempts: domain.attempts, providerId: domain.providerId, error: null, release: false };
+  const keep: DomainStep = {
+    state: domain.state,
+    attempts: domain.attempts,
+    providerId: domain.providerId,
+    error: null,
+    release: false,
+  };
   // Instants compared as numbers: the date facade (@krizaka/time) does not exist yet, and a new date-fns import is refused (krizaka-first-dates).
   const expired = domain.createdAt.valueOf() + ports.limits.waitMs < ports.now.valueOf();
   if (domain.state === DOMAIN_STATE.pendingTxt) return checkPendingTxt(domain, ports, keep, expired);
-  if (domain.state === DOMAIN_STATE.pendingTls && domain.providerId) return checkPendingTls(domain.providerId, ports.hostnames, keep, expired);
+  if (domain.state === DOMAIN_STATE.pendingTls && domain.providerId)
+    return checkPendingTls(domain.providerId, ports.hostnames, keep, expired);
   if (domain.state === DOMAIN_STATE.active) return checkActive(domain, ports, keep);
   return keep;
 }
@@ -152,33 +177,55 @@ export async function checkDomain(
 type CheckPorts = { dns: TxtResolver; hostnames: CustomHostnames; now: Date; limits: DomainLimits };
 type CheckedDomain = DomainSnapshot & { hostname: string; token: string };
 
-async function checkPendingTxt(domain: CheckedDomain, ports: CheckPorts, keep: DomainStep, expired: boolean): Promise<DomainStep> {
+async function checkPendingTxt(
+  domain: CheckedDomain,
+  ports: CheckPorts,
+  keep: DomainStep,
+  expired: boolean,
+): Promise<DomainStep> {
   if (await ownershipProven(ports.dns, domain.hostname, domain.token)) {
     const report = await ports.hostnames.create(domain.hostname).catch((): null => null);
     if (!report) return { ...keep, attempts: domain.attempts + 1, error: DOMAIN_ERROR.edgeUnavailable };
     return { ...keep, state: DOMAIN_STATE.pendingTls, attempts: 0, providerId: report.id };
   }
   const attempts = domain.attempts + 1;
-  return attempts >= ports.limits.maxAttempts || expired ? { ...keep, state: DOMAIN_STATE.failed, attempts, error: DOMAIN_ERROR.txtMissing } : { ...keep, attempts, error: DOMAIN_ERROR.txtMissing };
+  return attempts >= ports.limits.maxAttempts || expired
+    ? { ...keep, state: DOMAIN_STATE.failed, attempts, error: DOMAIN_ERROR.txtMissing }
+    : { ...keep, attempts, error: DOMAIN_ERROR.txtMissing };
 }
 
-async function checkPendingTls(providerId: string, hostnames: CustomHostnames, keep: DomainStep, expired: boolean): Promise<DomainStep> {
+async function checkPendingTls(
+  providerId: string,
+  hostnames: CustomHostnames,
+  keep: DomainStep,
+  expired: boolean,
+): Promise<DomainStep> {
   const report = await hostnames.status(providerId).catch((): null => null);
   if (!report) return { ...keep, error: DOMAIN_ERROR.edgeUnavailable };
   if (report.tls === "active") return { ...keep, state: DOMAIN_STATE.active, attempts: 0 };
-  if (report.tls === "failed") return { ...keep, state: DOMAIN_STATE.failed, error: DOMAIN_ERROR.tlsFailed, release: true };
+  if (report.tls === "failed")
+    return { ...keep, state: DOMAIN_STATE.failed, error: DOMAIN_ERROR.tlsFailed, release: true };
   return expired ? { ...keep, state: DOMAIN_STATE.failed, error: DOMAIN_ERROR.tlsTimeout, release: true } : keep;
 }
 
 async function checkActive(domain: CheckedDomain, ports: CheckPorts, keep: DomainStep): Promise<DomainStep> {
   if (await ownershipProven(ports.dns, domain.hostname, domain.token)) return { ...keep, attempts: 0 };
   const attempts = domain.attempts + 1;
-  return attempts >= ports.limits.lapseAttempts ? { ...keep, state: DOMAIN_STATE.suspended, attempts, error: DOMAIN_ERROR.txtMissing, release: true } : { ...keep, attempts, error: DOMAIN_ERROR.txtMissing };
+  return attempts >= ports.limits.lapseAttempts
+    ? { ...keep, state: DOMAIN_STATE.suspended, attempts, error: DOMAIN_ERROR.txtMissing, release: true }
+    : { ...keep, attempts, error: DOMAIN_ERROR.txtMissing };
 }
 
 /** The DNS instructions shown to the merchant: the TXT record and the CNAME to the edge. */
-export function dnsInstructions(hostname: string, token: string, edgeTarget: string): { txt: { name: string; value: string }; cname: { name: string; value: string } } {
-  return { txt: { name: txtRecordName(hostname), value: txtRecordValue(token) }, cname: { name: hostname, value: edgeTarget } };
+export function dnsInstructions(
+  hostname: string,
+  token: string,
+  edgeTarget: string,
+): { txt: { name: string; value: string }; cname: { name: string; value: string } } {
+  return {
+    txt: { name: txtRecordName(hostname), value: txtRecordValue(token) },
+    cname: { name: hostname, value: edgeTarget },
+  };
 }
 
 const TOKEN_BYTES = 24;

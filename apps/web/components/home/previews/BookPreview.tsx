@@ -9,7 +9,12 @@ export function BookPreview({ locale }: Readonly<{ locale: Locale }>) {
   const t = getDictionary(locale).landing;
   const [dayId, picked] = DEMO_PICKED.split("T") as [string, string];
   const times = DEMO_DAYS.find((d) => d.id === dayId)?.times ?? [];
-  const day = new Intl.DateTimeFormat(locale, { timeZone: "UTC", weekday: "short", day: "numeric", month: "short" }).format(new Date(`${dayId}T12:00:00Z`));
+  const day = new Intl.DateTimeFormat(locale, {
+    timeZone: "UTC",
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  }).format(new Date(`${dayId}T12:00:00Z`));
   const left = times.filter((time) => time !== picked);
   return (
     <PreviewFrame
@@ -32,7 +37,9 @@ export function BookPreview({ locale }: Readonly<{ locale: Locale }>) {
         body: (
           <>
             <span className="block text-base font-semibold tabular-nums">{`${day} · ${picked}`}</span>
-            <span className="block text-fg-secondary">{format(t.preview.book.others, { times: left.join(" · ") })}</span>
+            <span className="block text-fg-secondary">
+              {format(t.preview.book.others, { times: left.join(" · ") })}
+            </span>
           </>
         ),
       }}

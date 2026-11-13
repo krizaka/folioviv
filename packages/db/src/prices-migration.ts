@@ -5,7 +5,8 @@ import { pricesMigration } from "@krizaka/settings";
  * prices (folioviv#371, ADR-009) — its dated versions, each audited — then the version a subscription was sold at, and the
  * retirement of the setting `plans.founder.limit` (the cap is now the Starter entry's `founderCap` limit, one source only).
  */
-export const PRICES_MIGRATION_HEADER = "-- The catalogue of prices (@krizaka/settings, folioviv#371): dated versions an administrator schedules, each audited.\n";
+export const PRICES_MIGRATION_HEADER =
+  "-- The catalogue of prices (@krizaka/settings, folioviv#371): dated versions an administrator schedules, each audited.\n";
 export const PRICES_MIGRATION_TAIL = `-- The catalogue's version a subscription was sold at: a founder keeps the founder price, whatever is scheduled later.
 ALTER TABLE accounts ADD COLUMN IF NOT EXISTS subscription_price_version text;
 -- The founder offer's cap moved to the Starter entry (\`founderCap\`): the former setting is retired, never a second source.

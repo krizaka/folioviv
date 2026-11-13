@@ -17,7 +17,9 @@ describe("react/no-unstable-nested-components is an error on the web app (S6478)
   const lint = async (code: string) => {
     const eslint = new ESLint({ cwd: process.cwd() });
     const [result] = await eslint.lintText(code, { filePath: "components/zz-probe.tsx" });
-    return result.messages.filter((m) => m.ruleId === "react/no-unstable-nested-components" || /during render/.test(m.message));
+    return result.messages.filter(
+      (m) => m.ruleId === "react/no-unstable-nested-components" || /during render/.test(m.message),
+    );
   };
 
   it("refuses a component defined inside a component", async () => {

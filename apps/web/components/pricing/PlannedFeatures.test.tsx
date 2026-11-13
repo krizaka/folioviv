@@ -8,7 +8,13 @@ import fr from "../../messages/fr.json";
 import { PlannedFeatures } from "./PlannedFeatures";
 
 describe("what is planned on the pricing page (folioviv#440)", () => {
-  const html = renderToStaticMarkup(<PlannedFeatures title={en.pricing.plannedTitle} soon={en.pricing.soon} items={["Your clients' payments", "The signed order contract"]} />);
+  const html = renderToStaticMarkup(
+    <PlannedFeatures
+      title={en.pricing.plannedTitle}
+      soon={en.pricing.soon}
+      items={["Your clients' payments", "The signed order contract"]}
+    />,
+  );
 
   it("wears a Soon chip on every line and no tick", () => {
     expect(html.match(/data-soon/g)).toHaveLength(2);
@@ -25,7 +31,12 @@ describe("what is planned on the pricing page (folioviv#440)", () => {
   });
 
   it("says it in both languages", () => {
-    expect([en.pricing.soon, fr.pricing.soon, en.pricing.plannedTitle, fr.pricing.plannedTitle]).toEqual(["Soon", "Bientôt", "Coming soon", "À venir"]);
+    expect([en.pricing.soon, fr.pricing.soon, en.pricing.plannedTitle, fr.pricing.plannedTitle]).toEqual([
+      "Soon",
+      "Bientôt",
+      "Coming soon",
+      "À venir",
+    ]);
   });
 
   it("the public pricing page lists no plan and no feature (an invitation, krizaka-internal#2630): the planned block waits for the day it resumes", () => {

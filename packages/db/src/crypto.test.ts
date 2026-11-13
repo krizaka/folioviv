@@ -20,7 +20,9 @@ describe("field encryption (AES-256-GCM)", () => {
     expect(() => openField(sealed, key, "client-2")).toThrow();
     expect(() => openField(sealed, randomBytes(32), "client-1")).toThrow();
     const [v, iv, tag, data] = sealed.split(".");
-    expect(() => openField([v, iv, tag, Buffer.from("tampered").toString("base64url")].join("."), key, "client-1")).toThrow();
+    expect(() =>
+      openField([v, iv, tag, Buffer.from("tampered").toString("base64url")].join("."), key, "client-1"),
+    ).toThrow();
     expect(() => openField(`v9.${iv}.${tag}.${data}`, key, "client-1")).toThrow(DataKeyError);
   });
   it("accepts only a 32-byte base64 key, and never echoes it", () => {

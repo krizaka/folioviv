@@ -28,8 +28,28 @@ if (OUT) mkdirSync(OUT, { recursive: true });
 
 // The words of the interface, in the language of the run (messages/<locale>.json, `console.guest` and `console.journey`).
 const W = {
-  en: { name: "Your name", email: "E-mail", phone: "Phone", consent: /^I agree that/, send: "Send me the code", code: "Code", confirm: "Confirm my booking", booked: "You are booked", dog: "Name" },
-  fr: { name: "Votre nom", email: "Courriel", phone: "Téléphone", consent: /^J'accepte que/, send: "M'envoyer le code", code: "Code", confirm: "Confirmer ma réservation", booked: "C'est réservé", dog: "Nom" },
+  en: {
+    name: "Your name",
+    email: "E-mail",
+    phone: "Phone",
+    consent: /^I agree that/,
+    send: "Send me the code",
+    code: "Code",
+    confirm: "Confirm my booking",
+    booked: "You are booked",
+    dog: "Name",
+  },
+  fr: {
+    name: "Votre nom",
+    email: "Courriel",
+    phone: "Téléphone",
+    consent: /^J'accepte que/,
+    send: "M'envoyer le code",
+    code: "Code",
+    confirm: "Confirmer ma réservation",
+    booked: "C'est réservé",
+    dog: "Nom",
+  },
 }[LOCALE];
 const failures = [];
 const check = (ok, what) => {
@@ -88,8 +108,14 @@ try {
   await page.waitForURL(/\/confirm\?/);
   check(!page.url().includes("/sign-in"), "an anonymous visitor is not sent to the sign-in");
   await page.locator("[data-guest-summary]").waitFor();
-  check((await page.locator("[data-guest-summary]").innerText()).trim().length > 0, "the time and the price are shown before anything is asked");
-  check((await page.locator("[data-guest-cancel-rule]").count()) === 1, "the cancellation rule is shown before booking");
+  check(
+    (await page.locator("[data-guest-summary]").innerText()).trim().length > 0,
+    "the time and the price are shown before anything is asked",
+  );
+  check(
+    (await page.locator("[data-guest-cancel-rule]").count()) === 1,
+    "the cancellation rule is shown before booking",
+  );
   await shoot("2-details");
 
   // 3. Details, the consent line (never pre-ticked), the code by e-mail.

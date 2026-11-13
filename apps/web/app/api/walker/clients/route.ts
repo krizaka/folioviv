@@ -10,6 +10,9 @@ export const dynamic = "force-dynamic";
 export function GET(req: Request) {
   return handle(async () => {
     const { shop } = await requireShop(req, "clients");
-    return Response.json({ clients: await shopClients(db(), shop.id) }, { headers: { "Cache-Control": "private, no-store" } });
+    return Response.json(
+      { clients: await shopClients(db(), shop.id) },
+      { headers: { "Cache-Control": "private, no-store" } },
+    );
   });
 }

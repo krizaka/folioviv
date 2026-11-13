@@ -22,9 +22,15 @@ describe("the role line of the profile", () => {
   const shop = { name: "Pattes de Saint-Henri" };
 
   it("says the owner and the staff member apart, with the shop, in each language", () => {
-    expect(accountRoleLine(words("fr"), { admin: false, member: { role: "owner", shop } })).toBe("Propriétaire chez Pattes de Saint-Henri");
-    expect(accountRoleLine(words("fr"), { admin: false, member: { role: "staff", shop } })).toBe("Employé chez Pattes de Saint-Henri");
-    expect(accountRoleLine(words("en"), { admin: false, member: { role: "staff", shop } })).toBe("Staff at Pattes de Saint-Henri");
+    expect(accountRoleLine(words("fr"), { admin: false, member: { role: "owner", shop } })).toBe(
+      "Propriétaire chez Pattes de Saint-Henri",
+    );
+    expect(accountRoleLine(words("fr"), { admin: false, member: { role: "staff", shop } })).toBe(
+      "Employé chez Pattes de Saint-Henri",
+    );
+    expect(accountRoleLine(words("en"), { admin: false, member: { role: "staff", shop } })).toBe(
+      "Staff at Pattes de Saint-Henri",
+    );
   });
 
   it("names an administrator, and says nothing for a client: they hold no role (folioviv#440)", () => {

@@ -23,13 +23,19 @@ it("builds from zero to the expected schema with its configuration, and a second
   const folder = new URL("../drizzle", import.meta.url).pathname;
   await migrate(empty.pool, folder);
   await migrate(empty.pool, folder);
-  const expected = JSON.parse(readFileSync(new URL("./schema-expected.json", import.meta.url), "utf8")) as SchemaSnapshot;
+  const expected = JSON.parse(
+    readFileSync(new URL("./schema-expected.json", import.meta.url), "utf8"),
+  ) as SchemaSnapshot;
   expect(diffSnapshot(expected, await readSnapshot(empty.pool))).toEqual([]);
-  const { rows } = await empty.pool.query<{ n: number }>("SELECT count(*)::int AS n FROM price_versions WHERE actor_label = 'migration prices-2026-10'");
+  const { rows } = await empty.pool.query<{ n: number }>(
+    "SELECT count(*)::int AS n FROM price_versions WHERE actor_label = 'migration prices-2026-10'",
+  );
   expect(rows[0]?.n).toBe(3);
 });
 
 it("lists exactly one migration, the baseline, in the journal", () => {
-  const journal = JSON.parse(readFileSync(new URL("../drizzle/meta/_journal.json", import.meta.url), "utf8")) as { entries: { tag: string }[] };
+  const journal = JSON.parse(readFileSync(new URL("../drizzle/meta/_journal.json", import.meta.url), "utf8")) as {
+    entries: { tag: string }[];
+  };
   expect(journal.entries.map((e) => e.tag)).toEqual(["0000_baseline"]);
 });

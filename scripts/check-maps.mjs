@@ -14,7 +14,8 @@ export const SETTLE_MS = 4000;
 export function mapProblems(where, m) {
   if (!m) return [`${where}: no map on the page`];
   const out = [];
-  if (m.height < MIN_SIDE || m.width < MIN_SIDE) out.push(`${where}: the map box is ${Math.round(m.width)}x${Math.round(m.height)} px (empty)`);
+  if (m.height < MIN_SIDE || m.width < MIN_SIDE)
+    out.push(`${where}: the map box is ${Math.round(m.width)}x${Math.round(m.height)} px (empty)`);
   if (!m.canvasWidth || !m.canvasHeight) out.push(`${where}: the map has no canvas`);
   return out;
 }
@@ -29,7 +30,9 @@ const measure = () => {
 };
 
 export async function check({ base }) {
-  const browser = await chromium.launch({ args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"] });
+  const browser = await chromium.launch({
+    args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"],
+  });
   const problems = [];
   try {
     for (const theme of ["dark", "light"]) {

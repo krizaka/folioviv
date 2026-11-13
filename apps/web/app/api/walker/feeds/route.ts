@@ -21,12 +21,14 @@ const body = z.object({ staffId: z.string().uuid().nullable().default(null) });
  */
 async function allowed(req: Request) {
   // The feature, the session and the shop come first: a caller with no right here learns nothing of what the body should say.
-  if (!(await appSettings().get("exports.icsFeed.enabled"))) throw refuse(403, "FEATURE_OFF", "This feature is switched off", { feature: "exports.icsFeed" });
+  if (!(await appSettings().get("exports.icsFeed.enabled")))
+    throw refuse(403, "FEATURE_OFF", "This feature is switched off", { feature: "exports.icsFeed" });
   const { shop, role, session } = await requireShop(req, "agenda");
   const scope = agendaScope(role, session.account.id);
   const people = await feedPeople(db(), shop.id, scope);
   const { staffId } = await readJson(req, body);
-  if (staffId === null ? scope.staffAccountId !== undefined : !people.some((p) => p.id === staffId)) throw refuse(404, "NOT_FOUND", "Not found");
+  if (staffId === null ? scope.staffAccountId !== undefined : !people.some((p) => p.id === staffId))
+    throw refuse(404, "NOT_FOUND", "Not found");
   return { shop, session, staffId };
 }
 
@@ -34,7 +36,9 @@ async function allowed(req: Request) {
 export function GET(req: Request) {
   return handle(async () => {
     const { shop, role, session } = await requireShop(req, "agenda");
-    return Response.json(await feedOverview(shop.id, agendaScope(role, session.account.id)), { headers: { "Cache-Control": "private, no-store" } });
+    return Response.json(await feedOverview(shop.id, agendaScope(role, session.account.id)), {
+      headers: { "Cache-Control": "private, no-store" },
+    });
   });
 }
 
@@ -43,10 +47,25 @@ export function POST(req: Request) {
   return handle(async () => {
     const { shop, session, staffId } = await allowed(req);
     const token = newFeedToken();
-    const feed = await rotateFeedToken(db(), { shopId: shop.id, staffId }, feedTokenHash(token, sessionSecret()), requestNow());
+    const feed = await rotateFeedToken(
+      db(),
+      { shopId: shop.id, staffId },
+      feedTokenHash(token, sessionSecret()),
+      requestNow(),
+    );
     if (!feed) throw refuse(404, "NOT_FOUND", "Not found");
-    await audit({ action: feed.rotatedAt ? "shop.feed_rotated" : "shop.feed_created", actorId: session.account.id, actorLabel: session.account.email, targetId: shop.id, detail: { staffId }, headers: req.headers });
-    return Response.json({ url: feedUrl(readEnv().APP_PUBLIC_URL, token), createdAt: feed.createdAt, rotatedAt: feed.rotatedAt }, { headers: { "Cache-Control": "private, no-store" } });
+    await audit({
+      action: feed.rotatedAt ? "shop.feed_rotated" : "shop.feed_created",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: shop.id,
+      detail: { staffId },
+      headers: req.headers,
+    });
+    return Response.json(
+      { url: feedUrl(readEnv().APP_PUBLIC_URL, token), createdAt: feed.createdAt, rotatedAt: feed.rotatedAt },
+      { headers: { "Cache-Control": "private, no-store" } },
+    );
   });
 }
 
@@ -55,7 +74,15 @@ export function DELETE(req: Request) {
   return handle(async () => {
     const { shop, session, staffId } = await allowed(req);
     const revoked = await revokeFeedToken(db(), { shopId: shop.id, staffId }, requestNow());
-    if (revoked) await audit({ action: "shop.feed_revoked", actorId: session.account.id, actorLabel: session.account.email, targetId: shop.id, detail: { staffId }, headers: req.headers });
+    if (revoked)
+      await audit({
+        action: "shop.feed_revoked",
+        actorId: session.account.id,
+        actorLabel: session.account.email,
+        targetId: shop.id,
+        detail: { staffId },
+        headers: req.headers,
+      });
     return Response.json({ revoked });
   });
 }

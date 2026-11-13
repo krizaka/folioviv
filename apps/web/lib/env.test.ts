@@ -19,7 +19,12 @@ describe("env", () => {
 
   it("declares the media storage variables, all optional (uploads are off without them)", () => {
     const e = readEnv({});
-    expect([e.MEDIA_STORAGE_API_KEY, e.MEDIA_STORAGE_ZONE, e.MEDIA_STORAGE_ENDPOINT, e.MEDIA_CDN_HOSTNAME]).toEqual([undefined, undefined, undefined, undefined]);
+    expect([e.MEDIA_STORAGE_API_KEY, e.MEDIA_STORAGE_ZONE, e.MEDIA_STORAGE_ENDPOINT, e.MEDIA_CDN_HOSTNAME]).toEqual([
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    ]);
     expect(() => assertProductionEnv(PROD)).not.toThrow();
   });
 
@@ -37,7 +42,13 @@ describe("env", () => {
   it("offers a calendar provider only when both halves of its OAuth client are set", () => {
     expect(calendarOAuthApps({})).toEqual({});
     expect(calendarOAuthApps({ AUTH_CALENDAR_GOOGLE_CLIENT_ID: "id" })).toEqual({});
-    expect(calendarOAuthApps({ AUTH_CALENDAR_GOOGLE_CLIENT_ID: "id", AUTH_CALENDAR_GOOGLE_CLIENT_SECRET: "s", AUTH_CALENDAR_OUTLOOK_CLIENT_ID: "x" })).toEqual({ google: { clientId: "id", clientSecret: "s" } });
+    expect(
+      calendarOAuthApps({
+        AUTH_CALENDAR_GOOGLE_CLIENT_ID: "id",
+        AUTH_CALENDAR_GOOGLE_CLIENT_SECRET: "s",
+        AUTH_CALENDAR_OUTLOOK_CLIENT_ID: "x",
+      }),
+    ).toEqual({ google: { clientId: "id", clientSecret: "s" } });
   });
 
   it("keeps the point of sale off unless its flag is exactly true", () => {
@@ -55,7 +66,10 @@ describe("env", () => {
 
   it("lets nobody into the administration in production without an allow-list", () => {
     expect(consoleAllowedIps({ NODE_ENV: "production" })).toEqual([]);
-    expect(consoleAllowedIps({ NODE_ENV: "production", AUTH_ALLOWED_IPS: "203.0.113.7, 198.51.100.2" })).toEqual(["203.0.113.7", "198.51.100.2"]);
+    expect(consoleAllowedIps({ NODE_ENV: "production", AUTH_ALLOWED_IPS: "203.0.113.7, 198.51.100.2" })).toEqual([
+      "203.0.113.7",
+      "198.51.100.2",
+    ]);
     expect(consoleAllowedIps({ NODE_ENV: "development" })).toBeNull();
   });
 
@@ -64,13 +78,21 @@ describe("env", () => {
     expect(dataKey(PROD)).toHaveLength(32);
     expect(() => dataKey({ NODE_ENV: "production" })).toThrow(/not set/);
     expect(() => dataKey({ NODE_ENV: "production", APP_DATA_ENCRYPTION_KEY: "c2hvcnQ=" })).toThrow(/32 random bytes/);
-    expect(productionProblems(readEnv({ ...PROD, APP_DATA_ENCRYPTION_KEY: undefined }))).toContain("APP_DATA_ENCRYPTION_KEY must be 32 random bytes, base64-encoded");
+    expect(productionProblems(readEnv({ ...PROD, APP_DATA_ENCRYPTION_KEY: undefined }))).toContain(
+      "APP_DATA_ENCRYPTION_KEY must be 32 random bytes, base64-encoded",
+    );
   });
 
   it("delivers mail only through a configured provider: none by default, mailgun needs its key and domain", () => {
     expect(readEnv({}).MAIL_PROVIDER).toBe("none");
     expect(() => readEnv({ MAIL_PROVIDER: "sendgrid" })).toThrow();
-    expect(productionProblems(readEnv({ ...PROD, MAIL_PROVIDER: "mailgun" }))).toEqual(["MAIL_PROVIDER=mailgun needs MAIL_API_KEY and MAIL_DOMAIN"]);
-    expect(productionProblems(readEnv({ ...PROD, MAIL_PROVIDER: "mailgun", MAIL_API_KEY: "k", MAIL_DOMAIN: "mg.folioviv.com" }))).toEqual([]);
+    expect(productionProblems(readEnv({ ...PROD, MAIL_PROVIDER: "mailgun" }))).toEqual([
+      "MAIL_PROVIDER=mailgun needs MAIL_API_KEY and MAIL_DOMAIN",
+    ]);
+    expect(
+      productionProblems(
+        readEnv({ ...PROD, MAIL_PROVIDER: "mailgun", MAIL_API_KEY: "k", MAIL_DOMAIN: "mg.folioviv.com" }),
+      ),
+    ).toEqual([]);
   });
 });

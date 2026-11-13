@@ -11,7 +11,10 @@ describe("dependency-cruiser covers every workspace (folioviv#320)", () => {
 
   it("each workspace records its known violations beside it (they only shrink)", () => {
     for (const workspace of Object.keys(WORKSPACES)) {
-      assert.ok(existsSync(new URL(`../${workspace}/.dependency-cruiser-known-violations.json`, import.meta.url)), workspace);
+      assert.ok(
+        existsSync(new URL(`../${workspace}/.dependency-cruiser-known-violations.json`, import.meta.url)),
+        workspace,
+      );
     }
   });
 });

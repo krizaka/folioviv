@@ -25,7 +25,8 @@ export function SignInForm({ next, forgotPassword = true }: Readonly<{ next: str
   const router = useRouter();
   const [problem, setProblem] = useState<string | null>(null);
   const request = useMutation({
-    mutationFn: (body: { email: string; password: string }) => krizakaFetch("/api/auth/sign-in", { method: "POST", json: body }),
+    mutationFn: (body: { email: string; password: string }) =>
+      krizakaFetch("/api/auth/sign-in", { method: "POST", json: body }),
     onSuccess: () => {
       router.replace(next);
       router.refresh();
@@ -47,7 +48,10 @@ export function SignInForm({ next, forgotPassword = true }: Readonly<{ next: str
       <form.TextField name="email" label={say("signIn.email")} type="email" autoComplete="username" />
       <form.TextField name="password" label={say("signIn.password")} type="password" autoComplete="current-password" />
       {forgotPassword ? (
-        <Link href={`/${locale}/forgot-password`} className="-mt-2 self-end text-sm font-semibold text-fg-accent underline">
+        <Link
+          href={`/${locale}/forgot-password`}
+          className="-mt-2 self-end text-sm font-semibold text-fg-accent underline"
+        >
           {say("signIn.forgot")}
         </Link>
       ) : null}

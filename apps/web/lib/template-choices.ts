@@ -23,10 +23,16 @@ export interface TemplateRules {
   defaults: Record<ShopType, string>;
 }
 
-export function templateChoices(rules: TemplateRules, shopType: ShopType, config: Pick<ShopPageConfig, "templateId" | "templateVersion" | "sectionsCustom"> | null, catalogue?: readonly Template[]): TemplateChoices | null {
+export function templateChoices(
+  rules: TemplateRules,
+  shopType: ShopType,
+  config: Pick<ShopPageConfig, "templateId" | "templateVersion" | "sectionsCustom"> | null,
+  catalogue?: readonly Template[],
+): TemplateChoices | null {
   if (!rules.enabled) return null;
   const choices = templatesFor(shopType, rules.offered, catalogue);
-  const current = config?.templateId && config.templateVersion ? { id: config.templateId, version: config.templateVersion } : null;
+  const current =
+    config?.templateId && config.templateVersion ? { id: config.templateId, version: config.templateVersion } : null;
   const latest = current ? latestTemplate(current.id, catalogue) : null;
   return {
     shopType,
@@ -39,7 +45,14 @@ export function templateChoices(rules: TemplateRules, shopType: ShopType, config
 }
 
 /** The choices of every trade (the picker at shop creation, before the trade is known), or null while the switch is off. */
-export function templateChoicesByTrade(rules: TemplateRules, types: readonly ShopType[], catalogue?: readonly Template[]): Record<ShopType, TemplateChoices> | null {
+export function templateChoicesByTrade(
+  rules: TemplateRules,
+  types: readonly ShopType[],
+  catalogue?: readonly Template[],
+): Record<ShopType, TemplateChoices> | null {
   if (!rules.enabled) return null;
-  return Object.fromEntries(types.map((type) => [type, templateChoices(rules, type, null, catalogue)!])) as Record<ShopType, TemplateChoices>;
+  return Object.fromEntries(types.map((type) => [type, templateChoices(rules, type, null, catalogue)!])) as Record<
+    ShopType,
+    TemplateChoices
+  >;
 }

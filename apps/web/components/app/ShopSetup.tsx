@@ -24,30 +24,73 @@ import type { TemplateChoices } from "@/lib/template-choices";
 
 /** What the setup page needs, plain (the server picks it from the shop). */
 export interface SetupData {
-  page: { name: string; legalName: string; address: string; slug: string; ownerName: string; taglineFr: string; taglineEn: string; published: boolean; area: string; bioFr: string; bioEn: string; publicPhone: string; publicEmail: string; seatUnitFr: string; seatUnitEn: string; businessType: BusinessType } | null;
+  page: {
+    name: string;
+    legalName: string;
+    address: string;
+    slug: string;
+    ownerName: string;
+    taglineFr: string;
+    taglineEn: string;
+    published: boolean;
+    area: string;
+    bioFr: string;
+    bioEn: string;
+    publicPhone: string;
+    publicEmail: string;
+    seatUnitFr: string;
+    seatUnitEn: string;
+    businessType: BusinessType;
+  } | null;
   shopId: string | null;
   pageConfig: ShopPageConfig;
   publicUrl: string | null;
   zones: { id: string; name: string }[];
-  services: { id: string; nameFr: string; nameEn: string; durationMinutes: number; priceCents: number; capacity: number; descriptionFr: string; descriptionEn: string; includedFr: string[]; includedEn: string[]; priceVaries: boolean; linkUrl?: string }[];
-  media: { cover: (GalleryLine) | null; gallery: GalleryLine[] };
+  services: {
+    id: string;
+    nameFr: string;
+    nameEn: string;
+    durationMinutes: number;
+    priceCents: number;
+    capacity: number;
+    descriptionFr: string;
+    descriptionEn: string;
+    includedFr: string[];
+    includedEn: string[];
+    priceVaries: boolean;
+    linkUrl?: string;
+  }[];
+  media: { cover: GalleryLine | null; gallery: GalleryLine[] };
   windows: { id: string; weekday: number; startsAt: string; endsAt: string }[];
   daysOff: { id: string; onDate: string; reason: string | null }[];
   /** The proposed images (#267): null when the administrator has switched them off. */
   proposed: ProposedImagesData | null;
   /** The page templates of the shop's trade (#261): null while the administrator's switch is off. */
   templates: TemplateChoices | null;
-  rules: { cancellationHours: number; bookingHorizonDays: number; slotStepMinutes: number; minNoticeMinutes: number; reportLinkDays: number; paymentTermsDays: number } | null;
+  rules: {
+    cancellationHours: number;
+    bookingHorizonDays: number;
+    slotStepMinutes: number;
+    minNoticeMinutes: number;
+    reportLinkDays: number;
+    paymentTermsDays: number;
+  } | null;
 }
 
 const WEEK = [1, 2, 3, 4, 5, 6, 0] as const;
-const money = (cents: number, locale: string) => new Intl.NumberFormat(locale === "fr" ? "fr-CA" : "en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
+const money = (cents: number, locale: string) =>
+  new Intl.NumberFormat(locale === "fr" ? "fr-CA" : "en-CA", { style: "currency", currency: "CAD" }).format(
+    cents / 100,
+  );
 
 /**
  * « Ma page boutique » (K4): the section the hub opens, one at a time. The section is named by the hub's navigation (`?tab=`), never a
  * row of tabs; each section saves on its own. The shop's name, its status and its public link are the hub's header, not this one.
  */
-export function ShopSetupView({ data, tab = "identity" }: Readonly<{ data: SetupData; /** The section the hub opens (`?tab=`). */ tab?: PageTab }>) {
+export function ShopSetupView({
+  data,
+  tab = "identity",
+}: Readonly<{ data: SetupData; /** The section the hub opens (`?tab=`). */ tab?: PageTab }>) {
   const { say } = useSay();
   if (!data.page || !data.shopId) return <IdentitySection page={data.page} />;
   const body: Record<PageTab, React.ReactNode> = {
@@ -93,7 +136,11 @@ const logoForm = createKrizakaForm({
   defaultValues: { files: [] as File[] },
 });
 
-function ShopPageCard({ shopId, publicUrl, config: initial }: Readonly<{ shopId: string; publicUrl: string | null; config: ShopPageConfig }>) {
+function ShopPageCard({
+  shopId,
+  publicUrl,
+  config: initial,
+}: Readonly<{ shopId: string; publicUrl: string | null; config: ShopPageConfig }>) {
   const { say, locale } = useSay();
   const call = useCall();
   const [config, setConfig] = useState(initial);
@@ -124,51 +171,152 @@ function ShopPageCard({ shopId, publicUrl, config: initial }: Readonly<{ shopId:
     const body = new FormData();
     body.set("file", await shrinkImage(file, STOREFRONT_LONG_SIDE), "logo.jpg");
     body.set("purpose", "brand");
-    const url = (await call.run<{ url: string }>(`/api/walker/media/upload?shopId=${encodeURIComponent(shopId)}`, { body }, { refresh: false }))?.url;
+    const url = (
+      await call.run<{ url: string }>(
+        `/api/walker/media/upload?shopId=${encodeURIComponent(shopId)}`,
+        { body },
+        { refresh: false },
+      )
+    )?.url;
     if (url) await save({ ...config, [field]: url });
   };
-  const i18n = { t: (key: string, vars?: unknown) => say(key, vars as Record<string, string | number> | undefined), locale };
-  const form = logoForm.useForm({ i18n, onSubmit: async ({ files }) => { await uploadLogo(files[0], "logoUrl"); form.reset({ files: [] }); } });
-  const darkForm = logoForm.useForm({ i18n, onSubmit: async ({ files }) => { await uploadLogo(files[0], "logoDarkUrl"); darkForm.reset({ files: [] }); } });
+  const i18n = {
+    t: (key: string, vars?: unknown) => say(key, vars as Record<string, string | number> | undefined),
+    locale,
+  };
+  const form = logoForm.useForm({
+    i18n,
+    onSubmit: async ({ files }) => {
+      await uploadLogo(files[0], "logoUrl");
+      form.reset({ files: [] });
+    },
+  });
+  const darkForm = logoForm.useForm({
+    i18n,
+    onSubmit: async ({ files }) => {
+      await uploadLogo(files[0], "logoDarkUrl");
+      darkForm.reset({ files: [] });
+    },
+  });
   return (
     <Card.Root className="p-4 lg:col-span-2">
       <h2 className="mb-3 font-display text-base font-bold text-fg">{say("shopSetup.layout.title")}</h2>
-      {publicUrl ? <a className="mb-3 inline-block text-sm font-semibold text-fg-accent underline" href={publicUrl}>{say("shopSetup.viewPage")}</a> : null}
+      {publicUrl ? (
+        <a className="mb-3 inline-block text-sm font-semibold text-fg-accent underline" href={publicUrl}>
+          {say("shopSetup.viewPage")}
+        </a>
+      ) : null}
       <ul className="m-0 flex list-none flex-col gap-2 p-0">
         {config.sections.map(({ id, visible }, index) => (
-          <li key={id} tabIndex={0} className="flex flex-wrap items-center gap-2 rounded-lg border border-border-default p-2"
+          <li
+            key={id}
+            tabIndex={0}
+            className="flex flex-wrap items-center gap-2 rounded-lg border border-border-default p-2"
             onKeyDown={(event) => {
               if (event.key === "ArrowUp" || event.key === "ArrowDown") {
                 event.preventDefault();
                 reorder(id, event.key === "ArrowUp" ? -1 : 1);
               }
-            }}>
-            <Checkbox checked={visible} onCheckedChange={(checked) => void save({ ...config, sections: config.sections.map((item) => item.id === id ? { ...item, visible: checked === true } : item) })}>
-              {say(`shopSetup.layout.sections.${id}`)}{(["wall", "reels", "announcements", "reviews", "follow"] as ShopPageSection[]).includes(id) ? ` · ${say("shopSetup.layout.preparing")}` : ""}
+            }}
+          >
+            <Checkbox
+              checked={visible}
+              onCheckedChange={(checked) =>
+                void save({
+                  ...config,
+                  sections: config.sections.map((item) =>
+                    item.id === id ? { ...item, visible: checked === true } : item,
+                  ),
+                })
+              }
+            >
+              {say(`shopSetup.layout.sections.${id}`)}
+              {(["wall", "reels", "announcements", "reviews", "follow"] as ShopPageSection[]).includes(id)
+                ? ` · ${say("shopSetup.layout.preparing")}`
+                : ""}
             </Checkbox>
             <span className="ml-auto flex gap-1">
-              <Button type="button" size="sm" variant="ghost" disabled={index === 0} aria-label={say("shopSetup.layout.moveUp", { section: say(`shopSetup.layout.sections.${id}`) })} onClick={() => reorder(id, -1)}>↑</Button>
-              <Button type="button" size="sm" variant="ghost" disabled={index === config.sections.length - 1} aria-label={say("shopSetup.layout.moveDown", { section: say(`shopSetup.layout.sections.${id}`) })} onClick={() => reorder(id, 1)}>↓</Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                disabled={index === 0}
+                aria-label={say("shopSetup.layout.moveUp", { section: say(`shopSetup.layout.sections.${id}`) })}
+                onClick={() => reorder(id, -1)}
+              >
+                ↑
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                disabled={index === config.sections.length - 1}
+                aria-label={say("shopSetup.layout.moveDown", { section: say(`shopSetup.layout.sections.${id}`) })}
+                onClick={() => reorder(id, 1)}
+              >
+                ↓
+              </Button>
             </span>
           </li>
         ))}
       </ul>
       <form.Form aria-label={say("shopSetup.layout.logo")} className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
-        <form.FileUpload name="files" label={say("shopSetup.layout.logo")} title={say("shopSetup.layout.logo")} browseLabel={say("shopSetup.media.browse")} hint={say("shopSetup.media.uploadHint")} accept="image/*" maxSize={2 * 1024 * 1024} maxFiles={1} removeLabel={(name) => say("shopSetup.media.remove", { name })} refusalLabel={(r) => say("shopSetup.media.tooBig", { name: r.file.name })} />
-        <form.Submit size="md" variant="secondary">{say("shopSetup.layout.uploadLogo")}</form.Submit>
+        <form.FileUpload
+          name="files"
+          label={say("shopSetup.layout.logo")}
+          title={say("shopSetup.layout.logo")}
+          browseLabel={say("shopSetup.media.browse")}
+          hint={say("shopSetup.media.uploadHint")}
+          accept="image/*"
+          maxSize={2 * 1024 * 1024}
+          maxFiles={1}
+          removeLabel={(name) => say("shopSetup.media.remove", { name })}
+          refusalLabel={(r) => say("shopSetup.media.tooBig", { name: r.file.name })}
+        />
+        <form.Submit size="md" variant="secondary">
+          {say("shopSetup.layout.uploadLogo")}
+        </form.Submit>
       </form.Form>
       <darkForm.Form aria-label={say("shopSetup.layout.logoDark")} className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
-        <darkForm.FileUpload name="files" label={say("shopSetup.layout.logoDark")} title={say("shopSetup.layout.logoDark")} browseLabel={say("shopSetup.media.browse")} hint={say("shopSetup.layout.logoDarkHint")} accept="image/*" maxSize={2 * 1024 * 1024} maxFiles={1} removeLabel={(name) => say("shopSetup.media.remove", { name })} refusalLabel={(r) => say("shopSetup.media.tooBig", { name: r.file.name })} />
-        <darkForm.Submit size="md" variant="secondary">{say("shopSetup.layout.uploadLogoDark")}</darkForm.Submit>
+        <darkForm.FileUpload
+          name="files"
+          label={say("shopSetup.layout.logoDark")}
+          title={say("shopSetup.layout.logoDark")}
+          browseLabel={say("shopSetup.media.browse")}
+          hint={say("shopSetup.layout.logoDarkHint")}
+          accept="image/*"
+          maxSize={2 * 1024 * 1024}
+          maxFiles={1}
+          removeLabel={(name) => say("shopSetup.media.remove", { name })}
+          refusalLabel={(r) => say("shopSetup.media.tooBig", { name: r.file.name })}
+        />
+        <darkForm.Submit size="md" variant="secondary">
+          {say("shopSetup.layout.uploadLogoDark")}
+        </darkForm.Submit>
       </darkForm.Form>
-      {call.problem ? <Alert tone="danger" className="mt-3">{call.problem}</Alert> : null}
-      {saved ? <Alert tone="success" className="mt-3">{say("shopSetup.layout.saved")}</Alert> : null}
+      {call.problem ? (
+        <Alert tone="danger" className="mt-3">
+          {call.problem}
+        </Alert>
+      ) : null}
+      {saved ? (
+        <Alert tone="success" className="mt-3">
+          {say("shopSetup.layout.saved")}
+        </Alert>
+      ) : null}
     </Card.Root>
   );
 }
 
-const coord = z.string().trim().max(14).regex(/^(-?\d+([.,]\d+)?)?$/);
-const zoneForm = createKrizakaForm({ schema: z.object({ name: z.string().trim().min(1).max(80), lat: coord, lng: coord }), defaultValues: { name: "", lat: "", lng: "" } });
+const coord = z
+  .string()
+  .trim()
+  .max(14)
+  .regex(/^(-?\d+([.,]\d+)?)?$/);
+const zoneForm = createKrizakaForm({
+  schema: z.object({ name: z.string().trim().min(1).max(80), lat: coord, lng: coord }),
+  defaultValues: { name: "", lat: "", lng: "" },
+});
 
 function ZonesCard({ zones }: Readonly<{ zones: SetupData["zones"] }>) {
   const { say, locale } = useSay();
@@ -179,7 +327,8 @@ function ZonesCard({ zones }: Readonly<{ zones: SetupData["zones"] }>) {
       const lat = Number(values.lat.replace(",", "."));
       const lng = Number(values.lng.replace(",", "."));
       const place = values.lat && values.lng && Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : undefined;
-      if ((await call.run("/api/walker/zones", { json: { name: values.name, ...(place ? { place } : {}) } })) !== null) form.reset();
+      if ((await call.run("/api/walker/zones", { json: { name: values.name, ...(place ? { place } : {}) } })) !== null)
+        form.reset();
     },
   });
   return (
@@ -188,9 +337,18 @@ function ZonesCard({ zones }: Readonly<{ zones: SetupData["zones"] }>) {
       {zones.length ? (
         <ul className="mb-4 flex flex-wrap gap-2">
           {zones.map((z) => (
-            <li key={z.id} className="inline-flex items-center gap-1 rounded-sm border border-border-default bg-surface-2 py-1 pl-3 pr-1 text-sm text-fg">
+            <li
+              key={z.id}
+              className="inline-flex items-center gap-1 rounded-sm border border-border-default bg-surface-2 py-1 pl-3 pr-1 text-sm text-fg"
+            >
               {z.name}
-              <Button size="sm" variant="ghost" shape="pill" aria-label={say("shopSetup.zones.remove", { name: z.name })} onClick={() => call.run(`/api/walker/zones/${z.id}`, { method: "DELETE" })}>
+              <Button
+                size="sm"
+                variant="ghost"
+                shape="pill"
+                aria-label={say("shopSetup.zones.remove", { name: z.name })}
+                onClick={() => call.run(`/api/walker/zones/${z.id}`, { method: "DELETE" })}
+              >
                 ×
               </Button>
             </li>
@@ -200,9 +358,18 @@ function ZonesCard({ zones }: Readonly<{ zones: SetupData["zones"] }>) {
         <p className="mb-4 text-fg-secondary">{say("shopSetup.zones.none")}</p>
       )}
       <form.Form aria-label={say("shopSetup.zones.title")} className="flex flex-col gap-3">
-        <form.TextField name="name" label={say("shopSetup.zones.name")} placeholder={say("shopSetup.zones.placeholder")} />
+        <form.TextField
+          name="name"
+          label={say("shopSetup.zones.name")}
+          placeholder={say("shopSetup.zones.placeholder")}
+        />
         <div className="grid grid-cols-2 gap-3">
-          <form.TextField name="lat" label={say("shopSetup.zones.lat")} inputMode="decimal" hint={say("shopSetup.zones.placeHint")} />
+          <form.TextField
+            name="lat"
+            label={say("shopSetup.zones.lat")}
+            inputMode="decimal"
+            hint={say("shopSetup.zones.placeHint")}
+          />
           <form.TextField name="lng" label={say("shopSetup.zones.lng")} inputMode="decimal" />
         </div>
         {call.problem ? <Alert tone="danger">{call.problem}</Alert> : null}
@@ -226,9 +393,25 @@ const serviceForm = createKrizakaForm({
     includedFr: z.string().max(600),
     includedEn: z.string().max(600),
     priceVaries: z.boolean(),
-    linkUrl: z.string().trim().max(500).refine((v) => v === "" || v.startsWith("https://"), { message: "https" }),
+    linkUrl: z
+      .string()
+      .trim()
+      .max(500)
+      .refine((v) => v === "" || v.startsWith("https://"), { message: "https" }),
   }),
-  defaultValues: { nameFr: "", nameEn: "", durationMinutes: "60", priceCents: 3000, capacity: "1", descriptionFr: "", descriptionEn: "", includedFr: "", includedEn: "", priceVaries: false, linkUrl: "" },
+  defaultValues: {
+    nameFr: "",
+    nameEn: "",
+    durationMinutes: "60",
+    priceCents: 3000,
+    capacity: "1",
+    descriptionFr: "",
+    descriptionEn: "",
+    includedFr: "",
+    includedEn: "",
+    priceVaries: false,
+    linkUrl: "",
+  },
 });
 
 type Service = SetupData["services"][number];
@@ -253,17 +436,58 @@ function ServicesCard({ services }: Readonly<{ services: SetupData["services"] }
               <div>
                 <p className="font-semibold text-fg">{{ fr: s.nameFr, en: s.nameEn }[locale]}</p>
                 <p className="text-sm text-fg-secondary">
-                  {say("shopSetup.services.line", { minutes: s.durationMinutes, price: isOnQuote(s) ? say("shopSetup.services.onQuote") : money(s.priceCents, locale) })}
+                  {say("shopSetup.services.line", {
+                    minutes: s.durationMinutes,
+                    price: isOnQuote(s) ? say("shopSetup.services.onQuote") : money(s.priceCents, locale),
+                  })}
                   {s.capacity > 1 ? ` · ${say("shopSetup.services.group", { count: s.capacity })}` : ""}
                 </p>
               </div>
               <div className="flex shrink-0 gap-1">
-                <Button size="sm" variant="ghost" disabled={index === 0} aria-label={say("shopSetup.services.moveUp", { name: { fr: s.nameFr, en: s.nameEn }[locale] })} onClick={() => move(index, -1)}>↑</Button>
-                <Button size="sm" variant="ghost" disabled={index === services.length - 1} aria-label={say("shopSetup.services.moveDown", { name: { fr: s.nameFr, en: s.nameEn }[locale] })} onClick={() => move(index, 1)}>↓</Button>
-                <Button size="sm" variant="ghost" aria-label={say("shopSetup.services.edit", { name: { fr: s.nameFr, en: s.nameEn }[locale] })} onClick={() => setEditing(s)}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={index === 0}
+                  aria-label={say("shopSetup.services.moveUp", { name: { fr: s.nameFr, en: s.nameEn }[locale] })}
+                  onClick={() => move(index, -1)}
+                >
+                  ↑
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={index === services.length - 1}
+                  aria-label={say("shopSetup.services.moveDown", { name: { fr: s.nameFr, en: s.nameEn }[locale] })}
+                  onClick={() => move(index, 1)}
+                >
+                  ↓
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  aria-label={say("shopSetup.services.edit", { name: { fr: s.nameFr, en: s.nameEn }[locale] })}
+                  onClick={() => setEditing(s)}
+                >
                   ✎
                 </Button>
-                <Button size="sm" variant="ghost" aria-label={say("shopSetup.services.remove", { name: { fr: s.nameFr, en: s.nameEn }[locale] })} onClick={() => call.run("/api/walker/services", { json: { id: s.id, nameFr: s.nameFr, nameEn: s.nameEn, durationMinutes: s.durationMinutes, priceCents: s.priceCents, capacity: s.capacity, active: false } })}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  aria-label={say("shopSetup.services.remove", { name: { fr: s.nameFr, en: s.nameEn }[locale] })}
+                  onClick={() =>
+                    call.run("/api/walker/services", {
+                      json: {
+                        id: s.id,
+                        nameFr: s.nameFr,
+                        nameEn: s.nameEn,
+                        durationMinutes: s.durationMinutes,
+                        priceCents: s.priceCents,
+                        capacity: s.capacity,
+                        active: false,
+                      },
+                    })
+                  }
+                >
                   ×
                 </Button>
               </div>
@@ -285,7 +509,21 @@ function ServiceForm({ editing, onDone }: Readonly<{ editing: Service | null; on
   const form = serviceForm.useForm({
     i18n: { t: (key, vars) => say(key, vars as Record<string, string | number> | undefined), locale },
     ...(editing
-      ? { defaultValues: { nameFr: editing.nameFr, nameEn: editing.nameEn, durationMinutes: String(editing.durationMinutes), priceCents: editing.priceCents, capacity: String(editing.capacity), descriptionFr: editing.descriptionFr, descriptionEn: editing.descriptionEn, includedFr: joinLines(editing.includedFr), includedEn: joinLines(editing.includedEn), priceVaries: editing.priceVaries, linkUrl: editing.linkUrl ?? "" } }
+      ? {
+          defaultValues: {
+            nameFr: editing.nameFr,
+            nameEn: editing.nameEn,
+            durationMinutes: String(editing.durationMinutes),
+            priceCents: editing.priceCents,
+            capacity: String(editing.capacity),
+            descriptionFr: editing.descriptionFr,
+            descriptionEn: editing.descriptionEn,
+            includedFr: joinLines(editing.includedFr),
+            includedEn: joinLines(editing.includedEn),
+            priceVaries: editing.priceVaries,
+            linkUrl: editing.linkUrl ?? "",
+          },
+        }
       : {}),
     onSubmit: async (values) => {
       const done = await call.run("/api/walker/services", {
@@ -311,20 +549,45 @@ function ServiceForm({ editing, onDone }: Readonly<{ editing: Service | null; on
     },
   });
   return (
-    <form.Form aria-label={say(editing ? "shopSetup.services.editing" : "shopSetup.services.title")} className="grid gap-3 sm:grid-cols-2">
-      {editing ? <p className="text-sm font-semibold text-fg-accent sm:col-span-2">{say("shopSetup.services.editing")}</p> : null}
+    <form.Form
+      aria-label={say(editing ? "shopSetup.services.editing" : "shopSetup.services.title")}
+      className="grid gap-3 sm:grid-cols-2"
+    >
+      {editing ? (
+        <p className="text-sm font-semibold text-fg-accent sm:col-span-2">{say("shopSetup.services.editing")}</p>
+      ) : null}
       <form.TextField name="nameFr" label={say("shopSetup.services.nameFr")} />
       <form.TextField name="nameEn" label={say("shopSetup.services.nameEn")} />
       <form.TextField name="durationMinutes" label={say("shopSetup.services.duration")} inputMode="numeric" />
       <form.Money name="priceCents" label={say("shopSetup.services.price")} currency="CAD" />
-      <form.TextField name="capacity" label={say("shopSetup.services.capacity")} hint={say("shopSetup.services.capacityHint")} inputMode="numeric" />
+      <form.TextField
+        name="capacity"
+        label={say("shopSetup.services.capacity")}
+        hint={say("shopSetup.services.capacityHint")}
+        inputMode="numeric"
+      />
       <p className="self-end text-xs text-fg-muted">{say("shopSetup.services.taxes")}</p>
       <form.TextField name="descriptionFr" label={say("shopSetup.services.descriptionFr")} />
       <form.TextField name="descriptionEn" label={say("shopSetup.services.descriptionEn")} />
-      <form.TextArea name="includedFr" label={say("shopSetup.services.includedFr")} hint={say("shopSetup.services.includedHint")} rows={3} />
-      <form.TextArea name="includedEn" label={say("shopSetup.services.includedEn")} hint={say("shopSetup.services.includedHint")} rows={3} />
+      <form.TextArea
+        name="includedFr"
+        label={say("shopSetup.services.includedFr")}
+        hint={say("shopSetup.services.includedHint")}
+        rows={3}
+      />
+      <form.TextArea
+        name="includedEn"
+        label={say("shopSetup.services.includedEn")}
+        hint={say("shopSetup.services.includedHint")}
+        rows={3}
+      />
       <div className="sm:col-span-2">
-        <form.TextField name="linkUrl" label={say("shopSetup.services.link")} hint={say("shopSetup.services.linkHint")} inputMode="url" />
+        <form.TextField
+          name="linkUrl"
+          label={say("shopSetup.services.link")}
+          hint={say("shopSetup.services.linkHint")}
+          inputMode="url"
+        />
       </div>
       <div className="sm:col-span-2">
         <form.Switch name="priceVaries" label={say("shopSetup.services.priceVaries")} />
@@ -350,8 +613,22 @@ function ServiceForm({ editing, onDone }: Readonly<{ editing: Service | null; on
 const MAX_STOREFRONT_PHOTO = 25 * 1024 * 1024;
 
 const mediaForm = createKrizakaForm({
-  schema: z.object({ coverUrl: z.string().trim().max(500), coverAltFr: z.string().trim().max(200), coverAltEn: z.string().trim().max(200), gallery: z.string().max(5000), coverFiles: z.array(z.instanceof(File)).max(1), galleryFiles: z.array(z.instanceof(File)).max(12) }),
-  defaultValues: { coverUrl: "", coverAltFr: "", coverAltEn: "", gallery: "", coverFiles: [] as File[], galleryFiles: [] as File[] },
+  schema: z.object({
+    coverUrl: z.string().trim().max(500),
+    coverAltFr: z.string().trim().max(200),
+    coverAltEn: z.string().trim().max(200),
+    gallery: z.string().max(5000),
+    coverFiles: z.array(z.instanceof(File)).max(1),
+    galleryFiles: z.array(z.instanceof(File)).max(12),
+  }),
+  defaultValues: {
+    coverUrl: "",
+    coverAltFr: "",
+    coverAltEn: "",
+    gallery: "",
+    coverFiles: [] as File[],
+    galleryFiles: [] as File[],
+  },
 });
 
 function MediaCard({ media }: Readonly<{ media: SetupData["media"] }>) {
@@ -360,7 +637,14 @@ function MediaCard({ media }: Readonly<{ media: SetupData["media"] }>) {
   const [saved, setSaved] = useState(false);
   const form = mediaForm.useForm({
     i18n: { t: (key, vars) => say(key, vars as Record<string, string | number> | undefined), locale },
-    defaultValues: { coverUrl: media.cover?.url ?? "", coverAltFr: media.cover?.altFr ?? "", coverAltEn: media.cover?.altEn ?? "", gallery: galleryText(media.gallery), coverFiles: [], galleryFiles: [] },
+    defaultValues: {
+      coverUrl: media.cover?.url ?? "",
+      coverAltFr: media.cover?.altFr ?? "",
+      coverAltEn: media.cover?.altEn ?? "",
+      gallery: galleryText(media.gallery),
+      coverFiles: [],
+      galleryFiles: [],
+    },
     onSubmit: async (values) => {
       setSaved(false);
       // The chosen files are redrawn small and sent to the media storage first; their addresses join the form's.
@@ -378,8 +662,13 @@ function MediaCard({ media }: Readonly<{ media: SetupData["media"] }>) {
       }
       if (coverUrl === null) return;
       const keptCover = media.cover ? [media.cover] : [];
-      const cover = coverUrl ? keepExtras([{ url: coverUrl, altFr: values.coverAltFr, altEn: values.coverAltEn }], keptCover)[0]! : null;
-      const gallery = [...keepExtras(parseGallery(values.gallery), media.gallery), ...parseGallery(uploaded.join("\n"))].slice(0, 12);
+      const cover = coverUrl
+        ? keepExtras([{ url: coverUrl, altFr: values.coverAltFr, altEn: values.coverAltEn }], keptCover)[0]!
+        : null;
+      const gallery = [
+        ...keepExtras(parseGallery(values.gallery), media.gallery),
+        ...parseGallery(uploaded.join("\n")),
+      ].slice(0, 12);
       setSaved((await call.run("/api/walker/media", { json: { cover, gallery } })) !== null);
       form.reset({ ...values, coverUrl, coverFiles: [], galleryFiles: [], gallery: galleryText(gallery) });
     },
@@ -390,18 +679,51 @@ function MediaCard({ media }: Readonly<{ media: SetupData["media"] }>) {
       <p className="mb-3 text-sm text-fg-secondary">{say("shopSetup.media.intro")}</p>
       <form.Form aria-label={say("shopSetup.media.title")} className="grid gap-3 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <form.FileUpload name="coverFiles" label={say("shopSetup.media.uploadCover")} title={say("shopSetup.media.uploadCoverTitle")} browseLabel={say("shopSetup.media.browse")} hint={say("shopSetup.media.uploadHint")} accept="image/*" maxSize={MAX_STOREFRONT_PHOTO} maxFiles={1} removeLabel={(name) => say("shopSetup.media.remove", { name })} refusalLabel={(r) => say("shopSetup.media.tooBig", { name: r.file.name })} />
+          <form.FileUpload
+            name="coverFiles"
+            label={say("shopSetup.media.uploadCover")}
+            title={say("shopSetup.media.uploadCoverTitle")}
+            browseLabel={say("shopSetup.media.browse")}
+            hint={say("shopSetup.media.uploadHint")}
+            accept="image/*"
+            maxSize={MAX_STOREFRONT_PHOTO}
+            maxFiles={1}
+            removeLabel={(name) => say("shopSetup.media.remove", { name })}
+            refusalLabel={(r) => say("shopSetup.media.tooBig", { name: r.file.name })}
+          />
         </div>
         <div className="sm:col-span-2">
-          <form.TextField name="coverUrl" label={say("shopSetup.media.cover")} hint={say("shopSetup.media.coverHint")} inputMode="url" />
+          <form.TextField
+            name="coverUrl"
+            label={say("shopSetup.media.cover")}
+            hint={say("shopSetup.media.coverHint")}
+            inputMode="url"
+          />
         </div>
         <form.TextField name="coverAltFr" label={say("shopSetup.media.coverAltFr")} />
         <form.TextField name="coverAltEn" label={say("shopSetup.media.coverAltEn")} />
         <div className="sm:col-span-2">
-          <form.FileUpload name="galleryFiles" label={say("shopSetup.media.uploadGallery")} title={say("shopSetup.media.uploadGalleryTitle")} browseLabel={say("shopSetup.media.browse")} hint={say("shopSetup.media.uploadHint")} accept="image/*" maxSize={MAX_STOREFRONT_PHOTO} multiple maxFiles={12} removeLabel={(name) => say("shopSetup.media.remove", { name })} refusalLabel={(r) => say("shopSetup.media.tooBig", { name: r.file.name })} />
+          <form.FileUpload
+            name="galleryFiles"
+            label={say("shopSetup.media.uploadGallery")}
+            title={say("shopSetup.media.uploadGalleryTitle")}
+            browseLabel={say("shopSetup.media.browse")}
+            hint={say("shopSetup.media.uploadHint")}
+            accept="image/*"
+            maxSize={MAX_STOREFRONT_PHOTO}
+            multiple
+            maxFiles={12}
+            removeLabel={(name) => say("shopSetup.media.remove", { name })}
+            refusalLabel={(r) => say("shopSetup.media.tooBig", { name: r.file.name })}
+          />
         </div>
         <div className="sm:col-span-2">
-          <form.TextArea name="gallery" label={say("shopSetup.media.gallery")} hint={say("shopSetup.media.galleryHint")} rows={5} />
+          <form.TextArea
+            name="gallery"
+            label={say("shopSetup.media.gallery")}
+            hint={say("shopSetup.media.galleryHint")}
+            rows={5}
+          />
         </div>
         <div className="flex flex-col gap-3 sm:col-span-2">
           {call.problem ? <Alert tone="danger">{call.problem}</Alert> : null}
@@ -416,23 +738,42 @@ function MediaCard({ media }: Readonly<{ media: SetupData["media"] }>) {
 }
 
 const clock = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
-const hoursForm = createKrizakaForm({ schema: z.object({ weekday: z.string().regex(/^[0-6]$/), startsAt: clock, endsAt: clock }), defaultValues: { weekday: "1", startsAt: "09:00", endsAt: "17:00" } });
-const dayOffForm = createKrizakaForm({ schema: z.object({ day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), reason: z.string().trim().max(120) }), defaultValues: { day: "", reason: "" } });
+const hoursForm = createKrizakaForm({
+  schema: z.object({ weekday: z.string().regex(/^[0-6]$/), startsAt: clock, endsAt: clock }),
+  defaultValues: { weekday: "1", startsAt: "09:00", endsAt: "17:00" },
+});
+const dayOffForm = createKrizakaForm({
+  schema: z.object({ day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), reason: z.string().trim().max(120) }),
+  defaultValues: { day: "", reason: "" },
+});
 
-export function HoursCard({ windows, daysOff }: Readonly<{ windows: SetupData["windows"]; daysOff: SetupData["daysOff"] }>) {
+export function HoursCard({
+  windows,
+  daysOff,
+}: Readonly<{ windows: SetupData["windows"]; daysOff: SetupData["daysOff"] }>) {
   const { say, locale } = useSay();
   const call = useCall();
-  const i18n = { t: (key: string, vars?: Readonly<Record<string, string | number | boolean | Date | null | undefined>>) => say(key, vars as Record<string, string | number> | undefined), locale };
+  const i18n = {
+    t: (key: string, vars?: Readonly<Record<string, string | number | boolean | Date | null | undefined>>) =>
+      say(key, vars as Record<string, string | number> | undefined),
+    locale,
+  };
   const hours = hoursForm.useForm({
     i18n,
     onSubmit: async (values) => {
-      await call.run("/api/walker/hours", { json: { weekday: Number(values.weekday), startsAt: values.startsAt, endsAt: values.endsAt } });
+      await call.run("/api/walker/hours", {
+        json: { weekday: Number(values.weekday), startsAt: values.startsAt, endsAt: values.endsAt },
+      });
     },
   });
   const off = dayOffForm.useForm({
     i18n,
     onSubmit: async (values) => {
-      if ((await call.run("/api/walker/days-off", { json: { day: values.day, reason: values.reason || undefined } })) !== null) off.reset();
+      if (
+        (await call.run("/api/walker/days-off", { json: { day: values.day, reason: values.reason || undefined } })) !==
+        null
+      )
+        off.reset();
     },
   });
   const dayName = (weekday: number) => say(`shopSetup.weekdays.${weekday}`);
@@ -441,25 +782,52 @@ export function HoursCard({ windows, daysOff }: Readonly<{ windows: SetupData["w
       <h2 className="mb-3 font-display text-base font-bold text-fg">{say("shopSetup.hours.title")}</h2>
       {windows.length ? (
         <ul className="mb-4 flex flex-col divide-y divide-border-default">
-          {[...windows].sort((a, b) => WEEK.indexOf(a.weekday as never) - WEEK.indexOf(b.weekday as never) || a.startsAt.localeCompare(b.startsAt)).map((w) => (
-            <li key={w.id} className="flex items-center justify-between gap-3 py-1.5 text-sm">
-              <span className="text-fg">
-                {dayName(w.weekday)} <span className="tabular-nums text-fg-secondary">{w.startsAt.slice(0, 5)}–{w.endsAt.slice(0, 5)}</span>
-              </span>
-              <Button size="sm" variant="ghost" aria-label={say("shopSetup.hours.remove", { day: dayName(w.weekday), from: w.startsAt.slice(0, 5), to: w.endsAt.slice(0, 5) })} onClick={() => call.run(`/api/walker/hours/${w.id}`, { method: "DELETE" })}>
-                ×
-              </Button>
-            </li>
-          ))}
+          {[...windows]
+            .sort(
+              (a, b) =>
+                WEEK.indexOf(a.weekday as never) - WEEK.indexOf(b.weekday as never) ||
+                a.startsAt.localeCompare(b.startsAt),
+            )
+            .map((w) => (
+              <li key={w.id} className="flex items-center justify-between gap-3 py-1.5 text-sm">
+                <span className="text-fg">
+                  {dayName(w.weekday)}{" "}
+                  <span className="tabular-nums text-fg-secondary">
+                    {w.startsAt.slice(0, 5)}–{w.endsAt.slice(0, 5)}
+                  </span>
+                </span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  aria-label={say("shopSetup.hours.remove", {
+                    day: dayName(w.weekday),
+                    from: w.startsAt.slice(0, 5),
+                    to: w.endsAt.slice(0, 5),
+                  })}
+                  onClick={() => call.run(`/api/walker/hours/${w.id}`, { method: "DELETE" })}
+                >
+                  ×
+                </Button>
+              </li>
+            ))}
         </ul>
       ) : (
         <p className="mb-4 text-fg-secondary">{say("shopSetup.hours.none")}</p>
       )}
       <hours.Form aria-label={say("shopSetup.hours.title")} className="grid grid-cols-2 gap-3">
         <div className="col-span-2">
-          <hours.Select name="weekday" label={say("shopSetup.hours.weekday")} options={WEEK.map((d) => ({ value: String(d), label: dayName(d) }))} />
+          <hours.Select
+            name="weekday"
+            label={say("shopSetup.hours.weekday")}
+            options={WEEK.map((d) => ({ value: String(d), label: dayName(d) }))}
+          />
         </div>
-        <hours.TextField name="startsAt" label={say("shopSetup.hours.from")} hint={say("shopSetup.hours.timeHint")} inputMode="numeric" />
+        <hours.TextField
+          name="startsAt"
+          label={say("shopSetup.hours.from")}
+          hint={say("shopSetup.hours.timeHint")}
+          inputMode="numeric"
+        />
         <hours.TextField name="endsAt" label={say("shopSetup.hours.to")} inputMode="numeric" />
         <div className="col-span-2">
           <hours.Submit size="md" variant="secondary" className="w-full sm:w-auto">
@@ -471,10 +839,19 @@ export function HoursCard({ windows, daysOff }: Readonly<{ windows: SetupData["w
       {daysOff.length ? (
         <ul className="mb-3 flex flex-wrap gap-2">
           {daysOff.map((d) => (
-            <li key={d.id} className="inline-flex items-center gap-1 rounded-sm border border-border-default bg-surface-2 py-1 pl-3 pr-1 text-sm text-fg">
+            <li
+              key={d.id}
+              className="inline-flex items-center gap-1 rounded-sm border border-border-default bg-surface-2 py-1 pl-3 pr-1 text-sm text-fg"
+            >
               <span className="tabular-nums">{d.onDate}</span>
               {d.reason ? <span className="text-fg-secondary">· {d.reason}</span> : null}
-              <Button size="sm" variant="ghost" shape="pill" aria-label={say("shopSetup.hours.dayOffRemove", { day: d.onDate })} onClick={() => call.run(`/api/walker/days-off/${d.onDate}`, { method: "DELETE" })}>
+              <Button
+                size="sm"
+                variant="ghost"
+                shape="pill"
+                aria-label={say("shopSetup.hours.dayOffRemove", { day: d.onDate })}
+                onClick={() => call.run(`/api/walker/days-off/${d.onDate}`, { method: "DELETE" })}
+              >
                 ×
               </Button>
             </li>
@@ -497,12 +874,29 @@ export function HoursCard({ windows, daysOff }: Readonly<{ windows: SetupData["w
 
 const num = z.string().regex(/^\d{1,5}$/);
 const rulesForm = createKrizakaForm({
-  schema: z.object({ cancellationHours: num, bookingHorizonDays: num, slotStepMinutes: num, minNoticeMinutes: num, reportLinkDays: num, paymentTermsDays: num }),
-  defaultValues: { cancellationHours: "24", bookingHorizonDays: "60", slotStepMinutes: "30", minNoticeMinutes: "120", reportLinkDays: "30", paymentTermsDays: "30" },
+  schema: z.object({
+    cancellationHours: num,
+    bookingHorizonDays: num,
+    slotStepMinutes: num,
+    minNoticeMinutes: num,
+    reportLinkDays: num,
+    paymentTermsDays: num,
+  }),
+  defaultValues: {
+    cancellationHours: "24",
+    bookingHorizonDays: "60",
+    slotStepMinutes: "30",
+    minNoticeMinutes: "120",
+    reportLinkDays: "30",
+    paymentTermsDays: "30",
+  },
 });
 
 /** The shop's rules form. `part="terms"` shows only the payment terms (Invoices); the other values travel unchanged because one endpoint saves the six. */
-export function RulesCard({ rules, part = "rules" }: Readonly<{ rules: NonNullable<SetupData["rules"]>; part?: "rules" | "terms" }>) {
+export function RulesCard({
+  rules,
+  part = "rules",
+}: Readonly<{ rules: NonNullable<SetupData["rules"]>; part?: "rules" | "terms" }>) {
   const { say, locale } = useSay();
   const { visitReports } = useVocabulary();
   const call = useCall();
@@ -518,15 +912,34 @@ export function RulesCard({ rules, part = "rules" }: Readonly<{ rules: NonNullab
   });
   return (
     <Card.Root className="p-4 lg:col-span-2">
-      <h2 className="mb-3 font-display text-base font-bold text-fg">{say(part === "terms" ? "shopSetup.rules.termsTitle" : "shopSetup.rules.title")}</h2>
-      <form.Form aria-label={say(part === "terms" ? "shopSetup.rules.termsTitle" : "shopSetup.rules.title")} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <h2 className="mb-3 font-display text-base font-bold text-fg">
+        {say(part === "terms" ? "shopSetup.rules.termsTitle" : "shopSetup.rules.title")}
+      </h2>
+      <form.Form
+        aria-label={say(part === "terms" ? "shopSetup.rules.termsTitle" : "shopSetup.rules.title")}
+        className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+      >
         {part === "rules" ? (
           <>
-            <form.TextField name="cancellationHours" label={say("shopSetup.rules.cancellationHours")} inputMode="numeric" />
-            <form.TextField name="bookingHorizonDays" label={say("shopSetup.rules.bookingHorizonDays")} inputMode="numeric" />
+            <form.TextField
+              name="cancellationHours"
+              label={say("shopSetup.rules.cancellationHours")}
+              inputMode="numeric"
+            />
+            <form.TextField
+              name="bookingHorizonDays"
+              label={say("shopSetup.rules.bookingHorizonDays")}
+              inputMode="numeric"
+            />
             <form.TextField name="slotStepMinutes" label={say("shopSetup.rules.slotStepMinutes")} inputMode="numeric" />
-            <form.TextField name="minNoticeMinutes" label={say("shopSetup.rules.minNoticeMinutes")} inputMode="numeric" />
-            {visitReports ? <form.TextField name="reportLinkDays" label={say("shopSetup.rules.reportLinkDays")} inputMode="numeric" /> : null}
+            <form.TextField
+              name="minNoticeMinutes"
+              label={say("shopSetup.rules.minNoticeMinutes")}
+              inputMode="numeric"
+            />
+            {visitReports ? (
+              <form.TextField name="reportLinkDays" label={say("shopSetup.rules.reportLinkDays")} inputMode="numeric" />
+            ) : null}
           </>
         ) : (
           <form.TextField name="paymentTermsDays" label={say("shopSetup.rules.paymentTermsDays")} inputMode="numeric" />

@@ -1,18 +1,50 @@
 "use client";
 
-import { EXPLORE_KINDS, EXPLORE_OPEN, EXPLORE_RADII, type ExploreChip, exploreChips, type ExploreKind, type ExploreOpen, type ExploreRadius, type ExploreUrlState, withoutChip } from "@folioviv/core";
+import {
+  EXPLORE_KINDS,
+  EXPLORE_OPEN,
+  EXPLORE_RADII,
+  type ExploreChip,
+  exploreChips,
+  type ExploreKind,
+  type ExploreOpen,
+  type ExploreRadius,
+  type ExploreUrlState,
+  withoutChip,
+} from "@folioviv/core";
 import { type ActiveFilter, FilterBar, FilterMenu } from "@krizaka/ui/filter-bar";
 import { SearchField } from "@krizaka/ui/search-field";
 import { useState } from "react";
 
 /** The words of the bar, said on the server from the catalogue (`explore.filters`). */
 export interface ExploreFilterWords {
-  label: string; kind: string; all: string; salon: string; boutique: string; services: string; other: string; openNow: string; freeToday: string;
-  text: string; textPlaceholder: string; opening: string; week: string; distance: string; km: string; distanceNeeds: string; clearAll: string; remove: string; active: string; here: string; updating: string; textChip: string;
+  label: string;
+  kind: string;
+  all: string;
+  salon: string;
+  boutique: string;
+  services: string;
+  other: string;
+  openNow: string;
+  freeToday: string;
+  text: string;
+  textPlaceholder: string;
+  opening: string;
+  week: string;
+  distance: string;
+  km: string;
+  distanceNeeds: string;
+  clearAll: string;
+  remove: string;
+  active: string;
+  here: string;
+  updating: string;
+  textChip: string;
 }
 type FilterWords = ExploreFilterWords;
 
-const format = (message: string, values: Record<string, string>) => Object.entries(values).reduce((out, [key, value]) => out.replaceAll(`{${key}}`, value), message);
+const format = (message: string, values: Record<string, string>) =>
+  Object.entries(values).reduce((out, [key, value]) => out.replaceAll(`{${key}}`, value), message);
 
 /** What a chip says, from the catalogue: the kind's name, the opening, the radius, the typed text. */
 export function chipLabel(chip: ExploreChip, w: FilterWords): string {
@@ -38,7 +70,21 @@ export function chipLabel(chip: ExploreChip, w: FilterWords): string {
  * position), each active filter a removable chip, and « Clear all ». The state is the address's (`useExploreUrl`); a typed text
  * waits for a pause (the field's own debounce) before it reaches the address, and so the request.
  */
-export function ExploreFilterBar({ state, words, count, busy, onChange, onClear }: Readonly<{ state: ExploreUrlState; words: FilterWords; count: string; busy: boolean; onChange: (next: ExploreUrlState) => void; onClear: () => void }>) {
+export function ExploreFilterBar({
+  state,
+  words,
+  count,
+  busy,
+  onChange,
+  onClear,
+}: Readonly<{
+  state: ExploreUrlState;
+  words: FilterWords;
+  count: string;
+  busy: boolean;
+  onChange: (next: ExploreUrlState) => void;
+  onClear: () => void;
+}>) {
   // What is being typed, until the pause commits it to the address (null = follow the address: back/forward, a removed chip, « Clear all »).
   const [typed, setTyped] = useState<string | null>(null);
   const active: ActiveFilter[] = exploreChips(state).map((chip) => ({
@@ -51,7 +97,18 @@ export function ExploreFilterBar({ state, words, count, busy, onChange, onClear 
   }));
   const located = state.near !== null;
   return (
-    <FilterBar label={words.label} active={active} onClearAll={() => { setTyped(null); onClear(); }} clearLabel={words.clearAll} removeLabel={(filter) => format(words.remove, { filter })} results={busy ? words.updating : count} data-testid="explore-filters">
+    <FilterBar
+      label={words.label}
+      active={active}
+      onClearAll={() => {
+        setTyped(null);
+        onClear();
+      }}
+      clearLabel={words.clearAll}
+      removeLabel={(filter) => format(words.remove, { filter })}
+      results={busy ? words.updating : count}
+      data-testid="explore-filters"
+    >
       <SearchField
         label={words.text}
         placeholder={words.textPlaceholder}
@@ -80,7 +137,11 @@ export function ExploreFilterBar({ state, words, count, busy, onChange, onClear 
       <FilterMenu
         label={words.distance}
         multiple={false}
-        options={EXPLORE_RADII.map((r) => ({ value: String(r), label: format(words.km, { km: String(r) }), disabled: !located }))}
+        options={EXPLORE_RADII.map((r) => ({
+          value: String(r),
+          label: format(words.km, { km: String(r) }),
+          disabled: !located,
+        }))}
         value={state.within ? String(state.within) : ""}
         onValueChange={(value) => onChange({ ...state, within: value ? (Number(value) as ExploreRadius) : null })}
       />

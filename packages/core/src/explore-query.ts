@@ -23,8 +23,20 @@ export const exploreQuerySchema = z
     kinds: z.array(z.enum(EXPLORE_KINDS)).min(1).max(EXPLORE_KINDS.length).optional(),
     open: z.enum(EXPLORE_OPEN).optional(),
     near: z.tuple([lng, lat]).optional(),
-    within: z.union(EXPLORE_RADII.map((r) => z.literal(r)) as unknown as [z.ZodLiteral<1>, z.ZodLiteral<3>, z.ZodLiteral<10>, z.ZodLiteral<25>]).optional(),
-    bbox: z.tuple([lng, lat, lng, lat]).refine(([w, s, e, n]) => w < e && s < n, "bbox is [west, south, east, north]").optional(),
+    within: z
+      .union(
+        EXPLORE_RADII.map((r) => z.literal(r)) as unknown as [
+          z.ZodLiteral<1>,
+          z.ZodLiteral<3>,
+          z.ZodLiteral<10>,
+          z.ZodLiteral<25>,
+        ],
+      )
+      .optional(),
+    bbox: z
+      .tuple([lng, lat, lng, lat])
+      .refine(([w, s, e, n]) => w < e && s < n, "bbox is [west, south, east, north]")
+      .optional(),
     limit: z.number().int().min(1).max(EXPLORE_MAX_LIMIT).default(EXPLORE_MAX_LIMIT),
     /** Where the page starts (offset in the stable order); opaque to the caller, which passes back `next`. */
     offset: z.number().int().min(0).max(10_000).default(0),
@@ -50,5 +62,11 @@ export function parseExploreParams(params: URLSearchParams): ExploreQuery {
 
 /** The words of a text search as lower-case letters and digits without accents (what the index holds): never anything else reaches the query. */
 export function searchTokens(q: string): string[] {
-  return (q.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? []).slice(0, 8);
+  return (
+    q
+      .normalize("NFD")
+      .replace(/\p{M}/gu, "")
+      .toLowerCase()
+      .match(/[\p{L}\p{N}]+/gu) ?? []
+  ).slice(0, 8);
 }

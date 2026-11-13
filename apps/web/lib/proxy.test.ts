@@ -6,9 +6,14 @@ import { LOCALE_HEADER, PATH_HEADER } from "./locale-negotiation";
 import { customHostVerdict, type ShopVerdict, shopVerdict } from "./shop-directory";
 
 // The shop directory asks the running server: these tests answer for it.
-vi.mock("./shop-directory", async (original) => ({ ...(await original<typeof import("./shop-directory")>()), shopVerdict: vi.fn(async () => ({ kind: "shop" })), customHostVerdict: vi.fn(async () => ({ kind: "none" })) }));
+vi.mock("./shop-directory", async (original) => ({
+  ...(await original<typeof import("./shop-directory")>()),
+  shopVerdict: vi.fn(async () => ({ kind: "shop" })),
+  customHostVerdict: vi.fn(async () => ({ kind: "none" })),
+}));
 
-const get = (path: string) => proxy(new NextRequest(`https://dev.folioviv.com${path}`, { headers: { host: "dev.folioviv.com" } }));
+const get = (path: string) =>
+  proxy(new NextRequest(`https://dev.folioviv.com${path}`, { headers: { host: "dev.folioviv.com" } }));
 
 beforeEach(() => vi.stubEnv("APP_ALLOWED_HOSTS", "dev.folioviv.com"));
 afterEach(() => vi.unstubAllEnvs());
@@ -29,7 +34,8 @@ describe("the proxy of a deployment closed to search engines (APP_SEARCH_INDEXIN
     vi.stubEnv("APP_ALLOWED_HOSTS", "dev.folioviv.com,www.folioviv.com");
     vi.stubEnv("APP_SEARCH_INDEXING", "on");
     vi.stubEnv("APP_PUBLIC_URL", "https://www.folioviv.com");
-    const open = (path: string) => proxy(new NextRequest(`https://www.folioviv.com${path}`, { headers: { host: "www.folioviv.com" } }));
+    const open = (path: string) =>
+      proxy(new NextRequest(`https://www.folioviv.com${path}`, { headers: { host: "www.folioviv.com" } }));
     expect((await open("/en")).headers.get("x-robots-tag")).toBeNull();
     expect((await open("/sitemap.xml")).status).toBe(200);
     // ... but a dev.* host is never open, even when the deployment says it is (#249).
@@ -37,7 +43,8 @@ describe("the proxy of a deployment closed to search engines (APP_SEARCH_INDEXIN
   });
 });
 
-const as = (host: string, path: string, init: { method?: string } = {}) => proxy(new NextRequest(`https://${host}${path}`, { method: init.method, headers: { host } }));
+const as = (host: string, path: string, init: { method?: string } = {}) =>
+  proxy(new NextRequest(`https://${host}${path}`, { method: init.method, headers: { host } }));
 
 describe("www.folioviv.com is public, dev.folioviv.com leaves search (epic krizaka/.github#119)", () => {
   const setup = () => {
@@ -105,16 +112,26 @@ describe("www.folioviv.com is public, dev.folioviv.com leaves search (epic kriza
 
 describe("the language of the address reaches the pages (the 404 has no params)", () => {
   it("/fr/nope carries fr, /nope carries the visitor's choice", async () => {
-    const fr = await proxy(new NextRequest("https://www.folioviv.com/fr/nope", { headers: { host: "www.folioviv.com", "accept-language": "en" } }));
+    const fr = await proxy(
+      new NextRequest("https://www.folioviv.com/fr/nope", {
+        headers: { host: "www.folioviv.com", "accept-language": "en" },
+      }),
+    );
     expect(fr.headers.get(`x-middleware-request-${LOCALE_HEADER}`)).toBe("fr");
-    const en = await proxy(new NextRequest("https://www.folioviv.com/en/nope", { headers: { host: "www.folioviv.com" } }));
+    const en = await proxy(
+      new NextRequest("https://www.folioviv.com/en/nope", { headers: { host: "www.folioviv.com" } }),
+    );
     expect(en.headers.get(`x-middleware-request-${LOCALE_HEADER}`)).toBe("en");
   });
 });
 
 describe("the proxy hands the requested address to the pages (#287)", () => {
   it("carries the path and the query, so the signed-in guard can send the visitor back after sign-in", async () => {
-    const r = await proxy(new NextRequest("https://www.folioviv.com/fr/app/invoices?status=open", { headers: { host: "www.folioviv.com" } }));
+    const r = await proxy(
+      new NextRequest("https://www.folioviv.com/fr/app/invoices?status=open", {
+        headers: { host: "www.folioviv.com" },
+      }),
+    );
     expect(r.headers.get(`x-middleware-request-${PATH_HEADER}`)).toBe("/fr/app/invoices?status=open");
   });
 });
@@ -152,8 +169,10 @@ describe("the matcher lets a page with a dot in its address through, so its 404 
 
 // krizaka-ui#827: a signed-in visitor never sees the public landing page; the bar's hint flag follows the session cookie.
 describe("a signed-in visitor lands on their home, never on the landing page (krizaka-ui#827)", () => {
-  const ask = async (path: string, cookie?: string, host = "www.folioviv.com") => proxy(new NextRequest(`https://${host}${path}`, { headers: { host, ...(cookie ? { cookie } : {}) } }));
-  const goes = (res: Response) => (res.headers.get("location") ? new URL(res.headers.get("location")!, "https://www.folioviv.com").pathname : null);
+  const ask = async (path: string, cookie?: string, host = "www.folioviv.com") =>
+    proxy(new NextRequest(`https://${host}${path}`, { headers: { host, ...(cookie ? { cookie } : {}) } }));
+  const goes = (res: Response) =>
+    res.headers.get("location") ? new URL(res.headers.get("location")!, "https://www.folioviv.com").pathname : null;
 
   it("/ , /fr and /en with the session cookie answer 307 to the home in the language, private and varying with the cookie", async () => {
     for (const [path, home, cookie] of [
@@ -170,8 +189,19 @@ describe("a signed-in visitor lands on their home, never on the landing page (kr
     }
   });
   it("the Location is absolute on the configured public origin, never on the Host the request claims", async () => {
-    const res = await proxy(new NextRequest("https://localhost:3000/fr", { headers: { host: "www.folioviv.com", "x-forwarded-host": "evil.example", "x-forwarded-proto": "http", cookie: "folioviv_session=as1.x" } }));
-    expect(res.headers.get("location")).toBe(`${(process.env.APP_PUBLIC_URL ?? "https://www.folioviv.com").replace(/\/$/, "")}/fr/app`);
+    const res = await proxy(
+      new NextRequest("https://localhost:3000/fr", {
+        headers: {
+          host: "www.folioviv.com",
+          "x-forwarded-host": "evil.example",
+          "x-forwarded-proto": "http",
+          cookie: "folioviv_session=as1.x",
+        },
+      }),
+    );
+    expect(res.headers.get("location")).toBe(
+      `${(process.env.APP_PUBLIC_URL ?? "https://www.folioviv.com").replace(/\/$/, "")}/fr/app`,
+    );
   });
   it("a signed-out visitor still gets the landing page, and a public page stays reachable signed in", async () => {
     expect(goes(await ask("/fr"))).toBeNull();
@@ -189,7 +219,13 @@ describe("a signed-in visitor lands on their home, never on the landing page (kr
 });
 
 describe("the proxy on the API's writes (ADR-005 slice 1, folioviv#534)", () => {
-  const post = (headers: Record<string, string>) => proxy(new NextRequest("https://www.folioviv.com/api/me/profile", { method: "POST", headers: { host: "www.folioviv.com", ...headers } }));
+  const post = (headers: Record<string, string>) =>
+    proxy(
+      new NextRequest("https://www.folioviv.com/api/me/profile", {
+        method: "POST",
+        headers: { host: "www.folioviv.com", ...headers },
+      }),
+    );
 
   it("refuses a write from a shop host (same-site) or with the session and no origin, 403", async () => {
     const fromShop = await post({ "sec-fetch-site": "same-site", cookie: "folioviv_session=x" });
@@ -204,7 +240,9 @@ describe("the proxy on the API's writes (ADR-005 slice 1, folioviv#534)", () => 
     expect((await post({})).status).toBe(200);
   });
   it("sets the language cookie host-only, with no Domain", async () => {
-    const response = await proxy(new NextRequest("https://www.folioviv.com/fr", { headers: { host: "www.folioviv.com" } }));
+    const response = await proxy(
+      new NextRequest("https://www.folioviv.com/fr", { headers: { host: "www.folioviv.com" } }),
+    );
     const set = response.headers.get("set-cookie") ?? "";
     expect(set).toMatch(/NEXT_LOCALE=fr/);
     expect(set.toLowerCase()).not.toContain("domain=");
@@ -214,7 +252,8 @@ describe("the proxy on the API's writes (ADR-005 slice 1, folioviv#534)", () => 
 /** ADR-005 slice 3 (#535): the proxy sets the policy of each response; the public shop pages get a fresh nonce, on the request too (Next stamps its scripts with it). */
 describe("the Content-Security-Policy of the proxy", () => {
   const at = (host: string, path: string) => proxy(new NextRequest(`https://${host}${path}`, { headers: { host } }));
-  const scripts = (response: Response) => (response.headers.get("content-security-policy") ?? "").split("; ").find((d) => d.startsWith("script-src "));
+  const scripts = (response: Response) =>
+    (response.headers.get("content-security-policy") ?? "").split("; ").find((d) => d.startsWith("script-src "));
   const nonceOf = (response: Response) => /'nonce-([^']+)'/.exec(scripts(response) ?? "")?.[1];
 
   it("a public shop page carries a nonce policy, the same nonce on the request, and a fresh one each time", async () => {
@@ -224,8 +263,10 @@ describe("the Content-Security-Policy of the proxy", () => {
     expect(scripts(first)).not.toContain("'unsafe-inline'");
     expect(first.headers.get("content-security-policy")).toContain("default-src 'none'");
     expect(first.headers.get("x-middleware-request-x-nonce")).toBe(nonce);
-    expect(first.headers.get("x-middleware-request-content-security-policy")).toBe(first.headers.get("content-security-policy"));
-    expect(nonceOf((await at("www.folioviv.com", "/fr/s/pattes-saint-henri")))).not.toBe(nonce);
+    expect(first.headers.get("x-middleware-request-content-security-policy")).toBe(
+      first.headers.get("content-security-policy"),
+    );
+    expect(nonceOf(await at("www.folioviv.com", "/fr/s/pattes-saint-henri"))).not.toBe(nonce);
   });
   it("a shop's own host is the same page, so the same strict policy", async () => {
     const home = await at("pattes.folioviv.com", "/fr");
@@ -240,21 +281,28 @@ describe("the Content-Security-Policy of the proxy", () => {
     }
   });
   it("the API has a policy too", async () => {
-    expect((await at("www.folioviv.com", "/api/health")).headers.get("content-security-policy")).toContain("default-src 'self'");
+    expect((await at("www.folioviv.com", "/api/health")).headers.get("content-security-policy")).toContain(
+      "default-src 'self'",
+    );
   });
   it("drops upgrade-insecure-requests when the declared public origin is plain http, read at request time", async () => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("APP_PUBLIC_URL", "https://www.folioviv.com");
-    expect((await at("www.folioviv.com", "/fr/s/x")).headers.get("content-security-policy")).toContain("upgrade-insecure-requests");
+    expect((await at("www.folioviv.com", "/fr/s/x")).headers.get("content-security-policy")).toContain(
+      "upgrade-insecure-requests",
+    );
     vi.stubEnv("APP_PUBLIC_URL", "http://localhost:3000");
-    expect((await at("localhost:3000", "/fr/s/x")).headers.get("content-security-policy")).not.toContain("upgrade-insecure-requests");
+    expect((await at("localhost:3000", "/fr/s/x")).headers.get("content-security-policy")).not.toContain(
+      "upgrade-insecure-requests",
+    );
   });
 });
 
 /** ADR-005 slices 4-5 (folioviv#538, #549): the shop domain, the existence of a shop, the booking hop, the isolation of the session. */
 describe("the proxy on the shops' own domain", () => {
   const verdict = vi.mocked(shopVerdict);
-  const on = (host: string, path: string, headers: Record<string, string> = {}) => proxy(new NextRequest(`https://${host}${path}`, { headers: { host, ...headers } }));
+  const on = (host: string, path: string, headers: Record<string, string> = {}) =>
+    proxy(new NextRequest(`https://${host}${path}`, { headers: { host, ...headers } }));
   const setup = () => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("APP_PUBLIC_URL", "https://www.folioviv.com");
@@ -299,7 +347,9 @@ describe("the proxy on the shops' own domain", () => {
 
   it("answers a host this deployment does not serve 421 even under the shop domain (a nested label, another domain)", async () => {
     setup();
-    for (const host of ["a.b.folioviv.shop", "salon.folioviv.shop.evil.example"]) {expect((await on(host, "/en")).status, host).toBe(421);}
+    for (const host of ["a.b.folioviv.shop", "salon.folioviv.shop.evil.example"]) {
+      expect((await on(host, "/en")).status, host).toBe(421);
+    }
   });
 
   it("sends the old addresses to the shop domain with a 308, the query kept: <slug>.folioviv.com and /<locale>/s/<slug> on www", async () => {
@@ -313,14 +363,19 @@ describe("the proxy on the shops' own domain", () => {
   it("makes the booking's last step a top-level hop to the app, never served on the shop host", async () => {
     setup();
     const res = await on("salon.folioviv.shop", "/en/s/salon/service/42/confirm?slot=9");
-    expect([res.status, res.headers.get("location")]).toEqual([308, "https://www.folioviv.com/en/s/salon/service/42/confirm?slot=9"]);
+    expect([res.status, res.headers.get("location")]).toEqual([
+      308,
+      "https://www.folioviv.com/en/s/salon/service/42/confirm?slot=9",
+    ]);
     // ... and www keeps serving it.
     expect((await on("www.folioviv.com", "/en/s/salon/service/42/confirm")).headers.get("location")).toBeNull();
   });
 
   it("never shares a session with the shop domain: the app's cookie is not forwarded to the page and no cookie of the app is set there", async () => {
     setup();
-    const res = await on("salon.folioviv.shop", "/en", { cookie: "__Host-folioviv_session=tok; folioviv_session=tok; theme=dark" });
+    const res = await on("salon.folioviv.shop", "/en", {
+      cookie: "__Host-folioviv_session=tok; folioviv_session=tok; theme=dark",
+    });
     expect(res.headers.get("x-middleware-request-cookie")).toBe("theme=dark");
     const set = res.headers.get("set-cookie") ?? "";
     expect(set).not.toMatch(/session/i);
@@ -377,7 +432,11 @@ describe("a merchant's own domain (ADR-005 §3, folioviv#539)", () => {
   it("serves the shop at the root of its verified domain: rewritten, no store, noindex until opened, no app session", async () => {
     setup();
     serving({ kind: "shop", slug: "salon-laurier" });
-    const res = await proxy(new NextRequest(`https://${host}/fr`, { headers: { host, cookie: "__Host-folioviv_session=secret; theme=dark" } }));
+    const res = await proxy(
+      new NextRequest(`https://${host}/fr`, {
+        headers: { host, cookie: "__Host-folioviv_session=secret; theme=dark" },
+      }),
+    );
     expect(res.status).toBe(200);
     expect(res.headers.get("x-middleware-rewrite")).toContain("/fr/s/salon-laurier");
     expect(res.headers.get("cache-control")).toBe("private, no-store");
@@ -399,7 +458,9 @@ describe("a merchant's own domain (ADR-005 §3, folioviv#539)", () => {
   it("robots.txt of a custom host names its own sitemap and closes it", async () => {
     setup();
     serving({ kind: "shop", slug: "salon-laurier" });
-    expect(await (await as(host, "/robots.txt")).text()).toBe(`User-agent: *\nDisallow: /\nSitemap: https://${host}/sitemap.xml\n`);
+    expect(await (await as(host, "/robots.txt")).text()).toBe(
+      `User-agent: *\nDisallow: /\nSitemap: https://${host}/sitemap.xml\n`,
+    );
   });
 
   it("the shop's other address leads to its verified domain (308, path and query kept)", async () => {
@@ -422,7 +483,10 @@ describe("Google Search Console's verification file (a public token, not a secre
   it("reaches the image: the Dockerfile copies public/ next to the standalone server", async () => {
     const { readFileSync } = await import("node:fs");
     const { fileURLToPath } = await import("node:url");
-    const dockerfile = readFileSync(fileURLToPath(new URL("../../../deploy/docker/Dockerfile", import.meta.url)), "utf8");
+    const dockerfile = readFileSync(
+      fileURLToPath(new URL("../../../deploy/docker/Dockerfile", import.meta.url)),
+      "utf8",
+    );
     expect(dockerfile).toMatch(/\/app\/apps\/web\/public \.\/apps\/web\/public/);
   });
 });

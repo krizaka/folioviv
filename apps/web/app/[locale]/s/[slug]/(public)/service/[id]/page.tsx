@@ -16,16 +16,34 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 /** Step 2 — a service: duration, price to the cent, what is included, the cancellation rule, who takes it. The address keeps the choices. */
-export default async function ServicePage({ params, searchParams }: Readonly<{ params: Promise<{ locale: string; slug: string; id: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }>) {
+export default async function ServicePage({
+  params,
+  searchParams,
+}: Readonly<{
+  params: Promise<{ locale: string; slug: string; id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}>) {
   const { locale: raw, slug, id } = await params;
   const query = await searchParams;
   const locale = asLocale(raw);
   const t = translator(locale);
   const page = await loadPublicShopOrMove(locale, slug, `/service/${id}${queryString(query)}`);
-  const step = page ? serviceStep({ page, locale, serviceId: id, staffId: searchValue(query.staff), zoneId: searchValue(query.zone) }) : null;
+  const step = page
+    ? serviceStep({ page, locale, serviceId: id, staffId: searchValue(query.staff), zoneId: searchValue(query.zone) })
+    : null;
   if (!page || !step) notFound();
   return (
-    <JourneyFrame locale={locale} head={{ shop: page.shop.name, step: t("console.journey.stepOf", { step: 1, total: 4, label: t("console.journey.stepService") }) }} path={`/${locale}/s/${slug}/service/${id}`} back={{ href: step.backHref, label: t("console.journey.allServices") }} title={step.name} lead={step.description ?? undefined}>
+    <JourneyFrame
+      locale={locale}
+      head={{
+        shop: page.shop.name,
+        step: t("console.journey.stepOf", { step: 1, total: 4, label: t("console.journey.stepService") }),
+      }}
+      path={`/${locale}/s/${slug}/service/${id}`}
+      back={{ href: step.backHref, label: t("console.journey.allServices") }}
+      title={step.name}
+      lead={step.description ?? undefined}
+    >
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <div className="flex min-w-0 flex-col gap-6">
           {step.team.length ? (

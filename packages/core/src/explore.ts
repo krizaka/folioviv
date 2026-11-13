@@ -41,19 +41,36 @@ export function distanceBetween(a: readonly [number, number], b: readonly [numbe
 const minutesOfClock = (clock: string) => Number(clock.slice(0, 2)) * 60 + Number(clock.slice(3, 5));
 
 /** Is the shop open at `now`: inside one of its weekly windows (in its own zone), and the day is not a day off. */
-export function isOpenNow(windows: readonly { weekday: number; startsAt: string; endsAt: string }[], daysOff: readonly string[], timezone: string, now: Date): boolean {
+export function isOpenNow(
+  windows: readonly { weekday: number; startsAt: string; endsAt: string }[],
+  daysOff: readonly string[],
+  timezone: string,
+  now: Date,
+): boolean {
   const day = localDay(now, timezone);
   if (daysOff.includes(day)) return false;
-  const parts = getDateTimeFormat("en", { timeZone: timezone, hour: "numeric", minute: "numeric", hourCycle: "h23" }).formatToParts(now);
+  const parts = getDateTimeFormat("en", {
+    timeZone: timezone,
+    hour: "numeric",
+    minute: "numeric",
+    hourCycle: "h23",
+  }).formatToParts(now);
   const part = (type: string) => Number(parts.find((p) => p.type === type)?.value ?? 0);
   const minutes = part("hour") * 60 + part("minute");
   const weekday = weekdayOf(day);
-  return windows.some((w) => w.weekday === weekday && minutesOfClock(w.startsAt) <= minutes && minutes < minutesOfClock(w.endsAt));
+  return windows.some(
+    (w) => w.weekday === weekday && minutesOfClock(w.startsAt) <= minutes && minutes < minutesOfClock(w.endsAt),
+  );
 }
 
 /** The shops that pass every filter that is on. */
 export function filterShops<T extends ExploreShop>(shops: readonly T[], filters: ExploreFilters): T[] {
-  return shops.filter((s) => (filters.kind === null || s.kind === filters.kind) && (!filters.openNow || s.openNow) && (!filters.freeToday || s.freeToday));
+  return shops.filter(
+    (s) =>
+      (filters.kind === null || s.kind === filters.kind) &&
+      (!filters.openNow || s.openNow) &&
+      (!filters.freeToday || s.freeToday),
+  );
 }
 
 export type RankedShop<T extends ExploreShop = ExploreShop> = T & { distanceMeters: number | null };
@@ -62,10 +79,17 @@ export type RankedShop<T extends ExploreShop = ExploreShop> = T & { distanceMete
  * The shops nearest first from `origin`; a shop with no position goes after the others, in its name's order. Without an origin the
  * order is the name's (no ranking is invented). A stable, deterministic order: the same input gives the same list.
  */
-export function rankByDistance<T extends ExploreShop>(shops: readonly T[], origin: readonly [number, number] | null): RankedShop<T>[] {
-  const ranked = shops.map((s) => ({ ...s, distanceMeters: origin && s.point ? Math.round(distanceBetween(origin, s.point)) : null }));
+export function rankByDistance<T extends ExploreShop>(
+  shops: readonly T[],
+  origin: readonly [number, number] | null,
+): RankedShop<T>[] {
+  const ranked = shops.map((s) => ({
+    ...s,
+    distanceMeters: origin && s.point ? Math.round(distanceBetween(origin, s.point)) : null,
+  }));
   return ranked.sort((a, b) => {
-    if (a.distanceMeters !== null && b.distanceMeters !== null && a.distanceMeters !== b.distanceMeters) return a.distanceMeters - b.distanceMeters;
+    if (a.distanceMeters !== null && b.distanceMeters !== null && a.distanceMeters !== b.distanceMeters)
+      return a.distanceMeters - b.distanceMeters;
     if ((a.distanceMeters === null) !== (b.distanceMeters === null)) return a.distanceMeters === null ? 1 : -1;
     return a.name.localeCompare(b.name) || a.slug.localeCompare(b.slug);
   });

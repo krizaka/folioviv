@@ -11,14 +11,28 @@ import { bookingCodes } from "./schema";
 export function dbCodeStore(db: Db): CodeStore {
   return {
     async put(challenge: Challenge) {
-      await db.insert(bookingCodes).values({ id: challenge.id, proof: challenge.proof, attempts: challenge.attempts, expiresAt: challenge.expiresAt, payload: challenge.payload });
+      await db
+        .insert(bookingCodes)
+        .values({
+          id: challenge.id,
+          proof: challenge.proof,
+          attempts: challenge.attempts,
+          expiresAt: challenge.expiresAt,
+          payload: challenge.payload,
+        });
     },
     async get(id: string) {
       const [row] = await db.select().from(bookingCodes).where(eq(bookingCodes.id, id));
-      return row ? { id: row.id, proof: row.proof, attempts: row.attempts, expiresAt: row.expiresAt, payload: row.payload } : null;
+      return row
+        ? { id: row.id, proof: row.proof, attempts: row.attempts, expiresAt: row.expiresAt, payload: row.payload }
+        : null;
     },
     async recordFailure(id: string) {
-      const [row] = await db.update(bookingCodes).set({ attempts: sql`${bookingCodes.attempts} + 1` }).where(eq(bookingCodes.id, id)).returning({ attempts: bookingCodes.attempts });
+      const [row] = await db
+        .update(bookingCodes)
+        .set({ attempts: sql`${bookingCodes.attempts} + 1` })
+        .where(eq(bookingCodes.id, id))
+        .returning({ attempts: bookingCodes.attempts });
       return row?.attempts ?? null;
     },
     async consume(id: string) {
@@ -26,7 +40,10 @@ export function dbCodeStore(db: Db): CodeStore {
       return rows.length > 0;
     },
     async purge(now: Date) {
-      const rows = await db.delete(bookingCodes).where(lt(bookingCodes.expiresAt, now)).returning({ id: bookingCodes.id });
+      const rows = await db
+        .delete(bookingCodes)
+        .where(lt(bookingCodes.expiresAt, now))
+        .returning({ id: bookingCodes.id });
       return rows.length;
     },
   };

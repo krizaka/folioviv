@@ -5,4 +5,5 @@
  */
 export const GUARDED_DIGITS = ["4821", "514"] as const;
 
-export const leaksPlaintext = (haystack: string, secret: string): boolean => haystack.includes(secret) || haystack.includes(JSON.stringify(secret).slice(1, -1));
+export const leaksPlaintext = (haystack: string, secret: string): boolean =>
+  haystack.includes(secret) || haystack.includes(JSON.stringify(secret).slice(1, -1));

@@ -20,7 +20,12 @@ export default async function AdminPrices({ params }: Readonly<{ params: Promise
         <p className="max-w-prose text-fg-secondary">{t("console.admin.prices.lead")}</p>
       </header>
       {described.entries.map((entry, i) => (
-        <PriceEntryAdmin key={entry.key} entry={entry} history={histories[i] ?? []} availabilities={described.availabilities} />
+        <PriceEntryAdmin
+          key={entry.key}
+          entry={entry}
+          history={histories[i] ?? []}
+          availabilities={described.availabilities}
+        />
       ))}
     </div>
   );

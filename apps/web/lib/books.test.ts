@@ -17,7 +17,8 @@ describe("the period of a return", () => {
   });
 
   it("falls back to the default on anything else (never a query built from the address)", () => {
-    for (const bad of ["", "2026-Q5", "2026-13", "x'; drop table", "2026-Q3 ", "99999-Q1"]) expect(periodFor(bad, TODAY).id).toBe("2026-Q3");
+    for (const bad of ["", "2026-Q5", "2026-13", "x'; drop table", "2026-Q3 ", "99999-Q1"])
+      expect(periodFor(bad, TODAY).id).toBe("2026-Q3");
   });
 
   it("crosses the year: January's last completed quarter is the previous Q4", () => {
@@ -34,8 +35,16 @@ describe("the books view", () => {
     preparedOnly: true as const,
     lines: [
       { line: "101", amountCents: 20_000, sources: [] },
-      { line: "103", amountCents: 1_500, sources: [{ kind: "invoice" as const, id: "i1", label: "F-00001", amountCents: 1_500 }] },
-      { line: "106", amountCents: 500, sources: [{ kind: "expense" as const, id: "e1", label: "Fizz", amountCents: 500 }] },
+      {
+        line: "103",
+        amountCents: 1_500,
+        sources: [{ kind: "invoice" as const, id: "i1", label: "F-00001", amountCents: 1_500 }],
+      },
+      {
+        line: "106",
+        amountCents: 500,
+        sources: [{ kind: "expense" as const, id: "e1", label: "Fizz", amountCents: 500 }],
+      },
       { line: "109", amountCents: 1_000, sources: [] },
       { line: "203", amountCents: 750, sources: [] },
       { line: "206", amountCents: 1_000, sources: [] },
@@ -64,6 +73,10 @@ describe("an empty period", () => {
   it("is empty when no line has an amount or a document, and not when one has", () => {
     expect(booksIsEmpty({ lines: [{ line: "101", amountCents: 0, sources: [] }] })).toBe(true);
     expect(booksIsEmpty({ lines: [{ line: "101", amountCents: 100, sources: [] }] })).toBe(false);
-    expect(booksIsEmpty({ lines: [{ line: "103", amountCents: 0, sources: [{ kind: "invoice", id: "i", label: "F", amountCents: 0 }] }] })).toBe(false);
+    expect(
+      booksIsEmpty({
+        lines: [{ line: "103", amountCents: 0, sources: [{ kind: "invoice", id: "i", label: "F", amountCents: 0 }] }],
+      }),
+    ).toBe(false);
   });
 });

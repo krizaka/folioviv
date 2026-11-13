@@ -13,7 +13,12 @@ describe("shots-storefront (the captures of #261 on a seeded database)", () => {
     expect(DEVICES.phone.width).toBeLessThan(DEVICES.desktop.width);
     const all = plan();
     expect(all).toHaveLength(Object.keys(SCENES).length * 2 * 2);
-    expect(all.map((s) => s.file).slice(0, 4)).toEqual(["look-desktop-dark.png", "look-desktop-light.png", "look-phone-dark.png", "look-phone-light.png"]);
+    expect(all.map((s) => s.file).slice(0, 4)).toEqual([
+      "look-desktop-dark.png",
+      "look-desktop-light.png",
+      "look-phone-dark.png",
+      "look-phone-light.png",
+    ]);
     expect(shotName("storefront", "phone", "light")).toBe("storefront-phone-light.png");
     expect(() => plan(["nope"])).toThrow(/unknown scene/);
     expect(plan(["new"]).every((s) => s.scene === "new")).toBe(true);
@@ -26,8 +31,13 @@ describe("shots-storefront (the captures of #261 on a seeded database)", () => {
     expect(SCENES.look.path("fr", shop)).toBe("/fr/app/shop-1/shop?tab=look");
     expect(SCENES.new.path("en", shop)).toBe("/en/app/shop-1/shop/new");
     expect(SCENES.storefront.path("fr", shop)).toBe("/fr/s/pattes-saint-henri");
-    expect([SCENES.salon, SCENES.workshop, SCENES.consulting].map((s) => s.path("fr", shop))).toEqual(["/fr/s/cedre-ciseaux", "/fr/s/encre-vive", "/fr/s/ferland-conseil"]);
-    for (const scene of Object.values(SCENES)) expect(scene.expect).toMatchObject({ fr: expect.any(String), en: expect.any(String) });
+    expect([SCENES.salon, SCENES.workshop, SCENES.consulting].map((s) => s.path("fr", shop))).toEqual([
+      "/fr/s/cedre-ciseaux",
+      "/fr/s/encre-vive",
+      "/fr/s/ferland-conseil",
+    ]);
+    for (const scene of Object.values(SCENES))
+      expect(scene.expect).toMatchObject({ fr: expect.any(String), en: expect.any(String) });
     expect(SCENES.salon.expect.fr).toBe("Salon Cèdre & Ciseaux"); // the heading, there on every device
     expect(SCENES.look.signedIn).toBe(true);
     expect(SCENES.storefront.signedIn).toBe(false);
@@ -54,7 +64,8 @@ describe("the owner's guide's captures (folioviv#382)", () => {
     const shop = { id: "shop-1", slug: "pattes-saint-henri" };
     expect(SCENES["docs-books"].path("en", shop)).toBe("/en/app/shop-1/books");
     expect(SCENES["docs-data"].path("fr", shop)).toBe("/fr/app/profile/data");
-    for (const s of DOCS_SCENES) expect(SCENES[s].expect).toMatchObject({ fr: expect.any(String), en: expect.any(String) });
+    for (const s of DOCS_SCENES)
+      expect(SCENES[s].expect).toMatchObject({ fr: expect.any(String), en: expect.any(String) });
     const script = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).scripts["shots:docs"];
     for (const s of DOCS_SCENES) expect(script).toContain(s);
   });
@@ -62,7 +73,10 @@ describe("the owner's guide's captures (folioviv#382)", () => {
 
 describe("flagsOf: features switched on for a capture run only", () => {
   it("reads a comma list and keeps only feature keys", () => {
-    expect(flagsOf("features.cahierStorefront, features.x ,plans.free.apiKeys,;rm")).toEqual(["features.cahierStorefront", "features.x"]);
+    expect(flagsOf("features.cahierStorefront, features.x ,plans.free.apiKeys,;rm")).toEqual([
+      "features.cahierStorefront",
+      "features.x",
+    ]);
     expect(flagsOf(undefined)).toEqual([]);
   });
 });

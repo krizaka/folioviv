@@ -20,10 +20,18 @@ describe("the demo shop (real PostgreSQL 16)", () => {
     expect(first.created).toBe(true);
     expect(await t.db.select().from(appointments)).toHaveLength(4);
     const [invoice] = await t.db.select().from(invoices);
-    expect(invoice).toMatchObject({ number: "F-00001", subtotalCents: 14_000, gstCents: 700, qstCents: 1_397, totalCents: 16_097 });
+    expect(invoice).toMatchObject({
+      number: "F-00001",
+      subtotalCents: 14_000,
+      gstCents: 700,
+      qstCents: 1_397,
+      totalCents: 16_097,
+    });
     const r = await prepareShopReturn(t.db, first.shopId, "2026-10-01", "2026-10-31");
     expect(r.gstNetCents).toBe(700 - 1_200);
-    const [{ n } = { n: -1 }] = (await t.db.execute(sql`SELECT count(*)::int AS n FROM tax_ledger`)).rows as { n: number }[];
+    const [{ n } = { n: -1 }] = (await t.db.execute(sql`SELECT count(*)::int AS n FROM tax_ledger`)).rows as {
+      n: number;
+    }[];
     expect(n).toBe(4);
     expect(await seedDemoShop(t.db, "qa@example.test", now)).toEqual({ shopId: first.shopId, created: false });
   });

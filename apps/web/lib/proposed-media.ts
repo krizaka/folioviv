@@ -23,7 +23,16 @@ export interface Adoptable {
 export const GALLERY_MAX = 12;
 
 /** A line as the media route takes it: the loop files and the captions only when present (a `null` would be refused), `wide` always said. */
-export function asInput(line: GalleryLine): { url: string; altFr: string; altEn: string; captionFr?: string; captionEn?: string; webmUrl?: string; mp4Url?: string; wide: boolean } {
+export function asInput(line: GalleryLine): {
+  url: string;
+  altFr: string;
+  altEn: string;
+  captionFr?: string;
+  captionEn?: string;
+  webmUrl?: string;
+  mp4Url?: string;
+  wide: boolean;
+} {
   return {
     url: line.url,
     altFr: line.altFr,
@@ -37,17 +46,36 @@ export function asInput(line: GalleryLine): { url: string; altFr: string; altEn:
 }
 
 /** The body of a save: the whole state, each line as the route takes it. */
-export function mediaPayload(media: MediaState): { cover: ReturnType<typeof asInput> | null; gallery: ReturnType<typeof asInput>[] } {
+export function mediaPayload(media: MediaState): {
+  cover: ReturnType<typeof asInput> | null;
+  gallery: ReturnType<typeof asInput>[];
+} {
   return { cover: media.cover ? asInput(media.cover) : null, gallery: media.gallery.map(asInput) };
 }
 
 /** The proposed cover becomes the shop's, with its loop; the photos stay as they are. */
 export function adoptCover(media: MediaState, proposal: Adoptable): MediaState {
-  return { cover: { url: proposal.src, altFr: proposal.altFr, altEn: proposal.altEn, ...(proposal.webm ? { webmUrl: proposal.webm } : {}), ...(proposal.mp4 ? { mp4Url: proposal.mp4 } : {}), wide: false }, gallery: media.gallery };
+  return {
+    cover: {
+      url: proposal.src,
+      altFr: proposal.altFr,
+      altEn: proposal.altEn,
+      ...(proposal.webm ? { webmUrl: proposal.webm } : {}),
+      ...(proposal.mp4 ? { mp4Url: proposal.mp4 } : {}),
+      wide: false,
+    },
+    gallery: media.gallery,
+  };
 }
 
 /** The proposed picture joins the shop's photos (once, and never past the bound); the cover stays as it is. */
 export function addPhoto(media: MediaState, proposal: Adoptable): MediaState {
   if (media.gallery.some((line) => line.url === proposal.src)) return media;
-  return { cover: media.cover, gallery: [...media.gallery, { url: proposal.src, altFr: proposal.altFr, altEn: proposal.altEn, wide: false }].slice(0, GALLERY_MAX) };
+  return {
+    cover: media.cover,
+    gallery: [...media.gallery, { url: proposal.src, altFr: proposal.altFr, altEn: proposal.altEn, wide: false }].slice(
+      0,
+      GALLERY_MAX,
+    ),
+  };
 }

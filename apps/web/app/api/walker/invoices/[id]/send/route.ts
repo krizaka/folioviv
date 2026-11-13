@@ -27,10 +27,27 @@ export function POST(req: Request, { params }: { params: Promise<{ id: string }>
     const input = await readJson(req, sendSchema);
     const invoice = await invoiceDetail(db(), shop.id, invoiceId);
     if (!invoice) throw refuse(404, "NOT_FOUND", "Invoice not found");
-    if (!invoice.clientId || invoice.creditOf) throw refuse(409, "INVOICE_NOT_SENDABLE", "Only issued client invoices can be sent");
+    if (!invoice.clientId || invoice.creditOf)
+      throw refuse(409, "INVOICE_NOT_SENDABLE", "Only issued client invoices can be sent");
     const maxPerShopPerDay = await appSettings().get("limits.invoiceEmailsPerShopPerDay");
-    const result = await sendInvoiceMail(db(), shop.id, invoiceId, input.toEmail, input.message, systemClock.now(), mailSettings(), maxPerShopPerDay);
-    await audit({ action: "invoice.sent", actorId: session.account.id, actorLabel: session.account.email, targetId: invoiceId, detail: { deliveryId: result.deliveryId, status: result.status }, headers: req.headers });
+    const result = await sendInvoiceMail(
+      db(),
+      shop.id,
+      invoiceId,
+      input.toEmail,
+      input.message,
+      systemClock.now(),
+      mailSettings(),
+      maxPerShopPerDay,
+    );
+    await audit({
+      action: "invoice.sent",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: invoiceId,
+      detail: { deliveryId: result.deliveryId, status: result.status },
+      headers: req.headers,
+    });
     return Response.json(result, { status: 201 });
   });
 }

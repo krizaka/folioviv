@@ -39,7 +39,13 @@ export function SessionsPanel({ sessions }: Readonly<{ sessions: SessionView[] }
       description={say("account.sessions.description")}
       footer={
         others > 0 ? (
-          <ConfirmButton size="sm" variant="secondary" loading={signOut.isPending} confirmLabel={say("account.sessions.confirm")} onConfirm={() => signOut.mutate()}>
+          <ConfirmButton
+            size="sm"
+            variant="secondary"
+            loading={signOut.isPending}
+            confirmLabel={say("account.sessions.confirm")}
+            onConfirm={() => signOut.mutate()}
+          >
             {say("account.sessions.signOutOthers", { count: others })}
           </ConfirmButton>
         ) : null
@@ -49,8 +55,14 @@ export function SessionsPanel({ sessions }: Readonly<{ sessions: SessionView[] }
         {sessions.map((s) => (
           <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
             <span className="flex min-w-0 flex-col">
-              <span className="truncate text-sm font-medium text-fg">{s.userAgent ?? say("account.sessions.unknownDevice")}</span>
-              <span className="text-xs text-fg-secondary">{[s.ip, say("account.sessions.since", { date: formatDate(s.createdAt, locale, "UTC") })].filter(Boolean).join(" · ")}</span>
+              <span className="truncate text-sm font-medium text-fg">
+                {s.userAgent ?? say("account.sessions.unknownDevice")}
+              </span>
+              <span className="text-xs text-fg-secondary">
+                {[s.ip, say("account.sessions.since", { date: formatDate(s.createdAt, locale, "UTC") })]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </span>
             </span>
             {s.current ? <Badge tone="success">{say("account.sessions.thisOne")}</Badge> : null}
           </li>

@@ -16,8 +16,15 @@ const SECTIONS_RS = join(REPO, "apps/desktop/src-tauri/src/sections.rs");
 
 /** `("section.today", "today", "")` rows of the Rust table: the menu id, the shop page's segment, the short address's segment. */
 export function desktopSections(source: string): { id: string; inShop: string; short: string }[] {
-  const table = source.slice(source.indexOf("pub const SECTIONS"), source.indexOf("];", source.indexOf("pub const SECTIONS")));
-  return [...table.matchAll(/\("([^"]+)",\s*"([^"]*)",\s*"([^"]*)"\)/g)].map((m) => ({ id: m[1]!, inShop: m[2]!, short: m[3]! }));
+  const table = source.slice(
+    source.indexOf("pub const SECTIONS"),
+    source.indexOf("];", source.indexOf("pub const SECTIONS")),
+  );
+  return [...table.matchAll(/\("([^"]+)",\s*"([^"]*)",\s*"([^"]*)"\)/g)].map((m) => ({
+    id: m[1]!,
+    inShop: m[2]!,
+    short: m[3]!,
+  }));
 }
 
 const page = (dir: string) => existsSync(join(dir, "page.tsx"));
@@ -27,16 +34,30 @@ const live = (dir: string) => page(dir) && !/permanentRedirect\(/.test(readFileS
 
 describe("the apps open the web's own addresses (D9)", () => {
   it("reads the Mac's five sections", () => {
-    expect(desktopSections(readFileSync(SECTIONS_RS, "utf8")).map((s) => s.id)).toEqual(["section.today", "section.clients", "section.invoices", "section.books", "section.shop"]);
+    expect(desktopSections(readFileSync(SECTIONS_RS, "utf8")).map((s) => s.id)).toEqual([
+      "section.today",
+      "section.clients",
+      "section.invoices",
+      "section.books",
+      "section.shop",
+    ]);
   });
 
-  it.each(desktopSections(readFileSync(SECTIONS_RS, "utf8")))("$id: a page of the web in a shop and without one", ({ inShop, short }) => {
-    expect(live(join(APP, "[shop]", inShop)), `/fr/app/<shop>/${inShop}`).toBe(true);
-    expect(short === "" ? page(join(APP, "(account)")) : handler(join(APP, "(legacy)", short)), `/fr/app/${short}`).toBe(true);
-  });
+  it.each(desktopSections(readFileSync(SECTIONS_RS, "utf8")))(
+    "$id: a page of the web in a shop and without one",
+    ({ inShop, short }) => {
+      expect(live(join(APP, "[shop]", inShop)), `/fr/app/<shop>/${inShop}`).toBe(true);
+      expect(
+        short === "" ? page(join(APP, "(account)")) : handler(join(APP, "(legacy)", short)),
+        `/fr/app/${short}`,
+      ).toBe(true);
+    },
+  );
 
   it("refuses an address the web does not have, and one it keeps only to redirect", () => {
-    const [moved, missing] = desktopSections('pub const SECTIONS: [(&str, &str, &str); 2] = [("section.shop", "shop", "shop"), ("section.x", "nowhere", "nowhere")];');
+    const [moved, missing] = desktopSections(
+      'pub const SECTIONS: [(&str, &str, &str); 2] = [("section.shop", "shop", "shop"), ("section.x", "nowhere", "nowhere")];',
+    );
     expect(live(join(APP, "[shop]", moved!.inShop))).toBe(false);
     expect(live(join(APP, "[shop]", missing!.inShop))).toBe(false);
     expect(handler(join(APP, "(legacy)", missing!.short))).toBe(false);

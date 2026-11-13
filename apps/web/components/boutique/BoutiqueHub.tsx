@@ -27,7 +27,16 @@ export interface BoutiqueHubProps {
  * Boutique (K4): the shop's configuration on `SettingsLayout` — the shop's identity (name, status, public address) on top, the
  * sections beside the page (grouped; one menu on a phone). Each section is its own address; the page holds one section, one save.
  */
-export function BoutiqueHub({ locale, shopId, allowed, tabs, preview, current, shop, children }: Readonly<BoutiqueHubProps>) {
+export function BoutiqueHub({
+  locale,
+  shopId,
+  allowed,
+  tabs,
+  preview,
+  current,
+  shop,
+  children,
+}: Readonly<BoutiqueHubProps>) {
   const { say } = useSay();
   const routes = shopRoutes(locale, shopId);
   const groups = boutiqueGroups({
@@ -37,7 +46,10 @@ export function BoutiqueHub({ locale, shopId, allowed, tabs, preview, current, s
     current,
     words: {
       groups: { page: say("boutique.groups.page"), business: say("boutique.groups.business") },
-      tabs: Object.fromEntries(PAGE_TABS.map((tab) => [tab, say(`shopSetup.sections.tabs.${tab}`)])) as Record<PageTab, string>,
+      tabs: Object.fromEntries(PAGE_TABS.map((tab) => [tab, say(`shopSetup.sections.tabs.${tab}`)])) as Record<
+        PageTab,
+        string
+      >,
       languages: say("boutique.sections.languages"),
       hours: say("boutique.sections.hours"),
       rules: say("boutique.sections.rules"),
@@ -60,8 +72,14 @@ export function BoutiqueHub({ locale, shopId, allowed, tabs, preview, current, s
           <h1 className="text-2xl font-bold text-fg">{say("shell.shop")}</h1>
           <p className="break-words font-display text-xl font-bold text-fg">{shop.name}</p>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-            <Badge tone={shop.published ? "success" : "neutral"}>{say(shop.published ? "shopSetup.published" : "shopSetup.notPublished")}</Badge>
-            {shop.publicUrl && shop.published ? <a className="font-semibold text-fg-accent underline" href={shop.publicUrl}>{say("shopSetup.viewPage")}</a> : null}
+            <Badge tone={shop.published ? "success" : "neutral"}>
+              {say(shop.published ? "shopSetup.published" : "shopSetup.notPublished")}
+            </Badge>
+            {shop.publicUrl && shop.published ? (
+              <a className="font-semibold text-fg-accent underline" href={shop.publicUrl}>
+                {say("shopSetup.viewPage")}
+              </a>
+            ) : null}
           </div>
           {shop.publicUrl ? <p className="break-all font-mono text-xs text-fg-muted">{shop.publicUrl}</p> : null}
         </header>
@@ -72,7 +90,9 @@ export function BoutiqueHub({ locale, shopId, allowed, tabs, preview, current, s
           <div className="min-w-0">{children}</div>
           <PagePreview src={preview.src} published={shop.published} />
         </div>
-      ) : children}
+      ) : (
+        children
+      )}
     </SettingsLayout>
   );
 }

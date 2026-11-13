@@ -24,7 +24,29 @@ export interface AccountMenuWords {
  * Settings, the language, the theme and Sign out. The shell puts it at the bottom of the rail and in the phone's header;
  * the public bar puts it beside « Open the app ».
  */
-export function FoliovivAccountMenu({ locale, accountId, name, email, avatarSeed, settingsHref, subscriptionHref, words, onSignOut, showName = false }: Readonly<{ locale: "en" | "fr"; /** Draws the account's own default picture (`avatarOf`), the one its profile shows. */ accountId?: string; name?: string | null; /** Omitted in the public bar: no address is printed there (krizaka/folioviv#285). */ email?: string; avatarSeed?: string | null; settingsHref: string; subscriptionHref?: string; words: AccountMenuWords; onSignOut: () => void; showName?: boolean }>) {
+export function FoliovivAccountMenu({
+  locale,
+  accountId,
+  name,
+  email,
+  avatarSeed,
+  settingsHref,
+  subscriptionHref,
+  words,
+  onSignOut,
+  showName = false,
+}: Readonly<{
+  locale: "en" | "fr";
+  /** Draws the account's own default picture (`avatarOf`), the one its profile shows. */ accountId?: string;
+  name?: string | null;
+  /** Omitted in the public bar: no address is printed there (krizaka/folioviv#285). */ email?: string;
+  avatarSeed?: string | null;
+  settingsHref: string;
+  subscriptionHref?: string;
+  words: AccountMenuWords;
+  onSignOut: () => void;
+  showName?: boolean;
+}>) {
   const router = useRouter();
   const path = usePathname() ?? `/${locale}`;
   const languages = languagesFor(path);
@@ -33,11 +55,25 @@ export function FoliovivAccountMenu({ locale, accountId, name, email, avatarSeed
       label={words.account}
       name={name ?? undefined}
       email={email}
-      avatar={{ ...avatarOf({ id: accountId ?? email ?? name ?? "folioviv", avatarSeed }), alt: "", fallback: (name ?? email ?? "A").slice(0, 1).toUpperCase() }}
+      avatar={{
+        ...avatarOf({ id: accountId ?? email ?? name ?? "folioviv", avatarSeed }),
+        alt: "",
+        fallback: (name ?? email ?? "A").slice(0, 1).toUpperCase(),
+      }}
       showName={showName}
       linkAs={Link}
-      links={[{ id: "settings", label: words.settings, href: settingsHref, icon: <UserIcon size={16} /> }, ...(subscriptionHref ? [{ id: "subscription", label: words.subscription, href: subscriptionHref, icon: <UserIcon size={16} /> }] : [])]}
-      language={{ label: words.language, value: locale, options: languages.map((l) => ({ value: l.code, label: l.name })), onChange: (code) => router.push(languages.find((l) => l.code === code)?.href ?? path) }}
+      links={[
+        { id: "settings", label: words.settings, href: settingsHref, icon: <UserIcon size={16} /> },
+        ...(subscriptionHref
+          ? [{ id: "subscription", label: words.subscription, href: subscriptionHref, icon: <UserIcon size={16} /> }]
+          : []),
+      ]}
+      language={{
+        label: words.language,
+        value: locale,
+        options: languages.map((l) => ({ value: l.code, label: l.name })),
+        onChange: (code) => router.push(languages.find((l) => l.code === code)?.href ?? path),
+      }}
       signOut={{ label: words.signOut, onSelect: onSignOut, icon: <LogoutIcon size={16} /> }}
     >
       <ThemeToggle label={words.theme} variant="ghost" />

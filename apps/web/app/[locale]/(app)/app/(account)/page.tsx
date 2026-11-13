@@ -1,5 +1,12 @@
 import { localDay } from "@folioviv/core";
-import { clientBookings, clientFilesOf, clientInvoices, clientRequestsOf, dependantsOf, publicShop } from "@folioviv/db";
+import {
+  clientBookings,
+  clientFilesOf,
+  clientInvoices,
+  clientRequestsOf,
+  dependantsOf,
+  publicShop,
+} from "@folioviv/db";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
@@ -37,10 +44,39 @@ async function ClientSpace({ accountId }: Readonly<{ accountId: string }>) {
     <ClientHome
       files={await Promise.all(
         files.map(async (f) => ({
-          client: { id: f.id, fullName: f.fullName, shopName: f.shopName, shopSlug: f.shopSlug, businessType: f.businessType },
-          dogs: (await dependantsOf(db(), f.id)).map((d) => ({ id: d.id, name: d.name, breed: (d.profile as { breed?: string }).breed ?? null })),
-          bookings: (await clientBookings(db(), f.id)).map((b) => ({ ...b, report: b.report ? { id: b.report.id, note: b.report.note, hasPhoto: b.report.hasPhoto, durationMinutes: b.report.durationMinutes } : null })),
-          invoices: (await clientInvoices(db(), f.id)).map((i) => ({ id: i.id, number: i.number, issuedOn: i.issuedOn, dueOn: i.dueOn, totalCents: i.totalCents, paidCents: i.paidCents, creditOf: i.creditOf, superseded: i.superseded })),
+          client: {
+            id: f.id,
+            fullName: f.fullName,
+            shopName: f.shopName,
+            shopSlug: f.shopSlug,
+            businessType: f.businessType,
+          },
+          dogs: (await dependantsOf(db(), f.id)).map((d) => ({
+            id: d.id,
+            name: d.name,
+            breed: (d.profile as { breed?: string }).breed ?? null,
+          })),
+          bookings: (await clientBookings(db(), f.id)).map((b) => ({
+            ...b,
+            report: b.report
+              ? {
+                  id: b.report.id,
+                  note: b.report.note,
+                  hasPhoto: b.report.hasPhoto,
+                  durationMinutes: b.report.durationMinutes,
+                }
+              : null,
+          })),
+          invoices: (await clientInvoices(db(), f.id)).map((i) => ({
+            id: i.id,
+            number: i.number,
+            issuedOn: i.issuedOn,
+            dueOn: i.dueOn,
+            totalCents: i.totalCents,
+            paidCents: i.paidCents,
+            creditOf: i.creditOf,
+            superseded: i.superseded,
+          })),
           requests: await requestsOf(f.id, f.shopSlug),
           now,
           today: localDay(clock, f.timezone),
@@ -58,6 +94,11 @@ async function requestsOf(clientId: string, shopSlug: string | null) {
     clientId,
     shopSlug,
     requests: await clientRequestsOf(db(), clientId),
-    catalogue: page ? { services: page.services.map((s) => ({ id: s.id, nameFr: s.nameFr, nameEn: s.nameEn })), staff: page.team.map((m) => ({ id: m.id, name: m.name })) } : null,
+    catalogue: page
+      ? {
+          services: page.services.map((s) => ({ id: s.id, nameFr: s.nameFr, nameEn: s.nameEn })),
+          staff: page.team.map((m) => ({ id: m.id, name: m.name })),
+        }
+      : null,
   };
 }

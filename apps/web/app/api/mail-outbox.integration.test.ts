@@ -15,9 +15,25 @@ const enabled = process.env.DATABASE_IT === "1" && !!process.env.DATABASE_URL;
 
 describe.runIf(enabled)("a scoped flush of the outbox (folioviv#341)", () => {
   const tag = `flush-${randomUUID().slice(0, 8)}`;
-  const settings = { provider: "mailgun" as const, apiKey: "test-only", domain: "mg.example.test", from: "Folioviv <a@mg.example.test>", apiUrl: "https://api.mailgun.net", appUrl: "https://dev.folioviv.com" };
+  const settings = {
+    provider: "mailgun" as const,
+    apiKey: "test-only",
+    domain: "mg.example.test",
+    from: "Folioviv <a@mg.example.test>",
+    apiUrl: "https://api.mailgun.net",
+    appUrl: "https://dev.folioviv.com",
+  };
   const ok = (async () => new Response("{}", { status: 200 })) as unknown as typeof fetch;
-  const mail = (to: string) => ({ to, locale: "fr" as const, template: "test", subject: "test", html: "<p>x</p>", text: "x", relatedKind: "test", relatedId: randomUUID() });
+  const mail = (to: string) => ({
+    to,
+    locale: "fr" as const,
+    template: "test",
+    subject: "test",
+    html: "<p>x</p>",
+    text: "x",
+    relatedKind: "test",
+    relatedId: randomUUID(),
+  });
   let mine: string;
 
   beforeAll(async () => {
@@ -34,11 +50,15 @@ describe.runIf(enabled)("a scoped flush of the outbox (folioviv#341)", () => {
   it("delivers the mails it is scoped to, whatever is queued before them", async () => {
     const counts = await flushOutbox(db(), new Date(), settings, ok, { ids: [mine] });
     expect(counts).toEqual({ sent: 1, pending: 0, failed: 0 });
-    expect(await query<{ status: string }>("SELECT status FROM mail_outbox WHERE id = $1", [mine])).toEqual([{ status: "sent" }]);
+    expect(await query<{ status: string }>("SELECT status FROM mail_outbox WHERE id = $1", [mine])).toEqual([
+      { status: "sent" },
+    ]);
   });
 
   it("leaves the other files' mails alone", async () => {
-    const others = await query<{ status: string }>("SELECT DISTINCT status FROM mail_outbox WHERE to_email LIKE $1", [`${tag}-other-%`]);
+    const others = await query<{ status: string }>("SELECT DISTINCT status FROM mail_outbox WHERE to_email LIKE $1", [
+      `${tag}-other-%`,
+    ]);
     expect(others).toEqual([{ status: "pending" }]);
   });
 });

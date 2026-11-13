@@ -32,7 +32,11 @@ export const RETENTION_RULES: readonly RetentionRule[] = [
     tables: ["invoices", "invoice_lines", "payments"],
     keep: RETENTION_KEEP.tax,
     onErasure: "kept-anonymised",
-    basis: ["Tax Administration Act, CQLR c. A-6.002, art. 35", "Income Tax Act, R.S.C. 1985, c. 1 (5th Supp.), s. 230(4)", "Excise Tax Act, R.S.C. 1985, c. E-15, s. 286"],
+    basis: [
+      "Tax Administration Act, CQLR c. A-6.002, art. 35",
+      "Income Tax Act, R.S.C. 1985, c. 1 (5th Supp.), s. 230(4)",
+      "Excise Tax Act, R.S.C. 1985, c. E-15, s. 286",
+    ],
   },
   {
     id: "tax-ledger",
@@ -41,12 +45,32 @@ export const RETENTION_RULES: readonly RetentionRule[] = [
     onErasure: "kept-anonymised",
     basis: ["Tax Administration Act, CQLR c. A-6.002, art. 35", "Excise Tax Act, R.S.C. 1985, c. E-15, s. 286"],
   },
-  { id: "client-file", tables: ["clients", "dependants", "client_notes"], keep: RETENTION_KEEP.request, onErasure: "blanked" },
+  {
+    id: "client-file",
+    tables: ["clients", "dependants", "client_notes"],
+    keep: RETENTION_KEEP.request,
+    onErasure: "blanked",
+  },
   { id: "visit-reports", tables: ["visit_reports", "mail_outbox"], keep: RETENTION_KEEP.request, onErasure: "removed" },
-  { id: "client-requests", tables: ["client_requests", "client_request_files"], keep: RETENTION_KEEP.request, onErasure: "removed" },
+  {
+    id: "client-requests",
+    tables: ["client_requests", "client_request_files"],
+    keep: RETENTION_KEEP.request,
+    onErasure: "removed",
+  },
   { id: "reviews", tables: ["shop_reviews"], keep: RETENTION_KEEP.request, onErasure: "blanked" },
-  { id: "appointments", tables: ["appointments", "bookings"], keep: RETENTION_KEEP.period, onErasure: "kept-anonymised" },
-  { id: "consents", tables: ["privacy.consent", "privacy.request"], keep: RETENTION_KEEP.period, onErasure: "kept-anonymised" },
+  {
+    id: "appointments",
+    tables: ["appointments", "bookings"],
+    keep: RETENTION_KEEP.period,
+    onErasure: "kept-anonymised",
+  },
+  {
+    id: "consents",
+    tables: ["privacy.consent", "privacy.request"],
+    keep: RETENTION_KEEP.period,
+    onErasure: "kept-anonymised",
+  },
 ];
 
 /** The rule that holds a table, or undefined when no rule names it. */
@@ -57,6 +81,7 @@ export function retentionOf(table: string): RetentionRule | undefined {
 /** The last day a tax record must be kept: the end of the sixth year after the year it relates to (`YYYY-MM-DD` in, `YYYY-12-31` out). */
 export function taxRetentionEnd(day: string): string {
   const year = Number(day.slice(0, 4));
-  if (!Number.isInteger(year) || !/^\d{4}-\d{2}-\d{2}$/.test(day)) throw new RangeError(`a day is YYYY-MM-DD, got « ${day} »`);
+  if (!Number.isInteger(year) || !/^\d{4}-\d{2}-\d{2}$/.test(day))
+    throw new RangeError(`a day is YYYY-MM-DD, got « ${day} »`);
   return `${year + TAX_RETENTION_YEARS}-12-31`;
 }

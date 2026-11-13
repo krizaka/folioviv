@@ -50,7 +50,11 @@ export const FIGURE_STATE = { good: "good", watch: "watch", alert: "alert", info
 export type FigureState = (typeof FIGURE_STATE)[keyof typeof FIGURE_STATE];
 
 /** `higher` is better (collected share, margin) or `lower` is better (overdue share, no-shows). */
-export function judge(value: number | null, bounds: { watch: number; alert: number }, better: "higher" | "lower"): FigureState {
+export function judge(
+  value: number | null,
+  bounds: { watch: number; alert: number },
+  better: "higher" | "lower",
+): FigureState {
   if (value === null) return FIGURE_STATE.info;
   // Past a bound in the worse direction: below it when higher is better, above it when lower is better.
   const worse = (bound: number) => (better === "higher" ? value < bound : value > bound);
@@ -65,8 +69,14 @@ const clampPct = (n: number) => Math.min(100, Math.max(0, Math.round(n)));
  * (a shop cannot be in alert at 70 % collected and fine at 60 %).
  */
 export function sanitizeThresholds(t: FigureThresholds): FigureThresholds {
-  const lowerBetter = (watch: number, alert: number) => ({ watch: clampPct(watch), alert: Math.max(clampPct(alert), clampPct(watch)) });
-  const higherBetter = (watch: number, alert: number) => ({ watch: clampPct(watch), alert: Math.min(clampPct(alert), clampPct(watch)) });
+  const lowerBetter = (watch: number, alert: number) => ({
+    watch: clampPct(watch),
+    alert: Math.max(clampPct(alert), clampPct(watch)),
+  });
+  const higherBetter = (watch: number, alert: number) => ({
+    watch: clampPct(watch),
+    alert: Math.min(clampPct(alert), clampPct(watch)),
+  });
   const overdue = lowerBetter(t.overdueWatchPct, t.overdueAlertPct);
   const noShow = lowerBetter(t.noShowWatchPct, t.noShowAlertPct);
   const collected = higherBetter(t.collectedWatchPct, t.collectedAlertPct);
@@ -93,7 +103,17 @@ export function sanitizeThresholds(t: FigureThresholds): FigureThresholds {
  * settings are the defaults; an owner's value replaces one inside these bounds (the administrator can also switch tuning off). Nothing about the
  * ledger, the formulas or the amounts is tunable: only when a figure asks for a look.
  */
-export const OWNER_TUNABLE = ["overdueWatchPct", "overdueAlertPct", "collectedWatchPct", "collectedAlertPct", "marginWatchPct", "marginAlertPct", "noShowWatchPct", "noShowAlertPct", "taxPeriodSoonDays"] as const;
+export const OWNER_TUNABLE = [
+  "overdueWatchPct",
+  "overdueAlertPct",
+  "collectedWatchPct",
+  "collectedAlertPct",
+  "marginWatchPct",
+  "marginAlertPct",
+  "noShowWatchPct",
+  "noShowAlertPct",
+  "taxPeriodSoonDays",
+] as const;
 export type OwnerTunable = (typeof OWNER_TUNABLE)[number];
 export type OwnerOverrides = Partial<Record<OwnerTunable, number>>;
 

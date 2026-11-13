@@ -11,4 +11,8 @@ export const accountData = (accountId: string) => accountDataWith(accountId, dat
 export const passwordResetTtlMinutes = () => appSettings().get("auth.passwordResetTtlMinutes");
 
 /** The account service for a password reset, with the link's lifetime read from the settings. */
-export const passwordResets = async () => accountsAt(readEnv().APP_PUBLIC_URL, { passwordResetTtlMinutes: await passwordResetTtlMinutes(), product: await productName() });
+export const passwordResets = async () =>
+  accountsAt(readEnv().APP_PUBLIC_URL, {
+    passwordResetTtlMinutes: await passwordResetTtlMinutes(),
+    product: await productName(),
+  });

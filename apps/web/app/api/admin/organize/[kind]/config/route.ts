@@ -22,7 +22,10 @@ export function GET(req: Request, { params }: { params: Promise<{ kind: string }
   return handle(async () => {
     await requireAdmin(req);
     const kind = await kindOf(params);
-    return Response.json({ stored: await workspace("platform").config.get(kind) }, { headers: { "Cache-Control": "private, no-store" } });
+    return Response.json(
+      { stored: await workspace("platform").config.get(kind) },
+      { headers: { "Cache-Control": "private, no-store" } },
+    );
   });
 }
 
@@ -31,8 +34,13 @@ export function PUT(req: Request, { params }: { params: Promise<{ kind: string }
   return handle(async () => {
     const { account } = await requireAdmin(req);
     const kind = await kindOf(params);
-    const body = await readJson(req, z.object({ config: z.record(z.string(), z.unknown()), version: z.number().int().nullable() }));
+    const body = await readJson(
+      req,
+      z.object({ config: z.record(z.string(), z.unknown()), version: z.number().int().nullable() }),
+    );
     if (body.config.kind !== kind) throw refuse(400, "BAD_REQUEST", "The configuration is for another kind");
-    return Response.json({ stored: await workspace("platform").config.put(actorOf(account, "admin"), body.config, body.version) });
+    return Response.json({
+      stored: await workspace("platform").config.put(actorOf(account, "admin"), body.config, body.version),
+    });
   });
 }

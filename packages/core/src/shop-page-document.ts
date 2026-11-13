@@ -10,7 +10,19 @@ import type { ShopType } from "./shop-media";
  */
 
 /** The legacy sections, in the order of the stored list; `follow` has no document (it only ever said « coming »). */
-export const LEGACY_SECTION_IDS = ["services", "team", "hours", "zones", "trust", "gallery", "wall", "reels", "announcements", "reviews", "follow"] as const;
+export const LEGACY_SECTION_IDS = [
+  "services",
+  "team",
+  "hours",
+  "zones",
+  "trust",
+  "gallery",
+  "wall",
+  "reels",
+  "announcements",
+  "reviews",
+  "follow",
+] as const;
 export type LegacySectionId = (typeof LEGACY_SECTION_IDS)[number];
 
 /** A section of the document as the table writes it (the key is derived from the legacy id and the rank). */
@@ -23,7 +35,9 @@ export interface DocSection {
 
 /** What each legacy section becomes: one or more sections of the document, in order. @fixed: ADR-007 §6, the page migration table. */
 export const LEGACY_SECTION_DOCS: Readonly<Record<LegacySectionId, readonly DocSection[]>> = {
-  services: [{ type: "services", variant: "cards", settings: { source: "all", groupBy: "none", columns: 1, aside: "none" } }],
+  services: [
+    { type: "services", variant: "cards", settings: { source: "all", groupBy: "none", columns: 1, aside: "none" } },
+  ],
   team: [{ type: "team", variant: "row", settings: { source: "all" } }],
   hours: [{ type: "visit", variant: "card", settings: { showPhone: false } }],
   zones: [{ type: "visit", variant: "map", settings: { showPhone: false } }],
@@ -81,10 +95,13 @@ export function presetOf(trade: ShopType): { id: string; version: number } {
   return { id: preset.id, version: preset.version };
 }
 
-export const sectionKey = (legacy: string, rank: number, count: number) => (count > 1 ? `s_${legacy}_${rank + 1}` : `s_${legacy}`);
+export const sectionKey = (legacy: string, rank: number, count: number) =>
+  count > 1 ? `s_${legacy}_${rank + 1}` : `s_${legacy}`;
 
 /** The stored list that predates `trust` is read with it right before `gallery` (at the end without one), exactly as `withTrust` does. */
-export function withTrustLegacy<T extends { id: string; visible: boolean }>(sections: readonly T[]): (T | { id: "trust"; visible: boolean })[] {
+export function withTrustLegacy<T extends { id: string; visible: boolean }>(
+  sections: readonly T[],
+): (T | { id: "trust"; visible: boolean })[] {
   if (sections.some((s) => s.id === "trust")) return [...sections];
   const at = sections.findIndex((s) => s.id === "gallery");
   const out: (T | { id: "trust"; visible: boolean })[] = [...sections];
@@ -93,9 +110,14 @@ export function withTrustLegacy<T extends { id: string; visible: boolean }>(sect
 }
 
 /** Today's page as a document: same sections, same order, a hidden one `disabled`; the hero first and the booking bar last. Pure. */
-export function documentFromLegacy(input: { sections: readonly { id: string; visible: boolean }[]; trade: ShopType; booking?: readonly DocSection[] }): ShopPage {
+export function documentFromLegacy(input: {
+  sections: readonly { id: string; visible: boolean }[];
+  trade: ShopType;
+  booking?: readonly DocSection[];
+}): ShopPage {
   const sections: Record<string, unknown>[] = [];
-  const push = (key: string, doc: DocSection, disabled = false) => sections.push({ key, ...doc, ...(disabled ? { disabled: true } : {}) });
+  const push = (key: string, doc: DocSection, disabled = false) =>
+    sections.push({ key, ...doc, ...(disabled ? { disabled: true } : {}) });
   push("s_hero", HERO_SECTION);
   for (const legacy of withTrustLegacy(input.sections)) {
     const docs = LEGACY_SECTION_DOCS[legacy.id as LegacySectionId];
@@ -120,7 +142,6 @@ export function starterFor(trade: ShopType): ShopPage {
   return structuredClone(shopStarters[STARTER_BY_TRADE[trade]]) as ShopPage;
 }
 export const starterIdFor = (trade: ShopType): ShopStarterId => STARTER_BY_TRADE[trade];
-
 
 /**
  * The two demo shops are the Krizaka UI showcase (folioviv#404): their public page offers the other compositions of its trade through a « See it another way »

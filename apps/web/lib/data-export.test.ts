@@ -13,7 +13,8 @@ describe("the data exports' text (#420)", () => {
   });
 
   it("turns a cell a spreadsheet would run as a formula into text", () => {
-    for (const evil of ["=1+1", "+cmd", "-2+3", "@SUM(A1)", "\tx", "\rx"]) expect(csvCell(evil).replace(/^"/, "")).toMatch(/^'/);
+    for (const evil of ["=1+1", "+cmd", "-2+3", "@SUM(A1)", "\tx", "\rx"])
+      expect(csvCell(evil).replace(/^"/, "")).toMatch(/^'/);
     expect(csvCell("Rex-2")).toBe("Rex-2");
   });
 
@@ -24,8 +25,14 @@ describe("the data exports' text (#420)", () => {
 
   it("offers exactly the four files, and no other name", () => {
     expect(EXPORT_FILES).toEqual(["appointments.csv", "appointments.ics", "clients.csv", "invoices.csv"]);
-    expect(EXPORT_FILES.map((f) => [kindOf(f), formatOf(f)])).toEqual([["appointments", "csv"], ["appointments", "ics"], ["clients", "csv"], ["invoices", "csv"]]);
-    for (const bad of ["accounts.csv", "clients.json", "../clients.csv", "clients"]) expect(isExportFile(bad)).toBe(false);
+    expect(EXPORT_FILES.map((f) => [kindOf(f), formatOf(f)])).toEqual([
+      ["appointments", "csv"],
+      ["appointments", "ics"],
+      ["clients", "csv"],
+      ["invoices", "csv"],
+    ]);
+    for (const bad of ["accounts.csv", "clients.json", "../clients.csv", "clients"])
+      expect(isExportFile(bad)).toBe(false);
   });
 
   it("has every column and word in both languages", () => {

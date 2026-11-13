@@ -17,12 +17,14 @@ describe("the social-sync feature is retired", () => {
       "apps/web/lib/oauth-state.ts",
       "packages/core/src/social-sync.ts",
       "packages/db/src/social-sync.ts",
-    ]) expect(existsSync(join(ROOT, gone)), gone).toBe(false);
-    expect(read("packages/db/src/schema.ts")).not.toMatch(/social_connections|sync_proposals|sync_proposal_items|sync_log/);
+    ])
+      expect(existsSync(join(ROOT, gone)), gone).toBe(false);
+    expect(read("packages/db/src/schema.ts")).not.toMatch(
+      /social_connections|sync_proposals|sync_proposal_items|sync_log/,
+    );
     expect(read("packages/db/src/index.ts")).not.toContain("social-sync");
     expect(read("packages/core/src/index.ts")).not.toContain("social-sync");
     expect(read("apps/web/lib/env.ts")).not.toContain("APP_SOCIAL_SYNC");
     expect(read("apps/web/lib/http.ts")).not.toContain("AK_SYNC_");
   });
-
 });

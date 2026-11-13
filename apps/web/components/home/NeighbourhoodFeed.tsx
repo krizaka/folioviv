@@ -23,7 +23,8 @@ function Feed({ initial, locale, words }: Readonly<{ initial: FeedView; locale: 
   const quartierQuery = quartier ? `&quartier=${encodeURIComponent(quartier)}` : "";
   const feed = useQuery({
     queryKey: ["neighbourhood-feed", locale, quartier],
-    queryFn: ({ signal }) => krizakaFetch(`/api/feed?locale=${locale}${quartierQuery}`, { signal }) as Promise<FeedView>,
+    queryFn: ({ signal }) =>
+      krizakaFetch(`/api/feed?locale=${locale}${quartierQuery}`, { signal }) as Promise<FeedView>,
     // The server drew the unfiltered board: it is the first answer, a neighbourhood asks the API.
     ...(quartier === null ? { initialData: initial } : {}),
     staleTime: 60_000,
@@ -33,14 +34,29 @@ function Feed({ initial, locale, words }: Readonly<{ initial: FeedView; locale: 
     <div className="flex flex-col gap-6" data-testid="neighbourhood-feed">
       <div role="group" aria-label={words.filterLabel} className="flex flex-wrap gap-2">
         {[null, ...initial.quartiers].map((q) => (
-          <Button key={q ?? "all"} type="button" size="sm" variant={q === quartier ? "primary" : "ghost"} aria-pressed={q === quartier} onClick={() => setQuartier(q)}>
+          <Button
+            key={q ?? "all"}
+            type="button"
+            size="sm"
+            variant={q === quartier ? "primary" : "ghost"}
+            aria-pressed={q === quartier}
+            onClick={() => setQuartier(q)}
+          >
             {q ?? words.all}
           </Button>
         ))}
       </div>
-      {feed.isError ? <p role="alert" className="m-0 text-sm text-fg-secondary">{words.error}</p> : null}
-      {view.flyers.length > 0 && <Bulletin flyers={view.flyers} label={words.boardLabel} visit={(shop) => words.visit.replace("{shop}", shop)} />}
-      {view.flyers.length === 0 && !feed.isPending && !feed.isError && <p className="m-0 text-base text-fg-secondary">{words.empty}</p>}
+      {feed.isError ? (
+        <p role="alert" className="m-0 text-sm text-fg-secondary">
+          {words.error}
+        </p>
+      ) : null}
+      {view.flyers.length > 0 && (
+        <Bulletin flyers={view.flyers} label={words.boardLabel} visit={(shop) => words.visit.replace("{shop}", shop)} />
+      )}
+      {view.flyers.length === 0 && !feed.isPending && !feed.isError && (
+        <p className="m-0 text-base text-fg-secondary">{words.empty}</p>
+      )}
     </div>
   );
 }

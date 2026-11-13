@@ -19,17 +19,25 @@ const DOG_WORDS = {
 };
 
 /** What only a pet-care shop reaches (its dependants, its visit reports, the proposed images and the templates of the pets trade): the other business types never show these. */
-const PET_ONLY = /^(defaultMedia\.pets\.|templates\.pets-|clients\.(dogs|kinds|sizes|profile|vet|emergency)|book\.(dogTitle|dogName|breed|size|temperament|temperamentHint|vet\w*|emergency\w*|addDog|addAnother|needDog|dogs|dogsHint|access\w*)|walker\.(dog|dogs|dogsOf|reveal|hide|noNotes|notesTitle|reportTitle|note|notePlaceholder|photo\w*|save|saved|send|sendAgain|sentOn|sentNow|queued|failed)|report\.|meta\.report|client\.dogsTitle|errors\.(VISIT_NOT_DONE|NO_CONSENT|CLIENT_UNREACHABLE|BOOKING_OWNERSHIP|DEPENDANTS_REQUIRED|ACCESS_\w+|PHOTO_\w+|REPORT_\w+))/;
+const PET_ONLY =
+  /^(defaultMedia\.pets\.|templates\.pets-|clients\.(dogs|kinds|sizes|profile|vet|emergency)|book\.(dogTitle|dogName|breed|size|temperament|temperamentHint|vet\w*|emergency\w*|addDog|addAnother|needDog|dogs|dogsHint|access\w*)|walker\.(dog|dogs|dogsOf|reveal|hide|noNotes|notesTitle|reportTitle|note|notePlaceholder|photo\w*|save|saved|send|sendAgain|sentOn|sentNow|queued|failed)|report\.|meta\.report|client\.dogsTitle|errors\.(VISIT_NOT_DONE|NO_CONSENT|CLIENT_UNREACHABLE|BOOKING_OWNERSHIP|DEPENDANTS_REQUIRED|ACCESS_\w+|PHOTO_\w+|REPORT_\w+))/;
 /** Not the signed-in screens of a shop: the marketing site, the legal text and the administration. */
 /** The pickers name the other type and the pets trade by design; « walk-in » is the salon's word for a client without an appointment. */
-const NAMES_THE_OTHER_TYPE = /^(shopSetup\.page\.businessTypes\.pets|shopSetup\.defaults\.types\.pets|today\.walkIn|today\.headline\.(next|inProgress)WalkIn)$/;
+const NAMES_THE_OTHER_TYPE =
+  /^(shopSetup\.page\.businessTypes\.pets|shopSetup\.defaults\.types\.pets|today\.walkIn|today\.headline\.(next|inProgress)WalkIn)$/;
 const NOT_A_SHOP_SCREEN = /^(admin|adminSignIn|signIn|vocabularies)\b/;
 
 describe.each(Object.entries(LOCALES))("the professional vocabulary, %s", (locale, console_) => {
   const words = entries(wordsFor(console_, "professional"));
 
   it("has none of the dog walker's words on a shop's screens", () => {
-    const leaks = words.filter(([key, value]) => !NOT_A_SHOP_SCREEN.test(key) && !PET_ONLY.test(key) && !NAMES_THE_OTHER_TYPE.test(key) && DOG_WORDS[locale as "en" | "fr"].test(value.replace(/\{\w+\}/g, "")));
+    const leaks = words.filter(
+      ([key, value]) =>
+        !NOT_A_SHOP_SCREEN.test(key) &&
+        !PET_ONLY.test(key) &&
+        !NAMES_THE_OTHER_TYPE.test(key) &&
+        DOG_WORDS[locale as "en" | "fr"].test(value.replace(/\{\w+\}/g, "")),
+    );
     expect(leaks.map(([key, value]) => `${key} = ${value}`)).toEqual([]);
   });
 
@@ -41,7 +49,17 @@ describe.each(Object.entries(LOCALES))("the professional vocabulary, %s", (local
     for (const [key, value] of entries(overlay!)) {
       const original = base.get(key);
       if (original === undefined) holes.push(`${key}: not a message`);
-      else if ([...original.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort().join() !== [...value.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort().join()) holes.push(`${key}: placeholders differ`);
+      else if (
+        [...original.matchAll(/\{(\w+)\}/g)]
+          .map((m) => m[1])
+          .sort()
+          .join() !==
+        [...value.matchAll(/\{(\w+)\}/g)]
+          .map((m) => m[1])
+          .sort()
+          .join()
+      )
+        holes.push(`${key}: placeholders differ`);
     }
     expect(holes).toEqual([]);
   });
@@ -53,12 +71,17 @@ describe("the pet-care vocabulary", () => {
       expect(wordsFor(console_, "pets")).toMatchObject({ walker: { title: expect.any(String) } });
       expect(overlayOf(console_, "pets")).toBeUndefined();
     }
-    expect(wordsFor(LOCALES.en, "pets")).toMatchObject({ walker: { title: "Today's walks" }, shopSetup: { services: { capacity: "Dogs per walk" } } });
+    expect(wordsFor(LOCALES.en, "pets")).toMatchObject({
+      walker: { title: "Today's walks" },
+      shopSetup: { services: { capacity: "Dogs per walk" } },
+    });
   });
 
   it("every business type has its words in both languages", () => {
     for (const type of BUSINESS_TYPES.filter((t) => t !== "pets")) {
-      expect(Object.keys(overlayOf(LOCALES.en, type) ?? {}).sort()).toEqual(Object.keys(overlayOf(LOCALES.fr, type) ?? {}).sort());
+      expect(Object.keys(overlayOf(LOCALES.en, type) ?? {}).sort()).toEqual(
+        Object.keys(overlayOf(LOCALES.fr, type) ?? {}).sort(),
+      );
     }
   });
 });

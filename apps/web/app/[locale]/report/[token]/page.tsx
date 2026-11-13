@@ -30,17 +30,39 @@ export default async function ReportPage({ params }: Readonly<{ params: Promise<
     <>
       <SiteHeader locale={locale} current="home" path={`/${locale}/report/${token}`} />
       <main id="content" className="pt-20">
-          <>
-            <PageHero eyebrow={format(t.by, { shop: report.shopName })} title={format(t.title, { dog: report.dependantName })} lead={format(t.when, { date: new Date(report.startsAt).toLocaleString(lang, { dateStyle: "full", timeStyle: "short", timeZone: "America/Toronto" }), minutes: report.durationMinutes })} linkAs={Link} />
-            <Page className="flex flex-col gap-6 pb-8">
-              <Card.Root className="p-4">
-                {report.hasPhoto ? <Image className="mb-4 w-full max-w-xl rounded-lg object-cover" src={`/api/report/${token}/photo`} alt={format(t.photoAlt, { dog: report.dependantName })} width={1280} height={960} unoptimized priority /> : null}
-                <p className="text-sm font-semibold text-fg-secondary">{report.service[locale]}</p>
-                <p className="mt-2 max-w-prose text-lg text-fg">{report.note}</p>
-              </Card.Root>
-              <p className="text-sm text-fg-muted">{t.private}</p>
-            </Page>
-          </>
+        <>
+          <PageHero
+            eyebrow={format(t.by, { shop: report.shopName })}
+            title={format(t.title, { dog: report.dependantName })}
+            lead={format(t.when, {
+              date: new Date(report.startsAt).toLocaleString(lang, {
+                dateStyle: "full",
+                timeStyle: "short",
+                timeZone: "America/Toronto",
+              }),
+              minutes: report.durationMinutes,
+            })}
+            linkAs={Link}
+          />
+          <Page className="flex flex-col gap-6 pb-8">
+            <Card.Root className="p-4">
+              {report.hasPhoto ? (
+                <Image
+                  className="mb-4 w-full max-w-xl rounded-lg object-cover"
+                  src={`/api/report/${token}/photo`}
+                  alt={format(t.photoAlt, { dog: report.dependantName })}
+                  width={1280}
+                  height={960}
+                  unoptimized
+                  priority
+                />
+              ) : null}
+              <p className="text-sm font-semibold text-fg-secondary">{report.service[locale]}</p>
+              <p className="mt-2 max-w-prose text-lg text-fg">{report.note}</p>
+            </Card.Root>
+            <p className="text-sm text-fg-muted">{t.private}</p>
+          </Page>
+        </>
       </main>
       <SiteFooter locale={locale} />
     </>

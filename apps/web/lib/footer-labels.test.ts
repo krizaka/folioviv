@@ -7,7 +7,17 @@ describe("the product footer ships only its link-back words", () => {
   for (const locale of ["en", "fr"] as const) {
     it(`${locale}: signature, place, version and language, none of the family's one-liners, groups or statuses`, () => {
       const labels = productFooterLabels(locale);
-      expect(Object.keys(labels).sort()).toEqual(["current", "descriptions", "family", "groups", "lang", "place", "signature", "status", "version"]);
+      expect(Object.keys(labels).sort()).toEqual([
+        "current",
+        "descriptions",
+        "family",
+        "groups",
+        "lang",
+        "place",
+        "signature",
+        "status",
+        "version",
+      ]);
       expect(labels.signature.product).toBeTruthy();
       expect(labels.descriptions).toEqual({});
       expect(labels.groups).toEqual({});

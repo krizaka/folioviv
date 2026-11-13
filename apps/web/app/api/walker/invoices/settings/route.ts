@@ -11,7 +11,13 @@ export const dynamic = "force-dynamic";
 
 const settingsSchema = z.object({
   message: z.string().trim().max(500),
-  fromName: z.string().trim().min(1).max(120).regex(/^[^\r\n<>]+$/).nullable(),
+  fromName: z
+    .string()
+    .trim()
+    .min(1)
+    .max(120)
+    .regex(/^[^\r\n<>]+$/)
+    .nullable(),
   copy: z.boolean(),
   linkDays: z.number().int().min(1).max(365),
 });
@@ -32,14 +38,29 @@ export function PUT(req: Request) {
   return handle(async () => {
     const { session, shop } = await requireOwner(req);
     const input = await readJson(req, settingsSchema);
-    const before = { message: shop.invoiceMailMessage, fromName: shop.invoiceMailFromName, copy: shop.invoiceMailCopy, linkDays: shop.invoiceLinkDays };
-    await db().update(shops).set({
-      invoiceMailMessage: input.message,
-      invoiceMailFromName: input.fromName,
-      invoiceMailCopy: input.copy,
-      invoiceLinkDays: input.linkDays,
-    }).where(and(eq(shops.id, shop.id), eq(shops.ownerId, session.account.id)));
-    await audit({ action: "invoice.mail_settings_updated", actorId: session.account.id, actorLabel: session.account.email, targetId: shop.id, detail: { before, after: input }, headers: req.headers });
+    const before = {
+      message: shop.invoiceMailMessage,
+      fromName: shop.invoiceMailFromName,
+      copy: shop.invoiceMailCopy,
+      linkDays: shop.invoiceLinkDays,
+    };
+    await db()
+      .update(shops)
+      .set({
+        invoiceMailMessage: input.message,
+        invoiceMailFromName: input.fromName,
+        invoiceMailCopy: input.copy,
+        invoiceLinkDays: input.linkDays,
+      })
+      .where(and(eq(shops.id, shop.id), eq(shops.ownerId, session.account.id)));
+    await audit({
+      action: "invoice.mail_settings_updated",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: shop.id,
+      detail: { before, after: input },
+      headers: req.headers,
+    });
     return Response.json(input);
   });
 }

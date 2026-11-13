@@ -22,8 +22,17 @@ export default function Clients() {
   const clients = useQuery(queries.clients(shop));
   return (
     <Screen header={<AppHeader title={t("clients.title")} />}>
-      <SearchField label={t("clients.search")} clearLabel={t("clients.clear")} value={q ?? ""} onValueChange={(next) => router.setParams({ q: next || undefined })} />
-      <QueryStates query={clients} isEmpty={(all) => all.length === 0} empty={{ title: t("clients.empty"), description: t("clients.emptyLead") }}>
+      <SearchField
+        label={t("clients.search")}
+        clearLabel={t("clients.clear")}
+        value={q ?? ""}
+        onValueChange={(next) => router.setParams({ q: next || undefined })}
+      />
+      <QueryStates
+        query={clients}
+        isEmpty={(all) => all.length === 0}
+        empty={{ title: t("clients.empty"), description: t("clients.emptyLead") }}
+      >
         {(all) => {
           const shown = all.filter((client) => matchesClient(client, q ?? ""));
           if (shown.length === 0) return <EmptyState title={t("clients.empty")} />;
@@ -33,8 +42,18 @@ export default function Clients() {
                 <Txt variant="label">{client.fullName}</Txt>
                 {client.phone ? <Txt tone="secondary">{client.phone}</Txt> : null}
                 {client.email ? <Txt tone="secondary">{client.email}</Txt> : null}
-                {client.dependants.length ? <Txt tone="muted" variant="caption">{`${t("clients.dependants", { count: client.dependants.length })} : ${client.dependants.map((d) => d.name).join(", ")}`}</Txt> : null}
-                <Button size="sm" variant="secondary" label={t("clients.invoice")} onPress={() => router.navigate(routes.newInvoice(locale, shop, client.id) as never)} />
+                {client.dependants.length ? (
+                  <Txt
+                    tone="muted"
+                    variant="caption"
+                  >{`${t("clients.dependants", { count: client.dependants.length })} : ${client.dependants.map((d) => d.name).join(", ")}`}</Txt>
+                ) : null}
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  label={t("clients.invoice")}
+                  onPress={() => router.navigate(routes.newInvoice(locale, shop, client.id) as never)}
+                />
               </Card.Body>
             </Card.Root>
           ));

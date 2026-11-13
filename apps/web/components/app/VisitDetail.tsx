@@ -28,7 +28,11 @@ export interface DayVisitView {
     clientId: string;
     clientName: string;
     clientPhone: string | null;
-    dependant: { name: string; kind: "dog" | "cat" | "other"; profile: { breed?: string; size?: "small" | "medium" | "large"; temperament?: string } };
+    dependant: {
+      name: string;
+      kind: "dog" | "cat" | "other";
+      profile: { breed?: string; size?: "small" | "medium" | "large"; temperament?: string };
+    };
     hasAccessNotes: boolean;
     report: { id: string; note: string; hasPhoto: boolean; durationMinutes: number; sentAt: string | null } | null;
   }[];
@@ -53,7 +57,14 @@ export function VisitBookings({ visit, timeZone }: Readonly<{ visit: DayVisitVie
             {dependants ? (
               <p className="text-base font-semibold text-fg">
                 {b.dependant.name}
-                <span className="ml-2 text-sm font-normal text-fg-secondary">{[b.dependant.profile.breed, b.dependant.profile.size ? say(`clients.sizes.${b.dependant.profile.size}`) : null].filter(Boolean).join(" · ")}</span>
+                <span className="ml-2 text-sm font-normal text-fg-secondary">
+                  {[
+                    b.dependant.profile.breed,
+                    b.dependant.profile.size ? say(`clients.sizes.${b.dependant.profile.size}`) : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </span>
               </p>
             ) : null}
             <p className={dependants ? "text-sm text-fg-secondary" : "text-base font-semibold text-fg"}>
@@ -61,14 +72,19 @@ export function VisitBookings({ visit, timeZone }: Readonly<{ visit: DayVisitVie
               {b.clientPhone ? (
                 <>
                   {" · "}
-                  <a className="font-semibold text-fg-accent underline" href={`tel:${b.clientPhone.replace(/[^0-9+]/g, "")}`}>
+                  <a
+                    className="font-semibold text-fg-accent underline"
+                    href={`tel:${b.clientPhone.replace(/[^0-9+]/g, "")}`}
+                  >
                     {say("walker.call")} {b.clientPhone}
                   </a>
                 </>
               ) : null}
             </p>
           </div>
-          {dependants && b.dependant.profile.temperament ? <p className="text-sm text-fg-secondary">{b.dependant.profile.temperament}</p> : null}
+          {dependants && b.dependant.profile.temperament ? (
+            <p className="text-sm text-fg-secondary">{b.dependant.profile.temperament}</p>
+          ) : null}
           {dependants && b.hasAccessNotes ? <AccessNotes clientId={b.clientId} clientName={b.clientName} /> : null}
           {done && visitReports ? <ReportBox booking={b} timeZone={timeZone} /> : null}
         </li>
@@ -78,7 +94,11 @@ export function VisitBookings({ visit, timeZone }: Readonly<{ visit: DayVisitVie
 }
 
 /** Where the visit stands — started at, ended at — and its next step: start it, then end it. `wide` fills a phone's card. */
-export function VisitProgress({ visit, timeZone, wide = false }: Readonly<{ visit: DayVisitView; timeZone: string; wide?: boolean }>) {
+export function VisitProgress({
+  visit,
+  timeZone,
+  wide = false,
+}: Readonly<{ visit: DayVisitView; timeZone: string; wide?: boolean }>) {
   const { say, locale } = useSay();
   const call = useCall();
   const live = visit.checkedInAt && !visit.checkedOutAt;
@@ -88,15 +108,38 @@ export function VisitProgress({ visit, timeZone, wide = false }: Readonly<{ visi
   return (
     <div className="flex flex-col gap-3">
       {call.problem ? <Alert tone="danger">{call.problem}</Alert> : null}
-      {visit.checkedInAt ? <p className="text-sm text-fg-secondary">{say("walker.startedAt", { time: formatTime(visit.checkedInAt, locale, timeZone) })}</p> : null}
-      {done ? <p className="text-sm text-fg-secondary">{say("walker.endedAt", { time: formatTime(visit.checkedOutAt!, locale, timeZone), minutes: visit.minutes ?? 0 })}</p> : null}
+      {visit.checkedInAt ? (
+        <p className="text-sm text-fg-secondary">
+          {say("walker.startedAt", { time: formatTime(visit.checkedInAt, locale, timeZone) })}
+        </p>
+      ) : null}
+      {done ? (
+        <p className="text-sm text-fg-secondary">
+          {say("walker.endedAt", {
+            time: formatTime(visit.checkedOutAt!, locale, timeZone),
+            minutes: visit.minutes ?? 0,
+          })}
+        </p>
+      ) : null}
       {!visit.checkedInAt ? (
-        <Button size={size} variant="primary" className={className} loading={call.pending} onClick={() => call.run(`/api/walker/visits/${visit.appointmentId}/check-in`)}>
+        <Button
+          size={size}
+          variant="primary"
+          className={className}
+          loading={call.pending}
+          onClick={() => call.run(`/api/walker/visits/${visit.appointmentId}/check-in`)}
+        >
           {say("walker.checkIn")}
         </Button>
       ) : null}
       {live ? (
-        <Button size={size} variant="primary" className={className} loading={call.pending} onClick={() => call.run(`/api/walker/visits/${visit.appointmentId}/check-out`)}>
+        <Button
+          size={size}
+          variant="primary"
+          className={className}
+          loading={call.pending}
+          onClick={() => call.run(`/api/walker/visits/${visit.appointmentId}/check-out`)}
+        >
           {say("walker.checkOut")}
         </Button>
       ) : null}
@@ -110,7 +153,10 @@ const reportForm = createKrizakaForm({
 });
 
 /** The report of a visit for one dog: a note and a photo, saved, then sent to the owner. */
-export function ReportBox({ booking, timeZone }: Readonly<{ booking: DayVisitView["bookings"][number]; timeZone: string }>) {
+export function ReportBox({
+  booking,
+  timeZone,
+}: Readonly<{ booking: DayVisitView["bookings"][number]; timeZone: string }>) {
   const { say, locale } = useSay();
   const call = useCall();
   const [notice, setNotice] = useState<{ tone: "success" | "info" | "danger"; text: string } | null>(null);
@@ -124,12 +170,15 @@ export function ReportBox({ booking, timeZone }: Readonly<{ booking: DayVisitVie
       const body = new FormData();
       body.set("note", values.note);
       if (values.photos[0]) body.set("photo", await shrinkImage(values.photos[0]), "walk.jpg");
-      if ((await call.run(`/api/walker/bookings/${booking.bookingId}/report`, { body })) !== null) setNotice({ tone: "success", text: say("walker.saved") });
+      if ((await call.run(`/api/walker/bookings/${booking.bookingId}/report`, { body })) !== null)
+        setNotice({ tone: "success", text: say("walker.saved") });
     },
   });
   const send = async () => {
     setNotice(null);
-    const result = await call.run<{ status: "sent" | "pending" | "failed" }>(`/api/walker/bookings/${booking.bookingId}/report/send`);
+    const result = await call.run<{ status: "sent" | "pending" | "failed" }>(
+      `/api/walker/bookings/${booking.bookingId}/report/send`,
+    );
     if (!result) return;
     const notices = {
       sent: { tone: "success", text: say("walker.sentNow", { owner }) },
@@ -140,15 +189,28 @@ export function ReportBox({ booking, timeZone }: Readonly<{ booking: DayVisitVie
   };
   return (
     <div className="rounded-lg border border-border-default bg-surface-1 p-3">
-      <h3 className="mb-2 font-display text-sm font-bold text-fg">{say("walker.reportTitle", { dog: booking.dependant.name })}</h3>
-      <form.Form aria-label={say("walker.reportTitle", { dog: booking.dependant.name })} className="flex flex-col gap-3">
-        <form.TextArea name="note" label={say("walker.note")} placeholder={say("walker.notePlaceholder")} rows={3} maxLength={1000} />
+      <h3 className="mb-2 font-display text-sm font-bold text-fg">
+        {say("walker.reportTitle", { dog: booking.dependant.name })}
+      </h3>
+      <form.Form
+        aria-label={say("walker.reportTitle", { dog: booking.dependant.name })}
+        className="flex flex-col gap-3"
+      >
+        <form.TextArea
+          name="note"
+          label={say("walker.note")}
+          placeholder={say("walker.notePlaceholder")}
+          rows={3}
+          maxLength={1000}
+        />
         <form.FileUpload
           name="photos"
           label={say("walker.photo")}
           title={say("walker.photoTitle")}
           browseLabel={say("walker.photoBrowse")}
-          hint={report?.hasPhoto ? `${say("walker.photoAttached")} ${say("walker.photoHint")}` : say("walker.photoHint")}
+          hint={
+            report?.hasPhoto ? `${say("walker.photoAttached")} ${say("walker.photoHint")}` : say("walker.photoHint")
+          }
           accept="image/*"
           maxSize={MAX_PHOTO_BEFORE_SHRINK}
           maxFiles={1}
@@ -166,7 +228,11 @@ export function ReportBox({ booking, timeZone }: Readonly<{ booking: DayVisitVie
               {report.sentAt ? say("walker.sendAgain") : say("walker.send", { owner })}
             </Button>
           ) : null}
-          {report?.sentAt ? <span className="text-sm text-fg-secondary">{say("walker.sentOn", { date: formatDate(report.sentAt, locale, timeZone) })}</span> : null}
+          {report?.sentAt ? (
+            <span className="text-sm text-fg-secondary">
+              {say("walker.sentOn", { date: formatDate(report.sentAt, locale, timeZone) })}
+            </span>
+          ) : null}
         </div>
       </form.Form>
     </div>

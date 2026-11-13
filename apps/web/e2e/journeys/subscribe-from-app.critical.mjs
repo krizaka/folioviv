@@ -16,7 +16,10 @@ test("an owner reaches the plans from the account menu and starts the free month
   // Signed in, the public pricing page keeps the owner inside the app: it leads to Subscription.
   await page.goto("/en/pricing");
   await page.waitForURL(/\/app\/profile\/subscription/);
-  await expect(page.getByText("No plan is on sale yet."), "Subscription never says no plan is on sale while /pricing sells one").toHaveCount(0);
+  await expect(
+    page.getByText("No plan is on sale yet."),
+    "Subscription never says no plan is on sale while /pricing sells one",
+  ).toHaveCount(0);
   await expect(page.getByText("$29", { exact: false }).first(), "the plans of /pricing are here").toBeVisible();
 
   if (process.env.E2E_PAYMENTS !== "1") {

@@ -4,7 +4,20 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { shopDomains, shops } from "./schema";
 import { saveShopPage, ShopError } from "./service-shop";
-import { activeDomainOf, addShopDomain, checkDueDomains, checkShopDomain, checkShopDomainNow, DOMAIN_CODE, domainsOverview, listShopDomains, removeShopDomain, retryShopDomain, setCustomDomainOption, shopOfCustomHost } from "./shop-domains";
+import {
+  activeDomainOf,
+  addShopDomain,
+  checkDueDomains,
+  checkShopDomain,
+  checkShopDomainNow,
+  DOMAIN_CODE,
+  domainsOverview,
+  listShopDomains,
+  removeShopDomain,
+  retryShopDomain,
+  setCustomDomainOption,
+  shopOfCustomHost,
+} from "./shop-domains";
 import { freshDatabase } from "./test/db";
 import { account } from "./test/fixtures";
 
@@ -22,7 +35,13 @@ let n = 0;
 async function shop(published = true) {
   n += 1;
   const owner = await account(t.db, `domains${n}@example.test`);
-  const { shopId } = await saveShopPage(t.db, owner.id, { name: "Salon", legalName: "Salon", address: "1 rue Test", slug: `salon-dom-${n}`, ownerName: "Éric" });
+  const { shopId } = await saveShopPage(t.db, owner.id, {
+    name: "Salon",
+    legalName: "Salon",
+    address: "1 rue Test",
+    slug: `salon-dom-${n}`,
+    ownerName: "Éric",
+  });
   await t.db.update(shops).set({ published }).where(eq(shops.id, shopId));
   return shopId;
 }
@@ -34,18 +53,38 @@ function world() {
   const removed: string[] = [];
   let tls: "pending" | "active" | "failed" = "pending";
   const hostnames: CustomHostnames = {
-    create: async (h) => { created.push(h); return { id: `ch_${h}`, tls: "pending" }; },
+    create: async (h) => {
+      created.push(h);
+      return { id: `ch_${h}`, tls: "pending" };
+    },
     status: async (id) => ({ id, tls }),
-    remove: async (id) => { removed.push(id); },
+    remove: async (id) => {
+      removed.push(id);
+    },
   };
-  const ports = (now = NOW) => ({ dns: { txt: async (name: string) => records.get(name) ?? [] }, hostnames, now, limits });
-  return { records, created, removed, ports, setTls: (v: typeof tls) => { tls = v; } };
+  const ports = (now = NOW) => ({
+    dns: { txt: async (name: string) => records.get(name) ?? [] },
+    hostnames,
+    now,
+    limits,
+  });
+  return {
+    records,
+    created,
+    removed,
+    ports,
+    setTls: (v: typeof tls) => {
+      tls = v;
+    },
+  };
 }
 
 describe("merchants' own domains (real PostgreSQL 16, #539)", () => {
   it("refuses a domain while the option is off, then accepts it once an administrator enables it", async () => {
     const id = await shop();
-    await expect(addShopDomain(t.db, id, "reservation.monsalon.ca", { max: 5, random })).rejects.toMatchObject({ code: DOMAIN_CODE.optionOff });
+    await expect(addShopDomain(t.db, id, "reservation.monsalon.ca", { max: 5, random })).rejects.toMatchObject({
+      code: DOMAIN_CODE.optionOff,
+    });
     await setCustomDomainOption(t.db, id, true, "v1", NOW);
     const row = await addShopDomain(t.db, id, "https://Reservation.MonSalon.ca/", { max: 5, random });
     expect(row).toMatchObject({ hostname: "reservation.monsalon.ca", state: DOMAIN_STATE.pendingTxt });
@@ -58,9 +97,13 @@ describe("merchants' own domains (real PostgreSQL 16, #539)", () => {
     const id = await shop();
     await setCustomDomainOption(t.db, id, true, null, NOW);
     await addShopDomain(t.db, id, "a.monsalon.ca", { max: 2, random });
-    await expect(addShopDomain(t.db, id, "a.monsalon.ca", { max: 2, random })).rejects.toMatchObject({ code: DOMAIN_CODE.exists });
+    await expect(addShopDomain(t.db, id, "a.monsalon.ca", { max: 2, random })).rejects.toMatchObject({
+      code: DOMAIN_CODE.exists,
+    });
     await addShopDomain(t.db, id, "b.monsalon.ca", { max: 2, random });
-    await expect(addShopDomain(t.db, id, "c.monsalon.ca", { max: 2, random })).rejects.toMatchObject({ code: DOMAIN_CODE.limit });
+    await expect(addShopDomain(t.db, id, "c.monsalon.ca", { max: 2, random })).rejects.toMatchObject({
+      code: DOMAIN_CODE.limit,
+    });
     await expect(addShopDomain(t.db, id, "login.folioviv.com", { max: 9, random })).rejects.toBeInstanceOf(ShopError);
   });
 
@@ -125,7 +168,9 @@ describe("merchants' own domains (real PostgreSQL 16, #539)", () => {
     w.records.set("_folioviv-verify.shared.salon-take.ca", [txtRecordValue(first.token)]);
     w.setTls("active");
     await checkShopDomain(t.db, await checkShopDomain(t.db, first, w.ports()), w.ports()).then(() => undefined);
-    await expect(addShopDomain(t.db, b, "shared.salon-take.ca", { max: 5, random })).rejects.toMatchObject({ code: DOMAIN_CODE.taken });
+    await expect(addShopDomain(t.db, b, "shared.salon-take.ca", { max: 5, random })).rejects.toMatchObject({
+      code: DOMAIN_CODE.taken,
+    });
 
     // A removes it: B may add it, but A's token proves nothing for B, and B's row starts again at the proof.
     const [live] = await listShopDomains(t.db, a);
@@ -187,11 +232,17 @@ describe("merchants' own domains (real PostgreSQL 16, #539)", () => {
     expect(await checkDueDomains(t.db, w.ports(), { everyMs: 60_000, batch: 50 })).toBeGreaterThanOrEqual(1);
     const [after] = await t.db.select().from(shopDomains).where(eq(shopDomains.id, row.id));
     expect(after!.state).toBe(DOMAIN_STATE.pendingTls);
-    await expect(checkShopDomainNow(t.db, id, row.id, w.ports(new Date(NOW.getTime() + 1000)), 60_000)).rejects.toMatchObject({ code: DOMAIN_CODE.tooSoon });
-    await expect(checkShopDomainNow(t.db, id, row.id, w.ports(new Date(NOW.getTime() + 61_000)), 60_000)).resolves.toBeTruthy();
+    await expect(
+      checkShopDomainNow(t.db, id, row.id, w.ports(new Date(NOW.getTime() + 1000)), 60_000),
+    ).rejects.toMatchObject({ code: DOMAIN_CODE.tooSoon });
+    await expect(
+      checkShopDomainNow(t.db, id, row.id, w.ports(new Date(NOW.getTime() + 61_000)), 60_000),
+    ).resolves.toBeTruthy();
     // Another shop's domain is simply not found.
     const stranger = await shop();
-    await expect(checkShopDomainNow(t.db, stranger, row.id, w.ports(), 0)).rejects.toMatchObject({ code: DOMAIN_CODE.notFound });
+    await expect(checkShopDomainNow(t.db, stranger, row.id, w.ports(), 0)).rejects.toMatchObject({
+      code: DOMAIN_CODE.notFound,
+    });
     await expect(removeShopDomain(t.db, stranger, row.id, NOW)).rejects.toMatchObject({ code: DOMAIN_CODE.notFound });
     expect((await domainsOverview(t.db)).some((d) => d.id === row.id && d.shopName === "Salon")).toBe(true);
   });

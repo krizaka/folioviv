@@ -18,7 +18,22 @@ export function AccessNotes({ clientId, clientName }: Readonly<{ clientId: strin
   if (notes === undefined) {
     return (
       <>
-        <Button size="sm" variant="outline" loading={call.pending} onClick={async () => setNotes(((await call.run<{ notes: string | null }>(`/api/walker/clients/${clientId}/access-notes`, { method: "GET" }, { refresh: false }))?.notes ?? null) as string | null)}>
+        <Button
+          size="sm"
+          variant="outline"
+          loading={call.pending}
+          onClick={async () =>
+            setNotes(
+              ((
+                await call.run<{ notes: string | null }>(
+                  `/api/walker/clients/${clientId}/access-notes`,
+                  { method: "GET" },
+                  { refresh: false },
+                )
+              )?.notes ?? null) as string | null,
+            )
+          }
+        >
           {say("walker.reveal")}
         </Button>
         {call.problem ? <Alert tone="danger">{call.problem}</Alert> : null}
@@ -27,7 +42,9 @@ export function AccessNotes({ clientId, clientName }: Readonly<{ clientId: strin
   }
   return (
     <div className="flex flex-col gap-2" role="group" aria-label={say("walker.notesTitle", { name: clientName })}>
-      <p className="rounded-md border border-border-default bg-surface-2 px-3 py-2 font-mono text-sm text-fg">{notes ?? say("walker.noNotes")}</p>
+      <p className="rounded-md border border-border-default bg-surface-2 px-3 py-2 font-mono text-sm text-fg">
+        {notes ?? say("walker.noNotes")}
+      </p>
       <Button size="sm" variant="ghost" className="self-start" onClick={() => setNotes(undefined)}>
         {say("walker.hide")}
       </Button>

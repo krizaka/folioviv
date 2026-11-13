@@ -20,7 +20,13 @@ export function GET(req: Request) {
     const period = periodFor(queryOf(req).period, today);
     const view = booksView(await prepareShopReturn(db(), shop.id, period.start, period.end));
     return Response.json(
-      { period: { id: period.id, start: period.start, end: period.end }, choices: periodChoices(today).map((p) => p.id), gst: view.gst, qst: view.qst, preparedOnly: view.preparedOnly },
+      {
+        period: { id: period.id, start: period.start, end: period.end },
+        choices: periodChoices(today).map((p) => p.id),
+        gst: view.gst,
+        qst: view.qst,
+        preparedOnly: view.preparedOnly,
+      },
       { headers: { "Cache-Control": "private, no-store" } },
     );
   });

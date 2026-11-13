@@ -24,23 +24,38 @@ describe("storefront media upload follows the administrator's switches", () => {
     vi.stubEnv("MEDIA_STORAGE_API_KEY", "k");
     vi.stubEnv("MEDIA_STORAGE_ZONE", "z");
     vi.stubEnv("MEDIA_CDN_HOSTNAME", "cdn.example");
-    vi.mocked(requireShop).mockResolvedValue({ session: { account: { id: "a", email: "o@example.com" } }, shop: { id: "s1" }, role: "owner" } as never);
+    vi.mocked(requireShop).mockResolvedValue({
+      session: { account: { id: "a", email: "o@example.com" } },
+      shop: { id: "s1" },
+      role: "owner",
+    } as never);
     vi.mocked(appSettings).mockReturnValue({ get: vi.fn(async (key: string) => on[key] ?? false) } as never);
-    vi.stubGlobal("fetch", vi.fn(async () => new Response("", { status: 201 })));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response("", { status: 201 })),
+    );
   });
   afterEach(() => {
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
   });
 
-  it.each([["wall", "features.shopWall"], ["reels", "features.shopReels"], ["announcements", "features.shopAnnouncements"]])("refuses %s while %s is off, accepts it once on", async (purpose, key) => {
+  it.each([
+    ["wall", "features.shopWall"],
+    ["reels", "features.shopReels"],
+    ["announcements", "features.shopAnnouncements"],
+  ])("refuses %s while %s is off, accepts it once on", async (purpose, key) => {
     expect((await upload(purpose)).status).toBe(403);
     on[key] = true;
     expect((await upload(purpose)).status).toBe(200);
   });
 
   it("lets a manager pin photos, flyers and videos, but not change the shop's brand", async () => {
-    vi.mocked(requireShop).mockResolvedValue({ session: { account: { id: "m", email: "m@example.com" } }, shop: { id: "s1" }, role: "manager" } as never);
+    vi.mocked(requireShop).mockResolvedValue({
+      session: { account: { id: "m", email: "m@example.com" } },
+      shop: { id: "s1" },
+      role: "manager",
+    } as never);
     on["features.shopWall"] = true;
     expect((await upload("wall")).status).toBe(200);
     expect((await upload("brand")).status).toBe(403);

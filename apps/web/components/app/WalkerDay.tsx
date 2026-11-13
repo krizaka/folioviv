@@ -12,7 +12,15 @@ import { useSay, useVocabulary } from "@/lib/i18n-client";
 export type { DayVisitView } from "@/components/app/VisitDetail";
 
 /** The walker's day, built for a phone in the street: big buttons, one thing at a time, the report right under the walk. Staff see it; the owner reads the agenda. */
-export function WalkerDay({ visits, timeZone, nav }: Readonly<{ visits: DayVisitView[]; timeZone: string; nav: { prev: string; next: string; today: string; isToday: boolean } }>) {
+export function WalkerDay({
+  visits,
+  timeZone,
+  nav,
+}: Readonly<{
+  visits: DayVisitView[];
+  timeZone: string;
+  nav: { prev: string; next: string; today: string; isToday: boolean };
+}>) {
   const { say } = useSay();
   return (
     <div className="flex flex-col gap-4">
@@ -60,7 +68,13 @@ function VisitCard({ visit, timeZone }: Readonly<{ visit: DayVisitView; timeZone
             </span>{" "}
             · {visit.service[locale]}
           </h2>
-          {dependants ? <p className="text-sm text-fg-secondary">{visit.service.capacity > 1 ? say("walker.dogsOf", { count: visit.bookings.length, max: visit.service.capacity }) : say("walker.dogs", { count: visit.bookings.length })}</p> : null}
+          {dependants ? (
+            <p className="text-sm text-fg-secondary">
+              {visit.service.capacity > 1
+                ? say("walker.dogsOf", { count: visit.bookings.length, max: visit.service.capacity })
+                : say("walker.dogs", { count: visit.bookings.length })}
+            </p>
+          ) : null}
         </div>
         <div className="flex flex-wrap gap-2">
           {visit.zone ? <Badge tone="accent">{visit.zone}</Badge> : null}

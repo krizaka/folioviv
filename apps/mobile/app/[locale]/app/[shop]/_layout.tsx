@@ -3,7 +3,7 @@ import { TabBar } from "@krizaka/ui/native";
 import { Tabs, useRouter } from "expo-router";
 import * as React from "react";
 
-import { type TabName,TABS } from "@/domain/links";
+import { type TabName, TABS } from "@/domain/links";
 import { useI18n } from "@/i18n";
 import { useLocale } from "@/use-locale";
 import { useShop } from "@/use-shop";
@@ -20,7 +20,15 @@ const ICONS: Record<TabName, (color: string) => React.ReactNode> = {
 type TabBarProps = Parameters<NonNullable<React.ComponentProps<typeof Tabs>["tabBar"]>>[0];
 
 /** The shop's tab bar, made outside the screen: a component of its own, not one defined in the render of its parent. */
-function shopTabBar({ items, label, navigate }: { items: React.ComponentProps<typeof TabBar>["items"]; label: string; navigate: (name: string) => void }) {
+function shopTabBar({
+  items,
+  label,
+  navigate,
+}: {
+  items: React.ComponentProps<typeof TabBar>["items"];
+  label: string;
+  navigate: (name: string) => void;
+}) {
   return function ShopTabBar({ state }: Readonly<TabBarProps>) {
     // « Vos chiffres » is opened from Livres, so Livres stays the lit tab.
     const name = state.routes[state.index]?.name.split("/")[0];
@@ -38,11 +46,19 @@ export default function ShopTabs() {
   const { locale } = useLocale();
   const shop = useShop();
   const router = useRouter();
-  const items = TABS.map((tab) => ({ value: tab.name, label: t(tab.label), icon: (_on: boolean, color: string) => ICONS[tab.name](color) }));
+  const items = TABS.map((tab) => ({
+    value: tab.name,
+    label: t(tab.label),
+    icon: (_on: boolean, color: string) => ICONS[tab.name](color),
+  }));
   return (
     <Tabs
       screenOptions={{ headerShown: false }}
-      tabBar={shopTabBar({ items, label: t("tabs.label"), navigate: (name) => router.navigate(TABS.find((tab) => tab.name === name)!.href(locale, shop) as never) })}
+      tabBar={shopTabBar({
+        items,
+        label: t("tabs.label"),
+        navigate: (name) => router.navigate(TABS.find((tab) => tab.name === name)!.href(locale, shop) as never),
+      })}
     >
       {TABS.map((tab) => (
         <Tabs.Screen key={tab.name} name={tab.name} />

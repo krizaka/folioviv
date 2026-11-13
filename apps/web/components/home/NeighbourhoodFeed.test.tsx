@@ -13,13 +13,19 @@ const fr = bindProduct(frRaw);
 
 const view: FeedView = {
   flyers: [
-    { id: "a", text: "Open day on Saturday", until: "Until October 31", shop: { name: "Atelier", href: "/en/s/atelier" } },
+    {
+      id: "a",
+      text: "Open day on Saturday",
+      until: "Until October 31",
+      shop: { name: "Atelier", href: "/en/s/atelier" },
+    },
     { id: "b", text: "A walk left on Tuesdays", until: null, shop: { name: "Pattes", href: "/en/s/pattes" } },
   ],
   quartiers: ["Saint-Henri", "Villeray"],
   quartier: null,
 };
-const html = (words: typeof en.landing.feed, locale = "en") => renderToStaticMarkup(<NeighbourhoodFeed initial={view} locale={locale} words={words} />);
+const html = (words: typeof en.landing.feed, locale = "en") =>
+  renderToStaticMarkup(<NeighbourhoodFeed initial={view} locale={locale} words={words} />);
 
 describe("the home's neighbourhood feed (#318)", () => {
   it("draws the flyers on the board, each leading to its shop, with a chip per neighbourhood", () => {

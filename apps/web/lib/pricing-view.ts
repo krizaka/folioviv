@@ -38,13 +38,31 @@ const KEYS = { founder: FOUNDER, starter: STARTER, scale: SCALE, association: AS
 const built = (id: FeatureId): PlanFeature => ({ id, soon: false, vars: {} });
 const soon = (id: FeatureId): PlanFeature => ({ id, soon: true, vars: {} });
 
-function featuresOf(plan: PlanView["id"], entry: PublicPrice, locale: "en" | "fr", inheritsStarter: boolean): PlanFeature[] {
+function featuresOf(
+  plan: PlanView["id"],
+  entry: PublicPrice,
+  locale: "en" | "fr",
+  inheritsStarter: boolean,
+): PlanFeature[] {
   const limits = entry.limits;
   const fees: PlanFeature[] =
     limits.cardFeeBps !== undefined && limits.directDebitBps !== undefined && limits.directDebitCapCents !== undefined
-      ? [{ id: "fees", soon: true, vars: { cardRate: rateText(limits.cardFeeBps, locale), debitRate: rateText(limits.directDebitBps, locale), debitCap: centsText(limits.directDebitCapCents, locale) } }]
+      ? [
+          {
+            id: "fees",
+            soon: true,
+            vars: {
+              cardRate: rateText(limits.cardFeeBps, locale),
+              debitRate: rateText(limits.directDebitBps, locale),
+              debitCap: centsText(limits.directDebitCapCents, locale),
+            },
+          },
+        ]
       : [];
-  const running = (plan === "scale" || plan === "association") && inheritsStarter ? [built("inherits")] : [built("booking"), built("invoices"), built("books")];
+  const running =
+    (plan === "scale" || plan === "association") && inheritsStarter
+      ? [built("inherits")]
+      : [built("booking"), built("invoices"), built("books")];
   return [...running, soon("payments"), ...fees, ...(plan === "scale" ? [soon("contract"), soon("transfers")] : [])];
 }
 
@@ -52,28 +70,52 @@ function featuresOf(plan: PlanView["id"], entry: PublicPrice, locale: "en" | "fr
  * What the Subscription page sells: the very plans /pricing shows (the same `pricingPlans`, so the two never disagree), minus the
  * founder offer (it has its own row and its own seats) and minus a plan still in preparation (no figure, nothing to buy).
  */
-export function subscriptionPlans(plans: readonly PlanView[]): { id: "starter" | "scale" | "association"; price: string; trial: { months: number | null; days: number } | null }[] {
-  const sold: { id: "starter" | "scale" | "association"; price: string; trial: { months: number | null; days: number } | null }[] = [];
+export function subscriptionPlans(
+  plans: readonly PlanView[],
+): { id: "starter" | "scale" | "association"; price: string; trial: { months: number | null; days: number } | null }[] {
+  const sold: {
+    id: "starter" | "scale" | "association";
+    price: string;
+    trial: { months: number | null; days: number } | null;
+  }[] = [];
   for (const plan of plans) {
-    if (plan.id === "founder" || plan.price === null) {continue;}
+    if (plan.id === "founder" || plan.price === null) {
+      continue;
+    }
     sold.push({ id: plan.id, price: plan.price, trial: plan.trial });
   }
   return sold;
 }
 
 /** The plans to show, in order: the founder offer first while it is on sale, then Starter, Pro (the scale entry) and Association when the catalogue shows them. */
-export function pricingPlans(entries: readonly PublicPrice[], locale: "en" | "fr", options: { founderOnSale: boolean }): PlanView[] {
+export function pricingPlans(
+  entries: readonly PublicPrice[],
+  locale: "en" | "fr",
+  options: { founderOnSale: boolean },
+): PlanView[] {
   const plans: PlanView[] = [];
   for (const id of ["founder", "starter", "scale", "association"] as const) {
-    if (id === "founder" && !options.founderOnSale) {continue;}
+    if (id === "founder" && !options.founderOnSale) {
+      continue;
+    }
     const entry = entries.find((e) => e.key === KEYS[id]);
-    if (!entry) {continue;}
+    if (!entry) {
+      continue;
+    }
     plans.push({
       id,
       price: entry.availability === AVAILABILITY.preparing ? null : priceText(entry, locale),
       limit: id === "founder" ? (entry.limits.founderCap ?? null) : null,
-      trial: entry.availability === AVAILABILITY.preparing || trialDaysOf(entry) === 0 ? null : { days: trialDaysOf(entry), months: trialMonthsOf(entry) },
-      features: featuresOf(id, entry, locale, entries.some((e) => e.key === KEYS.starter)),
+      trial:
+        entry.availability === AVAILABILITY.preparing || trialDaysOf(entry) === 0
+          ? null
+          : { days: trialDaysOf(entry), months: trialMonthsOf(entry) },
+      features: featuresOf(
+        id,
+        entry,
+        locale,
+        entries.some((e) => e.key === KEYS.starter),
+      ),
     });
   }
   return plans;
@@ -91,11 +133,25 @@ export function planAction(signedIn: boolean, association: boolean): "visit" | "
  * Whether plans are really on sale: sign-up is open AND a payment provider is wired. While either is missing no card is asked
  * anywhere (the audit decision, krizaka-internal#1913): the prices are shown as planned and nothing leads to a card form.
  */
-export function salesOpen(settings: { signupEnabled: boolean; paymentsProvider: string | undefined; paymentsSecretKey: string | undefined; paymentsWebhookSecret: string | undefined }): boolean {
-  return settings.signupEnabled && settings.paymentsProvider === "stripe" && Boolean(settings.paymentsSecretKey) && Boolean(settings.paymentsWebhookSecret);
+export function salesOpen(settings: {
+  signupEnabled: boolean;
+  paymentsProvider: string | undefined;
+  paymentsSecretKey: string | undefined;
+  paymentsWebhookSecret: string | undefined;
+}): boolean {
+  return (
+    settings.signupEnabled &&
+    settings.paymentsProvider === "stripe" &&
+    Boolean(settings.paymentsSecretKey) &&
+    Boolean(settings.paymentsWebhookSecret)
+  );
 }
 
 /** The FAQ as shown: the free-period answer says « planned, no card » while nothing is on sale (matched by its question). */
-export function faqFor(faq: readonly { q: string; a: string }[], planned: { q: string; a: string }, selling: boolean): { q: string; a: string }[] {
+export function faqFor(
+  faq: readonly { q: string; a: string }[],
+  planned: { q: string; a: string },
+  selling: boolean,
+): { q: string; a: string }[] {
   return faq.map((item) => (!selling && item.q === planned.q ? planned : item));
 }

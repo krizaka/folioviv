@@ -17,9 +17,16 @@ const body = z.object({ overrides: z.record(z.string(), z.unknown()) });
 export function GET(req: Request) {
   return handle(async () => {
     const { shop } = await requireOwner(req);
-    const [{ defaults }, tunable, overrides] = await Promise.all([adminFigureRules(), appSettings().get("figures.ownerTunable"), shopFigureOverrides(db(), shop.id)]);
+    const [{ defaults }, tunable, overrides] = await Promise.all([
+      adminFigureRules(),
+      appSettings().get("figures.ownerTunable"),
+      shopFigureOverrides(db(), shop.id),
+    ]);
     const pick = Object.fromEntries(OWNER_TUNABLE.map((key) => [key, defaults[key]]));
-    return Response.json({ tunable, defaults: pick, overrides, bounds: OWNER_BOUNDS }, { headers: { "Cache-Control": "private, no-store" } });
+    return Response.json(
+      { tunable, defaults: pick, overrides, bounds: OWNER_BOUNDS },
+      { headers: { "Cache-Control": "private, no-store" } },
+    );
   });
 }
 
@@ -27,12 +34,21 @@ export function GET(req: Request) {
 export function PUT(req: Request) {
   return handle(async () => {
     const { session, shop } = await requireOwner(req);
-    if (!(await appSettings().get("figures.ownerTunable"))) throw refuse(403, "FEATURE_OFF", "The thresholds are set by the administrator");
+    if (!(await appSettings().get("figures.ownerTunable")))
+      throw refuse(403, "FEATURE_OFF", "The thresholds are set by the administrator");
     const { overrides } = await readJson(req, body);
     const kept = parseOwnerOverrides(overrides);
-    if (Object.keys(kept).length !== Object.keys(overrides).length) throw refuse(400, "BAD_REQUEST", "A threshold is out of bounds or cannot be changed");
+    if (Object.keys(kept).length !== Object.keys(overrides).length)
+      throw refuse(400, "BAD_REQUEST", "A threshold is out of bounds or cannot be changed");
     await saveShopFigureOverrides(db(), shop.id, kept);
-    await audit({ action: "shop.figure_rules_changed", actorId: session.account.id, actorLabel: session.account.email, targetId: shop.id, detail: kept, headers: req.headers });
+    await audit({
+      action: "shop.figure_rules_changed",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: shop.id,
+      detail: kept,
+      headers: req.headers,
+    });
     return Response.json({ overrides: kept });
   });
 }

@@ -22,7 +22,8 @@ export class DataKeyError extends Error {
 /** The key from its base64 form (32 random bytes); anything else is refused, naming the rule and never the value. */
 export function parseDataKey(base64: string | undefined): Buffer {
   const key = Buffer.from(base64 ?? "", "base64");
-  if (key.length !== KEY_BYTES) throw new DataKeyError(`the data encryption key must be ${KEY_BYTES} bytes, base64-encoded`);
+  if (key.length !== KEY_BYTES)
+    throw new DataKeyError(`the data encryption key must be ${KEY_BYTES} bytes, base64-encoded`);
   return key;
 }
 
@@ -31,7 +32,12 @@ export function sealField(plain: string, key: Buffer, aad: string): string {
   const cipher = createCipheriv("aes-256-gcm", key, iv);
   cipher.setAAD(Buffer.from(aad));
   const data = Buffer.concat([cipher.update(plain, "utf8"), cipher.final()]);
-  return [VERSION, iv.toString("base64url"), cipher.getAuthTag().toString("base64url"), data.toString("base64url")].join(".");
+  return [
+    VERSION,
+    iv.toString("base64url"),
+    cipher.getAuthTag().toString("base64url"),
+    data.toString("base64url"),
+  ].join(".");
 }
 
 export function openField(sealed: string, key: Buffer, aad: string): string {

@@ -28,12 +28,27 @@ describe.runIf(enabled)("the Monday brief's invitation (#200)", () => {
       [`brief-${stamp}`],
     );
     shop = { id: s!.id, name: "Salon Brief", slug: `brief-${stamp}`, published: true, timezone: "America/Montreal" };
-    const [st] = await query<{ id: string }>("INSERT INTO staff (shop_id, name) VALUES ($1, 'Julie') RETURNING id", [shop.id]);
-    for (const weekday of [0, 1, 2, 3, 4, 5, 6]) await query("INSERT INTO schedules (staff_id, weekday, starts_at, ends_at) VALUES ($1, $2, '09:00', '17:00')", [st!.id, weekday]);
-    const [svc] = await query<{ id: string }>("INSERT INTO services (shop_id, name_fr, name_en, duration_minutes, price_cents) VALUES ($1, 'Coupe', 'Cut', 60, 5000) RETURNING id", [shop.id]);
-    const [c] = await query<{ id: string }>("INSERT INTO clients (shop_id, full_name, email, language) VALUES ($1, 'Camille Tremblay', $2, 'fr') RETURNING id", [shop.id, `camille-${stamp}@folioviv.test`]);
+    const [st] = await query<{ id: string }>("INSERT INTO staff (shop_id, name) VALUES ($1, 'Julie') RETURNING id", [
+      shop.id,
+    ]);
+    for (const weekday of [0, 1, 2, 3, 4, 5, 6])
+      await query("INSERT INTO schedules (staff_id, weekday, starts_at, ends_at) VALUES ($1, $2, '09:00', '17:00')", [
+        st!.id,
+        weekday,
+      ]);
+    const [svc] = await query<{ id: string }>(
+      "INSERT INTO services (shop_id, name_fr, name_en, duration_minutes, price_cents) VALUES ($1, 'Coupe', 'Cut', 60, 5000) RETURNING id",
+      [shop.id],
+    );
+    const [c] = await query<{ id: string }>(
+      "INSERT INTO clients (shop_id, full_name, email, language) VALUES ($1, 'Camille Tremblay', $2, 'fr') RETURNING id",
+      [shop.id, `camille-${stamp}@folioviv.test`],
+    );
     regular = c!.id;
-    await query("INSERT INTO privacy.consent (id, subject_kind, subject_id, purpose, version, granted, at) VALUES (gen_random_uuid(), 'client', $1, 'marketing', '2026-10-01', true, now())", [regular]);
+    await query(
+      "INSERT INTO privacy.consent (id, subject_kind, subject_id, purpose, version, granted, at) VALUES (gen_random_uuid(), 'client', $1, 'marketing', '2026-10-01', true, now())",
+      [regular],
+    );
     // Twelve done visits 43 to 54 days ago: a regular who stopped coming, enough history to speak.
     for (let d = 43; d <= 54; d++) {
       const start = subDays(now, d);
@@ -47,11 +62,18 @@ describe.runIf(enabled)("the Monday brief's invitation (#200)", () => {
   afterAll(async () => pool().end());
 
   it("e-mails the owner the week's brief once, with a link that stops it", async () => {
-    const [owner] = await query<{ id: string }>("INSERT INTO accounts (email, password_hash, locale) VALUES ($1, 'x', 'fr') RETURNING id", [`owner-${stamp}@folioviv.test`]);
+    const [owner] = await query<{ id: string }>(
+      "INSERT INTO accounts (email, password_hash, locale) VALUES ($1, 'x', 'fr') RETURNING id",
+      [`owner-${stamp}@folioviv.test`],
+    );
     await query("UPDATE shops SET owner_id = $1 WHERE id = $2", [owner!.id, shop.id]);
     const first = await sendDueBriefs(now, settings);
     expect(first.pending).toBeGreaterThanOrEqual(1);
-    const mine = () => query<{ subject: string; body_text: string }>("SELECT subject, body_text FROM mail_outbox WHERE template = 'brief-weekly' AND related_id = $1", [shop.id]);
+    const mine = () =>
+      query<{ subject: string; body_text: string }>(
+        "SELECT subject, body_text FROM mail_outbox WHERE template = 'brief-weekly' AND related_id = $1",
+        [shop.id],
+      );
     const [mail] = await mine();
     expect(mail!.subject).toBe("Le point du lundi — Salon Brief");
     expect(mail!.body_text).toMatch(/créneaux libres dans les 7 prochains jours/);
@@ -71,7 +93,10 @@ describe.runIf(enabled)("the Monday brief's invitation (#200)", () => {
     expect(gaps?.figures.invitees).toBe(1);
     const result = await inviteRegulars(shop, gaps!.id, now, settings);
     expect(result).toEqual({ sent: 0, pending: 1, failed: 0, skipped: 0 }); // no provider: the mail waits in the outbox
-    const [mail] = await query<{ to_email: string; template: string; body_text: string }>("SELECT to_email, template, body_text FROM mail_outbox WHERE related_kind = 'brief' AND related_id = $1", [regular]);
+    const [mail] = await query<{ to_email: string; template: string; body_text: string }>(
+      "SELECT to_email, template, body_text FROM mail_outbox WHERE related_kind = 'brief' AND related_id = $1",
+      [regular],
+    );
     expect(mail).toMatchObject({ to_email: `camille-${stamp}@folioviv.test`, template: "brief-invite" });
     expect(mail!.body_text).toContain(`https://www.folioviv.com/fr/s/brief-${stamp}`);
     expect(mail!.body_text).toContain("Bonjour Camille");

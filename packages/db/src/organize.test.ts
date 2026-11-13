@@ -21,7 +21,6 @@ const org = () => organizeOver(async (sql, params) => (await t.pool.query(sql, p
 const RULES = { allowedSeeds: SHOP_AVATAR_SEEDS };
 
 describe("a shop is an item of « organize »", () => {
-
   it("an owner has a default collection (in their language) and a new shop falls into it", async () => {
     const owner = await account(t.db, "orga@example.test");
     const { shopId } = await saveShopPage(t.db, owner.id, page("orga-1"));
@@ -38,13 +37,23 @@ describe("a shop is an item of « organize »", () => {
     const o = org();
     await o.profile("shop").describe(owner.id, a, "  Le salon du centre  ");
     await o.profile("shop").setAvatar(owner.id, a, "plain-3", RULES);
-    await expect(o.profile("shop").setAvatar(owner.id, a, "nope", RULES)).rejects.toMatchObject({ code: "AVATAR_NOT_ALLOWED" });
+    await expect(o.profile("shop").setAvatar(owner.id, a, "nope", RULES)).rejects.toMatchObject({
+      code: "AVATAR_NOT_ALLOWED",
+    });
     const tag = await o.tags.create(owner.id, { name: "centre", color: "blue" });
     await o.tags.assign(owner.id, "shop", a, [tag.id]);
     const group = await o.collections.create(owner.id, { name: "Montréal" });
     await o.profile("shop").setCollection(owner.id, b, group.id);
-    expect(await o.profile("shop").get(owner.id, a)).toMatchObject({ description: "Le salon du centre", avatar: { kind: "set", seed: "plain-3" } });
-    expect([...(await o.tags.of(owner.id, "shop", [a, b])).entries()].map(([id, tags]) => [id === a, tags.map((x) => x.name)])).toEqual([[true, ["centre"]]]);
+    expect(await o.profile("shop").get(owner.id, a)).toMatchObject({
+      description: "Le salon du centre",
+      avatar: { kind: "set", seed: "plain-3" },
+    });
+    expect(
+      [...(await o.tags.of(owner.id, "shop", [a, b])).entries()].map(([id, tags]) => [
+        id === a,
+        tags.map((x) => x.name),
+      ]),
+    ).toEqual([[true, ["centre"]]]);
     expect((await o.profile("shop").get(owner.id, b)).collectionId).toBe(group.id);
     // the current shop is another matter: it moves without touching the collections
     await setDefaultShop(t.db, owner.id, b);

@@ -14,9 +14,13 @@ export function InvoiceDeliveryHistory({ deliveries, locale }: Readonly<{ delive
       <ul className="flex flex-col divide-y divide-border-default">
         {deliveries.map((delivery) => (
           <li key={delivery.id} className="flex flex-wrap justify-between gap-2 py-2 text-sm">
-            <span className="text-fg">{delivery.toEmail} · {formatDate(delivery.createdAt.toISOString(), locale, "UTC")}</span>
+            <span className="text-fg">
+              {delivery.toEmail} · {formatDate(delivery.createdAt.toISOString(), locale, "UTC")}
+            </span>
             <span className="text-fg-secondary">
-              {delivery.openedAt ? format(t.opened, { date: formatDate(delivery.openedAt.toISOString(), locale, "UTC") }) : t.notOpened}
+              {delivery.openedAt
+                ? format(t.opened, { date: formatDate(delivery.openedAt.toISOString(), locale, "UTC") })
+                : t.notOpened}
               {delivery.revokedAt ? ` · ${t.revoked}` : ""}
             </span>
           </li>

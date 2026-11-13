@@ -12,7 +12,15 @@ describe("record-journey (the hero's continuous take)", () => {
   });
 
   it("walks the whole journey in one page: storefront, booking, the walker's day, the report, the client, the books", () => {
-    for (const beat of ['mark("storefront")', 'mark("booked")', 'mark("day")', 'mark("sent")', 'mark("client")', 'mark("books")']) expect(source).toContain(beat);
+    for (const beat of [
+      'mark("storefront")',
+      'mark("booked")',
+      'mark("day")',
+      'mark("sent")',
+      'mark("client")',
+      'mark("books")',
+    ])
+      expect(source).toContain(beat);
   });
 
   it("keeps every credential in the environment, never in the file or in the output", () => {

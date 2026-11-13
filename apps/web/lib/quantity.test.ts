@@ -12,11 +12,13 @@ describe("a quantity typed on the invoice form (krizaka/folioviv#111)", () => {
   });
 
   it("reads nothing, zero, a thousandth or a stray character as no quantity", () => {
-    for (const bad of ["", "0", "0,00", "0,001", "7,555", "-1", "1e3", "7,5 h", "abc", "1 000"]) expect(parseQuantity(bad), bad).toBeNull();
+    for (const bad of ["", "0", "0,00", "0,001", "7,555", "-1", "1e3", "7,5 h", "abc", "1 000"])
+      expect(parseQuantity(bad), bad).toBeNull();
   });
 
   it("the field accepts what is being typed on the way to a quantity", () => {
-    for (const typing of ["", "7", "7,", "7.", "7,5", "7.25", "10000"]) expect(QUANTITY_FIELD.safeParse(typing).success, typing).toBe(true);
+    for (const typing of ["", "7", "7,", "7.", "7,5", "7.25", "10000"])
+      expect(QUANTITY_FIELD.safeParse(typing).success, typing).toBe(true);
     for (const bad of ["7,555", "-1", "a", "1,2,3"]) expect(QUANTITY_FIELD.safeParse(bad).success, bad).toBe(false);
   });
 

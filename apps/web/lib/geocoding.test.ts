@@ -9,7 +9,14 @@ const place: GeoPlace = { label: "1 rue Exemple, Montréal", lat: 45.5, lng: -73
 /** A fake adapter: the port is the seam, so no network and no vendor in a test. */
 function fake(places: GeoPlace[] = [place]): GeocodingPort & { calls: string[] } {
   const calls: string[] = [];
-  return { calls, attribution: { text: "Fake maps", href: "https://example.test/credits" }, async search(q) { calls.push(q); return places; } };
+  return {
+    calls,
+    attribution: { text: "Fake maps", href: "https://example.test/credits" },
+    async search(q) {
+      calls.push(q);
+      return places;
+    },
+  };
 }
 
 describe("a typed address, normalised", () => {
@@ -50,7 +57,10 @@ describe("the cache in front of the port", () => {
 
 describe("the search answer (what the route sends)", () => {
   it("returns the places with the attribution to show", async () => {
-    expect(await geocodeAnswer(fake(), "h2x1y4", "fr")).toEqual({ places: [place], attribution: { text: "Fake maps", href: "https://example.test/credits" } });
+    expect(await geocodeAnswer(fake(), "h2x1y4", "fr")).toEqual({
+      places: [place],
+      attribution: { text: "Fake maps", href: "https://example.test/credits" },
+    });
   });
   it("asks the port the normalised query", async () => {
     const port = fake();
@@ -60,7 +70,12 @@ describe("the search answer (what the route sends)", () => {
   it("refuses: 503 when no geocoder is set, 400 for a bad query, 502 (no vendor named) when the vendor fails", async () => {
     await expect(geocodeAnswer(null, "h2x1y4", "fr")).rejects.toMatchObject({ status: 503 });
     await expect(geocodeAnswer(fake(), "ab", "fr")).rejects.toMatchObject({ status: 400 });
-    const broken: GeocodingPort = { attribution: { text: "x", href: "https://example.test" }, search: async () => { throw new Error("vendor.example down"); } };
+    const broken: GeocodingPort = {
+      attribution: { text: "x", href: "https://example.test" },
+      search: async () => {
+        throw new Error("vendor.example down");
+      },
+    };
     const error = await geocodeAnswer(broken, "h2x1y4", "fr").catch((e: unknown) => e);
     expect(error).toBeInstanceOf(HttpError);
     expect((error as HttpError).status).toBe(502);
@@ -73,9 +88,18 @@ describe("the HTTP adapter (Nominatim protocol, the service is the environment's
     let asked = "";
     const fetcher = (async (url: URL) => {
       asked = String(url);
-      return Response.json([{ display_name: "Montréal", lat: "45.5", lon: "-73.5" }, { display_name: "Nowhere", lat: "x", lon: "1" }, { lat: 1, lon: 1 }, { display_name: "Far", lat: 95, lon: 0 }]);
+      return Response.json([
+        { display_name: "Montréal", lat: "45.5", lon: "-73.5" },
+        { display_name: "Nowhere", lat: "x", lon: "1" },
+        { lat: 1, lon: 1 },
+        { display_name: "Far", lat: 95, lon: 0 },
+      ]);
     }) as unknown as typeof fetch;
-    const port = httpGeocoder({ url: "https://geo.example.test/search", attribution: { text: "Geo", href: "https://geo.example.test" }, fetcher });
+    const port = httpGeocoder({
+      url: "https://geo.example.test/search",
+      attribution: { text: "Geo", href: "https://geo.example.test" },
+      fetcher,
+    });
     expect(await port.search("H2X", { locale: "fr" })).toEqual([{ label: "Montréal", lat: 45.5, lng: -73.5 }]);
     expect(asked).toContain("countrycodes=ca");
     expect(asked).toContain("accept-language=fr");
@@ -83,6 +107,12 @@ describe("the HTTP adapter (Nominatim protocol, the service is the environment's
   });
   it("throws on a vendor error, so the route can answer 502", async () => {
     const fetcher = (async () => new Response("no", { status: 500 })) as unknown as typeof fetch;
-    await expect(httpGeocoder({ url: "https://geo.example.test/s", attribution: { text: "g", href: "https://geo.example.test" }, fetcher }).search("H2X", { locale: "en" })).rejects.toThrow();
+    await expect(
+      httpGeocoder({
+        url: "https://geo.example.test/s",
+        attribution: { text: "g", href: "https://geo.example.test" },
+        fetcher,
+      }).search("H2X", { locale: "en" }),
+    ).rejects.toThrow();
   });
 });

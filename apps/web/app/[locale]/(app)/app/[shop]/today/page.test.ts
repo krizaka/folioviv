@@ -7,9 +7,15 @@ import { memberShop } from "@/lib/member-shop";
 
 import Today from "./page";
 
-vi.mock("@folioviv/db", async (importOriginal) => ({ ...await importOriginal<typeof import("@folioviv/db")>(), todayBoard: vi.fn() }));
+vi.mock("@folioviv/db", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@folioviv/db")>()),
+  todayBoard: vi.fn(),
+}));
 vi.mock("@/lib/db", () => ({ db: vi.fn(() => ({})) }));
-vi.mock("@/lib/member-shop", async (importOriginal) => ({ ...await importOriginal<typeof import("@/lib/member-shop")>(), memberShop: vi.fn() }));
+vi.mock("@/lib/member-shop", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/member-shop")>()),
+  memberShop: vi.fn(),
+}));
 
 afterEach(() => {
   vi.clearAllMocks();
@@ -24,7 +30,10 @@ describe("Today's board: the shop's money for who may see the invoices (D4)", ()
       role,
     } as Awaited<ReturnType<typeof memberShop>>);
     // The page decides who sees the invoices and returns the day's element with them (or null): nothing below it is rendered here.
-    return (await Today({ params: Promise.resolve({ locale: "en", shop: "s1" }), searchParams: Promise.resolve({ day: "2026-09-01", period }) })) as ReactElement<{ board?: unknown; period?: number }>;
+    return (await Today({
+      params: Promise.resolve({ locale: "en", shop: "s1" }),
+      searchParams: Promise.resolve({ day: "2026-09-01", period }),
+    })) as ReactElement<{ board?: unknown; period?: number }>;
   };
 
   it.each([

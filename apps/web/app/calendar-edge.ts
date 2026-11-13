@@ -20,4 +20,5 @@ export async function calendarSourceMaker(): Promise<SourceMaker> {
 }
 
 /** The kinds that can work on this deployment: the ones with no client to create, and the OAuth providers whose client is set. */
-export const configuredKinds = (): CalendarKind[] => CALENDAR_KINDS.filter((k) => k !== "google" && k !== "outlook" ? true : oauthApps()[k] !== undefined);
+export const configuredKinds = (): CalendarKind[] =>
+  CALENDAR_KINDS.filter((k) => (k !== "google" && k !== "outlook" ? true : oauthApps()[k] !== undefined));

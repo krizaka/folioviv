@@ -13,7 +13,11 @@ export function PUT(req: Request, { params }: { params: Promise<{ id: string }> 
   return handle(async () => {
     const session = await requireAdmin(req);
     const { enabled } = body.parse(await req.json());
-    await setOption(idParam((await params).id), enabled, { actorId: session.account.id, actorLabel: session.account.email, headers: req.headers });
+    await setOption(idParam((await params).id), enabled, {
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      headers: req.headers,
+    });
     return new Response(null, { status: 204 });
   });
 }

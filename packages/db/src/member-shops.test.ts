@@ -15,7 +15,9 @@ describe("the shops an account works in", () => {
   it("lists the shops with the role there, the owned one first, and opens the one asked for only to a member", async () => {
     const mine = await walkerShop(t.db, "own");
     const other = await walkerShop(t.db, "other");
-    await t.db.insert(memberships).values({ scopeId: other.shopId, accountId: mine.owner.id, role: "staff", createdAt: new Date() });
+    await t.db
+      .insert(memberships)
+      .values({ scopeId: other.shopId, accountId: mine.owner.id, role: "staff", createdAt: new Date() });
 
     const shops = await shopsOfMember(t.db, mine.owner.id);
     expect(shops.map((s) => s.role)).toEqual(["owner", "staff"]);

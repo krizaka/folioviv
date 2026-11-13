@@ -1,4 +1,4 @@
-import { saveWall,wallOf } from "@folioviv/db";
+import { saveWall, wallOf } from "@folioviv/db";
 
 import { requireShop } from "@/lib/access";
 import { audit } from "@/lib/audit";
@@ -24,7 +24,13 @@ export function PUT(req: Request) {
     await assertShopFeature("features.shopWall");
     const body: unknown = await req.json().catch(() => null);
     await saveWall(db(), shop.id, body, (await communityLimits()).wallItems);
-    await audit({ action: "shop.wall_saved", actorId: session.account.id, actorLabel: session.account.email, targetId: shop.id, headers: req.headers });
+    await audit({
+      action: "shop.wall_saved",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: shop.id,
+      headers: req.headers,
+    });
     await announcePage(shop.id);
     return Response.json(await wallOf(db(), shop.id));
   });

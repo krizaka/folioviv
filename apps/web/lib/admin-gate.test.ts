@@ -12,7 +12,10 @@ import { routeFor } from "./host";
  * whole surface is behind it, not just one route: a new console page or admin API route that forgets the lock fails here.
  */
 const root = path.join(__dirname, "..", "app");
-const walk = (dir: string): string[] => readdirSync(dir).flatMap((name) => (statSync(path.join(dir, name)).isDirectory() ? walk(path.join(dir, name)) : [path.join(dir, name)]));
+const walk = (dir: string): string[] =>
+  readdirSync(dir).flatMap((name) =>
+    statSync(path.join(dir, name)).isDirectory() ? walk(path.join(dir, name)) : [path.join(dir, name)],
+  );
 const read = (file: string) => readFileSync(file, "utf8");
 
 describe("every administration API route takes the three locks", () => {
@@ -38,7 +41,8 @@ describe("every console page is behind the signed layout (or is the sign-in, whi
   for (const file of pages) {
     const rel = path.relative(consoleDir, file);
     if (rel.startsWith("sign-in")) {
-      it(`${rel} 404s an address off the list`, () => expect(read(file)).toMatch(/ipAllowed\(.*\)[^\n]*notFound\(\)|!ipAllowed\(/));
+      it(`${rel} 404s an address off the list`, () =>
+        expect(read(file)).toMatch(/ipAllowed\(.*\)[^\n]*notFound\(\)|!ipAllowed\(/));
     } else {
       it(`${rel} lives under (signed)`, () => expect(rel.startsWith("(signed)")).toBe(true));
     }
@@ -56,6 +60,11 @@ describe("off the list, off the host", () => {
   });
 
   it("with no list in production, nobody gets in", () => {
-    expect(ipAllowed(from("admin.folioviv.com", "203.0.113.7"), { NODE_ENV: "production", ABUSE_CLIENT_IP_HEADER: "do-connecting-ip" })).toBe(false);
+    expect(
+      ipAllowed(from("admin.folioviv.com", "203.0.113.7"), {
+        NODE_ENV: "production",
+        ABUSE_CLIENT_IP_HEADER: "do-connecting-ip",
+      }),
+    ).toBe(false);
   });
 });

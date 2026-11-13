@@ -26,7 +26,10 @@ export function FeedAddress({ id, name, url }: Readonly<{ id: string; name: stri
             size="md"
             variant="secondary"
             onClick={() => {
-              void navigator.clipboard?.writeText(url).then(() => setCopied(true), () => setCopied(false));
+              void navigator.clipboard?.writeText(url).then(
+                () => setCopied(true),
+                () => setCopied(false),
+              );
             }}
           >
             {copied ? t("copied") : t("copy")}

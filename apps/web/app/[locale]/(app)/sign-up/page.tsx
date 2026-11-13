@@ -55,7 +55,13 @@ export default async function SignUpPage({ params }: Readonly<{ params: Promise<
         )
       }
     >
-      {open ? <p className="text-sm text-fg-secondary">{t.account.signUp.description}</p> : <Link className="font-semibold text-fg-accent" href={`/${locale}/sign-in`}>{t.account.signUp.back}</Link>}
+      {open ? (
+        <p className="text-sm text-fg-secondary">{t.account.signUp.description}</p>
+      ) : (
+        <Link className="font-semibold text-fg-accent" href={`/${locale}/sign-in`}>
+          {t.account.signUp.back}
+        </Link>
+      )}
     </AccountAuthPage>
   );
 }

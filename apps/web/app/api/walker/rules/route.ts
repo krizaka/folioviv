@@ -14,7 +14,14 @@ export function POST(req: Request) {
     const { session, shop } = await requireOwner(req);
     const rules = await readJson(req, shopRulesSchema);
     await saveRules(db(), shop.id, rules);
-    await audit({ action: "shop.rules_changed", actorId: session.account.id, actorLabel: session.account.email, targetId: shop.id, detail: rules, headers: req.headers });
+    await audit({
+      action: "shop.rules_changed",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: shop.id,
+      detail: rules,
+      headers: req.headers,
+    });
     return Response.json({ ok: true });
   });
 }

@@ -2,11 +2,36 @@ import { readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 
-import { A11Y, A11Y_WIDTHS, CHECKS, FRAME_LOCALES, FRAME_PAGES, OPTIONS, PAGES, SETTLE_MS, STATE_OWNERS, THEMES, TILE_PATH, WIDTHS, launchWithStubbedTiles, stubTiles } from "./check-overflow.mjs";
+import {
+  A11Y,
+  A11Y_WIDTHS,
+  CHECKS,
+  FRAME_LOCALES,
+  FRAME_PAGES,
+  OPTIONS,
+  PAGES,
+  SETTLE_MS,
+  STATE_OWNERS,
+  THEMES,
+  TILE_PATH,
+  WIDTHS,
+  launchWithStubbedTiles,
+  stubTiles,
+} from "./check-overflow.mjs";
 
 describe("the dev-preview crawl (ui.themes-devices)", () => {
   it("covers both languages of the public pages and the sign-in, in both themes, from a phone to a desktop", () => {
-    for (const page of ["/en", "/fr", "/en/sign-in", "/fr/sign-in", "/en/changelog", "/fr/privacy", "/fr/s/cedre-ciseaux?look=editorial", "/en/s/pattes-saint-henri?look=journal"]) expect(PAGES).toContain(page);
+    for (const page of [
+      "/en",
+      "/fr",
+      "/en/sign-in",
+      "/fr/sign-in",
+      "/en/changelog",
+      "/fr/privacy",
+      "/fr/s/cedre-ciseaux?look=editorial",
+      "/en/s/pattes-saint-henri?look=journal",
+    ])
+      expect(PAGES).toContain(page);
     expect(THEMES).toEqual(["dark", "light"]);
     expect(Math.min(...WIDTHS)).toBeLessThanOrEqual(360);
     expect(Math.max(...WIDTHS)).toBeGreaterThanOrEqual(1440);
@@ -45,9 +70,14 @@ describe("the dev-preview crawl (ui.themes-devices)", () => {
 
   it("takes the notice off the frame's screen in CSS, from the height FrameSlot measures", () => {
     const css = readFileSync(new URL("../apps/web/app/globals.css", import.meta.url), "utf8");
-    expect(css).toMatch(/\[data-app-frame-slot\] > \.min-h-dvh \{ min-height: calc\(100dvh - var\(--kz-top-chrome-h, 0px\)\)/);
+    expect(css).toMatch(
+      /\[data-app-frame-slot\] > \.min-h-dvh \{ min-height: calc\(100dvh - var\(--kz-top-chrome-h, 0px\)\)/,
+    );
     expect(css).toMatch(/\.md\\:h-dvh \{ height: calc\(100dvh - var\(--kz-top-chrome-h/);
-    for (const f of ["ShopFrame", "AppFrame"]) expect(readFileSync(new URL(`../apps/web/components/app/${f}.tsx`, import.meta.url), "utf8")).toContain("<FrameSlot>");
+    for (const f of ["ShopFrame", "AppFrame"])
+      expect(readFileSync(new URL(`../apps/web/components/app/${f}.tsx`, import.meta.url), "utf8")).toContain(
+        "<FrameSlot>",
+      );
   });
 
   it("crawls the frame as an owner with an EMPTY shop and an owner with ONE item per list, seeded by CI like the dev seed (folioviv#405)", () => {
@@ -55,7 +85,9 @@ describe("the dev-preview crawl (ui.themes-devices)", () => {
     const ci = readFileSync(new URL("./ci-after-build.sh", import.meta.url), "utf8");
     expect(ci).toContain("scripts/seed-owner-states.mjs");
     for (const o of STATE_OWNERS) expect(ci).toContain(`${o.emailVariable}=`);
-    expect(readFileSync(new URL("../apps/web/scripts/seed-cast.mjs", import.meta.url), "utf8")).toContain("ensureOwnerStates(");
+    expect(readFileSync(new URL("../apps/web/scripts/seed-cast.mjs", import.meta.url), "utf8")).toContain(
+      "ensureOwnerStates(",
+    );
   });
 
   it("never asks the media CDN for the basemap: tile and glyph requests are answered by the audit itself (folioviv#625)", async () => {

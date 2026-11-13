@@ -3,7 +3,28 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
 
 import { eraseClient } from "./shop-ops";
-import { addAnnouncement, feedFlyers, addExternalReel, addReview, addUploadedReel, announcementsOf, communityOf, reelsOf, removeAnnouncement, removeReel, reelTransitionOf, reorderReels, setReelTransition, replyToReview, reviewsOf, saveSocialLinks, saveWall, setReviewState, socialLinksOf, wallOf } from "./shop-community";
+import {
+  addAnnouncement,
+  feedFlyers,
+  addExternalReel,
+  addReview,
+  addUploadedReel,
+  announcementsOf,
+  communityOf,
+  reelsOf,
+  removeAnnouncement,
+  removeReel,
+  reelTransitionOf,
+  reorderReels,
+  setReelTransition,
+  replyToReview,
+  reviewsOf,
+  saveSocialLinks,
+  saveWall,
+  setReviewState,
+  socialLinksOf,
+  wallOf,
+} from "./shop-community";
 import { shops } from "./schema";
 import { freshDatabase, refusal } from "./test/db";
 import { walkerShop } from "./test/fixtures";
@@ -14,7 +35,19 @@ beforeAll(async () => {
 });
 afterAll(async () => t.drop());
 
-const photo = (z: number, over: Record<string, unknown> = {}) => ({ kind: "polaroid", x: 10 + z, y: 20, rotation: 1, z, imageUrl: `https://cdn.example/p${z}.webp`, altFr: "Une photo", altEn: "A photo", captionFr: "Légende", captionEn: "Caption", ...over });
+const photo = (z: number, over: Record<string, unknown> = {}) => ({
+  kind: "polaroid",
+  x: 10 + z,
+  y: 20,
+  rotation: 1,
+  z,
+  imageUrl: `https://cdn.example/p${z}.webp`,
+  altFr: "Une photo",
+  altEn: "A photo",
+  captionFr: "Légende",
+  captionEn: "Caption",
+  ...over,
+});
 
 describe("the wall (#310)", () => {
   it("is empty and plaster before the owner pins anything", async () => {
@@ -24,7 +57,20 @@ describe("the wall (#310)", () => {
 
   it("saves the texture and the items, read back in stacking order", async () => {
     const s = await walkerShop(t.db, "wall-save");
-    await saveWall(t.db, s.shopId, { texture: "brick", items: [photo(2), photo(1), { kind: "note", x: 50, y: 50, rotation: -2, z: 3, textFr: "Merci", textEn: "Thanks", signature: "Léa" }, { kind: "sign", x: 80, y: 10, z: 4 }] }, 24);
+    await saveWall(
+      t.db,
+      s.shopId,
+      {
+        texture: "brick",
+        items: [
+          photo(2),
+          photo(1),
+          { kind: "note", x: 50, y: 50, rotation: -2, z: 3, textFr: "Merci", textEn: "Thanks", signature: "Léa" },
+          { kind: "sign", x: 80, y: 10, z: 4 },
+        ],
+      },
+      24,
+    );
     const wall = await wallOf(t.db, s.shopId);
     expect(wall.texture).toBe("brick");
     expect(wall.items.map((i) => i.z)).toEqual([1, 2, 3, 4]);
@@ -71,7 +117,14 @@ describe("the wall (#310)", () => {
 describe("the reels (#312)", () => {
   it("keeps an uploaded reel as CDN addresses, in the order they were added", async () => {
     const s = await walkerShop(t.db, "reel-up");
-    await addUploadedReel(t.db, s.shopId, { mp4Url: "https://cdn.example/a.mp4", webmUrl: "https://cdn.example/a.webm", posterUrl: "https://cdn.example/a.webp", seconds: 7.8, titleFr: "Ma semaine", titleEn: "My week" });
+    await addUploadedReel(t.db, s.shopId, {
+      mp4Url: "https://cdn.example/a.mp4",
+      webmUrl: "https://cdn.example/a.webm",
+      posterUrl: "https://cdn.example/a.webp",
+      seconds: 7.8,
+      titleFr: "Ma semaine",
+      titleEn: "My week",
+    });
     await addExternalReel(t.db, s.shopId, "https://www.youtube.com/shorts/abcDEF12345", { titleFr: "", titleEn: "" });
     const reels = await reelsOf(t.db, s.shopId);
     expect(reels).toHaveLength(2);
@@ -82,21 +135,59 @@ describe("the reels (#312)", () => {
   it("plays the videos in the owner's order: reordered, and a removal closes the gap (#469)", async () => {
     const s = await walkerShop(t.db, "reel-order");
     const ids: string[] = [];
-    for (const n of ["a", "b", "c"]) ids.push(await addUploadedReel(t.db, s.shopId, { mp4Url: `https://cdn.example/${n}.mp4`, webmUrl: null, posterUrl: null, seconds: 5, titleFr: n, titleEn: n }));
+    for (const n of ["a", "b", "c"])
+      ids.push(
+        await addUploadedReel(t.db, s.shopId, {
+          mp4Url: `https://cdn.example/${n}.mp4`,
+          webmUrl: null,
+          posterUrl: null,
+          seconds: 5,
+          titleFr: n,
+          titleEn: n,
+        }),
+      );
     expect((await reelsOf(t.db, s.shopId)).map((r) => r.titleEn)).toEqual(["a", "b", "c"]);
     expect(await reorderReels(t.db, s.shopId, [ids[2]!, ids[0]!, ids[1]!])).toBe(true);
     expect((await reelsOf(t.db, s.shopId)).map((r) => r.titleEn)).toEqual(["c", "a", "b"]);
     await removeReel(t.db, s.shopId, ids[0]!);
-    await addUploadedReel(t.db, s.shopId, { mp4Url: "https://cdn.example/d.mp4", webmUrl: null, posterUrl: null, seconds: 5, titleFr: "d", titleEn: "d" });
+    await addUploadedReel(t.db, s.shopId, {
+      mp4Url: "https://cdn.example/d.mp4",
+      webmUrl: null,
+      posterUrl: null,
+      seconds: 5,
+      titleFr: "d",
+      titleEn: "d",
+    });
     expect((await reelsOf(t.db, s.shopId)).map((r) => r.titleEn)).toEqual(["c", "b", "d"]);
   });
 
   it("refuses an order that is not exactly this shop's videos, and never touches another shop (#469)", async () => {
     const a = await walkerShop(t.db, "reel-ord-a");
     const b = await walkerShop(t.db, "reel-ord-b");
-    const one = await addUploadedReel(t.db, a.shopId, { mp4Url: "https://cdn.example/1.mp4", webmUrl: null, posterUrl: null, seconds: 5, titleFr: "", titleEn: "1" });
-    const two = await addUploadedReel(t.db, a.shopId, { mp4Url: "https://cdn.example/2.mp4", webmUrl: null, posterUrl: null, seconds: 5, titleFr: "", titleEn: "2" });
-    const other = await addUploadedReel(t.db, b.shopId, { mp4Url: "https://cdn.example/3.mp4", webmUrl: null, posterUrl: null, seconds: 5, titleFr: "", titleEn: "3" });
+    const one = await addUploadedReel(t.db, a.shopId, {
+      mp4Url: "https://cdn.example/1.mp4",
+      webmUrl: null,
+      posterUrl: null,
+      seconds: 5,
+      titleFr: "",
+      titleEn: "1",
+    });
+    const two = await addUploadedReel(t.db, a.shopId, {
+      mp4Url: "https://cdn.example/2.mp4",
+      webmUrl: null,
+      posterUrl: null,
+      seconds: 5,
+      titleFr: "",
+      titleEn: "2",
+    });
+    const other = await addUploadedReel(t.db, b.shopId, {
+      mp4Url: "https://cdn.example/3.mp4",
+      webmUrl: null,
+      posterUrl: null,
+      seconds: 5,
+      titleFr: "",
+      titleEn: "3",
+    });
     expect(await reorderReels(t.db, a.shopId, [two])).toBe(false);
     expect(await reorderReels(t.db, a.shopId, [two, one, one])).toBe(false);
     expect(await reorderReels(t.db, a.shopId, [two, other])).toBe(false);
@@ -114,14 +205,21 @@ describe("the reels (#312)", () => {
 
   it("refuses a link to any other host", async () => {
     const s = await walkerShop(t.db, "reel-host");
-    await expect(addExternalReel(t.db, s.shopId, "https://evil.example/shorts/abcDEF12345", { titleFr: "", titleEn: "" })).rejects.toMatchObject({ code: "AK_REEL_LINK" });
-    await expect(addExternalReel(t.db, s.shopId, "http://www.tiktok.com/@a/video/12345678", { titleFr: "", titleEn: "" })).rejects.toMatchObject({ code: "AK_REEL_LINK" });
+    await expect(
+      addExternalReel(t.db, s.shopId, "https://evil.example/shorts/abcDEF12345", { titleFr: "", titleEn: "" }),
+    ).rejects.toMatchObject({ code: "AK_REEL_LINK" });
+    await expect(
+      addExternalReel(t.db, s.shopId, "http://www.tiktok.com/@a/video/12345678", { titleFr: "", titleEn: "" }),
+    ).rejects.toMatchObject({ code: "AK_REEL_LINK" });
   });
 
   it("removes a reel of this shop only", async () => {
     const a = await walkerShop(t.db, "reel-rm-a");
     const b = await walkerShop(t.db, "reel-rm-b");
-    const id = await addExternalReel(t.db, a.shopId, "https://www.instagram.com/reel/Cabc123xyz/", { titleFr: "", titleEn: "" });
+    const id = await addExternalReel(t.db, a.shopId, "https://www.instagram.com/reel/Cabc123xyz/", {
+      titleFr: "",
+      titleEn: "",
+    });
     expect(await removeReel(t.db, b.shopId, id)).toBe(false);
     expect(await reelsOf(t.db, a.shopId)).toHaveLength(1);
     expect(await removeReel(t.db, a.shopId, id)).toBe(true);
@@ -129,48 +227,103 @@ describe("the reels (#312)", () => {
 
   it("holds twelve reels at most", async () => {
     const s = await walkerShop(t.db, "reel-max");
-    for (let i = 0; i < 12; i++) await addUploadedReel(t.db, s.shopId, { mp4Url: `https://cdn.example/${i}.mp4`, webmUrl: null, posterUrl: null, seconds: 5, titleFr: "", titleEn: "" });
-    await expect(addUploadedReel(t.db, s.shopId, { mp4Url: "https://cdn.example/13.mp4", webmUrl: null, posterUrl: null, seconds: 5, titleFr: "", titleEn: "" })).rejects.toMatchObject({ code: "AK_REEL_LIMIT" });
+    for (let i = 0; i < 12; i++)
+      await addUploadedReel(t.db, s.shopId, {
+        mp4Url: `https://cdn.example/${i}.mp4`,
+        webmUrl: null,
+        posterUrl: null,
+        seconds: 5,
+        titleFr: "",
+        titleEn: "",
+      });
+    await expect(
+      addUploadedReel(t.db, s.shopId, {
+        mp4Url: "https://cdn.example/13.mp4",
+        webmUrl: null,
+        posterUrl: null,
+        seconds: 5,
+        titleFr: "",
+        titleEn: "",
+      }),
+    ).rejects.toMatchObject({ code: "AK_REEL_LIMIT" });
   });
 });
 
 describe("the profile links (#312)", () => {
   it("saves one link per platform on its own host, and removes one with null", async () => {
     const s = await walkerShop(t.db, "social");
-    await saveSocialLinks(t.db, s.shopId, { instagram: "https://www.instagram.com/cedre", tiktok: "https://www.tiktok.com/@cedre" });
-    expect(await socialLinksOf(t.db, s.shopId)).toEqual({ instagram: "https://www.instagram.com/cedre", tiktok: "https://www.tiktok.com/@cedre" });
+    await saveSocialLinks(t.db, s.shopId, {
+      instagram: "https://www.instagram.com/cedre",
+      tiktok: "https://www.tiktok.com/@cedre",
+    });
+    expect(await socialLinksOf(t.db, s.shopId)).toEqual({
+      instagram: "https://www.instagram.com/cedre",
+      tiktok: "https://www.tiktok.com/@cedre",
+    });
     await saveSocialLinks(t.db, s.shopId, { tiktok: null });
     expect(Object.keys(await socialLinksOf(t.db, s.shopId))).toEqual(["instagram"]);
   });
   it("refuses another platform's address", async () => {
     const s = await walkerShop(t.db, "social-bad");
-    await expect(saveSocialLinks(t.db, s.shopId, { instagram: "https://www.tiktok.com/@x" })).rejects.toMatchObject({ code: "AK_SOCIAL_LINK" });
+    await expect(saveSocialLinks(t.db, s.shopId, { instagram: "https://www.tiktok.com/@x" })).rejects.toMatchObject({
+      code: "AK_SOCIAL_LINK",
+    });
   });
 });
 
 describe("the bulletin board (#314)", () => {
   it("pins a flyer, lists it, takes it down", async () => {
     const s = await walkerShop(t.db, "board");
-    const id = await addAnnouncement(t.db, s.shopId, { textFr: "Portes ouvertes samedi", textEn: "", photoUrl: null, photoAlt: "", endsOn: "2026-12-31" });
+    const id = await addAnnouncement(t.db, s.shopId, {
+      textFr: "Portes ouvertes samedi",
+      textEn: "",
+      photoUrl: null,
+      photoAlt: "",
+      endsOn: "2026-12-31",
+    });
     expect((await announcementsOf(t.db, s.shopId)).map((a) => a.id)).toEqual([id]);
     expect(await removeAnnouncement(t.db, s.shopId, id)).toBe(true);
     expect(await announcementsOf(t.db, s.shopId)).toEqual([]);
   });
   it("refuses an empty flyer and a flyer of 501 characters", async () => {
     const s = await walkerShop(t.db, "board-bad");
-    await expect(addAnnouncement(t.db, s.shopId, { textFr: "", textEn: "", photoUrl: null, photoAlt: "", endsOn: null })).rejects.toThrow();
-    await expect(addAnnouncement(t.db, s.shopId, { textFr: "x".repeat(501), textEn: "", photoUrl: null, photoAlt: "", endsOn: null })).rejects.toThrow();
+    await expect(
+      addAnnouncement(t.db, s.shopId, { textFr: "", textEn: "", photoUrl: null, photoAlt: "", endsOn: null }),
+    ).rejects.toThrow();
+    await expect(
+      addAnnouncement(t.db, s.shopId, {
+        textFr: "x".repeat(501),
+        textEn: "",
+        photoUrl: null,
+        photoAlt: "",
+        endsOn: null,
+      }),
+    ).rejects.toThrow();
   });
   it("takes down another shop's flyer? No: it answers false", async () => {
     const a = await walkerShop(t.db, "board-a");
     const b = await walkerShop(t.db, "board-b");
-    const id = await addAnnouncement(t.db, a.shopId, { textFr: "Bonjour", textEn: "", photoUrl: null, photoAlt: "", endsOn: null });
+    const id = await addAnnouncement(t.db, a.shopId, {
+      textFr: "Bonjour",
+      textEn: "",
+      photoUrl: null,
+      photoAlt: "",
+      endsOn: null,
+    });
     expect(await removeAnnouncement(t.db, b.shopId, id)).toBe(false);
   });
 });
 
 describe("the reviews (#313)", () => {
-  const review = (over: Record<string, unknown> = {}) => ({ firstName: "Camille", lastInitial: "T", rating: 5, body: "Très bien", serviceName: "Coupe", verified: true, ...over });
+  const review = (over: Record<string, unknown> = {}) => ({
+    firstName: "Camille",
+    lastInitial: "T",
+    rating: 5,
+    body: "Très bien",
+    serviceName: "Coupe",
+    verified: true,
+    ...over,
+  });
 
   it("lists only what a visitor may read: a first name and an initial, never the client", async () => {
     const s = await walkerShop(t.db, "rev-public");
@@ -225,7 +378,11 @@ describe("the demo shops as places (B45)", () => {
     await seedDemoCommunity(t.db, s.shopId, "pattes-saint-henri");
     const first = await communityOf(t.db, s.shopId);
     expect(first.wall.items.length).toBeGreaterThanOrEqual(6);
-    expect(first.wall.items.filter((i) => i.kind === "polaroid").every((i) => i.kind === "polaroid" && i.imageUrl.includes("/pattes-saint-henri/"))).toBe(true);
+    expect(
+      first.wall.items
+        .filter((i) => i.kind === "polaroid")
+        .every((i) => i.kind === "polaroid" && i.imageUrl.includes("/pattes-saint-henri/")),
+    ).toBe(true);
     expect(first.reel?.kind).toBe("upload");
     expect(Object.keys(first.links).sort()).toEqual(["instagram", "tiktok"]);
     expect(first.announcements).toHaveLength(2);
@@ -244,7 +401,8 @@ describe("the demo shops as places (B45)", () => {
     const b = await walkerShop(t.db, "demo-trade-b");
     await seedDemoCommunity(t.db, a.shopId, "cedre-ciseaux");
     await seedDemoCommunity(t.db, b.shopId, "pattes-saint-henri");
-    const urls = async (id: string) => (await wallOf(t.db, id)).items.flatMap((i) => (i.kind === "polaroid" ? [i.imageUrl] : []));
+    const urls = async (id: string) =>
+      (await wallOf(t.db, id)).items.flatMap((i) => (i.kind === "polaroid" ? [i.imageUrl] : []));
     expect((await urls(a.shopId)).every((u) => u.includes("/demo/cedre-ciseaux/"))).toBe(true);
     expect((await urls(b.shopId)).every((u) => u.includes("/demo/pattes-saint-henri/"))).toBe(true);
     const text = JSON.stringify(await wallOf(t.db, a.shopId)).toLowerCase();
@@ -253,15 +411,27 @@ describe("the demo shops as places (B45)", () => {
 });
 
 describe("the neighbourhood feed (#318)", () => {
-  const flyer = (textFr: string, endsOn: string | null = null) => ({ textFr, textEn: "", photoUrl: null, photoAlt: "", endsOn });
-  const setArea = (shopId: string, area: string | null, published = true) => t.db.update(shops).set({ area, published }).where(eq(shops.id, shopId));
+  const flyer = (textFr: string, endsOn: string | null = null) => ({
+    textFr,
+    textEn: "",
+    photoUrl: null,
+    photoAlt: "",
+    endsOn,
+  });
+  const setArea = (shopId: string, area: string | null, published = true) =>
+    t.db.update(shops).set({ area, published }).where(eq(shops.id, shopId));
 
   it("lists the flyers of published shops with a locality, with the shop's name and address, never a street", async () => {
     const s = await walkerShop(t.db, "feed-ok");
     await setArea(s.shopId, "Saint-Henri, Montréal");
     const id = await addAnnouncement(t.db, s.shopId, flyer("Portes ouvertes"));
     const row = (await feedFlyers(t.db)).find((f) => f.id === id);
-    expect(row).toMatchObject({ textFr: "Portes ouvertes", shopName: "Pattes de Saint-Henri", shopSlug: "pattes-feed-ok", area: "Saint-Henri, Montréal" });
+    expect(row).toMatchObject({
+      textFr: "Portes ouvertes",
+      shopName: "Pattes de Saint-Henri",
+      shopSlug: "pattes-feed-ok",
+      area: "Saint-Henri, Montréal",
+    });
     expect(JSON.stringify(row)).not.toContain("Notre-Dame");
   });
 
@@ -272,7 +442,11 @@ describe("the neighbourhood feed (#318)", () => {
     await setArea(noArea.shopId, null);
     const old = await walkerShop(t.db, "feed-old");
     await setArea(old.shopId, "Villeray");
-    const ids = [await addAnnouncement(t.db, hidden.shopId, flyer("Caché")), await addAnnouncement(t.db, noArea.shopId, flyer("Sans quartier")), await addAnnouncement(t.db, old.shopId, flyer("Passé", "2020-01-01"))];
+    const ids = [
+      await addAnnouncement(t.db, hidden.shopId, flyer("Caché")),
+      await addAnnouncement(t.db, noArea.shopId, flyer("Sans quartier")),
+      await addAnnouncement(t.db, old.shopId, flyer("Passé", "2020-01-01")),
+    ];
     const listed = (await feedFlyers(t.db)).map((f) => f.id);
     for (const id of ids) expect(listed).not.toContain(id);
   });

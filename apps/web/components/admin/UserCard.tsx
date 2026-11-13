@@ -29,13 +29,22 @@ export function UserCard({ initial, self }: Readonly<{ initial: UserDetail; self
     setNote(null);
     setProblem(say(`errors.${errorKey(error)}`));
   };
-  const post = (path: string, init: { method: string; json?: unknown } = { method: "POST" }) => krizakaFetch(`/api/admin/users/${user.id}${path}`, init) as Promise<{ user?: UserDetail; revoked?: number }>;
+  const post = (path: string, init: { method: string; json?: unknown } = { method: "POST" }) =>
+    krizakaFetch(`/api/admin/users/${user.id}${path}`, init) as Promise<{ user?: UserDetail; revoked?: number }>;
   const apply = (r: { user?: UserDetail }) => {
     if (r.user) setUser(r.user);
     setProblem(null);
   };
-  const status = useMutation({ mutationFn: (to: "suspend" | "restore") => post(`/${to}`), onSuccess: apply, onError: fail });
-  const role = useMutation({ mutationFn: () => post("/role", { method: "POST", json: { role: user.role === "ADMIN" ? "USER" : "ADMIN" } }), onSuccess: apply, onError: fail });
+  const status = useMutation({
+    mutationFn: (to: "suspend" | "restore") => post(`/${to}`),
+    onSuccess: apply,
+    onError: fail,
+  });
+  const role = useMutation({
+    mutationFn: () => post("/role", { method: "POST", json: { role: user.role === "ADMIN" ? "USER" : "ADMIN" } }),
+    onSuccess: apply,
+    onError: fail,
+  });
   const revoke = useMutation({
     mutationFn: () => post("/sessions", { method: "DELETE" }),
     onSuccess: (r) => {
@@ -44,7 +53,11 @@ export function UserCard({ initial, self }: Readonly<{ initial: UserDetail; self
     },
     onError: fail,
   });
-  const erase = useMutation({ mutationFn: () => post("", { method: "DELETE", json: { confirmEmail: confirm } }), onSuccess: () => router.push(`/${locale}/users`), onError: fail });
+  const erase = useMutation({
+    mutationFn: () => post("", { method: "DELETE", json: { confirmEmail: confirm } }),
+    onSuccess: () => router.push(`/${locale}/users`),
+    onError: fail,
+  });
   return (
     <Card.Root className="flex flex-col gap-4 p-4">
       <Link href={`/${locale}/users`} className="text-sm text-fg-muted hover:text-fg">
@@ -54,25 +67,38 @@ export function UserCard({ initial, self }: Readonly<{ initial: UserDetail; self
         <h2 className="break-all font-display text-xl font-extrabold text-fg">{user.email}</h2>
         {!self &&
           (user.status === "ACTIVE" ? (
-          <Button variant="secondary" size="sm" loading={status.isPending} onClick={() => status.mutate("suspend")}>
-            {say("admin.user.suspend")}
-          </Button>
-        ) : (
-          <Button variant="primary" size="sm" loading={status.isPending} onClick={() => status.mutate("restore")}>
-            {say("admin.user.restore")}
-          </Button>
-        ))}
+            <Button variant="secondary" size="sm" loading={status.isPending} onClick={() => status.mutate("suspend")}>
+              {say("admin.user.suspend")}
+            </Button>
+          ) : (
+            <Button variant="primary" size="sm" loading={status.isPending} onClick={() => status.mutate("restore")}>
+              {say("admin.user.restore")}
+            </Button>
+          ))}
       </div>
       {problem ? <Alert tone="danger">{problem}</Alert> : null}
       {note ? <Alert tone="success">{note}</Alert> : null}
       <DescriptionList
         items={[
-          { term: say("admin.user.role"), details: <Badge tone={user.role === "ADMIN" ? "accent" : "neutral"}>{say(`admin.roles.${user.role}`)}</Badge> },
-          { term: say("admin.user.status"), details: <Badge tone={user.status === "ACTIVE" ? "success" : "danger"}>{say(`admin.states.${user.status}`)}</Badge> },
+          {
+            term: say("admin.user.role"),
+            details: (
+              <Badge tone={user.role === "ADMIN" ? "accent" : "neutral"}>{say(`admin.roles.${user.role}`)}</Badge>
+            ),
+          },
+          {
+            term: say("admin.user.status"),
+            details: (
+              <Badge tone={user.status === "ACTIVE" ? "success" : "danger"}>{say(`admin.states.${user.status}`)}</Badge>
+            ),
+          },
           { term: say("admin.user.shops"), details: String(user.shops) },
           { term: say("admin.user.sessions"), details: String(user.sessions) },
           { term: say("admin.user.created"), details: formatDate(user.createdAt, locale, true) },
-          { term: say("admin.user.lastSeen"), details: user.lastSeenAt ? formatDate(user.lastSeenAt, locale, true) : say("admin.never") },
+          {
+            term: say("admin.user.lastSeen"),
+            details: user.lastSeenAt ? formatDate(user.lastSeenAt, locale, true) : say("admin.never"),
+          },
         ]}
       />
       {self ? (
@@ -92,15 +118,30 @@ export function UserCard({ initial, self }: Readonly<{ initial: UserDetail; self
               </a>
             </Button>
           </div>
-          <section className="flex flex-col gap-2 border-t border-border-subtle pt-4" aria-label={say("admin.user.dangerTitle")}>
+          <section
+            className="flex flex-col gap-2 border-t border-border-subtle pt-4"
+            aria-label={say("admin.user.dangerTitle")}
+          >
             <h3 className="font-display text-sm font-bold text-fg">{say("admin.user.dangerTitle")}</h3>
             <p className="text-sm text-fg-secondary">{say("admin.user.dangerLead")}</p>
             <Field.Root>
               <Field.Label htmlFor="confirm-email">{say("admin.user.confirmLabel")}</Field.Label>
-              <Input id="confirm-email" value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="off" spellCheck={false} />
+              <Input
+                id="confirm-email"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                autoComplete="off"
+                spellCheck={false}
+              />
             </Field.Root>
             <div>
-              <Button variant="danger" size="sm" loading={erase.isPending} disabled={confirm.trim().toLowerCase() !== user.email} onClick={() => erase.mutate()}>
+              <Button
+                variant="danger"
+                size="sm"
+                loading={erase.isPending}
+                disabled={confirm.trim().toLowerCase() !== user.email}
+                onClick={() => erase.mutate()}
+              >
                 {say("admin.user.deleteAccount")}
               </Button>
             </div>

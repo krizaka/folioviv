@@ -18,5 +18,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ file: s
   const { file } = await params;
   if (!(FILES as readonly string[]).includes(file)) return new Response("Not found", { status: 404 });
   // The build runs in apps/web, where the package is installed (a bundler would rewrite a `require.resolve`).
-  return new Response(await readFile(join(process.cwd(), "node_modules/maplibre-gl/dist", file)), { headers: { "content-type": "text/javascript; charset=utf-8", "cache-control": "public, max-age=86400" } });
+  return new Response(await readFile(join(process.cwd(), "node_modules/maplibre-gl/dist", file)), {
+    headers: { "content-type": "text/javascript; charset=utf-8", "cache-control": "public, max-age=86400" },
+  });
 }

@@ -24,7 +24,12 @@ export function POST(req: Request, { params }: { params: Promise<{ id: string }>
       if (file.size > MAX_PHOTO_BYTES) throw refuse(413, "PHOTO_TOO_LARGE", "The photo is too large");
       photo = { bytes: Buffer.from(await file.arrayBuffer()) };
     }
-    const result = await saveReport(db(), { shopId: shop.id, bookingId: idParam((await params).id), note: String(form.get("note") ?? ""), photo });
+    const result = await saveReport(db(), {
+      shopId: shop.id,
+      bookingId: idParam((await params).id),
+      note: String(form.get("note") ?? ""),
+      photo,
+    });
     return Response.json(result, { status: result.created ? 201 : 200 });
   });
 }

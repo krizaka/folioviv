@@ -20,7 +20,14 @@ export function POST(req: Request, { params }: { params: Promise<{ id: string }>
     const { session, shop, client } = await requireShopClient(req, idParam((await params).id), "clients");
     const { body } = noteSchema.parse(await req.json());
     const profile = await accounts().profile(session.account.id);
-    const note = await addClientNote(db(), shop.id, client.id, { accountId: session.account.id, name: profile.name ?? session.account.email }, body, requestNow());
+    const note = await addClientNote(
+      db(),
+      shop.id,
+      client.id,
+      { accountId: session.account.id, name: profile.name ?? session.account.email },
+      body,
+      requestNow(),
+    );
     return Response.json({ note }, { status: 201 });
   });
 }

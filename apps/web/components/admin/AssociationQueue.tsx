@@ -26,13 +26,17 @@ function Proof({ proof }: Readonly<{ proof: PendingAssociation }>) {
   const { say, locale } = useSay();
   const call = useCall();
   const [reason, setReason] = useState("");
-  const decide = (decision: "approved" | "rejected") => call.run(`/api/admin/associations/${proof.id}`, { json: { decision, ...(reason ? { note: reason } : {}) } });
+  const decide = (decision: "approved" | "rejected") =>
+    call.run(`/api/admin/associations/${proof.id}`, { json: { decision, ...(reason ? { note: reason } : {}) } });
   return (
     <Card.Root className="flex flex-col gap-3 p-4" data-testid="association-proof">
       <DescriptionList
         items={[
           { term: say("admin.associations.account"), details: proof.email },
-          { term: say("admin.associations.kind"), details: <Badge tone="neutral">{say(`account.subscription.assoKinds.${proof.kind}`)}</Badge> },
+          {
+            term: say("admin.associations.kind"),
+            details: <Badge tone="neutral">{say(`account.subscription.assoKinds.${proof.kind}`)}</Badge>,
+          },
           { term: say("admin.associations.reference"), details: <code>{proof.reference}</code> },
           { term: say("admin.associations.submitted"), details: formatDate(proof.submittedAt, locale, "UTC") },
           ...(proof.note ? [{ term: say("account.subscription.assoNote"), details: proof.note }] : []),
@@ -64,7 +68,11 @@ export function AssociationQueue({ pending }: Readonly<{ pending: PendingAssocia
         <h1 className="font-display text-2xl font-bold text-fg">{say("admin.associations.title")}</h1>
         <p className="max-w-prose text-fg-secondary">{say("admin.associations.lead")}</p>
       </header>
-      {pending.length === 0 ? <p className="text-fg-secondary">{say("admin.associations.empty")}</p> : pending.map((proof) => <Proof key={proof.id} proof={proof} />)}
+      {pending.length === 0 ? (
+        <p className="text-fg-secondary">{say("admin.associations.empty")}</p>
+      ) : (
+        pending.map((proof) => <Proof key={proof.id} proof={proof} />)
+      )}
     </div>
   );
 }

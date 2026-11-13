@@ -24,9 +24,33 @@ const data = (over: Partial<LanguagesData> = {}): LanguagesData => ({
   usedToday: 3,
   setupHref: "/en/app/s1/shop",
   fields: [
-    { key: "shop:s1:tagline", kind: "shop", field: "tagline", owner: null, source: "Coiffure de quartier", languages: { en: { state: "own", text: "Neighbourhood hair" }, es: { state: "auto", text: "Peluquería de barrio" } } },
-    { key: "shop:s1:bio", kind: "shop", field: "bio", owner: null, source: "Julie vous reçoit.", languages: { en: { state: "missing", text: "" }, es: { state: "stale", text: "Julie le recibe." } } },
-    { key: "service:c1:name", kind: "service", field: "name", owner: null, source: "Coupe", languages: { en: { state: "edited", text: "Haircut" }, es: { state: "missing", text: "" } } },
+    {
+      key: "shop:s1:tagline",
+      kind: "shop",
+      field: "tagline",
+      owner: null,
+      source: "Coiffure de quartier",
+      languages: {
+        en: { state: "own", text: "Neighbourhood hair" },
+        es: { state: "auto", text: "Peluquería de barrio" },
+      },
+    },
+    {
+      key: "shop:s1:bio",
+      kind: "shop",
+      field: "bio",
+      owner: null,
+      source: "Julie vous reçoit.",
+      languages: { en: { state: "missing", text: "" }, es: { state: "stale", text: "Julie le recibe." } },
+    },
+    {
+      key: "service:c1:name",
+      kind: "service",
+      field: "name",
+      owner: null,
+      source: "Coupe",
+      languages: { en: { state: "edited", text: "Haircut" }, es: { state: "missing", text: "" } },
+    },
   ],
   ...over,
 });
@@ -36,7 +60,16 @@ const text = (h: string) => h.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ");
 describe("the owner's screen for the shop page's languages (#258)", () => {
   it("shows each text beside its translation, with its state, in each language that is on", () => {
     const t = text(html(data()));
-    for (const word of ["Languages of your page", "Written by you", "Translated automatically", "Edited by you", "To review", "Not translated", "Translate"]) expect(t).toContain(word);
+    for (const word of [
+      "Languages of your page",
+      "Written by you",
+      "Translated automatically",
+      "Edited by you",
+      "To review",
+      "Not translated",
+      "Translate",
+    ])
+      expect(t).toContain(word);
     expect(t).toContain("Coiffure de quartier");
     expect(html(data())).toContain("Peluquería de barrio");
     expect(t).toContain("3 of 20 translations used today");

@@ -1,7 +1,13 @@
-import { type BusyRange, type BusyResult, type CalendarSource, CalendarSourceError, mergeBusy, parseBusy } from "@folioviv/core";
+import {
+  type BusyRange,
+  type BusyResult,
+  type CalendarSource,
+  CalendarSourceError,
+  mergeBusy,
+  parseBusy,
+} from "@folioviv/core";
 
 import { assertPublicHost, parseCalendarUrl, type Resolver } from "./public-url";
-
 
 /**
  * iCloud and any CalDAV server, read-only (RFC 4791): one `REPORT calendar-query` over the window on the calendar collection the owner gives,
@@ -18,12 +24,25 @@ export interface CaldavOptions {
   resolve?: Resolver;
 }
 
-const compact = (d: Date) => d.toISOString().replaceAll(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
-const unescapeXml = (s: string) => s.replaceAll(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1").replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&quot;", '"').replaceAll("&apos;", "'").replaceAll("&amp;", "&");
+const compact = (d: Date) =>
+  d
+    .toISOString()
+    .replaceAll(/[-:]/g, "")
+    .replace(/\.\d{3}Z$/, "Z");
+const unescapeXml = (s: string) =>
+  s
+    .replaceAll(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">")
+    .replaceAll("&quot;", '"')
+    .replaceAll("&apos;", "'")
+    .replaceAll("&amp;", "&");
 
 /** The iCalendar bodies of a multistatus answer. */
 export function calendarDataOf(xml: string): string[] {
-  return [...xml.matchAll(/<(?:[\w-]+:)?calendar-data[^>]*>([\s\S]*?)<\/(?:[\w-]+:)?calendar-data>/gi)].map((m) => unescapeXml(m[1]!));
+  return [...xml.matchAll(/<(?:[\w-]+:)?calendar-data[^>]*>([\s\S]*?)<\/(?:[\w-]+:)?calendar-data>/gi)].map((m) =>
+    unescapeXml(m[1]!),
+  );
 }
 
 export function caldavSource(options: CaldavOptions): CalendarSource {
@@ -38,7 +57,11 @@ export function caldavSource(options: CaldavOptions): CalendarSource {
       try {
         res = await doFetch(url, {
           method: "REPORT",
-          headers: { authorization: `Basic ${Buffer.from([options.username, options.password].join(":")).toString("base64")}`, depth: "1", "content-type": "application/xml; charset=utf-8" },
+          headers: {
+            authorization: `Basic ${Buffer.from([options.username, options.password].join(":")).toString("base64")}`,
+            depth: "1",
+            "content-type": "application/xml; charset=utf-8",
+          },
           body,
           redirect: "error",
           signal: AbortSignal.timeout(20_000),

@@ -18,13 +18,17 @@ async function main() {
     const { rows } = await pool.query("SELECT id FROM shops WHERE slug = $1", [SLUG]);
     if (rows.length !== 1) throw new Error(`no shop with the slug ${SLUG}: seed the persona first`);
     const result = await resetWalkerPersona(createDb(pool), rows[0].id, new Date());
-    process.stdout.write(`walker persona reset: ${result.cancelled} booking(s) cancelled, ${result.recreated} open visit(s) recreated\n`);
+    process.stdout.write(
+      `walker persona reset: ${result.cancelled} booking(s) cancelled, ${result.recreated} open visit(s) recreated\n`,
+    );
   } finally {
     await pool.end();
   }
 }
 
-main().then(() => process.exit(0)).catch((error) => {
-  process.stderr.write(`✗ ${error instanceof Error ? error.message : error}\n`);
-  process.exit(1);
-});
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    process.stderr.write(`✗ ${error instanceof Error ? error.message : error}\n`);
+    process.exit(1);
+  });

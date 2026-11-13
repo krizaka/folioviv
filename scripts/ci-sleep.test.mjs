@@ -20,7 +20,15 @@ const SLEEPS = [
   "visual.yml",
 ];
 // Fast, required, or on demand and cheap: they never sleep.
-const AWAKE = ["bump-krizaka.yml", "dependabot-automerge.yml", "docs-map.yml", "merge-resolution.yml", "release-notes.yml", "security.yml", "update-visual-baselines.yml"];
+const AWAKE = [
+  "bump-krizaka.yml",
+  "dependabot-automerge.yml",
+  "docs-map.yml",
+  "merge-resolution.yml",
+  "release-notes.yml",
+  "security.yml",
+  "update-visual-baselines.yml",
+];
 
 describe("the CI_SLEEP switch", () => {
   it("classifies every workflow as sleeping or awake", () => {
@@ -37,7 +45,10 @@ describe("the CI_SLEEP switch", () => {
 
   it("every job of a sleeping standalone workflow carries the condition", () => {
     for (const f of ["download-videos.yml", "e2e-pricing.yml", "scorecard.yml", "lang-guards.yml", "desktop.yml"]) {
-      const jobs = code(f).split(/^jobs:\n/m)[1].split(/^ {2}(?=[a-z][\w-]*:\n)/m).filter((j) => j.trim());
+      const jobs = code(f)
+        .split(/^jobs:\n/m)[1]
+        .split(/^ {2}(?=[a-z][\w-]*:\n)/m)
+        .filter((j) => j.trim());
       for (const job of jobs) expect(job, `${f}: ${job.split("\n")[0]}`).toContain("vars.CI_SLEEP != 'true'");
     }
   });
@@ -49,7 +60,9 @@ describe("the CI_SLEEP switch", () => {
   it("the required checks still report while asleep", () => {
     // journeys / gate: a stand-in with the literal name, since a skipped caller never produces it.
     const journeys = code("journeys.yml");
-    expect(journeys).toMatch(/\n {2}journeys-asleep:\n {4}name: journeys \/ gate\n {4}if: \$\{\{ vars\.CI_SLEEP == 'true' \}\}/);
+    expect(journeys).toMatch(
+      /\n {2}journeys-asleep:\n {4}name: journeys \/ gate\n {4}if: \$\{\{ vars\.CI_SLEEP == 'true' \}\}/,
+    );
     // visual / Visual regression and mobile-e2e / gate: the org's changes gate answers « nothing relevant », the gates always report; the caller is never skipped.
     expect(code("visual.yml")).toContain("relevant: ${{ vars.CI_SLEEP == 'true' && '^$' ||");
     const mobile = code("mobile-ci.yml");

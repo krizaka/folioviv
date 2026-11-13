@@ -25,23 +25,42 @@ describe("the palette's search (⌘K): the shop's clients and invoices, never an
   it("finds the shop's clients by a part of their name, whatever the case typed", async () => {
     const found = await searchShop(t.db, a.shop.id, "lum");
     expect(found.clients.map((c) => c.fullName)).toEqual(["Studio Lumen inc."]);
-    expect((await searchShop(t.db, a.shop.id, "TREMBLAY")).clients.map((c) => c.fullName)).toEqual(["Camille Tremblay"]);
+    expect((await searchShop(t.db, a.shop.id, "TREMBLAY")).clients.map((c) => c.fullName)).toEqual([
+      "Camille Tremblay",
+    ]);
   });
 
   it("never returns another shop's client or invoice, even when the other shop's name matches better", async () => {
-    await issueShopInvoice(t.db, b.shop.id, { clientId: b.client.id, language: "fr", issuedOn: "2026-10-21", lines: [{ serviceId: b.services.cut.id, quantity: 1 }] });
+    await issueShopInvoice(t.db, b.shop.id, {
+      clientId: b.client.id,
+      language: "fr",
+      issuedOn: "2026-10-21",
+      lines: [{ serviceId: b.services.cut.id, quantity: 1 }],
+    });
     const found = await searchShop(t.db, a.shop.id, "Lumière");
     expect(found.clients).toEqual([]);
     expect((await searchShop(t.db, a.shop.id, "Camille")).invoices).toEqual([]);
   });
 
   it("finds an invoice by its number or its client's name, newest first", async () => {
-    const first = await issueShopInvoice(t.db, a.shop.id, { clientId: a.client.id, language: "fr", issuedOn: "2026-10-21", lines: [{ serviceId: a.services.cut.id, quantity: 1 }] });
-    const second = await issueShopInvoice(t.db, a.shop.id, { clientId: a.client.id, language: "fr", issuedOn: "2026-10-22", lines: [{ serviceId: a.services.cut.id, quantity: 1 }] });
+    const first = await issueShopInvoice(t.db, a.shop.id, {
+      clientId: a.client.id,
+      language: "fr",
+      issuedOn: "2026-10-21",
+      lines: [{ serviceId: a.services.cut.id, quantity: 1 }],
+    });
+    const second = await issueShopInvoice(t.db, a.shop.id, {
+      clientId: a.client.id,
+      language: "fr",
+      issuedOn: "2026-10-22",
+      lines: [{ serviceId: a.services.cut.id, quantity: 1 }],
+    });
     const byName = await searchShop(t.db, a.shop.id, "camille");
     expect(byName.invoices.map((i) => i.number)).toEqual([second.invoice.number, first.invoice.number]);
     expect(byName.invoices[0]).toMatchObject({ id: second.invoice.id, client: "Camille Tremblay" });
-    expect((await searchShop(t.db, a.shop.id, first.invoice.number)).invoices.map((i) => i.id)).toEqual([first.invoice.id]);
+    expect((await searchShop(t.db, a.shop.id, first.invoice.number)).invoices.map((i) => i.id)).toEqual([
+      first.invoice.id,
+    ]);
   });
 
   it("reads a % or a _ as itself, and answers nothing for an empty query", async () => {
@@ -55,8 +74,20 @@ describe("the rail's counts: the day's appointments and the invoices still to co
   it("counts the day's appointments (not the cancelled ones, not another day's) and the invoices with money owed", async () => {
     const base = await frameCounts(t.db, a.shop.id, { day: "2026-10-23" });
     // 2026-10-23 10:00 and 14:00 in Montréal, then the next day: only the first two are the day's.
-    for (const at of ["2026-10-23T14:00:00Z", "2026-10-23T18:00:00Z", "2026-10-24T14:00:00Z"]) await book(t.db, { shopId: a.shop.id, staffId: a.staff.julie.id, serviceId: a.services.cut.id, clientId: a.client.id, startsAt: new Date(at) });
-    await book(t.db, { shopId: b.shop.id, staffId: b.staff.julie.id, serviceId: b.services.cut.id, startsAt: new Date("2026-10-23T15:00:00Z") });
+    for (const at of ["2026-10-23T14:00:00Z", "2026-10-23T18:00:00Z", "2026-10-24T14:00:00Z"])
+      await book(t.db, {
+        shopId: a.shop.id,
+        staffId: a.staff.julie.id,
+        serviceId: a.services.cut.id,
+        clientId: a.client.id,
+        startsAt: new Date(at),
+      });
+    await book(t.db, {
+      shopId: b.shop.id,
+      staffId: b.staff.julie.id,
+      serviceId: b.services.cut.id,
+      startsAt: new Date("2026-10-23T15:00:00Z"),
+    });
     const counts = await frameCounts(t.db, a.shop.id, { day: "2026-10-23" });
     expect(counts.appointments).toBe(base.appointments + 2);
     // The two invoices of shop A above, unpaid: both still to collect; shop B's is not counted.

@@ -33,7 +33,13 @@ export function GET(req: Request, ctx: { params: Promise<{ token: string }> }) {
     const entries = await feedEntriesAround(db(), feed, now, BEHIND_DAYS, AHEAD_DAYS);
     const body = buildFeedIcs({
       name: await feedTitle(db(), feed, await productName()),
-      entries: entries.map((e) => ({ appointmentId: e.appointmentId, start: e.startsAt, end: e.endsAt, service: e.service.fr, firstNames: e.firstNames })),
+      entries: entries.map((e) => ({
+        appointmentId: e.appointmentId,
+        start: e.startsAt,
+        end: e.endsAt,
+        service: e.service.fr,
+        firstNames: e.firstNames,
+      })),
       now,
     });
     return new Response(body, {

@@ -10,7 +10,9 @@ import { asLocale, getDictionary } from "@/lib/i18n";
 import { pageMetadata, siteJsonLd } from "@/lib/seo";
 import { DOC_IDS, pagePath } from "@/lib/site";
 
-export async function generateMetadata({ params }: Readonly<{ params: Promise<{ locale: string }> }>): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: Readonly<{ params: Promise<{ locale: string }> }>): Promise<Metadata> {
   return pageMetadata(asLocale((await params).locale), "docs");
 }
 
@@ -28,8 +30,20 @@ export default async function Docs({ params }: Readonly<{ params: Promise<{ loca
           lead={d.lead}
           linkAs={Link}
           collectionsTitle={d.collectionsTitle}
-          collections={[{ id: "folioviv", brand: "folioviv", title: d.collection.title, href: pagePath(locale, "docs/shop"), description: d.collection.description, links: [] }]}
-          popular={{ title: d.popularTitle, items: DOC_IDS.map((id) => ({ href: docHref(locale, id), title: d.pages[id].title })) }}
+          collections={[
+            {
+              id: "folioviv",
+              brand: "folioviv",
+              title: d.collection.title,
+              href: pagePath(locale, "docs/shop"),
+              description: d.collection.description,
+              links: [],
+            },
+          ]}
+          popular={{
+            title: d.popularTitle,
+            items: DOC_IDS.map((id) => ({ href: docHref(locale, id), title: d.pages[id].title })),
+          }}
         />
       </main>
       <SiteFooter locale={locale} />

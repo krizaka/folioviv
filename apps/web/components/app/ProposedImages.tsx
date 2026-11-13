@@ -55,15 +55,38 @@ export function ProposedImages({ data }: Readonly<{ data: ProposedImagesData }>)
       </div>
       <Field.Root>
         <Field.Label htmlFor="shop-type">{t("type")}</Field.Label>
-        <Select id="shop-type" value={type} onChange={(e) => { const next = e.target.value as ShopType; setType(next); void savePage({ shopType: next }); }}>
+        <Select
+          id="shop-type"
+          value={type}
+          onChange={(e) => {
+            const next = e.target.value as ShopType;
+            setType(next);
+            void savePage({ shopType: next });
+          }}
+        >
           {/* The trade in force stays visible (and selectable only when the administrator offers it), so choosing an offered trade is a change the select reports. */}
-          {offered.includes(type) ? null : <option value={type} disabled>{t(`types.${type}`)}</option>}
-          {offered.map((x) => <option key={x} value={x}>{t(`types.${x}`)}</option>)}
+          {offered.includes(type) ? null : (
+            <option value={type} disabled>
+              {t(`types.${type}`)}
+            </option>
+          )}
+          {offered.map((x) => (
+            <option key={x} value={x}>
+              {t(`types.${x}`)}
+            </option>
+          ))}
         </Select>
       </Field.Root>
       <div className="flex items-center justify-between gap-3">
         <span className="text-sm text-fg">{t("show")}</span>
-        <Switch checked={show} onCheckedChange={(on) => { setShow(on); void savePage({ useDefaults: on }); }} label={t("show")} />
+        <Switch
+          checked={show}
+          onCheckedChange={(on) => {
+            setShow(on);
+            void savePage({ useDefaults: on });
+          }}
+          label={t("show")}
+        />
       </div>
       {current ? (
         <div className="flex flex-col gap-4">
@@ -72,11 +95,29 @@ export function ProposedImages({ data }: Readonly<{ data: ProposedImagesData }>)
               <h3 className="m-0 text-sm font-semibold text-fg">{t("cover")}</h3>
               <figure className="m-0 flex flex-col gap-2 sm:max-w-md">
                 {/* Keyed by the proposal, so a change of trade loads its own loop; played only when the owner asks (native controls), still otherwise. */}
-                <video key={current.cover.id} className="aspect-video w-full rounded-lg object-cover" poster={current.cover.src} controls muted loop playsInline preload="metadata" aria-label={t("preview")}>
+                <video
+                  key={current.cover.id}
+                  className="aspect-video w-full rounded-lg object-cover"
+                  poster={current.cover.src}
+                  controls
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  aria-label={t("preview")}
+                >
                   <source src={current.cover.webm} type="video/webm" />
                   <source src={current.cover.mp4} type="video/mp4" />
                 </video>
-                <Button size="sm" variant="secondary" className="self-start" disabled={call.pending} onClick={() => void saveMedia(adoptCover(media, current.cover!))}>{t("useCover")}</Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="self-start"
+                  disabled={call.pending}
+                  onClick={() => void saveMedia(adoptCover(media, current.cover!))}
+                >
+                  {t("useCover")}
+                </Button>
               </figure>
             </div>
           ) : null}
@@ -86,8 +127,22 @@ export function ProposedImages({ data }: Readonly<{ data: ProposedImagesData }>)
               {current.gallery.map((p) => (
                 <li key={p.id} className="flex flex-col gap-2">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={p.src} alt={({ fr: p.altFr, en: p.altEn })[locale]} width={960} height={720} loading="lazy" className="aspect-[4/3] w-full rounded-lg object-cover" />
-                  <Button size="sm" variant="secondary" disabled={call.pending} onClick={() => void saveMedia(addPhoto(media, p))}>{t("addPhoto")}</Button>
+                  <img
+                    src={p.src}
+                    alt={{ fr: p.altFr, en: p.altEn }[locale]}
+                    width={960}
+                    height={720}
+                    loading="lazy"
+                    className="aspect-[4/3] w-full rounded-lg object-cover"
+                  />
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    disabled={call.pending}
+                    onClick={() => void saveMedia(addPhoto(media, p))}
+                  >
+                    {t("addPhoto")}
+                  </Button>
                 </li>
               ))}
             </ul>

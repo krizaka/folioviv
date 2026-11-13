@@ -18,6 +18,12 @@ export const POST = clientPrivacyRoute(async ({ req, session, client }) => {
   await readJson(req, body);
   limit("client-erase", req, session.account.id, [20, 3600]);
   const erased = await eraseClientEverywhere(client.id);
-  await audit({ action: "client.erased_by_shop", actorId: session.account.id, actorLabel: session.account.email, targetId: client.id, headers: req.headers });
+  await audit({
+    action: "client.erased_by_shop",
+    actorId: session.account.id,
+    actorLabel: session.account.email,
+    targetId: client.id,
+    headers: req.headers,
+  });
   return Response.json({ ok: true, erased }, { headers: { "Cache-Control": "no-store" } });
 });

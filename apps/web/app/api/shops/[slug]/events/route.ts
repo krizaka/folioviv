@@ -11,7 +11,7 @@ export const runtime = "nodejs";
 
 /** Concurrent streams per public shop page on this instance, shared across route bundles. */
 const holder = globalThis as unknown as { __foliovivStorefrontStreams?: Map<string, number> };
-const streams = holder.__foliovivStorefrontStreams ??= new Map<string, number>();
+const streams = (holder.__foliovivStorefrontStreams ??= new Map<string, number>());
 
 export function GET(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   return handle(async () => {
@@ -51,9 +51,16 @@ export function GET(req: Request, { params }: { params: Promise<{ slug: string }
         req.signal.addEventListener("abort", close, { once: true });
         try {
           // Never forward the bus payload: only this shop's invalidation crosses the public wire.
-          const offSlots = bus.subscribe(slotsTopic(shopId), () => send({ event: "slots.changed", data: { type: "slots.changed" } }));
-          const offPage = bus.subscribe(pageTopic(shopId), () => send({ event: "shop.page.updated", data: { type: "shop.page.updated" } }));
-          unsubscribe = () => { offSlots(); offPage(); };
+          const offSlots = bus.subscribe(slotsTopic(shopId), () =>
+            send({ event: "slots.changed", data: { type: "slots.changed" } }),
+          );
+          const offPage = bus.subscribe(pageTopic(shopId), () =>
+            send({ event: "shop.page.updated", data: { type: "shop.page.updated" } }),
+          );
+          unsubscribe = () => {
+            offSlots();
+            offPage();
+          };
           if (req.signal.aborted) close();
         } catch (error) {
           cleanup();

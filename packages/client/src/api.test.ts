@@ -4,12 +4,26 @@ import { createFoliovivApi } from "./api";
 import { keys } from "./queries";
 
 const DAY = { shopId: "s1", timezone: "America/Toronto", day: "2026-10-20", visits: [] };
-const BOOKS = { period: { id: "2026-Q3", start: "2026-07-01", end: "2026-09-30" }, choices: ["2026-Q3", "2026-Q2"], gst: { netCents: 1_250, outcome: "remit" }, qst: { netCents: 2_494, outcome: "remit" }, preparedOnly: true };
+const BOOKS = {
+  period: { id: "2026-Q3", start: "2026-07-01", end: "2026-09-30" },
+  choices: ["2026-Q3", "2026-Q2"],
+  gst: { netCents: 1_250, outcome: "remit" },
+  qst: { netCents: 2_494, outcome: "remit" },
+  preparedOnly: true,
+};
 
 /** A fake transport: what the app asked for, and the answer it gets. */
 function fake(answer: unknown) {
   const asked: { path: string; method?: string }[] = [];
-  const api = createFoliovivApi({ call: async <T,>(path: string, init?: { method?: string }) => (asked.push({ path, method: init?.method }), answer as T) }, { saveToken: async () => undefined, clearToken: async () => undefined });
+  const api = createFoliovivApi(
+    {
+      call: async <T>(path: string, init?: { method?: string }) => (
+        asked.push({ path, method: init?.method }),
+        answer as T
+      ),
+    },
+    { saveToken: async () => undefined, clearToken: async () => undefined },
+  );
   return { api, asked };
 }
 
@@ -18,7 +32,10 @@ describe("the owner's API is the shop's of the address (D8: the app's paths carr
     const { api, asked } = fake(DAY);
     await api.day("2026-10-20", "s1");
     await api.day(undefined, "s1");
-    expect(asked.map((a) => a.path)).toEqual(["/api/walker/day?date=2026-10-20&shopId=s1", "/api/walker/day?shopId=s1"]);
+    expect(asked.map((a) => a.path)).toEqual([
+      "/api/walker/day?date=2026-10-20&shopId=s1",
+      "/api/walker/day?shopId=s1",
+    ]);
   });
 
   it("asks the shop the server picks when the address names none", async () => {

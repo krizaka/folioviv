@@ -18,7 +18,8 @@ const TOKEN = /^as1\.[A-Za-z0-9_-]{43}$/;
 
 export const newToken = () => `as1.${crypto.randomBytes(32).toString("base64url")}`;
 export const isToken = (value: string | undefined): value is string => !!value && TOKEN.test(value);
-export const tokenHash = (token: string, secret = sessionSecret()) => crypto.createHmac("sha256", `session:${secret}`).update(token).digest("hex");
+export const tokenHash = (token: string, secret = sessionSecret()) =>
+  crypto.createHmac("sha256", `session:${secret}`).update(token).digest("hex");
 
 export interface SessionAccount {
   id: string;
@@ -32,17 +33,32 @@ export interface Session {
   account: SessionAccount;
 }
 
-export async function createSession(accountId: string, meta: { ip: string | null; userAgent: string | null }): Promise<{ token: string; expires: Date }> {
+export async function createSession(
+  accountId: string,
+  meta: { ip: string | null; userAgent: string | null },
+): Promise<{ token: string; expires: Date }> {
   const token = newToken();
   const expires = systemClock.now();
   expires.setUTCDate(expires.getUTCDate() + SESSION_TTL_DAYS);
-  await query("INSERT INTO sessions (account_id, token_hash, expires_at, ip, user_agent) VALUES ($1, $2, $3, $4, $5)", [accountId, tokenHash(token), expires, meta.ip, meta.userAgent?.slice(0, 300) ?? null]);
+  await query("INSERT INTO sessions (account_id, token_hash, expires_at, ip, user_agent) VALUES ($1, $2, $3, $4, $5)", [
+    accountId,
+    tokenHash(token),
+    expires,
+    meta.ip,
+    meta.userAgent?.slice(0, 300) ?? null,
+  ]);
   return { token, expires };
 }
 
 export async function resolveSession(token: string | undefined): Promise<Session | null> {
   if (!isToken(token)) return null;
-  const [row] = await query<{ session_id: string; id: string; email: string; role: "USER" | "ADMIN"; locale: "en" | "fr" }>(
+  const [row] = await query<{
+    session_id: string;
+    id: string;
+    email: string;
+    role: "USER" | "ADMIN";
+    locale: "en" | "fr";
+  }>(
     `SELECT s.id AS session_id, a.id, a.email, a.role, a.locale
        FROM sessions s JOIN accounts a ON a.id = s.account_id
       WHERE s.token_hash = $1 AND s.expires_at > now() AND a.status = 'ACTIVE'`,

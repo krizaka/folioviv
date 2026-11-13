@@ -5,7 +5,13 @@ import type { BriefSnapshot } from "./snapshot";
 
 /** A fictional salon: 8 weeks of visits, three services, six clients. Every expected figure is worked out by hand below. */
 const visit = (n: number, serviceId: string, minutes: number, clientId: string | null, days: string[]) =>
-  Array.from({ length: n }, (_, i) => ({ id: `${serviceId}-${clientId ?? "walk-in"}-${i}`, serviceId, clientId, minutes, day: days[i % days.length]! }));
+  Array.from({ length: n }, (_, i) => ({
+    id: `${serviceId}-${clientId ?? "walk-in"}-${i}`,
+    serviceId,
+    clientId,
+    minutes,
+    day: days[i % days.length]!,
+  }));
 
 const salon = (): BriefSnapshot => ({
   week: "2026-W43",
@@ -47,7 +53,16 @@ const salon = (): BriefSnapshot => ({
       { id: "i1", number: "2026-0101", issuedOn: "2026-10-13", totalCents: 11498, gstCents: 500, qstCents: 998 },
       { id: "i2", number: "2026-0102", issuedOn: "2026-10-16", totalCents: 4599, gstCents: 200, qstCents: 399 },
     ],
-    expenses: [{ id: "e1", supplier: "Fournitures Laval", paidOn: "2026-10-14", gstCents: 100, qstCents: 200, businessSharePct: 50 }],
+    expenses: [
+      {
+        id: "e1",
+        supplier: "Fournitures Laval",
+        paidOn: "2026-10-14",
+        gstCents: 100,
+        qstCents: 200,
+        businessSharePct: 50,
+      },
+    ],
   },
 });
 
@@ -58,25 +73,52 @@ describe("the Monday brief of a salon", () => {
 
   it("keeps three cards: the gaps first (time-bound), then the largest gain", () => {
     expect(brief.items.map((i) => i.kind)).toEqual(["gaps", "pricing", "taxes"]);
-    expect(brief.items.map((i) => i.id)).toEqual(["2026-W43:gaps:ahead", "2026-W43:pricing:cut", "2026-W43:taxes:lastWeek"]);
+    expect(brief.items.map((i) => i.id)).toEqual([
+      "2026-W43:gaps:ahead",
+      "2026-W43:pricing:cut",
+      "2026-W43:taxes:lastWeek",
+    ]);
   });
 
   it("gaps: 420 free minutes at the shop's rate (221 000 ¢ / 1 860 min) = 49 903 ¢, and the two regulars to invite", () => {
     const gaps = find(brief.items, "gaps");
-    expect(gaps.figures).toEqual({ freeMinutes: 420, freeSlots: 7, freeDays: 2, missedCents: 49903, invitees: 2, dormantDays: 42 });
+    expect(gaps.figures).toEqual({
+      freeMinutes: 420,
+      freeSlots: 7,
+      freeDays: 2,
+      missedCents: 49903,
+      invitees: 2,
+      dormantDays: 42,
+    });
     // c1 usually comes on Saturday, a free day: first. c3 (no consent), c4 (two visits), c5 (recent), c6 (erased) never.
-    expect(gaps.action).toEqual({ kind: "invite", payload: { clientIds: ["c1", "c2"], days: ["2026-10-22", "2026-10-24"] } });
+    expect(gaps.action).toEqual({
+      kind: "invite",
+      payload: { clientIds: ["c1", "c2"], days: ["2026-10-22", "2026-10-24"] },
+    });
   });
 
   it("pricing: the cut takes 45 % of the time for 25 % of the revenue; +6 $ (capped at 15 %) = 4 550 ¢ a month at equal volume", () => {
     const cut = find(brief.items, "pricing");
-    expect(cut.figures).toEqual({ timeSharePct: 45, revenueSharePct: 25, currentCents: 4000, suggestedCents: 4600, raiseCents: 600, monthlyGainCents: 4550 });
+    expect(cut.figures).toEqual({
+      timeSharePct: 45,
+      revenueSharePct: 25,
+      currentCents: 4000,
+      suggestedCents: 4600,
+      raiseCents: 600,
+      monthlyGainCents: 4550,
+    });
     expect(cut.assumptions).toEqual(["equalVolume", "revenueNotMargin"]);
     expect(brief.items.filter((i) => i.kind === "pricing")).toHaveLength(1); // colour and care earn above the average
   });
 
   it("taxes: 2 097 ¢ collected − 150 ¢ of credits (half business) = 1 947 ¢ to set aside out of 16 097 ¢", () => {
-    expect(find(brief.items, "taxes").figures).toEqual({ invoicedCents: 16097, collectedCents: 2097, creditsCents: 150, setAsideCents: 1947, availableCents: 14150 });
+    expect(find(brief.items, "taxes").figures).toEqual({
+      invoicedCents: 16097,
+      collectedCents: 2097,
+      creditsCents: 150,
+      setAsideCents: 1947,
+      availableCents: 14150,
+    });
   });
 
   it("says nothing on gaps and prices when the history is too thin, but still the taxes", () => {
@@ -85,7 +127,10 @@ describe("the Monday brief of a salon", () => {
   });
 
   it("says nothing on taxes for a week without invoices", () => {
-    expect(shopBrief({ ...salon(), lastWeek: { invoices: [], expenses: [] } }).items.map((i) => i.kind)).toEqual(["gaps", "pricing"]);
+    expect(shopBrief({ ...salon(), lastWeek: { invoices: [], expenses: [] } }).items.map((i) => i.kind)).toEqual([
+      "gaps",
+      "pricing",
+    ]);
   });
 
   it("no free time, no gap card; no regular to invite, no gap card", () => {
@@ -96,14 +141,19 @@ describe("the Monday brief of a salon", () => {
   });
 
   it("no price advice on a « from » price", () => {
-    const from = { ...salon(), services: salon().services.map((s) => (s.id === "cut" ? { ...s, priceVaries: true } : s)) };
+    const from = {
+      ...salon(),
+      services: salon().services.map((s) => (s.id === "cut" ? { ...s, priceVaries: true } : s)),
+    };
     expect(shopBrief(from).items.map((i) => i.kind)).not.toContain("pricing");
   });
 
   it("the falcon vetoes an invitation to anyone without a granted marketing consent", () => {
     const gaps = find(brief.items, "gaps");
     const tampered = { ...gaps, action: { kind: "invite" as const, payload: { clientIds: ["c1", "c3"], days: [] } } };
-    expect(marketingConsent.check(tampered, { snapshot: salon(), rules: DEFAULT_BRIEF_RULES })).toBe("NO_MARKETING_CONSENT");
+    expect(marketingConsent.check(tampered, { snapshot: salon(), rules: DEFAULT_BRIEF_RULES })).toBe(
+      "NO_MARKETING_CONSENT",
+    );
     expect(marketingConsent.check(gaps, { snapshot: salon(), rules: DEFAULT_BRIEF_RULES })).toBeNull();
   });
 

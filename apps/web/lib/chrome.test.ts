@@ -3,7 +3,6 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-
 const chrome = readFileSync(join(__dirname, "../components/SiteChrome.tsx"), "utf8");
 
 describe("the bar's composition (NavBar of @krizaka/ui, 3.30)", () => {

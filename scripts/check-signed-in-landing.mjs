@@ -45,9 +45,13 @@ export const watchSignInLink = () => {
     if (links.length) window.__sawSignIn = true;
     const hinted = document.documentElement.hasAttribute("data-session");
     for (const link of links) {
-      if (!hinted) flag("a sign-in link is in the bar and html has no data-session (the head script did not run, or the hint cookie is missing)");
+      if (!hinted)
+        flag(
+          "a sign-in link is in the bar and html has no data-session (the head script did not run, or the hint cookie is missing)",
+        );
       else if (!link.hasAttribute("data-signed-out-only")) flag("a sign-in link of the bar lacks data-signed-out-only");
-      else if (painted && getComputedStyle(link).display !== "none") flag("a sign-in link of the bar is visible under html[data-session] (computed display is not none)");
+      else if (painted && getComputedStyle(link).display !== "none")
+        flag("a sign-in link of the bar is visible under html[data-session] (computed display is not none)");
     }
   };
   new MutationObserver(inspect).observe(document, { childList: true, subtree: true, attributes: true });
@@ -76,23 +80,47 @@ export async function check({ base, locale = "fr", email, password }) {
     const page = await context.newPage();
     // Signed out first: the public page does offer « Sign in » (so the next checks mean something).
     await loadSettled(page, `${base}/${locale}/pricing`);
-    await page.waitForFunction(() => document.querySelector('[data-site-bar] a[href$="/sign-in"]') !== null, null, { timeout: 15_000 }).catch(() => {
-      problems.push(`/${locale}/pricing signed out: no « Sign in » link in the bar (the guard would pass for nothing)`);
-    });
+    await page
+      .waitForFunction(() => document.querySelector('[data-site-bar] a[href$="/sign-in"]') !== null, null, {
+        timeout: 15_000,
+      })
+      .catch(() => {
+        problems.push(
+          `/${locale}/pricing signed out: no « Sign in » link in the bar (the guard would pass for nothing)`,
+        );
+      });
     await signIn(page, base, locale, email, password);
     for (const from of ["/", `/${locale}`]) {
       await loadSettled(page, `${base}${from}`);
-      if (!inApp(pathOf(page.url()), locale)) problems.push(`${from} signed in: landed on ${pathOf(page.url())}, expected the app (/${locale}/app…)`);
+      if (!inApp(pathOf(page.url()), locale))
+        problems.push(`${from} signed in: landed on ${pathOf(page.url())}, expected the app (/${locale}/app…)`);
     }
     // The server answers the redirect itself: 307, private, varying with the cookie (no HTML of the landing page at all).
     const raw = await page.request.get(`${base}/${locale}`, { maxRedirects: 0 });
-    if (raw.status() !== 307) problems.push(`/${locale} signed in: expected a 307 from the server, got ${raw.status()}`);
-    if (raw.headers()["cache-control"] !== "private, no-store") problems.push(`/${locale} signed in: Cache-Control must be « private, no-store », got ${raw.headers()["cache-control"]}`);
-    if (!/cookie/i.test(raw.headers().vary ?? "")) problems.push(`/${locale} signed in: Vary must name Cookie, got ${raw.headers().vary}`);
+    if (raw.status() !== 307)
+      problems.push(`/${locale} signed in: expected a 307 from the server, got ${raw.status()}`);
+    if (raw.headers()["cache-control"] !== "private, no-store")
+      problems.push(
+        `/${locale} signed in: Cache-Control must be « private, no-store », got ${raw.headers()["cache-control"]}`,
+      );
+    if (!/cookie/i.test(raw.headers().vary ?? ""))
+      problems.push(`/${locale} signed in: Vary must name Cookie, got ${raw.headers().vary}`);
     await loadSettled(page, `${base}/${locale}/pricing`);
-    await page.waitForFunction(() => document.querySelector('[data-site-bar] button, [data-site-bar] [data-state]') !== null, null, { timeout: 15_000 }).catch(() => {});
-    const seen = await page.evaluate(() => ({ hinted: document.documentElement.hasAttribute("data-session"), problems: window.__signInProblems }));
-    if (!seen.hinted) problems.push(`/${locale}/pricing signed in: html has no data-session (the head script must set it from the kz-session hint)`);
+    await page
+      .waitForFunction(
+        () => document.querySelector("[data-site-bar] button, [data-site-bar] [data-state]") !== null,
+        null,
+        { timeout: 15_000 },
+      )
+      .catch(() => {});
+    const seen = await page.evaluate(() => ({
+      hinted: document.documentElement.hasAttribute("data-session"),
+      problems: window.__signInProblems,
+    }));
+    if (!seen.hinted)
+      problems.push(
+        `/${locale}/pricing signed in: html has no data-session (the head script must set it from the kz-session hint)`,
+      );
     for (const why of seen.problems) problems.push(`/${locale}/pricing signed in: ${why}`);
     await context.close();
   } finally {
@@ -102,7 +130,12 @@ export async function check({ base, locale = "fr", email, password }) {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const problems = await check({ base: arg("base", "http://localhost:3000"), locale: arg("locale", "fr"), email: process.env.E2E_EMAIL, password: process.env.E2E_PASSWORD });
+  const problems = await check({
+    base: arg("base", "http://localhost:3000"),
+    locale: arg("locale", "fr"),
+    email: process.env.E2E_EMAIL,
+    password: process.env.E2E_PASSWORD,
+  });
   if (problems.length) {
     console.error(`${problems.length} problem(s):\n  ${problems.join("\n  ")}`);
     process.exit(1);

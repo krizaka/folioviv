@@ -1,8 +1,24 @@
 import { describe, expect, it } from "vitest";
 
-import { AppointmentStatus, dayHeadline, daySummary, dayView, type HeadlineAppointment, headlineMessage,isIsoDay, shiftDay, stripWindow  } from "./day";
+import {
+  AppointmentStatus,
+  dayHeadline,
+  daySummary,
+  dayView,
+  type HeadlineAppointment,
+  headlineMessage,
+  isIsoDay,
+  shiftDay,
+  stripWindow,
+} from "./day";
 
-const at = (id: string, hour: number, status: AppointmentStatus, priceCents = 10_000, category: "standard" | "exempt" = "standard") => ({
+const at = (
+  id: string,
+  hour: number,
+  status: AppointmentStatus,
+  priceCents = 10_000,
+  category: "standard" | "exempt" = "standard",
+) => ({
   id,
   startsAt: `2026-10-22T${String(hour).padStart(2, "0")}:00:00Z`,
   status,
@@ -35,7 +51,13 @@ describe("days", () => {
 
 describe("daySummary", () => {
   const now = new Date("2026-10-22T10:30:00Z");
-  const day = [at("a", 9, "done"), at("b", 11, "booked"), at("c", 12, "cancelled"), at("d", 14, "booked", 5_000, "exempt"), at("e", 15, "noShow")];
+  const day = [
+    at("a", 9, "done"),
+    at("b", 11, "booked"),
+    at("c", 12, "cancelled"),
+    at("d", 14, "booked", 5_000, "exempt"),
+    at("e", 15, "noShow"),
+  ];
 
   it("counts the booked and the done, and bills them with GST and QST for a registrant", () => {
     const summary = daySummary(day, true, now);
@@ -70,37 +92,70 @@ describe("who reads the day how (docs/ux/2026-10-full-review.md B1)", () => {
 
 describe("Aujourd'hui's headline (D4): true in every state, in the trade's words", () => {
   const at = (h: string) => `2026-10-23T${h}:00.000Z`; // 14:00Z = 10 h in Montréal
-  const a = (over: Partial<HeadlineAppointment> = {}): HeadlineAppointment => ({ startsAt: at("18:00"), endsAt: at("19:00"), client: "Studio Lumen inc.", service: { fr: "Atelier", en: "Workshop" }, status: AppointmentStatus.Booked, checkedInAt: null, ...over });
+  const a = (over: Partial<HeadlineAppointment> = {}): HeadlineAppointment => ({
+    startsAt: at("18:00"),
+    endsAt: at("19:00"),
+    client: "Studio Lumen inc.",
+    service: { fr: "Atelier", en: "Workshop" },
+    status: AppointmentStatus.Booked,
+    checkedInAt: null,
+    ...over,
+  });
   const now = new Date(at("17:00"));
   const say = (h: ReturnType<typeof dayHeadline>) => headlineMessage(h, { dependants: false });
 
   it("names the next client and the hour", () => {
-    expect(say(dayHeadline([a()], now, true))).toEqual({ key: "today.headline.next", vars: { client: "Studio Lumen inc.", at: at("18:00") } });
+    expect(say(dayHeadline([a()], now, true))).toEqual({
+      key: "today.headline.next",
+      vars: { client: "Studio Lumen inc.", at: at("18:00") },
+    });
   });
 
   it("says who is in the chair now, until when", () => {
     const busy = a({ startsAt: at("16:30"), endsAt: at("17:30"), checkedInAt: at("16:31") });
-    expect(say(dayHeadline([busy, a()], now, true))).toEqual({ key: "today.headline.inProgress", vars: { client: "Studio Lumen inc.", at: at("17:30") } });
+    expect(say(dayHeadline([busy, a()], now, true))).toEqual({
+      key: "today.headline.inProgress",
+      vars: { client: "Studio Lumen inc.", at: at("17:30") },
+    });
   });
 
   it("closes a day whose appointments are behind it, counting them", () => {
-    expect(say(dayHeadline([a({ status: AppointmentStatus.Done }), a({ status: AppointmentStatus.Cancelled })], now, true))).toEqual({ key: "today.headline.done", vars: { count: 1 } });
+    expect(
+      say(dayHeadline([a({ status: AppointmentStatus.Done }), a({ status: AppointmentStatus.Cancelled })], now, true)),
+    ).toEqual({ key: "today.headline.done", vars: { count: 1 } });
   });
 
   it("says an empty day is free (cancelled ones do not count)", () => {
     expect(say(dayHeadline([], now, true))).toEqual({ key: "today.headline.empty", vars: {} });
-    expect(say(dayHeadline([a({ status: AppointmentStatus.Cancelled })], now, true))).toEqual({ key: "today.headline.empty", vars: {} });
+    expect(say(dayHeadline([a({ status: AppointmentStatus.Cancelled })], now, true))).toEqual({
+      key: "today.headline.empty",
+      vars: {},
+    });
   });
 
   it("names a walk-in as such", () => {
-    expect(say(dayHeadline([a({ client: null })], now, true))).toEqual({ key: "today.headline.nextWalkIn", vars: { at: at("18:00") } });
+    expect(say(dayHeadline([a({ client: null })], now, true))).toEqual({
+      key: "today.headline.nextWalkIn",
+      vars: { at: at("18:00") },
+    });
   });
 
   it("reads a pets shop's day by its walks, never by the dog owner's name", () => {
     const pets = (h: ReturnType<typeof dayHeadline>) => headlineMessage(h, { dependants: true });
-    expect(pets(dayHeadline([a({ service: { fr: "Promenade en groupe", en: "Group walk" } })], now, true))).toEqual({ key: "today.headline.nextService", vars: { service: { fr: "Promenade en groupe", en: "Group walk" }, at: at("18:00") } });
-    const walking = a({ startsAt: at("16:30"), endsAt: at("17:30"), checkedInAt: at("16:31"), service: { fr: "Promenade solo", en: "Solo walk" } });
-    expect(pets(dayHeadline([walking], now, true))).toEqual({ key: "today.headline.inProgressService", vars: { service: { fr: "Promenade solo", en: "Solo walk" }, at: at("17:30") } });
+    expect(pets(dayHeadline([a({ service: { fr: "Promenade en groupe", en: "Group walk" } })], now, true))).toEqual({
+      key: "today.headline.nextService",
+      vars: { service: { fr: "Promenade en groupe", en: "Group walk" }, at: at("18:00") },
+    });
+    const walking = a({
+      startsAt: at("16:30"),
+      endsAt: at("17:30"),
+      checkedInAt: at("16:31"),
+      service: { fr: "Promenade solo", en: "Solo walk" },
+    });
+    expect(pets(dayHeadline([walking], now, true))).toEqual({
+      key: "today.headline.inProgressService",
+      vars: { service: { fr: "Promenade solo", en: "Solo walk" }, at: at("17:30") },
+    });
   });
 
   it("on another day, counts what is booked", () => {
@@ -110,5 +165,11 @@ describe("Aujourd'hui's headline (D4): true in every state, in the trade's words
 });
 
 describe("shiftDay is calendar arithmetic, never the machine's zone (folioviv#320)", () => {
-  it.each([["2026-03-08", 1, "2026-03-09"], ["2026-11-01", 1, "2026-11-02"], ["2026-12-31", 1, "2027-01-01"], ["2028-03-01", -1, "2028-02-29"], ["2026-10-24", -3, "2026-10-21"]])("%s %i -> %s", (day, by, want) => expect(shiftDay(day, by)).toBe(want));
+  it.each([
+    ["2026-03-08", 1, "2026-03-09"],
+    ["2026-11-01", 1, "2026-11-02"],
+    ["2026-12-31", 1, "2027-01-01"],
+    ["2028-03-01", -1, "2028-02-29"],
+    ["2026-10-24", -3, "2026-10-21"],
+  ])("%s %i -> %s", (day, by, want) => expect(shiftDay(day, by)).toBe(want));
 });

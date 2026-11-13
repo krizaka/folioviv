@@ -14,7 +14,15 @@ beforeAll(async () => {
 });
 afterAll(async () => t.drop());
 
-const offer = (nameEn: string, over: Record<string, unknown> = {}) => ({ nameFr: nameEn, nameEn, durationMinutes: 30, priceCents: 0, capacity: 1, priceVaries: true, ...over });
+const offer = (nameEn: string, over: Record<string, unknown> = {}) => ({
+  nameFr: nameEn,
+  nameEn,
+  durationMinutes: 30,
+  priceCents: 0,
+  capacity: 1,
+  priceVaries: true,
+  ...over,
+});
 
 async function shopOf(shopId: string) {
   const [row] = await t.db.select().from(shops).where(eq(shops.id, shopId));
@@ -26,7 +34,8 @@ describe("the offers' order and link (#597)", () => {
     const s = await walkerShop(t.db, "offers-order");
     const base = (await loadShop(t.db, await shopOf(s.shopId))).services.length;
     const ids: string[] = [];
-    for (const name of ["Verikora", "Folioviv", "Sovkora", "Entreprise"]) ids.push(await saveService(t.db, s.shopId, offer(name)));
+    for (const name of ["Verikora", "Folioviv", "Sovkora", "Entreprise"])
+      ids.push(await saveService(t.db, s.shopId, offer(name)));
     const listed = async () => (await loadShop(t.db, await shopOf(s.shopId))).services.map((x) => x.nameEn).slice(base);
     expect(await listed()).toEqual(["Verikora", "Folioviv", "Sovkora", "Entreprise"]);
     const all = (await loadShop(t.db, await shopOf(s.shopId))).services.map((x) => x.id);
@@ -39,9 +48,17 @@ describe("the offers' order and link (#597)", () => {
     const s = await walkerShop(t.db, "offers-refuse");
     const a = await saveService(t.db, s.shopId, offer("A"));
     const all = (await loadShop(t.db, await shopOf(s.shopId))).services.map((x) => x.id);
-    expect(await reorderServices(t.db, s.shopId, all.filter((id) => id !== a))).toBe(false);
+    expect(
+      await reorderServices(
+        t.db,
+        s.shopId,
+        all.filter((id) => id !== a),
+      ),
+    ).toBe(false);
     expect(await reorderServices(t.db, s.shopId, [...all, a])).toBe(false);
-    expect(await reorderServices(t.db, s.shopId, [...all.slice(1), "00000000-0000-0000-0000-000000000000"])).toBe(false);
+    expect(await reorderServices(t.db, s.shopId, [...all.slice(1), "00000000-0000-0000-0000-000000000000"])).toBe(
+      false,
+    );
   });
 
   it("carries an https link to the public page, and clears it with null", async () => {
@@ -68,8 +85,14 @@ describe("a logo for each theme (#597)", () => {
   it("keeps a dark-theme logo next to the light one, https only", async () => {
     const s = await walkerShop(t.db, "logo-dark");
     expect((await shopPageConfigOf(t.db, s.shopId)).logoDarkUrl).toBeNull();
-    await saveShopPageConfig(t.db, s.shopId, { logoUrl: "https://cdn.example/logo-light.png", logoDarkUrl: "https://cdn.example/logo-dark.png" });
-    expect(await shopPageConfigOf(t.db, s.shopId)).toMatchObject({ logoUrl: "https://cdn.example/logo-light.png", logoDarkUrl: "https://cdn.example/logo-dark.png" });
+    await saveShopPageConfig(t.db, s.shopId, {
+      logoUrl: "https://cdn.example/logo-light.png",
+      logoDarkUrl: "https://cdn.example/logo-dark.png",
+    });
+    expect(await shopPageConfigOf(t.db, s.shopId)).toMatchObject({
+      logoUrl: "https://cdn.example/logo-light.png",
+      logoDarkUrl: "https://cdn.example/logo-dark.png",
+    });
     await saveShopPageConfig(t.db, s.shopId, { logoDarkUrl: null });
     expect((await shopPageConfigOf(t.db, s.shopId)).logoDarkUrl).toBeNull();
     await expect(saveShopPageConfig(t.db, s.shopId, { logoDarkUrl: "http://cdn.example/x.png" })).rejects.toThrow();

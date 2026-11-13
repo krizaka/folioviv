@@ -2,7 +2,13 @@ import { parseShopPage } from "@krizaka/ui/shop";
 import { describe, expect, it } from "vitest";
 
 import { SHOP_TYPES } from "./shop-media";
-import { demoLookDocument, demoLooksOf, documentFromLegacy, LEGACY_SECTION_IDS, starterFor } from "./shop-page-document";
+import {
+  demoLookDocument,
+  demoLooksOf,
+  documentFromLegacy,
+  LEGACY_SECTION_IDS,
+  starterFor,
+} from "./shop-page-document";
 
 const all = LEGACY_SECTION_IDS.map((id) => ({ id, visible: true }));
 
@@ -13,7 +19,19 @@ describe("the shop page document", () => {
   });
 
   it("keeps the order and the visibility: a hidden section is disabled, not lost", () => {
-    const order = ["reviews", "services", "trust", "hours", "team", "zones", "gallery", "wall", "reels", "announcements", "follow"] as const;
+    const order = [
+      "reviews",
+      "services",
+      "trust",
+      "hours",
+      "team",
+      "zones",
+      "gallery",
+      "wall",
+      "reels",
+      "announcements",
+      "follow",
+    ] as const;
     const doc = documentFromLegacy({ sections: order.map((id) => ({ id, visible: id !== "wall" })), trade: "salon" });
     const keys = doc.sections.map((s) => s.key);
     expect(keys[0]).toBe("s_hero");

@@ -27,7 +27,12 @@ export interface InvoiceDeliveryMail {
 }
 
 /** Enqueues one invoice e-mail and creates its per-send link in the same transaction. */
-export async function enqueueInvoiceDelivery(db: Db, shopId: string, invoiceId: string, mail: InvoiceDeliveryMail): Promise<{ deliveryId: string; mailId: string }> {
+export async function enqueueInvoiceDelivery(
+  db: Db,
+  shopId: string,
+  invoiceId: string,
+  mail: InvoiceDeliveryMail,
+): Promise<{ deliveryId: string; mailId: string }> {
   return db.transaction(async (tx) => {
     await tx.execute(sql`SELECT id FROM shops WHERE id = ${shopId} FOR UPDATE`);
     const [invoice] = await tx
@@ -39,7 +44,9 @@ export async function enqueueInvoiceDelivery(db: Db, shopId: string, invoiceId: 
     if (invoice.erasedAt) throw new ShopError("AK_CLIENT_UNREACHABLE", "AK_CLIENT_UNREACHABLE");
     if (!mail.toEmail.trim()) throw new ShopError("AK_INVOICE_RECIPIENT", "AK_INVOICE_RECIPIENT");
 
-    const dayStart = new Date(Date.UTC(mail.createdAt.getUTCFullYear(), mail.createdAt.getUTCMonth(), mail.createdAt.getUTCDate()));
+    const dayStart = new Date(
+      Date.UTC(mail.createdAt.getUTCFullYear(), mail.createdAt.getUTCMonth(), mail.createdAt.getUTCDate()),
+    );
     const dayEnd = addDays(dayStart, 1);
     const count = await tx.execute(sql`
       SELECT count(*)::int AS count
@@ -47,25 +54,35 @@ export async function enqueueInvoiceDelivery(db: Db, shopId: string, invoiceId: 
        WHERE i.shop_id = ${shopId}
          AND d.created_at >= ${dayStart.toISOString()}::timestamptz
          AND d.created_at < ${dayEnd.toISOString()}::timestamptz`);
-    if ((count.rows[0] as { count: number }).count >= mail.maxPerShopPerDay) throw new ShopError("AK_INVOICE_SEND_LIMIT", "AK_INVOICE_SEND_LIMIT");
+    if ((count.rows[0] as { count: number }).count >= mail.maxPerShopPerDay)
+      throw new ShopError("AK_INVOICE_SEND_LIMIT", "AK_INVOICE_SEND_LIMIT");
 
     const [delivery] = await tx
       .insert(invoiceDeliveries)
-      .values({ invoiceId, viewTokenHash: mail.tokenHash, toEmail: mail.toEmail, expiresAt: mail.expiresAt, createdAt: mail.createdAt })
+      .values({
+        invoiceId,
+        viewTokenHash: mail.tokenHash,
+        toEmail: mail.toEmail,
+        expiresAt: mail.expiresAt,
+        createdAt: mail.createdAt,
+      })
       .returning({ id: invoiceDeliveries.id });
-    const [queued] = await tx.insert(mailOutbox).values({
-      toEmail: mail.toEmail,
-      ccEmail: mail.ccEmail,
-      fromName: mail.fromName,
-      locale: mail.locale,
-      template: "invoice-issued",
-      subject: mail.subject,
-      html: mail.html,
-      bodyText: mail.text,
-      relatedKind: "invoice_delivery",
-      relatedId: delivery!.id,
-      createdAt: mail.createdAt,
-    }).returning({ id: mailOutbox.id });
+    const [queued] = await tx
+      .insert(mailOutbox)
+      .values({
+        toEmail: mail.toEmail,
+        ccEmail: mail.ccEmail,
+        fromName: mail.fromName,
+        locale: mail.locale,
+        template: "invoice-issued",
+        subject: mail.subject,
+        html: mail.html,
+        bodyText: mail.text,
+        relatedKind: "invoice_delivery",
+        relatedId: delivery!.id,
+        createdAt: mail.createdAt,
+      })
+      .returning({ id: mailOutbox.id });
     return { deliveryId: delivery!.id, mailId: queued!.id };
   });
 }
@@ -79,14 +96,27 @@ export async function invoiceByToken(db: Db, token: string, now: Date) {
     .from(invoiceDeliveries)
     .innerJoin(invoices, eq(invoices.id, invoiceDeliveries.invoiceId))
     .innerJoin(clients, eq(clients.id, invoices.clientId))
-    .where(and(eq(invoiceDeliveries.viewTokenHash, hash), sql`${invoiceDeliveries.expiresAt} > ${now.toISOString()}::timestamptz`, isNull(invoiceDeliveries.revokedAt), isNull(clients.erasedAt)))
+    .where(
+      and(
+        eq(invoiceDeliveries.viewTokenHash, hash),
+        sql`${invoiceDeliveries.expiresAt} > ${now.toISOString()}::timestamptz`,
+        isNull(invoiceDeliveries.revokedAt),
+        isNull(clients.erasedAt),
+      ),
+    )
     .limit(1);
   const delivery = found[0];
   if (!delivery) return null;
-  await db.update(invoiceDeliveries).set({ openedAt: now }).where(and(eq(invoiceDeliveries.id, delivery.id), isNull(invoiceDeliveries.openedAt)));
+  await db
+    .update(invoiceDeliveries)
+    .set({ openedAt: now })
+    .where(and(eq(invoiceDeliveries.id, delivery.id), isNull(invoiceDeliveries.openedAt)));
   const invoice = await invoiceDetail(db, delivery.shopId, delivery.invoiceId);
   if (!invoice) return null;
-  const [received] = await db.select({ paidCents: sql<number>`coalesce(sum(${payments.amountCents}), 0)::int` }).from(payments).where(eq(payments.invoiceId, delivery.invoiceId));
+  const [received] = await db
+    .select({ paidCents: sql<number>`coalesce(sum(${payments.amountCents}), 0)::int` })
+    .from(payments)
+    .where(eq(payments.invoiceId, delivery.invoiceId));
   return { ...invoice, paidCents: received?.paidCents ?? 0 };
 }
 
@@ -98,7 +128,10 @@ export async function invoiceReplacementByToken(db: Db, token: string, replaceme
   if (!owner) return null;
   const replacement = await invoiceDetail(db, owner.shopId, replacementId);
   if (!replacement) return null;
-  const [received] = await db.select({ paidCents: sql<number>`coalesce(sum(${payments.amountCents}), 0)::int` }).from(payments).where(eq(payments.invoiceId, replacementId));
+  const [received] = await db
+    .select({ paidCents: sql<number>`coalesce(sum(${payments.amountCents}), 0)::int` })
+    .from(payments)
+    .where(eq(payments.invoiceId, replacementId));
   return { ...replacement, paidCents: received?.paidCents ?? 0 };
 }
 
@@ -117,7 +150,10 @@ export async function invoiceDeliveryHistory(db: Db, shopId: string, invoiceId: 
     })
     .from(invoiceDeliveries)
     .innerJoin(invoices, eq(invoices.id, invoiceDeliveries.invoiceId))
-    .leftJoin(mailOutbox, and(eq(mailOutbox.relatedId, invoiceDeliveries.id), eq(mailOutbox.relatedKind, "invoice_delivery")))
+    .leftJoin(
+      mailOutbox,
+      and(eq(mailOutbox.relatedId, invoiceDeliveries.id), eq(mailOutbox.relatedKind, "invoice_delivery")),
+    )
     .where(and(eq(invoices.id, invoiceId), eq(invoices.shopId, shopId)))
     .orderBy(desc(invoiceDeliveries.createdAt));
 }
@@ -156,14 +192,30 @@ export async function invoiceForClientAccount(db: Db, accountId: string, invoice
   if (!row) return null;
   const invoice = await invoiceDetail(db, row.shopId, row.invoiceId);
   if (!invoice) return null;
-  const [received] = await db.select({ paidCents: sql<number>`coalesce(sum(${payments.amountCents}), 0)::int` }).from(payments).where(eq(payments.invoiceId, row.invoiceId));
+  const [received] = await db
+    .select({ paidCents: sql<number>`coalesce(sum(${payments.amountCents}), 0)::int` })
+    .from(payments)
+    .where(eq(payments.invoiceId, row.invoiceId));
   return { ...invoice, paidCents: received?.paidCents ?? 0 };
 }
 
 export async function invoiceMailSettings(db: Db, shopId: string) {
   const [[shop], [logo]] = await Promise.all([
-    db.select({ message: shops.invoiceMailMessage, fromName: shops.invoiceMailFromName, copy: shops.invoiceMailCopy, linkDays: shops.invoiceLinkDays, publicEmail: shops.publicEmail }).from(shops).where(eq(shops.id, shopId)),
-    db.select({ url: shopMedia.url }).from(shopMedia).where(and(eq(shopMedia.shopId, shopId), eq(shopMedia.role, "cover"))).limit(1),
+    db
+      .select({
+        message: shops.invoiceMailMessage,
+        fromName: shops.invoiceMailFromName,
+        copy: shops.invoiceMailCopy,
+        linkDays: shops.invoiceLinkDays,
+        publicEmail: shops.publicEmail,
+      })
+      .from(shops)
+      .where(eq(shops.id, shopId)),
+    db
+      .select({ url: shopMedia.url })
+      .from(shopMedia)
+      .where(and(eq(shopMedia.shopId, shopId), eq(shopMedia.role, "cover")))
+      .limit(1),
   ]);
   return shop ? { shop, logo: logo?.url ?? null } : null;
 }

@@ -14,7 +14,8 @@ const ROLES = ["owner", "manager", "staff"];
 export function staffFromEnv(env) {
   const email = (env.QA_STAFF_EMAIL ?? "").trim().toLowerCase();
   if (!/^[^@\s]+@[^@\s]+$/.test(email)) throw new Error("QA_STAFF_EMAIL is missing or invalid");
-  if (!env.QA_STAFF_PASSWORD || env.QA_STAFF_PASSWORD.length < 12) throw new Error("QA_STAFF_PASSWORD is missing or shorter than 12 characters");
+  if (!env.QA_STAFF_PASSWORD || env.QA_STAFF_PASSWORD.length < 12)
+    throw new Error("QA_STAFF_PASSWORD is missing or shorter than 12 characters");
   const role = env.QA_STAFF_ROLE ?? "staff";
   if (!ROLES.includes(role)) throw new Error(`QA_STAFF_ROLE is one of ${ROLES.join(", ")}`);
   return { email, password: env.QA_STAFF_PASSWORD, role, shopSlug: env.QA_STAFF_SHOP ?? "cedre-ciseaux" };
@@ -26,7 +27,10 @@ async function main() {
   const url = new URL(process.env.DATABASE_URL ?? "");
   const tls = ["require", "verify-ca", "verify-full"].includes(url.searchParams.get("sslmode") ?? "");
   url.searchParams.delete("sslmode");
-  const client = new pg.Client({ connectionString: url.toString(), ...(tls ? { ssl: { ca: process.env.DATABASE_CA_CERT?.replace(/\\n/g, "\n"), rejectUnauthorized: true } } : {}) });
+  const client = new pg.Client({
+    connectionString: url.toString(),
+    ...(tls ? { ssl: { ca: process.env.DATABASE_CA_CERT?.replace(/\\n/g, "\n"), rejectUnauthorized: true } } : {}),
+  });
   await client.connect();
   try {
     const [shop] = (await client.query("SELECT id FROM shops WHERE slug = $1", [member.shopSlug])).rows;
@@ -43,7 +47,9 @@ async function main() {
        ON CONFLICT (scope_id, account_id) DO UPDATE SET role = EXCLUDED.role`,
       [shop.id, account.id, member.role],
     );
-    console.log(`seed-staff: ${member.email} is ${member.role} of ${member.shopSlug} (password from the environment, not printed)`);
+    console.log(
+      `seed-staff: ${member.email} is ${member.role} of ${member.shopSlug} (password from the environment, not printed)`,
+    );
   } finally {
     await client.end();
   }

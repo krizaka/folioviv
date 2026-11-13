@@ -4,7 +4,9 @@ import { cookieProblems } from "./check-cookies.mjs";
 
 describe("check-cookies", () => {
   it("passes a host-locked cookie on https", () => {
-    expect(cookieProblems(["__Host-folioviv_session=x; Path=/; Secure; HttpOnly; SameSite=lax"], { https: true })).toEqual([]);
+    expect(
+      cookieProblems(["__Host-folioviv_session=x; Path=/; Secure; HttpOnly; SameSite=lax"], { https: true }),
+    ).toEqual([]);
   });
   it("refuses a Domain attribute everywhere", () => {
     expect(cookieProblems(["folioviv_session=x; Path=/; Domain=folioviv.com"], { https: false })).toHaveLength(1);

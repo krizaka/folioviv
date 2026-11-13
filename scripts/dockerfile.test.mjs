@@ -13,7 +13,13 @@ describe("the image build", () => {
     const sources = dockerfile
       .split("\n")
       .filter((line) => /^COPY\s/.test(line) && !/--from=/.test(line))
-      .flatMap((line) => line.replace(/^COPY\s+(--\S+\s+)*/, "").trim().split(/\s+/).slice(0, -1));
+      .flatMap((line) =>
+        line
+          .replace(/^COPY\s+(--\S+\s+)*/, "")
+          .trim()
+          .split(/\s+/)
+          .slice(0, -1),
+      );
     expect(sources.length).toBeGreaterThan(0);
     const missing = sources.filter((src) => src !== "." && !existsSync(new URL(`../${src}`, import.meta.url)));
     expect(missing).toEqual([]);

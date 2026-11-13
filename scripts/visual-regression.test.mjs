@@ -27,7 +27,8 @@ describe("the visual regression", () => {
 
   it("covers the main journeys: the public side, a shop, a service and the walker's day, in both themes", () => {
     const journeys = read("apps/web/e2e/visual/journeys.visual.mjs");
-    for (const name of ["landing", "shop-page", "service-booking", "sign-in", "walker-today"]) expect(journeys).toContain(`name: "${name}"`);
+    for (const name of ["landing", "shop-page", "service-booking", "sign-in", "walker-today"])
+      expect(journeys).toContain(`name: "${name}"`);
     expect(journeys).toContain("mask: LIVE");
   });
 

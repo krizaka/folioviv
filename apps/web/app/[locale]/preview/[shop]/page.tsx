@@ -35,13 +35,43 @@ export default async function ShopPreview({ params }: Readonly<{ params: Promise
   const content = asPageLocale(raw);
   const locale = uiLocaleOf(content);
   const now = requestNow();
-  const [team, enabledUpcomingSections, community, rules, document, accent, paper] = await Promise.all([teamDay(db(), shopId, now), shopSectionFeatures(), communityOf(db(), shopId), reviewRules(), draftShopPage(db(), shopId), shopAccentOf(db(), shopId), shopPaperOf(db(), shopId).then(async (paper) => shopPaperShown(paper, await ownerOfShop(db(), shopId)))]);
-  const placed = buildCommunity({ community, locale, today: localDay(now, page.shop.timezone), rules, enabled: enabledUpcomingSections });
-  const view = buildStorefront({ page, locale, contentLocale: content, now, teamDay: team, enabledUpcomingSections, community: placed, defaults: await proposedDefaults(page) });
+  const [team, enabledUpcomingSections, community, rules, document, accent, paper] = await Promise.all([
+    teamDay(db(), shopId, now),
+    shopSectionFeatures(),
+    communityOf(db(), shopId),
+    reviewRules(),
+    draftShopPage(db(), shopId),
+    shopAccentOf(db(), shopId),
+    shopPaperOf(db(), shopId).then(async (paper) => shopPaperShown(paper, await ownerOfShop(db(), shopId))),
+  ]);
+  const placed = buildCommunity({
+    community,
+    locale,
+    today: localDay(now, page.shop.timezone),
+    rules,
+    enabled: enabledUpcomingSections,
+  });
+  const view = buildStorefront({
+    page,
+    locale,
+    contentLocale: content,
+    now,
+    teamDay: team,
+    enabledUpcomingSections,
+    community: placed,
+    defaults: await proposedDefaults(page),
+  });
   return (
     <main id="content">
       <PreviewBridge />
-      <ShopPageView page={document.page} view={view} locale={locale} accent={accent ?? undefined} paper={paper} today={localDay(now, page.shop.timezone)} />
+      <ShopPageView
+        page={document.page}
+        view={view}
+        locale={locale}
+        accent={accent ?? undefined}
+        paper={paper}
+        today={localDay(now, page.shop.timezone)}
+      />
     </main>
   );
 }

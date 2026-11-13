@@ -7,7 +7,7 @@ import { captchaMissing, verifyCaptcha } from "@/lib/captcha";
 import { clientIp } from "@/lib/client-ip";
 import { db } from "@/lib/db";
 import { mailSettings, sessionSecret } from "@/lib/env";
-import { type GuestHold,guestStart, guestVerification } from "@/lib/guest-booking";
+import { type GuestHold, guestStart, guestVerification } from "@/lib/guest-booking";
 import { handle, readJson, refuse } from "@/lib/http";
 import { mailConfigured, sendCodeMail } from "@/lib/mail";
 import { limit } from "@/lib/rate-limit";
@@ -42,10 +42,20 @@ export function POST(req: Request, { params }: { params: Promise<{ slug: string 
     const verification = guestVerification(db(), now, sessionSecret());
     await verification.purge();
     const issued = await verification.issue({ address: input.email, payload: hold });
-    const sent = await sendCodeMail(db(), input.email, verificationMail({ locale: input.language, code: issued.code, ttlMinutes: issued.ttlMinutes }), input.language, now(), settings);
+    const sent = await sendCodeMail(
+      db(),
+      input.email,
+      verificationMail({ locale: input.language, code: issued.code, ttlMinutes: issued.ttlMinutes }),
+      input.language,
+      now(),
+      settings,
+    );
     if (!sent) {
       throw refuse(502, "MAIL_FAILED", "The code could not be mailed");
     }
-    return Response.json({ challengeId: issued.challengeId, ttlMinutes: issued.ttlMinutes }, { status: 201, headers: { "Cache-Control": "no-store" } });
+    return Response.json(
+      { challengeId: issued.challengeId, ttlMinutes: issued.ttlMinutes },
+      { status: 201, headers: { "Cache-Control": "no-store" } },
+    );
   });
 }

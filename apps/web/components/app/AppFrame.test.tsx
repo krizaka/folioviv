@@ -4,13 +4,27 @@ import { describe, expect, it, vi } from "vitest";
 
 import { AppFrame } from "./AppFrame";
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }), usePathname: () => "/en/shops/s-1" }));
-vi.mock("@/lib/i18n-client", () => ({ useSay: () => ({ say: (key: string, vars?: Record<string, string>) => (vars ? `${key} ${Object.values(vars).join(" ")}` : key) }) }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
+  usePathname: () => "/en/shops/s-1",
+}));
+vi.mock("@/lib/i18n-client", () => ({
+  useSay: () => ({
+    say: (key: string, vars?: Record<string, string>) => (vars ? `${key} ${Object.values(vars).join(" ")}` : key),
+  }),
+}));
 
 const ITEMS = ["overview", "users", "shops", "invoices", "ledger", "operations", "audit"] as const;
 const html = renderToStaticMarkup(
   <KrizakaQueryProvider>
-    <AppFrame locale="en" productName="Folioviv" email="camille@example.com" name="Camille" base="/en" items={[...ITEMS]}>
+    <AppFrame
+      locale="en"
+      productName="Folioviv"
+      email="camille@example.com"
+      name="Camille"
+      base="/en"
+      items={[...ITEMS]}
+    >
       <p>page</p>
     </AppFrame>
   </KrizakaQueryProvider>,

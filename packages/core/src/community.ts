@@ -14,20 +14,34 @@ export const SIGN_VARIANTS = ["enamel", "neon", "painted"] as const;
 export const ATTACHMENTS = ["tape", "pin"] as const;
 
 // @fixed: the design's limits that keep every shop beautiful (docs/design/cahier-storefront.md § 5.3): the wall draws twelve items, a caption is 40 characters, a card 140, a tilt 8 degrees.
-export const WALL_LIMITS = { drawn: 12, caption: 40, note: 140, alt: 200, signature: 40, tilt: 8, order: 1000 } as const;
+export const WALL_LIMITS = {
+  drawn: 12,
+  caption: 40,
+  note: 140,
+  alt: 200,
+  signature: 40,
+  tilt: 8,
+  order: 1000,
+} as const;
 // @fixed: the same section: a flyer is 500 characters, three are pinned at a time.
 export const ANNOUNCEMENT_LIMITS = { text: 500, current: 3 } as const;
 // @fixed: a review is a short word; the owner's reply is as long.
 export const REVIEW_LIMITS = { text: 1000, reply: 1000, name: 40, service: 120 } as const;
 
-const httpsUrl = z.string().max(500).refine((value) => {
-  try {
-    const url = new URL(value);
-    return url.protocol === "https:" && !url.username && !url.password;
-  } catch {
-    return false;
-  }
-}, { message: "https only" });
+const httpsUrl = z
+  .string()
+  .max(500)
+  .refine(
+    (value) => {
+      try {
+        const url = new URL(value);
+        return url.protocol === "https:" && !url.username && !url.password;
+      } catch {
+        return false;
+      }
+    },
+    { message: "https only" },
+  );
 
 const place = {
   x: z.number().finite().min(0).max(100),
@@ -41,22 +55,49 @@ const caption = z.string().max(WALL_LIMITS.caption);
 const eitherLanguage = (fr: string, en: string) => fr.trim().length > 0 || en.trim().length > 0;
 
 export const wallItemSchema = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("polaroid"), ...place, attachment, imageUrl: httpsUrl, altFr: alt, altEn: alt, captionFr: caption.default(""), captionEn: caption.default("") })
-    .refine((item) => eitherLanguage(item.altFr, item.altEn), { message: "A photo needs its alternative text", path: ["altFr"] }),
-  z.object({ kind: z.literal("note"), ...place, attachment, textFr: z.string().max(WALL_LIMITS.note), textEn: z.string().max(WALL_LIMITS.note), signature: z.string().max(WALL_LIMITS.signature).default("") })
+  z
+    .object({
+      kind: z.literal("polaroid"),
+      ...place,
+      attachment,
+      imageUrl: httpsUrl,
+      altFr: alt,
+      altEn: alt,
+      captionFr: caption.default(""),
+      captionEn: caption.default(""),
+    })
+    .refine((item) => eitherLanguage(item.altFr, item.altEn), {
+      message: "A photo needs its alternative text",
+      path: ["altFr"],
+    }),
+  z
+    .object({
+      kind: z.literal("note"),
+      ...place,
+      attachment,
+      textFr: z.string().max(WALL_LIMITS.note),
+      textEn: z.string().max(WALL_LIMITS.note),
+      signature: z.string().max(WALL_LIMITS.signature).default(""),
+    })
     .refine((item) => eitherLanguage(item.textFr, item.textEn), { message: "A card needs a word", path: ["textFr"] }),
   z.object({ kind: z.literal("sign"), ...place, variant: z.enum(SIGN_VARIANTS).default("enamel") }),
 ]);
 export type WallItem = z.infer<typeof wallItemSchema>;
 
 /** The whole wall as the owner saves it: a texture and at most `max` items (`limits.wallItems`). */
-export const wallSchema = (max: number) => z.object({ texture: z.enum(WALL_TEXTURES), items: z.array(wallItemSchema).max(max) });
+export const wallSchema = (max: number) =>
+  z.object({ texture: z.enum(WALL_TEXTURES), items: z.array(wallItemSchema).max(max) });
 export type WallInput = z.infer<ReturnType<typeof wallSchema>>;
 
 // ---- reviews -------------------------------------------------------------------------------------------------------------------------------------
 
 export const REVIEW_STATES = ["published", "hidden_by_owner", "removed_by_admin", "pending"] as const;
-export const REVIEW_STATE = { published: "published", hiddenByOwner: "hidden_by_owner", removedByAdmin: "removed_by_admin", pending: "pending" } as const;
+export const REVIEW_STATE = {
+  published: "published",
+  hiddenByOwner: "hidden_by_owner",
+  removedByAdmin: "removed_by_admin",
+  pending: "pending",
+} as const;
 export interface ScoredReview {
   rating: number;
   verified: boolean;
@@ -80,12 +121,16 @@ export interface ReviewScore {
 
 /** `(C·m + Σr) / (C + n)` over the published, verified reviews only: a lone five-star word does not make a five-star shop. */
 export function reviewScore(reviews: readonly ScoredReview[], rules: ScoreRules): ReviewScore {
-  const counted = reviews.filter((r) => r.verified && r.state === REVIEW_STATE.published && Number.isInteger(r.rating) && r.rating >= 1 && r.rating <= 5);
+  const counted = reviews.filter(
+    (r) =>
+      r.verified && r.state === REVIEW_STATE.published && Number.isInteger(r.rating) && r.rating >= 1 && r.rating <= 5,
+  );
   const distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } as ReviewScore["distribution"];
   for (const r of counted) distribution[r.rating as 1 | 2 | 3 | 4 | 5] += 1;
   const count = counted.length;
   const sum = counted.reduce((n, r) => n + r.rating, 0);
-  const score = count === 0 ? null : Math.round(((rules.weight * rules.prior + sum) / (rules.weight + count)) * 10) / 10;
+  const score =
+    count === 0 ? null : Math.round(((rules.weight * rules.prior + sum) / (rules.weight + count)) * 10) / 10;
   return { count, score, distribution, shown: count >= rules.minCount && count > 0 };
 }
 
@@ -97,7 +142,10 @@ function newestFirst(a: { createdAt: Date }, b: { createdAt: Date }): number {
 }
 
 /** The flyers still up on `today` (the shop's local day, `YYYY-MM-DD`): no end date, or an end date not yet passed; newest first, at most three. */
-export function currentAnnouncements<T extends { endsOn: string | null; createdAt: Date }>(list: readonly T[], today: string): T[] {
+export function currentAnnouncements<T extends { endsOn: string | null; createdAt: Date }>(
+  list: readonly T[],
+  today: string,
+): T[] {
   return list
     .filter((a) => a.endsOn === null || a.endsOn >= today)
     .sort(newestFirst)
@@ -132,15 +180,36 @@ export function externalReel(value: string): ExternalReel | null {
   const host = url.hostname.toLowerCase();
   if (host === "www.tiktok.com" || host === "tiktok.com") {
     const id = /^\/@[\w.]{1,40}\/video\/(\d{8,25})\/?$/.exec(url.pathname)?.[1];
-    return id ? { platform: "tiktok", url: `https://www.tiktok.com${url.pathname.replace(/\/$/, "")}`, embedUrl: `https://www.tiktok.com/embed/v2/${id}` } : null;
+    return id
+      ? {
+          platform: "tiktok",
+          url: `https://www.tiktok.com${url.pathname.replace(/\/$/, "")}`,
+          embedUrl: `https://www.tiktok.com/embed/v2/${id}`,
+        }
+      : null;
   }
   if (host === "www.youtube.com" || host === "youtube.com" || host === "m.youtube.com" || host === "youtu.be") {
-    const id = host === "youtu.be" ? /^\/([\w-]{11})\/?$/.exec(url.pathname)?.[1] : /^\/shorts\/([\w-]{11})\/?$/.exec(url.pathname)?.[1];
-    return id ? { platform: "youtube-shorts", url: `https://www.youtube.com/shorts/${id}`, embedUrl: `https://www.youtube-nocookie.com/embed/${id}` } : null;
+    const id =
+      host === "youtu.be"
+        ? /^\/([\w-]{11})\/?$/.exec(url.pathname)?.[1]
+        : /^\/shorts\/([\w-]{11})\/?$/.exec(url.pathname)?.[1];
+    return id
+      ? {
+          platform: "youtube-shorts",
+          url: `https://www.youtube.com/shorts/${id}`,
+          embedUrl: `https://www.youtube-nocookie.com/embed/${id}`,
+        }
+      : null;
   }
   if (host === "www.instagram.com" || host === "instagram.com") {
     const id = /^\/(?:reel|reels|p)\/([\w-]{5,20})\/?$/.exec(url.pathname)?.[1];
-    return id ? { platform: "instagram", url: `https://www.instagram.com/reel/${id}/`, embedUrl: `https://www.instagram.com/reel/${id}/embed` } : null;
+    return id
+      ? {
+          platform: "instagram",
+          url: `https://www.instagram.com/reel/${id}/`,
+          embedUrl: `https://www.instagram.com/reel/${id}/embed`,
+        }
+      : null;
   }
   return null;
 }
@@ -175,7 +244,7 @@ export interface DetectedVideo {
   seconds: number;
 }
 
-const be32 = (b: Uint8Array, at: number) => ((b[at]! * 2 ** 24) + (b[at + 1]! << 16) + (b[at + 2]! << 8) + b[at + 3]!);
+const be32 = (b: Uint8Array, at: number) => b[at]! * 2 ** 24 + (b[at + 1]! << 16) + (b[at + 2]! << 8) + b[at + 3]!;
 const be64 = (b: Uint8Array, at: number) => be32(b, at) * 2 ** 32 + be32(b, at + 4);
 const tag = (b: Uint8Array, at: number) => String.fromCodePoint(b[at]!, b[at + 1]!, b[at + 2]!, b[at + 3]!);
 
@@ -215,14 +284,18 @@ function mp4Seconds(b: Uint8Array): number | null {
   return walk(0, b.length, false);
 }
 
-function readVint(b: Uint8Array, at: number, keepMarker: boolean): { value: number; length: number; unknown: boolean } | null {
+function readVint(
+  b: Uint8Array,
+  at: number,
+  keepMarker: boolean,
+): { value: number; length: number; unknown: boolean } | null {
   const first = b[at];
   if (first === undefined || first === 0) return null;
   let length = 1;
   while (!(first & (0x80 >> (length - 1)))) length += 1;
   if (at + length > b.length) return null;
   let value = keepMarker ? first : first & (0xff >> length);
-  let unknown = !keepMarker && (first & (0xff >> length)) === (0xff >> length);
+  let unknown = !keepMarker && (first & (0xff >> length)) === 0xff >> length;
   for (let i = 1; i < length; i++) {
     value = value * 256 + b[at + i]!;
     if (b[at + i] !== 0xff) unknown = false;
@@ -247,7 +320,12 @@ const floatOf = (b: Uint8Array, from: number, to: number) => {
   return to - from === 4 ? view.getFloat32(0) : view.getFloat64(0);
 };
 
-interface EbmlElement { id: number; body: number; end: number; unknown: boolean }
+interface EbmlElement {
+  id: number;
+  body: number;
+  end: number;
+  unknown: boolean;
+}
 
 /** The element at `at`: its id, where its body starts and ends (`to` when its size is unknown); null when the header is cut. */
 function ebmlElement(b: Uint8Array, at: number, to: number): EbmlElement | null {
@@ -261,7 +339,8 @@ function ebmlElement(b: Uint8Array, at: number, to: number): EbmlElement | null 
 /** The two leaves that state a WebM's length: the time scale, and the duration in those units. */
 function readLeaf(b: Uint8Array, el: EbmlElement, found: { scale: number; duration: number | null }): void {
   if (el.id === TIMECODE_SCALE) found.scale = uintOf(b, el.body, el.end);
-  if (el.id === DURATION && (el.end - el.body === 4 || el.end - el.body === 8)) found.duration = floatOf(b, el.body, el.end);
+  if (el.id === DURATION && (el.end - el.body === 4 || el.end - el.body === 8))
+    found.duration = floatOf(b, el.body, el.end);
 }
 
 function webmSeconds(b: Uint8Array): number | null {
@@ -285,11 +364,15 @@ function webmSeconds(b: Uint8Array): number | null {
 export function detectVideo(bytes: Uint8Array): DetectedVideo | null {
   if (bytes.length >= 12 && tag(bytes, 4) === "ftyp") {
     const seconds = mp4Seconds(bytes);
-    return seconds !== null && Number.isFinite(seconds) && seconds > 0 ? { ext: "mp4", mime: "video/mp4", seconds } : null;
+    return seconds !== null && Number.isFinite(seconds) && seconds > 0
+      ? { ext: "mp4", mime: "video/mp4", seconds }
+      : null;
   }
   if (bytes.length >= 4 && be32(bytes, 0) === EBML) {
     const seconds = webmSeconds(bytes);
-    return seconds !== null && Number.isFinite(seconds) && seconds > 0 ? { ext: "webm", mime: "video/webm", seconds } : null;
+    return seconds !== null && Number.isFinite(seconds) && seconds > 0
+      ? { ext: "webm", mime: "video/webm", seconds }
+      : null;
   }
   return null;
 }

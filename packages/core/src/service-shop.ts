@@ -26,11 +26,32 @@ export const dependantProfileSchema = z.object({
 });
 export type DependantProfile = z.infer<typeof dependantProfileSchema>;
 
-export const dependantInputSchema = z.object({ kind: z.enum(DEPENDANT_KINDS), name: z.string().trim().min(1).max(80), profile: dependantProfileSchema.default({}) });
+export const dependantInputSchema = z.object({
+  kind: z.enum(DEPENDANT_KINDS),
+  name: z.string().trim().min(1).max(80),
+  profile: dependantProfileSchema.default({}),
+});
 export type DependantInput = z.infer<typeof dependantInputSchema>;
 
 /** A shop page address: lowercase words joined by hyphens, never a word the site itself uses. « krizaka » is not here: the company opens its own shop on it through the held-address review (the `slugs.protectedTerms` setting holds it until an administrator clears it, #489). */
-export const RESERVED_SLUGS = ["admin", "api", "app", "en", "fr", "s", "report", "privacy", "sign-in", "sign-up", "forgot-password", "reset-password", "console", "folioviv", "www", "dev"] as const;
+export const RESERVED_SLUGS = [
+  "admin",
+  "api",
+  "app",
+  "en",
+  "fr",
+  "s",
+  "report",
+  "privacy",
+  "sign-in",
+  "sign-up",
+  "forgot-password",
+  "reset-password",
+  "console",
+  "folioviv",
+  "www",
+  "dev",
+] as const;
 export const slugSchema = z
   .string()
   .trim()
@@ -114,7 +135,8 @@ export function addLocalDays(day: string, n: number): string {
   return format(addDays(new Date(Date.UTC(y, m - 1, d, 12)), n), "yyyy-MM-dd");
 }
 
-const overlaps = (aStart: Date, aEnd: Date, bStart: Date, bEnd: Date) => isBefore(aStart, bEnd) && isBefore(bStart, aEnd);
+const overlaps = (aStart: Date, aEnd: Date, bStart: Date, bEnd: Date) =>
+  isBefore(aStart, bEnd) && isBefore(bStart, aEnd);
 
 /**
  * The start times a client may book: inside the weekly windows, not on a day off, far enough from now, and either free
@@ -137,9 +159,22 @@ export function openSlots(request: SlotRequest): Slot[] {
         const endsAt = addMinutes(startsAt, request.durationMinutes);
         if (isBefore(startsAt, earliest)) continue;
         if (request.busy && overlapsBusy(startsAt, endsAt, request.busy)) continue;
-        const same = request.visits.find((v) => v.startsAt.getTime() === startsAt.getTime() && v.endsAt.getTime() === endsAt.getTime() && v.serviceId === request.serviceId && v.zoneId === request.zoneId);
+        const same = request.visits.find(
+          (v) =>
+            v.startsAt.getTime() === startsAt.getTime() &&
+            v.endsAt.getTime() === endsAt.getTime() &&
+            v.serviceId === request.serviceId &&
+            v.zoneId === request.zoneId,
+        );
         if (same && request.capacity > 1) {
-          if (same.seatsTaken < request.capacity) out.push({ startsAt, endsAt, seatsLeft: request.capacity - same.seatsTaken, capacity: request.capacity, joins: true });
+          if (same.seatsTaken < request.capacity)
+            out.push({
+              startsAt,
+              endsAt,
+              seatsLeft: request.capacity - same.seatsTaken,
+              capacity: request.capacity,
+              joins: true,
+            });
           continue;
         }
         if (request.visits.some((v) => overlaps(startsAt, endsAt, v.startsAt, v.endsAt))) continue;
@@ -151,16 +186,24 @@ export function openSlots(request: SlotRequest): Slot[] {
 }
 
 /** A booking may be cancelled until `cancellationHours` before the visit starts (the shop's rule). */
-export const canCancel = (startsAt: Date, now: Date, cancellationHours: number): boolean => !isBefore(addMinutes(startsAt, -cancellationHours * 60), now);
+export const canCancel = (startsAt: Date, now: Date, cancellationHours: number): boolean =>
+  !isBefore(addMinutes(startsAt, -cancellationHours * 60), now);
 
 /** The time the walker spent, in whole minutes, from the check-in and check-out instants (at least one). */
-export const visitMinutes = (checkedInAt: Date, checkedOutAt: Date): number => Math.max(1, Math.round(differenceInSeconds(checkedOutAt, checkedInAt) / 60));
+export const visitMinutes = (checkedInAt: Date, checkedOutAt: Date): number =>
+  Math.max(1, Math.round(differenceInSeconds(checkedOutAt, checkedInAt) / 60));
 
 /** The image kinds a report photo may be, recognised by their first bytes — the declared type is never trusted. */
 export function sniffImage(bytes: Uint8Array): "jpeg" | "png" | "webp" | null {
   if (bytes.length > 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "jpeg";
-  if (bytes.length > 8 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) return "png";
-  if (bytes.length > 12 && String.fromCharCode(...bytes.slice(0, 4)) === "RIFF" && String.fromCharCode(...bytes.slice(8, 12)) === "WEBP") return "webp";
+  if (bytes.length > 8 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47)
+    return "png";
+  if (
+    bytes.length > 12 &&
+    String.fromCharCode(...bytes.slice(0, 4)) === "RIFF" &&
+    String.fromCharCode(...bytes.slice(8, 12)) === "WEBP"
+  )
+    return "webp";
   return null;
 }
 

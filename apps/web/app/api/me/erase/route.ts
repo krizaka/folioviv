@@ -15,10 +15,17 @@ export function POST(req: Request) {
   return handle(async () => {
     const input = await readJson(req, body);
     const { session, client } = await requireOwnClient(req, input.clientId);
-    if (input.confirmEmail !== session.account.email) throw refuse(409, "CONFIRM_MISMATCH", "The e-mail typed does not match the account");
+    if (input.confirmEmail !== session.account.email)
+      throw refuse(409, "CONFIRM_MISMATCH", "The e-mail typed does not match the account");
     limit("erase", req, session.account.id, [10, 3600]);
     await eraseClientEverywhere(client.id);
-    await audit({ action: "client.erased", actorId: session.account.id, actorLabel: session.account.email, targetId: client.id, headers: req.headers });
+    await audit({
+      action: "client.erased",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: client.id,
+      headers: req.headers,
+    });
     return Response.json({ ok: true });
   });
 }

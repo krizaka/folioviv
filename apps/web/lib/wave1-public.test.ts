@@ -23,14 +23,22 @@ const fr = bindProduct(frRaw);
 const ROOT = join(__dirname, "..");
 const read = (path: string) => readFileSync(join(ROOT, path), "utf8");
 const words = (node: unknown): string[] => {
-  if (typeof node === "string") {return [node];}
-  if (node && typeof node === "object") {return Object.values(node).flatMap(words);}
+  if (typeof node === "string") {
+    return [node];
+  }
+  if (node && typeof node === "object") {
+    return Object.values(node).flatMap(words);
+  }
   return [];
 };
 
 // The fonts are `next/font/local` calls, resolved by the Next compiler only.
 vi.mock("@/lib/shop-fonts", () => ({ shopSans: { variable: "" }, shopDisplay: { variable: "" } }));
-vi.mock("./shop-directory", async (original) => ({ ...(await original<typeof import("./shop-directory")>()), shopVerdict: vi.fn(async () => ({ kind: "shop" })), customHostVerdict: vi.fn(async () => ({ kind: "none" })) }));
+vi.mock("./shop-directory", async (original) => ({
+  ...(await original<typeof import("./shop-directory")>()),
+  shopVerdict: vi.fn(async () => ({ kind: "shop" })),
+  customHostVerdict: vi.fn(async () => ({ kind: "none" })),
+}));
 
 beforeEach(() => vi.stubEnv("APP_ALLOWED_HOSTS", "www.folioviv.com,dev.folioviv.com"));
 afterEach(() => vi.unstubAllEnvs());
@@ -38,7 +46,8 @@ afterEach(() => vi.unstubAllEnvs());
 /** The closed state keys on today's configuration (APP_SEARCH_INDEXING explicitly on AND the host of APP_PUBLIC_URL), never on a typed host. */
 describe("the site is closed to search engines unless the configuration explicitly opens it", () => {
   const CLOSED = [{}, { APP_SEARCH_INDEXING: "off" }, { APP_SEARCH_INDEXING: "" }];
-  const www = (path: string) => proxy(new NextRequest(`https://www.folioviv.com${path}`, { headers: { host: "www.folioviv.com" } }));
+  const www = (path: string) =>
+    proxy(new NextRequest(`https://www.folioviv.com${path}`, { headers: { host: "www.folioviv.com" } }));
   const configure = (setting: string | undefined) => {
     vi.stubEnv("APP_PUBLIC_URL", "https://www.folioviv.com");
     vi.stubEnv("APP_DEV_HOST", "dev.folioviv.com");
@@ -46,8 +55,14 @@ describe("the site is closed to search engines unless the configuration explicit
   };
 
   it("indexableOn: open only when on AND the public host; dev hosts never", () => {
-    for (const env of CLOSED) { expect(indexableOn("www.folioviv.com", env)).toBe(false); }
-    const on = { APP_SEARCH_INDEXING: "on", APP_PUBLIC_URL: "https://www.folioviv.com", APP_DEV_HOST: "dev.folioviv.com" };
+    for (const env of CLOSED) {
+      expect(indexableOn("www.folioviv.com", env)).toBe(false);
+    }
+    const on = {
+      APP_SEARCH_INDEXING: "on",
+      APP_PUBLIC_URL: "https://www.folioviv.com",
+      APP_DEV_HOST: "dev.folioviv.com",
+    };
     expect(indexableOn("www.folioviv.com", on)).toBe(true);
     expect(indexableOn("admin.folioviv.com", on)).toBe(false);
     expect(indexableOn("dev.folioviv.com", on)).toBe(false);
@@ -56,7 +71,11 @@ describe("the site is closed to search engines unless the configuration explicit
   it("no setting, or off: every answer on the public host says noindex and robots.txt disallows everything", async () => {
     for (const setting of [undefined, "off"]) {
       configure(setting);
-      for (const path of ["/fr", "/en", "/fr/pricing", "/en/sign-in", "/api/healthz"]) { expect(`${setting} ${path} ${(await www(path)).headers.get("x-robots-tag")}`).toBe(`${setting} ${path} noindex, nofollow`); }
+      for (const path of ["/fr", "/en", "/fr/pricing", "/en/sign-in", "/api/healthz"]) {
+        expect(`${setting} ${path} ${(await www(path)).headers.get("x-robots-tag")}`).toBe(
+          `${setting} ${path} noindex, nofollow`,
+        );
+      }
       const res = await www("/robots.txt");
       expect(res.headers.get("x-robots-tag")).toBe("noindex, nofollow");
       expect(await res.text()).toMatch(/^User-agent: \*\nDisallow: \/\n/);
@@ -66,7 +85,11 @@ describe("the site is closed to search engines unless the configuration explicit
   it("explicitly on: the public host is open, the dev host stays closed", async () => {
     configure("on");
     expect((await www("/en")).headers.get("x-robots-tag")).toBeNull();
-    expect((await proxy(new NextRequest("https://dev.folioviv.com/api/healthz", { headers: { host: "dev.folioviv.com" } }))).headers.get("x-robots-tag")).toBe("noindex, nofollow");
+    expect(
+      (
+        await proxy(new NextRequest("https://dev.folioviv.com/api/healthz", { headers: { host: "dev.folioviv.com" } }))
+      ).headers.get("x-robots-tag"),
+    ).toBe("noindex, nofollow");
   });
 
   it("robots.ts (the file the build writes) disallows everything for every crawler unless on", () => {
@@ -116,7 +139,8 @@ describe("no price anywhere public: the pages that show a price are gone from th
   });
 
   it("no amount, no fee and no percentage in the words a visitor reads (home, pricing invitation, meta, terms, privacy, llms.txt)", () => {
-    const AMOUNT = /\d[\d\s.,]*\s?\$|\$\s?\d|\b\d+\s?(CAD|USD)\b|par mois|per month|\/\s?mois|\/\s?month|cardRate|debitRate|debitCap|\{price\}/i;
+    const AMOUNT =
+      /\d[\d\s.,]*\s?\$|\$\s?\d|\b\d+\s?(CAD|USD)\b|par mois|per month|\/\s?mois|\/\s?month|cardRate|debitRate|debitCap|\{price\}/i;
     const FEES = /frais\b.*(carte|débit)|(card|debit).*\bfees?\b/i;
     for (const m of [fr, en]) {
       // The founder offer's words wait, unmounted, for the day the product resumes: the rest of the landing is what a visitor reads.
@@ -126,19 +150,25 @@ describe("no price anywhere public: the pages that show a price are gone from th
         expect(text).not.toMatch(FEES);
       }
       // The terms still say who pays whom, but name no amount.
-      for (const text of [...words(m.terms), ...words(m.privacy)]) { expect(text).not.toMatch(AMOUNT); }
+      for (const text of [...words(m.terms), ...words(m.privacy)]) {
+        expect(text).not.toMatch(AMOUNT);
+      }
     }
     expect(llmsText()).not.toMatch(/\d\s?\$|\$\s?\d/);
   });
 
   it("the terms point to no pricing page", () => {
-    for (const m of [fr, en]) { expect(JSON.stringify(m.terms)).not.toMatch(/page des tarifs|pricing page/i); }
+    for (const m of [fr, en]) {
+      expect(JSON.stringify(m.terms)).not.toMatch(/page des tarifs|pricing page/i);
+    }
   });
 });
 
 describe("no code name in a public address either", () => {
   it("the contact link names the commercial product and site", () => {
-    for (const locale of ["fr", "en"] as const) { expect(contactHref("folioviv-pricing", locale)).not.toMatch(/akinaza/i); }
+    for (const locale of ["fr", "en"] as const) {
+      expect(contactHref("folioviv-pricing", locale)).not.toMatch(/akinaza/i);
+    }
   });
 });
 
@@ -158,14 +188,19 @@ describe("the line is « taxes préparées », never « réglées »", () => {
   it("the title, the lead and the description", () => {
     expect(fr.landing.title).toBe("Vos rendez-vous et vos factures réglés, vos taxes préparées.");
     expect(en.landing.title).toBe("Your bookings and invoices sorted, your taxes prepared.");
-    for (const text of [fr.landing.title, fr.landing.lead, fr.meta.description]) { expect(text).not.toMatch(/taxes?[^.]{0,20}réglé/i); }
-    for (const text of [en.landing.title, en.landing.lead, en.meta.description]) { expect(text).not.toMatch(/taxes?,? sorted/i); }
+    for (const text of [fr.landing.title, fr.landing.lead, fr.meta.description]) {
+      expect(text).not.toMatch(/taxes?[^.]{0,20}réglé/i);
+    }
+    for (const text of [en.landing.title, en.landing.lead, en.meta.description]) {
+      expect(text).not.toMatch(/taxes?,? sorted/i);
+    }
     expect(fr.meta.description).toMatch(/taxes préparées/);
     expect(en.meta.description).toMatch(/taxes prepared/);
   });
 
   it("no code name in the words of the public face", () => {
-    for (const m of [fr, en]) { for (const text of [...words(m.landing), ...words(m.meta), ...words(m.pricing.access)]) {
+    for (const m of [fr, en]) {
+      for (const text of [...words(m.landing), ...words(m.meta), ...words(m.pricing.access)]) {
         expect(text).not.toMatch(/akinaza/i);
       }
     }

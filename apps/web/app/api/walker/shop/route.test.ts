@@ -13,14 +13,34 @@ vi.mock("@/lib/db", () => ({ db: vi.fn(() => ({})) }));
 vi.mock("@/lib/settings", () => ({ appSettings: vi.fn() }));
 const policy = { terms: [{ source: "login" }] };
 vi.mock("@/lib/slug-policy", () => ({ slugPolicy: vi.fn(async () => policy) }));
-vi.mock("@folioviv/db", async (original) => ({ ...(await original<typeof import("@folioviv/db")>()), saveShopPage: vi.fn() }));
+vi.mock("@folioviv/db", async (original) => ({
+  ...(await original<typeof import("@folioviv/db")>()),
+  saveShopPage: vi.fn(),
+}));
 
-const page = { name: "Atelier", legalName: "Atelier inc.", address: "1 rue X", slug: "atelier-b", ownerName: "Éric", published: true };
-const post = (query = "") => POST(new Request(`http://localhost/api/walker/shop${query}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(page) }));
+const page = {
+  name: "Atelier",
+  legalName: "Atelier inc.",
+  address: "1 rue X",
+  slug: "atelier-b",
+  ownerName: "Éric",
+  published: true,
+};
+const post = (query = "") =>
+  POST(
+    new Request(`http://localhost/api/walker/shop${query}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(page),
+    }),
+  );
 
 describe("adding a shop (#265)", () => {
   beforeEach(() => {
-    vi.mocked(requireSession).mockResolvedValue({ id: "s", account: { id: "owner", email: "o@example.com", role: "USER", locale: "en" } });
+    vi.mocked(requireSession).mockResolvedValue({
+      id: "s",
+      account: { id: "owner", email: "o@example.com", role: "USER", locale: "en" },
+    });
     vi.mocked(appSettings).mockReturnValue({ get: vi.fn(async () => 2) } as never);
     vi.mocked(saveShopPage).mockResolvedValue({ shopId: "new", created: true, held: false });
   });
@@ -29,7 +49,13 @@ describe("adding a shop (#265)", () => {
   it("creates one more shop, unpublished, for the signed-in account only, under the administrator's bound", async () => {
     const res = await post("?additional=1");
     expect(res.status).toBe(201);
-    expect(vi.mocked(saveShopPage).mock.calls[0]).toMatchObject([expect.anything(), "owner", { published: false, slug: "atelier-b" }, { additional: true, maxShops: 2 }, policy]);
+    expect(vi.mocked(saveShopPage).mock.calls[0]).toMatchObject([
+      expect.anything(),
+      "owner",
+      { published: false, slug: "atelier-b" },
+      { additional: true, maxShops: 2 },
+      policy,
+    ]);
   });
 
   it("hands the administrator's protected terms to every save, so an address wearing one is held (#537)", async () => {

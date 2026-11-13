@@ -4,10 +4,10 @@
    everything these pages draw. */
 @import "tailwindcss";
 @import "@krizaka/tailwind";
-@import "@krizaka/fonts/css";     /* the faces of @krizaka/fonts, Plus Jakarta Sans (--kz-font-product-display) for the product register's titles */
+@import "@krizaka/fonts/css"; /* the faces of @krizaka/fonts, Plus Jakarta Sans (--kz-font-product-display) for the product register's titles */
 @import "@krizaka/ui/tailwind.css";
 @import "@krizaka/tokens/brands/folioviv.css";
-@import "@krizaka/tokens/appearance.css";  /* the optional surface sets (Blueprint, Carbone) and the density of the Appearance block (ADR-006 §4) */
+@import "@krizaka/tokens/appearance.css"; /* the optional surface sets (Blueprint, Carbone) and the density of the Appearance block (ADR-006 §4) */
 
 html {
   overflow-x: hidden;
@@ -58,43 +58,119 @@ body {
    A template's hue, on the public page (`<main data-hue>`) and in the picker's previews: the --kz-hue contract of the
    blocks (@krizaka/ui/blocks.css falls back to the accent, so a shop without a hue stays on the Folioviv brand). Krizaka
    palette only; --kz-hue is decorative (≥ 3:1), --kz-hue-text is for small text (≥ 4.5:1), both themes. */
-[data-hue="cobalt"] { --kz-hue: hsl(217 92% 60%); --kz-hue-2: hsl(206 92% 62%); --kz-hue-text: hsl(217 92% 74%); }
-[data-hue="sky"]    { --kz-hue: hsl(199 89% 52%); --kz-hue-2: hsl(190 85% 52%); --kz-hue-text: hsl(199 89% 66%); }
-[data-hue="cyan"]   { --kz-hue: hsl(186 72% 45%); --kz-hue-2: hsl(196 80% 52%); --kz-hue-text: hsl(186 70% 58%); }
-[data-hue="indigo"] { --kz-hue: hsl(234 85% 68%); --kz-hue-2: hsl(222 90% 64%); --kz-hue-text: hsl(234 90% 80%); }
-[data-hue="steel"]  { --kz-hue: hsl(212 32% 62%); --kz-hue-2: hsl(206 40% 70%); --kz-hue-text: hsl(212 36% 74%); }
-[data-hue="ink"]    { --kz-hue: hsl(220 16% 80%); --kz-hue-2: hsl(217 40% 70%); --kz-hue-text: hsl(220 16% 86%); }
-html.light [data-hue="cobalt"] { --kz-hue: hsl(217 92% 50%); --kz-hue-2: hsl(206 92% 48%); --kz-hue-text: hsl(217 92% 40%); }
-html.light [data-hue="sky"]    { --kz-hue: hsl(199 89% 40%); --kz-hue-2: hsl(190 85% 38%); --kz-hue-text: hsl(200 90% 29%); }
-html.light [data-hue="cyan"]   { --kz-hue: hsl(186 80% 32%); --kz-hue-2: hsl(196 80% 38%); --kz-hue-text: hsl(188 85% 24%); }
-html.light [data-hue="indigo"] { --kz-hue: hsl(234 66% 52%); --kz-hue-2: hsl(222 80% 52%); --kz-hue-text: hsl(234 60% 45%); }
-html.light [data-hue="steel"]  { --kz-hue: hsl(212 28% 46%); --kz-hue-2: hsl(206 34% 50%); --kz-hue-text: hsl(212 30% 34%); }
-html.light [data-hue="ink"]    { --kz-hue: hsl(222 30% 22%); --kz-hue-2: hsl(217 50% 40%); --kz-hue-text: hsl(222 30% 20%); }
+[data-hue="cobalt"] {
+  --kz-hue: hsl(217 92% 60%);
+  --kz-hue-2: hsl(206 92% 62%);
+  --kz-hue-text: hsl(217 92% 74%);
+}
+[data-hue="sky"] {
+  --kz-hue: hsl(199 89% 52%);
+  --kz-hue-2: hsl(190 85% 52%);
+  --kz-hue-text: hsl(199 89% 66%);
+}
+[data-hue="cyan"] {
+  --kz-hue: hsl(186 72% 45%);
+  --kz-hue-2: hsl(196 80% 52%);
+  --kz-hue-text: hsl(186 70% 58%);
+}
+[data-hue="indigo"] {
+  --kz-hue: hsl(234 85% 68%);
+  --kz-hue-2: hsl(222 90% 64%);
+  --kz-hue-text: hsl(234 90% 80%);
+}
+[data-hue="steel"] {
+  --kz-hue: hsl(212 32% 62%);
+  --kz-hue-2: hsl(206 40% 70%);
+  --kz-hue-text: hsl(212 36% 74%);
+}
+[data-hue="ink"] {
+  --kz-hue: hsl(220 16% 80%);
+  --kz-hue-2: hsl(217 40% 70%);
+  --kz-hue-text: hsl(220 16% 86%);
+}
+html.light [data-hue="cobalt"] {
+  --kz-hue: hsl(217 92% 50%);
+  --kz-hue-2: hsl(206 92% 48%);
+  --kz-hue-text: hsl(217 92% 40%);
+}
+html.light [data-hue="sky"] {
+  --kz-hue: hsl(199 89% 40%);
+  --kz-hue-2: hsl(190 85% 38%);
+  --kz-hue-text: hsl(200 90% 29%);
+}
+html.light [data-hue="cyan"] {
+  --kz-hue: hsl(186 80% 32%);
+  --kz-hue-2: hsl(196 80% 38%);
+  --kz-hue-text: hsl(188 85% 24%);
+}
+html.light [data-hue="indigo"] {
+  --kz-hue: hsl(234 66% 52%);
+  --kz-hue-2: hsl(222 80% 52%);
+  --kz-hue-text: hsl(234 60% 45%);
+}
+html.light [data-hue="steel"] {
+  --kz-hue: hsl(212 28% 46%);
+  --kz-hue-2: hsl(206 34% 50%);
+  --kz-hue-text: hsl(212 30% 34%);
+}
+html.light [data-hue="ink"] {
+  --kz-hue: hsl(222 30% 22%);
+  --kz-hue-2: hsl(217 50% 40%);
+  --kz-hue-text: hsl(222 30% 20%);
+}
 
 /* The picker's tiny previews (TemplatePreview): the hero band and its title wear the template's hue, else the accent;
    the paper is a faint pattern drawn from the text colour, never a colour of its own. */
-.kz-tpl-preview-hero { background: color-mix(in srgb, var(--kz-hue, var(--kz-accent)) 18%, transparent); }
-.kz-tpl-preview-title { background: var(--kz-hue, var(--kz-accent)); }
-.kz-tpl-preview[data-paper="dot-grid"] { background-image: radial-gradient(color-mix(in srgb, currentColor 30%, transparent) 0.6px, transparent 0.8px); background-size: 6px 6px; }
-.kz-tpl-preview[data-paper="ruled"] { background-image: repeating-linear-gradient(to bottom, transparent 0 7px, color-mix(in srgb, currentColor 18%, transparent) 7px 8px); }
-.kz-tpl-preview[data-paper="kraft"] { background-color: color-mix(in srgb, var(--kz-accent) 10%, transparent); }
+.kz-tpl-preview-hero {
+  background: color-mix(in srgb, var(--kz-hue, var(--kz-accent)) 18%, transparent);
+}
+.kz-tpl-preview-title {
+  background: var(--kz-hue, var(--kz-accent));
+}
+.kz-tpl-preview[data-paper="dot-grid"] {
+  background-image: radial-gradient(color-mix(in srgb, currentColor 30%, transparent) 0.6px, transparent 0.8px);
+  background-size: 6px 6px;
+}
+.kz-tpl-preview[data-paper="ruled"] {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0 7px,
+    color-mix(in srgb, currentColor 18%, transparent) 7px 8px
+  );
+}
+.kz-tpl-preview[data-paper="kraft"] {
+  background-color: color-mix(in srgb, var(--kz-accent) 10%, transparent);
+}
 
 /* The frame under what stands above the page (the development notice): its screen is what is left of the viewport, so a short page
    never scrolls by the notice's height. `--kz-top-chrome-h` is measured by FrameSlot (0 without a notice). The rail is sticky, so it
    gets the same height or it would hold the page open. */
-[data-app-frame-slot] > .min-h-dvh { min-height: calc(100dvh - var(--kz-top-chrome-h, 0px)); }
+[data-app-frame-slot] > .min-h-dvh {
+  min-height: calc(100dvh - var(--kz-top-chrome-h, 0px));
+}
 @media (min-width: 48rem) {
-  [data-app-frame-slot] .md\:h-dvh { height: calc(100dvh - var(--kz-top-chrome-h, 0px)); }
+  [data-app-frame-slot] .md\:h-dvh {
+    height: calc(100dvh - var(--kz-top-chrome-h, 0px));
+  }
 }
 
 /* The first screen (the dev banner above the page included): the faces come from next/font (preloaded, display optional, metric-matched fallback), so nothing swaps late. */
 .kz-shop-fonts {
-  --kz-font-sans: var(--kz-shop-font-sans), "Atkinson Hyperlegible Next Fallback", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --kz-font-display: var(--kz-shop-font-display), "Plus Jakarta Sans Fallback", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --kz-font-sans:
+    var(--kz-shop-font-sans), "Atkinson Hyperlegible Next Fallback", system-ui, -apple-system, "Segoe UI", Roboto,
+    sans-serif;
+  --kz-font-display:
+    var(--kz-shop-font-display), "Plus Jakarta Sans Fallback", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   font-family: var(--kz-font-sans);
 }
 
 /* A shop's logo for each theme (folioviv#597): dark is the default, `html.light` swaps the file. */
-.kz-logo-light { display: none; }
-html.light .kz-logo-light { display: block; }
-html.light .kz-logo-dark { display: none; }
+.kz-logo-light {
+  display: none;
+}
+html.light .kz-logo-light {
+  display: block;
+}
+html.light .kz-logo-dark {
+  display: none;
+}

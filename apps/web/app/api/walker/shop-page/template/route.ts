@@ -9,7 +9,11 @@ import { templateCatalogue, templateRules } from "@/lib/template-rules";
 
 export const dynamic = "force-dynamic";
 
-const body = z.object({ templateId: z.string().regex(/^[a-z]+-[a-z]+$/), templateVersion: z.number().int().min(1).optional(), keepOrder: z.boolean().optional() });
+const body = z.object({
+  templateId: z.string().regex(/^[a-z]+-[a-z]+$/),
+  templateVersion: z.number().int().min(1).optional(),
+  keepOrder: z.boolean().optional(),
+});
 
 /**
  * The owner applies a template (#261): only a template the administrator offers, only while the switch is on. The shop's section order is replaced by the template's unless
@@ -19,10 +23,23 @@ export function POST(req: Request) {
   return handle(async () => {
     const { session, shop } = await requireOwner(req);
     const rules = await templateRules();
-    if (!rules.enabled) throw refuse(403, "FEATURE_OFF", "This feature is switched off", { feature: "features.storefrontTemplates" });
+    if (!rules.enabled)
+      throw refuse(403, "FEATURE_OFF", "This feature is switched off", { feature: "features.storefrontTemplates" });
     const input = await readJson(req, body);
-    const template = await applyTemplate(db(), shop.id, { ...input, offered: rules.offered }, await templateCatalogue(session.account.id));
-    await audit({ action: "shop.template_applied", actorId: session.account.id, actorLabel: session.account.email, targetId: shop.id, detail: { template: template.id, version: template.version, keepOrder: input.keepOrder ?? null }, headers: req.headers });
+    const template = await applyTemplate(
+      db(),
+      shop.id,
+      { ...input, offered: rules.offered },
+      await templateCatalogue(session.account.id),
+    );
+    await audit({
+      action: "shop.template_applied",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: shop.id,
+      detail: { template: template.id, version: template.version, keepOrder: input.keepOrder ?? null },
+      headers: req.headers,
+    });
     return Response.json(await shopPageConfigOf(db(), shop.id));
   });
 }

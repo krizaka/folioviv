@@ -22,9 +22,25 @@ export function POST(req: Request) {
   return handle(async () => {
     const { session, shop } = await requireShop(req, "catalogue");
     await assertShopFeature("features.shopAnnouncements");
-    const flyer = await readJson(req, z.object({ textFr: z.string().max(500).default(""), textEn: z.string().max(500).default(""), photoUrl: z.string().max(500).nullable().default(null), photoAlt: z.string().max(200).default(""), endsOn: z.string().nullable().default(null) }));
+    const flyer = await readJson(
+      req,
+      z.object({
+        textFr: z.string().max(500).default(""),
+        textEn: z.string().max(500).default(""),
+        photoUrl: z.string().max(500).nullable().default(null),
+        photoAlt: z.string().max(200).default(""),
+        endsOn: z.string().nullable().default(null),
+      }),
+    );
     const id = await addAnnouncement(db(), shop.id, flyer);
-    await audit({ action: "shop.announcement_added", actorId: session.account.id, actorLabel: session.account.email, targetId: shop.id, detail: { announcement: id }, headers: req.headers });
+    await audit({
+      action: "shop.announcement_added",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: shop.id,
+      detail: { announcement: id },
+      headers: req.headers,
+    });
     await announcePage(shop.id);
     return Response.json({ id }, { status: 201 });
   });

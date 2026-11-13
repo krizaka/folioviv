@@ -4,7 +4,8 @@
  * development notice in the footer. `indexable` only drives that notice; whether a host may be indexed is `indexableOn`: closed unless the
  * setting is explicitly `on` AND the host is the configured public host (krizaka-internal#2630: the paused site is not advertised).
  */
-export const indexable = (env: Record<string, string | undefined> = process.env): boolean => env.APP_SEARCH_INDEXING?.trim().toLowerCase() !== "off";
+export const indexable = (env: Record<string, string | undefined> = process.env): boolean =>
+  env.APP_SEARCH_INDEXING?.trim().toLowerCase() !== "off";
 
 export const NOINDEX = "noindex, nofollow";
 /** A closed site advertises nothing, no sitemap either (the family contract, krizaka-seo-family `--index off`). */
@@ -28,15 +29,25 @@ export const publicHost = (env: Record<string, string | undefined> = process.env
     return "";
   }
 };
-export const isDevHost = (host: string | null | undefined, env: Record<string, string | undefined> = process.env): boolean => !!env.APP_DEV_HOST?.trim() && bare(host) === bare(env.APP_DEV_HOST);
+export const isDevHost = (
+  host: string | null | undefined,
+  env: Record<string, string | undefined> = process.env,
+): boolean => !!env.APP_DEV_HOST?.trim() && bare(host) === bare(env.APP_DEV_HOST);
 /** The setting is on only when it is explicitly `on`: unset, `off` or anything else keeps the site closed (the product is paused, krizaka-internal#2630). */
-export const indexingExplicitlyOn = (env: Record<string, string | undefined> = process.env): boolean => env.APP_SEARCH_INDEXING?.trim().toLowerCase() === "on";
+export const indexingExplicitlyOn = (env: Record<string, string | undefined> = process.env): boolean =>
+  env.APP_SEARCH_INDEXING?.trim().toLowerCase() === "on";
 /**
  * Whether a response to this host may be indexed: only when the setting is explicitly on AND the host is the configured public host
  * (`APP_PUBLIC_URL`). No host is typed here, today's configuration decides. A `dev.*` host, or the one `APP_DEV_HOST` names, never is.
  */
-export const indexableOn = (host: string | null | undefined, env: Record<string, string | undefined> = process.env): boolean =>
-  !bare(host).startsWith("dev.") && !isDevHost(host, env) && indexingExplicitlyOn(env) && bare(host) === publicHost(env);
+export const indexableOn = (
+  host: string | null | undefined,
+  env: Record<string, string | undefined> = process.env,
+): boolean =>
+  !bare(host).startsWith("dev.") &&
+  !isDevHost(host, env) &&
+  indexingExplicitlyOn(env) &&
+  bare(host) === publicHost(env);
 
 /** What the dev host keeps serving: robots.txt, /healthz, the API (auth callbacks, webhooks, the mobile apps' calls) and /.well-known. */
 const DEV_KEEPS = ["/api/", "/.well-known/"];
@@ -47,4 +58,3 @@ export function devRedirect(method: string, pathname: string, search: string, pu
   if (DEV_KEEPS_EXACT.includes(pathname) || DEV_KEEPS.some((p) => pathname.startsWith(p))) return null;
   return `${publicUrl.replace(/\/$/, "")}${pathname}${search}`;
 }
-

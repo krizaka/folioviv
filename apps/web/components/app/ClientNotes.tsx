@@ -9,13 +9,20 @@ import { useCall } from "@/components/app/useCall";
 import { formatDate } from "@/lib/format";
 import { useSay } from "@/lib/i18n-client";
 
-const noteForm = createKrizakaForm({ schema: z.object({ body: z.string().trim().min(1).max(2000) }), defaultValues: { body: "" } });
+const noteForm = createKrizakaForm({
+  schema: z.object({ body: z.string().trim().min(1).max(2000) }),
+  defaultValues: { body: "" },
+});
 
 /**
  * The notes column of a client's file (D5): each note signed and dated on one line (who · when), newest first, and « Ajouter
  * une note » — saved for the shop under the author's name. One field, one save.
  */
-export function ClientNotes({ clientId, notes, timeZone }: Readonly<{ clientId: string; notes: ClientNote[]; timeZone: string }>) {
+export function ClientNotes({
+  clientId,
+  notes,
+  timeZone,
+}: Readonly<{ clientId: string; notes: ClientNote[]; timeZone: string }>) {
   const { say, locale } = useSay();
   const call = useCall();
   const form = noteForm.useForm({

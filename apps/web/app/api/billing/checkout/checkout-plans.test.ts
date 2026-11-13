@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
 
-
 const state = vi.hoisted(() => ({
   approved: false,
   eligible: true,
@@ -11,18 +10,25 @@ const state = vi.hoisted(() => ({
 }));
 
 vi.mock("@/app/system-clock", () => ({ systemClock: { now: () => new Date("2026-11-01T12:00:00Z") } }));
-vi.mock("@/lib/access", () => ({ requireSession: async () => ({ account: { id: "acc-1", email: "owner@example.test", locale: "en" } }) }));
+vi.mock("@/lib/access", () => ({
+  requireSession: async () => ({ account: { id: "acc-1", email: "owner@example.test", locale: "en" } }),
+}));
 vi.mock("@/lib/audit", () => ({ audit: async () => undefined }));
 vi.mock("@/lib/db", () => ({ db: () => ({}), query: async () => [] }));
 vi.mock("@/lib/rate-limit", () => ({ limit: () => undefined }));
-vi.mock("@/lib/env", () => ({ env: () => ({ APP_PUBLIC_URL: "https://folioviv.test", PAYMENTS_STRIPE_SECRET_KEY: state.secret }) }));
+vi.mock("@/lib/env", () => ({
+  env: () => ({ APP_PUBLIC_URL: "https://folioviv.test", PAYMENTS_STRIPE_SECRET_KEY: state.secret }),
+}));
 vi.mock("@/lib/billing", () => ({
   customerOf: async () => "cus_1",
   founderGate: async () => "open",
   recordOfferedVersion: async (_q: unknown, _a: string, v: string) => void state.recorded.push(v),
   trialEligible: async () => state.eligible,
 }));
-vi.mock("@folioviv/db", async (original) => ({ ...(await original<typeof import("@folioviv/db")>()), associationApproved: async () => state.approved }));
+vi.mock("@folioviv/db", async (original) => ({
+  ...(await original<typeof import("@folioviv/db")>()),
+  associationApproved: async () => state.approved,
+}));
 vi.mock("@/lib/price-catalogue", async () => {
   const { pricesInForce: inForce } = await import("@/lib/test-prices");
   const catalogue = await inForce(new Date("2026-11-01T12:00:00Z"));
@@ -34,15 +40,20 @@ vi.mock("@/lib/payments/config", async (original) => ({
     capabilities: { trial: true },
     price: async (kind: string) => ({ amount: state.amounts[kind] ?? 0, currency: "cad", interval: "month" }),
     createCustomer: async () => ({ id: "cus_1" }),
-    checkout: async (request: Record<string, unknown>) => (state.requests.push(request), { url: "https://pay.test/s", checkoutRef: "cs_1", expiresAt: null }),
+    checkout: async (request: Record<string, unknown>) => (
+      state.requests.push(request),
+      { url: "https://pay.test/s", checkoutRef: "cs_1", expiresAt: null }
+    ),
   }),
 }));
 
 import { POST } from "./route";
 
-const call = (plan: string) => POST(new Request(`http://x/api/billing/checkout?plan=${plan}&locale=en`, { method: "POST" }));
+const call = (plan: string) =>
+  POST(new Request(`http://x/api/billing/checkout?plan=${plan}&locale=en`, { method: "POST" }));
 const body = async (r: Response) => (await r.json()) as { code?: string; url?: string };
-const reset = () => Object.assign(state, { approved: false, eligible: true, secret: "sk_test_x", requests: [], recorded: [] });
+const reset = () =>
+  Object.assign(state, { approved: false, eligible: true, secret: "sk_test_x", requests: [], recorded: [] });
 
 describe("the checkout sells a plan of the catalogue, with its free months (ADR-003 addendum 2026-10-30)", () => {
   it("Starter starts with the entry's 90 free days, and the version offered is the new 29 $ one", async () => {

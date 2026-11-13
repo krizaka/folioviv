@@ -11,7 +11,10 @@ import { overlayOf, type Tree, wordAt } from "./vocabulary";
 /** The console's client side: it receives only the `console` slice of the active language. */
 export type ConsoleMessages = Pick<Messages, "console">;
 
-export const { I18nProvider, useI18n } = createI18nReact<ConsoleMessages, Locale>({ locales: ["en", "fr"], defaultLocale: "en" });
+export const { I18nProvider, useI18n } = createI18nReact<ConsoleMessages, Locale>({
+  locales: ["en", "fr"],
+  defaultLocale: "en",
+});
 
 /** The business type whose words the screens below speak (krizaka/folioviv#117): the shop's, read on the server. */
 const VocabularyContext = createContext<BusinessType>("pets");
@@ -38,7 +41,9 @@ export function useSay(explicit?: BusinessType) {
   const say = useCallback(
     (key: string, vars?: Record<string, string | number>): string => {
       const own = wordAt(overlayOf(messages.console as unknown as Tree, type), key);
-      return own !== undefined ? format(own, vars) : (t as unknown as (k: string, v?: Record<string, string | number>) => string)(`console.${key}`, vars);
+      return own !== undefined
+        ? format(own, vars)
+        : (t as unknown as (k: string, v?: Record<string, string | number>) => string)(`console.${key}`, vars);
     },
     [t, messages, format, type],
   );

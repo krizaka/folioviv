@@ -13,11 +13,7 @@ export const DEMO_SHOP = "pattes-saint-henri";
 /**
  * The three jobs, each shown by the real component of the app drawn with demo data (components/home/previews, lib/landing-demo.ts).
  */
-export const SCREENS = [
-  { id: "book" },
-  { id: "invoice" },
-  { id: "books" },
-] as const;
+export const SCREENS = [{ id: "book" }, { id: "invoice" }, { id: "books" }] as const;
 
 type DevPreview = { criteria: Record<string, { evidence?: string | null; na?: boolean | string }> };
 
@@ -31,7 +27,10 @@ export interface HeroAction {
 /** Signed in: « Open my shop » into the owner's app. Signed out: « Try the demo shop », with « Sign in » beside it. Never « Talk to us ». */
 export function heroActions(locale: Locale, signedIn: boolean): { primary: HeroAction; secondary: HeroAction | null } {
   if (signedIn) return { primary: { href: `/${locale}/app`, message: "openShop" }, secondary: null };
-  return { primary: { href: `/${locale}/s/${DEMO_SHOP}`, message: "tryDemo" }, secondary: { href: `/${locale}/sign-in`, message: "signIn" } };
+  return {
+    primary: { href: `/${locale}/s/${DEMO_SHOP}`, message: "tryDemo" },
+    secondary: { href: `/${locale}/sign-in`, message: "signIn" },
+  };
 }
 
 /**
@@ -40,6 +39,8 @@ export function heroActions(locale: Locale, signedIn: boolean): { primary: HeroA
  */
 const PAUSED = true;
 export function productStatus(preview: DevPreview): "paused" | "development" | "preview" {
-  if (PAUSED) {return "paused";}
+  if (PAUSED) {
+    return "paused";
+  }
   return Object.values(preview.criteria).every((c) => Boolean(c.evidence) || Boolean(c.na)) ? "preview" : "development";
 }

@@ -1,6 +1,6 @@
 import type { BusinessType } from "@folioviv/core";
 
-import { getDictionary,type Locale } from "@/lib/i18n";
+import { getDictionary, type Locale } from "@/lib/i18n";
 
 /**
  * The words of a business type (krizaka/folioviv#117). `console` holds the base words (the pet-care shop's, the first
@@ -30,7 +30,9 @@ export const overlayOf = (consoleMessages: Tree, type: BusinessType): Tree | und
 
 /** Every message of a tree with its dotted path. */
 export function entries(tree: Tree, prefix = ""): [string, string][] {
-  return Object.entries(tree).flatMap(([key, value]) => (typeof value === "string" ? [[`${prefix}${key}`, value] as [string, string]] : entries(value, `${prefix}${key}.`)));
+  return Object.entries(tree).flatMap(([key, value]) =>
+    typeof value === "string" ? [[`${prefix}${key}`, value] as [string, string]] : entries(value, `${prefix}${key}.`),
+  );
 }
 
 /** The console's messages as a business type reads them: the base, with the type's own words over it. */
@@ -50,4 +52,7 @@ export function wordsFor(consoleMessages: Tree, type: BusinessType): Tree {
 }
 
 /** What a server component reads: the console's messages in the shop's vocabulary. */
-export const consoleFor = (locale: Locale, type: BusinessType) => wordsFor(getDictionary(locale).console as unknown as Tree, type) as unknown as ReturnType<typeof getDictionary>["console"];
+export const consoleFor = (locale: Locale, type: BusinessType) =>
+  wordsFor(getDictionary(locale).console as unknown as Tree, type) as unknown as ReturnType<
+    typeof getDictionary
+  >["console"];

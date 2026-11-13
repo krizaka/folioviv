@@ -36,7 +36,12 @@ async function renditions(input, type, slot, name, ratio) {
   for (const width of DEFAULT_SLOTS[slot].widths) {
     for (const format of RENDITION_FORMATS) {
       const file = target(type, slot, `${name}-${width}.${format}`);
-      let image = sharp(input).resize({ width, height: ratio ? Math.round(width / ratio) : undefined, fit: "cover", position: "centre" });
+      let image = sharp(input).resize({
+        width,
+        height: ratio ? Math.round(width / ratio) : undefined,
+        fit: "cover",
+        position: "centre",
+      });
       image = format === "avif" ? image.avif(QUALITY.avif) : image.webp(QUALITY.webp);
       await image.toFile(file);
       record(logical(type, slot, `${name}-${width}.${format}`), file);
@@ -47,9 +52,13 @@ async function renditions(input, type, slot, name, ratio) {
 function loop(input, type, name) {
   const webm = target(type, "cover", `${name}-loop.webm`);
   const mp4 = target(type, "cover", `${name}-loop.mp4`);
-  const filter = "scale=2560:-1,zoompan=z='1+0.08*sin(PI*on/192)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=192:s=1280x720:fps=24,format=yuv420p";
+  const filter =
+    "scale=2560:-1,zoompan=z='1+0.08*sin(PI*on/192)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=192:s=1280x720:fps=24,format=yuv420p";
   const common = ["-y", "-loglevel", "error", "-loop", "1", "-i", input, "-vf", filter, "-t", "8", "-an"];
-  for (const [file, codec] of [[webm, ["-c:v", "libvpx-vp9", "-b:v", "0", "-crf", "36", "-row-mt", "1"]], [mp4, ["-c:v", "libx264", "-crf", "24", "-preset", "slow", "-movflags", "+faststart", "-pix_fmt", "yuv420p"]]]) {
+  for (const [file, codec] of [
+    [webm, ["-c:v", "libvpx-vp9", "-b:v", "0", "-crf", "36", "-row-mt", "1"]],
+    [mp4, ["-c:v", "libx264", "-crf", "24", "-preset", "slow", "-movflags", "+faststart", "-pix_fmt", "yuv420p"]],
+  ]) {
     const run = spawnSync("ffmpeg", [...common, ...codec, file], { encoding: "utf8" });
     if (run.status !== 0) throw new Error(`ffmpeg failed for ${file}: ${run.stderr}`);
   }
@@ -65,11 +74,16 @@ for (const type of SHOP_TYPES) {
   await sharp(cover).resize({ width: 1280, height: 720, fit: "cover" }).webp(QUALITY.webp).toFile(poster);
   record(logical(type, "cover", `${type}-cover-1-poster.webp`), poster);
   loop(cover, type, `${type}-cover-1`);
-  for (let n = 1; n <= DEFAULT_SLOTS.gallery.count; n += 1) await renditions(join(src, `${type}-gallery-${n}.png`), type, "gallery", `${type}-gallery-${n}`, 4 / 3);
-  for (let n = 1; n <= DEFAULT_SLOTS.service.count; n += 1) await renditions(join(src, `${type}-gallery-${n}.png`), type, "service", `${type}-service-${n}`, 3 / 2);
+  for (let n = 1; n <= DEFAULT_SLOTS.gallery.count; n += 1)
+    await renditions(join(src, `${type}-gallery-${n}.png`), type, "gallery", `${type}-gallery-${n}`, 4 / 3);
+  for (let n = 1; n <= DEFAULT_SLOTS.service.count; n += 1)
+    await renditions(join(src, `${type}-gallery-${n}.png`), type, "service", `${type}-service-${n}`, 3 / 2);
   console.log(type, "done");
 }
 
 const sorted = Object.fromEntries(Object.entries(manifest).sort(([a], [b]) => a.localeCompare(b)));
-writeFileSync(join(here, "../../lib/default-media.manifest.json"), `${JSON.stringify({ cdn: "https://krizaka-assets.b-cdn.net", root: "apps/folioviv", files: sorted }, null, 2)}\n`);
+writeFileSync(
+  join(here, "../../lib/default-media.manifest.json"),
+  `${JSON.stringify({ cdn: "https://krizaka-assets.b-cdn.net", root: "apps/folioviv", files: sorted }, null, 2)}\n`,
+);
 console.log(Object.keys(sorted).length, "files in the manifest");

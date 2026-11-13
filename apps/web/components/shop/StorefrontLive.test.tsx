@@ -4,7 +4,12 @@ import { StorefrontLive } from "./StorefrontLive";
 
 const hooks = vi.hoisted(() => ({ refresh: vi.fn(), effect: null as null | (() => void | (() => void)) }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: hooks.refresh }) }));
-vi.mock("react", async (original) => ({ ...await original<typeof import("react")>(), useEffect: (effect: () => void | (() => void)) => { hooks.effect = effect; } }));
+vi.mock("react", async (original) => ({
+  ...(await original<typeof import("react")>()),
+  useEffect: (effect: () => void | (() => void)) => {
+    hooks.effect = effect;
+  },
+}));
 
 class Source extends EventTarget {
   static instances: Source[] = [];

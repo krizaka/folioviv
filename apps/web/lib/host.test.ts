@@ -7,7 +7,10 @@ describe("host routing", () => {
     expect(isAdminHost("admin.folioviv.com")).toBe(true);
     expect(isAdminHost("dev.folioviv.com")).toBe(false);
     expect(routeFor("admin.folioviv.com", "/en", "en")).toEqual({ kind: "rewrite", path: "/en/console" });
-    expect(routeFor("admin.folioviv.com", "/fr/users/42", "en")).toEqual({ kind: "rewrite", path: "/fr/console/users/42" });
+    expect(routeFor("admin.folioviv.com", "/fr/users/42", "en")).toEqual({
+      kind: "rewrite",
+      path: "/fr/console/users/42",
+    });
     expect(routeFor("admin.folioviv.com", "/", "fr")).toEqual({ kind: "redirect", path: "/fr" });
     expect(routeFor("admin.folioviv.com", "/en/console/runs", "en")).toEqual({ kind: "redirect", path: "/en/runs" });
   });
@@ -31,20 +34,46 @@ describe("a shop's own subdomain (#77, level 2)", () => {
     const { shopOfHost } = await import("./host");
     expect(shopOfHost("pattes-saint-henri.folioviv.com", "folioviv.com")).toBe("pattes-saint-henri");
     expect(shopOfHost("Pattes-Saint-Henri.folioviv.com:443", "folioviv.com")).toBe("pattes-saint-henri");
-    for (const h of ["www.folioviv.com", "dev.folioviv.com", "admin.folioviv.com", "api.folioviv.com", "folioviv.com", "a.b.folioviv.com", "ab.folioviv.com", "bad_slug.folioviv.com", "evil.folioviv.com.attacker.io", "salon.verikora.com", null]) {
+    for (const h of [
+      "www.folioviv.com",
+      "dev.folioviv.com",
+      "admin.folioviv.com",
+      "api.folioviv.com",
+      "folioviv.com",
+      "a.b.folioviv.com",
+      "ab.folioviv.com",
+      "bad_slug.folioviv.com",
+      "evil.folioviv.com.attacker.io",
+      "salon.verikora.com",
+      null,
+    ]) {
       expect(shopOfHost(h, "folioviv.com"), String(h)).toBeNull();
     }
   });
   it("serves the shop page at the root, keeping the short address", () => {
-    expect(routeFor("salon-laurier.folioviv.com", "/", "fr", site)).toEqual({ kind: "rewrite", path: "/fr/s/salon-laurier" });
-    expect(routeFor("salon-laurier.folioviv.com", "/en", "fr", site)).toEqual({ kind: "rewrite", path: "/en/s/salon-laurier" });
+    expect(routeFor("salon-laurier.folioviv.com", "/", "fr", site)).toEqual({
+      kind: "rewrite",
+      path: "/fr/s/salon-laurier",
+    });
+    expect(routeFor("salon-laurier.folioviv.com", "/en", "fr", site)).toEqual({
+      kind: "rewrite",
+      path: "/en/s/salon-laurier",
+    });
   });
   it("lets the shop's own journey through, as the page links it", () => {
-    expect(routeFor("salon-laurier.folioviv.com", "/fr/s/salon-laurier/service/42/slots", "fr", site)).toEqual({ kind: "next" });
+    expect(routeFor("salon-laurier.folioviv.com", "/fr/s/salon-laurier/service/42/slots", "fr", site)).toEqual({
+      kind: "next",
+    });
   });
   it("sends everything else to www: another shop, the sign-in, the app", () => {
-    expect(routeFor("salon-laurier.folioviv.com", "/fr/s/autre-salon", "fr", site)).toEqual({ kind: "redirect", path: "https://www.folioviv.com/fr/s/autre-salon" });
-    expect(routeFor("salon-laurier.folioviv.com", "/fr/sign-in", "fr", site)).toEqual({ kind: "redirect", path: "https://www.folioviv.com/fr/sign-in" });
+    expect(routeFor("salon-laurier.folioviv.com", "/fr/s/autre-salon", "fr", site)).toEqual({
+      kind: "redirect",
+      path: "https://www.folioviv.com/fr/s/autre-salon",
+    });
+    expect(routeFor("salon-laurier.folioviv.com", "/fr/sign-in", "fr", site)).toEqual({
+      kind: "redirect",
+      path: "https://www.folioviv.com/fr/sign-in",
+    });
     expect(routeFor("salon-laurier.folioviv.com", "/robots.txt", "fr", site)).toEqual({ kind: "robotsClosed" });
   });
 });
@@ -55,12 +84,18 @@ describe("the Spanish shop page (#258)", () => {
     expect(routeFor("www.folioviv.com", "/es/s/salon-laurier/", "fr")).toEqual({ kind: "next" });
     expect(routeFor("www.folioviv.com", "/es/sign-in", "fr")).toEqual({ kind: "redirect", path: "/fr/es/sign-in" });
     expect(routeFor("www.folioviv.com", "/es/app", "en")).toEqual({ kind: "redirect", path: "/en/es/app" });
-    expect(routeFor("www.folioviv.com", "/es/s/salon-laurier/service/x", "en")).toEqual({ kind: "redirect", path: "/en/es/s/salon-laurier/service/x" });
+    expect(routeFor("www.folioviv.com", "/es/s/salon-laurier/service/x", "en")).toEqual({
+      kind: "redirect",
+      path: "/en/es/s/salon-laurier/service/x",
+    });
   });
 
   it("a shop's own address answers /es with its page in Spanish", () => {
     const site = "https://www.folioviv.com";
-    expect(routeFor("salon-laurier.folioviv.com", "/es", "fr", site)).toEqual({ kind: "rewrite", path: "/es/s/salon-laurier" });
+    expect(routeFor("salon-laurier.folioviv.com", "/es", "fr", site)).toEqual({
+      kind: "rewrite",
+      path: "/es/s/salon-laurier",
+    });
   });
 });
 
@@ -80,8 +115,19 @@ describe("shops on their own domain", () => {
   });
 
   it("sends the booking's last step and everything of the app to www, 308 (the session never exists on a shop host)", () => {
-    for (const path of ["/en/s/salon/service/42/confirm", "/en/s/salon/service/42/confirmation", "/fr/app", "/en/sign-in", "/en/s/other/service/1", "/en/pricing"]) {
-      expect(route("salon.folioviv.shop", path), path).toEqual({ kind: "redirect", path: `https://www.folioviv.com${path}`, permanent: true });
+    for (const path of [
+      "/en/s/salon/service/42/confirm",
+      "/en/s/salon/service/42/confirmation",
+      "/fr/app",
+      "/en/sign-in",
+      "/en/s/other/service/1",
+      "/en/pricing",
+    ]) {
+      expect(route("salon.folioviv.shop", path), path).toEqual({
+        kind: "redirect",
+        path: `https://www.folioviv.com${path}`,
+        permanent: true,
+      });
     }
   });
 
@@ -92,16 +138,40 @@ describe("shops on their own domain", () => {
 
   it("leads the shop domain's own apex and www to the app", () => {
     for (const host of ["folioviv.shop", "www.folioviv.shop"]) {
-      expect(route(host, "/anything")).toEqual({ kind: "redirect", path: "https://www.folioviv.com/", permanent: true });
+      expect(route(host, "/anything")).toEqual({
+        kind: "redirect",
+        path: "https://www.folioviv.com/",
+        permanent: true,
+      });
     }
   });
 
   it("moves the old addresses to the shop domain with a 308: <slug>.folioviv.com and /<locale>/s/<slug>", () => {
-    expect(route("salon.folioviv.com", "/")).toEqual({ kind: "redirect", path: "https://salon.folioviv.shop/", permanent: true });
-    expect(route("salon.folioviv.com", "/en/s/salon/service/3")).toEqual({ kind: "redirect", path: "https://salon.folioviv.shop/en/s/salon/service/3", permanent: true });
-    expect(route("www.folioviv.com", "/en/s/salon")).toEqual({ kind: "redirect", path: "https://salon.folioviv.shop/en", permanent: true });
-    expect(route("www.folioviv.com", "/es/s/salon")).toEqual({ kind: "redirect", path: "https://salon.folioviv.shop/es", permanent: true });
-    expect(route("www.folioviv.com", "/fr/s/salon/service/42/slots")).toEqual({ kind: "redirect", path: "https://salon.folioviv.shop/fr/s/salon/service/42/slots", permanent: true });
+    expect(route("salon.folioviv.com", "/")).toEqual({
+      kind: "redirect",
+      path: "https://salon.folioviv.shop/",
+      permanent: true,
+    });
+    expect(route("salon.folioviv.com", "/en/s/salon/service/3")).toEqual({
+      kind: "redirect",
+      path: "https://salon.folioviv.shop/en/s/salon/service/3",
+      permanent: true,
+    });
+    expect(route("www.folioviv.com", "/en/s/salon")).toEqual({
+      kind: "redirect",
+      path: "https://salon.folioviv.shop/en",
+      permanent: true,
+    });
+    expect(route("www.folioviv.com", "/es/s/salon")).toEqual({
+      kind: "redirect",
+      path: "https://salon.folioviv.shop/es",
+      permanent: true,
+    });
+    expect(route("www.folioviv.com", "/fr/s/salon/service/42/slots")).toEqual({
+      kind: "redirect",
+      path: "https://salon.folioviv.shop/fr/s/salon/service/42/slots",
+      permanent: true,
+    });
   });
 
   it("leaves the booking's hop and the app's pages on www, and the console on its host", () => {

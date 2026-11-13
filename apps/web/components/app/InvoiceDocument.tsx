@@ -13,14 +13,30 @@ export type InvoiceView = NonNullable<Awaited<ReturnType<typeof invoiceDetail>>>
  * is due, its payment terms and due date (krizaka/folioviv#113: a buyer needs them from $500, DORS/91-45 art. 3).
  * Each label and its value are plain text, so the document reads the same as a PDF text layer or a screen reader.
  */
-export function InvoiceDocument({ invoice, locale, backHref, heading: Heading = "h1" }: Readonly<{ invoice: InvoiceView; locale: Locale; backHref?: string; /** `h2` inside a page whose `h1` is the invoice's number (DetailLayout). */ heading?: "h1" | "h2" }>) {
+export function InvoiceDocument({
+  invoice,
+  locale,
+  backHref,
+  heading: Heading = "h1",
+}: Readonly<{
+  invoice: InvoiceView;
+  locale: Locale;
+  backHref?: string;
+  /** `h2` inside a page whose `h1` is the invoice's number (DetailLayout). */ heading?: "h1" | "h2";
+}>) {
   const t = getDictionary(invoice.language).console.invoiceDoc;
   const back = getDictionary(locale).console.invoices.back;
   const lang = INTL_LOCALE[invoice.language];
   // Integer cents through @krizaka/intl, in the invoice's language (never `cents / 100`).
   const money = (cents: number) => formatMoney(cents, invoice.language);
-  const date = new Date(`${invoice.issuedOn}T12:00:00Z`).toLocaleDateString(lang, { dateStyle: "long", timeZone: "UTC" });
-  const due = invoice.dueOn && invoice.termsDays !== null ? new Date(`${invoice.dueOn}T12:00:00Z`).toLocaleDateString(lang, { dateStyle: "long", timeZone: "UTC" }) : null;
+  const date = new Date(`${invoice.issuedOn}T12:00:00Z`).toLocaleDateString(lang, {
+    dateStyle: "long",
+    timeZone: "UTC",
+  });
+  const due =
+    invoice.dueOn && invoice.termsDays !== null
+      ? new Date(`${invoice.dueOn}T12:00:00Z`).toLocaleDateString(lang, { dateStyle: "long", timeZone: "UTC" })
+      : null;
   const termsOf = () => {
     if (invoice.termsDays === 0) return t.termsOnReceipt;
     if (invoice.termsDays === 1) return t.termsNetOne;
@@ -28,8 +44,18 @@ export function InvoiceDocument({ invoice, locale, backHref, heading: Heading = 
   };
   const terms = termsOf();
   return (
-    <article lang={invoice.language} className="flex max-w-3xl flex-col gap-5 rounded-lg border border-border-default bg-surface-1 p-5 sm:p-8" aria-labelledby="invoice-title">
-      {backHref ? <p><Link className="text-sm text-fg-accent underline" href={backHref} lang={locale}>← {back}</Link></p> : null}
+    <article
+      lang={invoice.language}
+      className="flex max-w-3xl flex-col gap-5 rounded-lg border border-border-default bg-surface-1 p-5 sm:p-8"
+      aria-labelledby="invoice-title"
+    >
+      {backHref ? (
+        <p>
+          <Link className="text-sm text-fg-accent underline" href={backHref} lang={locale}>
+            ← {back}
+          </Link>
+        </p>
+      ) : null}
       <header className="flex flex-wrap items-start justify-between gap-3">
         <Heading id="invoice-title" className="font-display text-2xl font-bold text-fg">
           {invoice.creditOf ? t.credit : t.title}
@@ -61,7 +87,9 @@ export function InvoiceDocument({ invoice, locale, backHref, heading: Heading = 
           <section aria-label={t.billedTo}>
             <h2 className="text-xs font-semibold text-fg-muted">{t.billedTo}</h2>
             <p className="font-semibold text-fg">{invoice.client.fullName}</p>
-            <p className="text-sm text-fg-secondary">{[invoice.client.email, invoice.client.phone].filter(Boolean).join(" · ")}</p>
+            <p className="text-sm text-fg-secondary">
+              {[invoice.client.email, invoice.client.phone].filter(Boolean).join(" · ")}
+            </p>
           </section>
         ) : null}
       </div>
@@ -92,7 +120,9 @@ export function InvoiceDocument({ invoice, locale, backHref, heading: Heading = 
         <dt className="text-fg-secondary">{t.qst}</dt>
         <dd className="text-right tabular-nums">{money(invoice.qstCents)}</dd>
         <dt className="border-t border-border-default pt-1 font-semibold text-fg">{t.total}</dt>
-        <dd className="border-t border-border-default pt-1 text-right tabular-nums font-semibold text-fg">{money(invoice.totalCents)}</dd>
+        <dd className="border-t border-border-default pt-1 text-right tabular-nums font-semibold text-fg">
+          {money(invoice.totalCents)}
+        </dd>
       </dl>
       <p className="text-xs text-fg-muted">{t.footer}</p>
     </article>

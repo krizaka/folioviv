@@ -26,8 +26,30 @@ const need = (name) => {
 };
 const who = { email: need("E2E_OWNER_EMAIL"), secret: need("E2E_OWNER_PASS") };
 const W = {
-  fr: { email: "Courriel", secret: "Mot de passe", signIn: "Se connecter", sections: "Sections", style: "Allure", publish: "Publier", discard: "Abandonner le brouillon", discardYes: "Oui, annuler", restore: "Restaurer", history: "Historique" },
-  en: { email: "E-mail", secret: "Password", signIn: "Sign in", sections: "Sections", style: "Style", publish: "Publish", discard: "Discard the draft", discardYes: "Yes, discard", restore: "Restore", history: "History" },
+  fr: {
+    email: "Courriel",
+    secret: "Mot de passe",
+    signIn: "Se connecter",
+    sections: "Sections",
+    style: "Allure",
+    publish: "Publier",
+    discard: "Abandonner le brouillon",
+    discardYes: "Oui, annuler",
+    restore: "Restaurer",
+    history: "Historique",
+  },
+  en: {
+    email: "E-mail",
+    secret: "Password",
+    signIn: "Sign in",
+    sections: "Sections",
+    style: "Style",
+    publish: "Publish",
+    discard: "Discard the draft",
+    discardYes: "Yes, discard",
+    restore: "Restore",
+    history: "History",
+  },
 }[LOCALE];
 
 mkdirSync(OUT, { recursive: true });
@@ -48,19 +70,32 @@ const until = async (fn, what, ms = 15000) => {
 };
 
 const browser = await chromium.launch();
-const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, locale: LOCALE === "fr" ? "fr-CA" : "en-CA", timezoneId: "America/Toronto" });
+const context = await browser.newContext({
+  viewport: { width: 1440, height: 1000 },
+  locale: LOCALE === "fr" ? "fr-CA" : "en-CA",
+  timezoneId: "America/Toronto",
+});
 const page = await context.newPage();
 const api = async (route, init) => {
   // The studio's own calls, as its page makes them: a browser says `Sec-Fetch-Site: same-origin`, which the API's write check (lib/csrf.ts) asks of a request that carries the session.
-  const res = await context.request.fetch(`${BASE}${route}`, { ...init, headers: { "sec-fetch-site": "same-origin", ...init?.headers } });
-  return { status: res.status(), body: (res.headers()["content-type"] ?? "").includes("json") ? await res.json() : await res.text() };
+  const res = await context.request.fetch(`${BASE}${route}`, {
+    ...init,
+    headers: { "sec-fetch-site": "same-origin", ...init?.headers },
+  });
+  return {
+    status: res.status(),
+    body: (res.headers()["content-type"] ?? "").includes("json") ? await res.json() : await res.text(),
+  };
 };
 const orderOf = (doc) => doc.sections.map((s) => s.key);
 const draftDoc = async () => (await api("/api/walker/page/draft")).body;
 /** What the public page draws: the sections in order, and the style id. */
 const publicView = async (slug) => {
   const html = String((await api(`/${LOCALE}/s/${slug}`)).body);
-  return { sections: [...html.matchAll(/data-shop-key="([^"]+)"/g)].map((m) => m[1]).join(), preset: html.match(/data-shop-preset="([^"]+)"/)?.[1] ?? "" };
+  return {
+    sections: [...html.matchAll(/data-shop-key="([^"]+)"/g)].map((m) => m[1]).join(),
+    preset: html.match(/data-shop-preset="([^"]+)"/)?.[1] ?? "",
+  };
 };
 
 try {
@@ -87,7 +122,10 @@ try {
   await page.goto(composerUrl);
   const sectionsNav = page.getByRole("navigation", { name: W.sections, exact: true });
   await sectionsNav.waitFor();
-  check((await sectionsNav.getByRole("listitem").count()) === startOrder.length, "the composer lists the page's sections");
+  check(
+    (await sectionsNav.getByRole("listitem").count()) === startOrder.length,
+    "the composer lists the page's sections",
+  );
 
   // 2 - reorder with the keyboard, change the style: the autosave stores the draft.
   // The page is drawn by the server first: a key or a choice before React has taken the controls over does nothing, and the autosave then never has a change to store (the CI flake of #543). Wait for the takeover of the controls we use, then for each action's visible effect, never a sleep.
@@ -95,12 +133,19 @@ try {
   const hydrated = (el) => Object.keys(el).some((k) => k.startsWith("__reactProps$"));
   await page.waitForFunction(hydrated, await sectionsNav.getByRole("button").first().elementHandle());
   await page.waitForFunction(hydrated, await picker.elementHandle());
-  const listOrder = () => sectionsNav.getByRole("listitem").allInnerTexts().then((texts) => texts.join("|"));
+  const listOrder = () =>
+    sectionsNav
+      .getByRole("listitem")
+      .allInnerTexts()
+      .then((texts) => texts.join("|"));
   const orderBefore = await listOrder();
   await sectionsNav.getByRole("listitem").nth(1).getByRole("button").first().focus();
   await page.keyboard.press("Alt+ArrowDown");
   await until(async () => (await listOrder()) !== orderBefore, "the list shows the section moved down");
-  const other = await picker.evaluate((el, current) => [...el.options].map((o) => o.value).find((v) => v !== current), startPreset);
+  const other = await picker.evaluate(
+    (el, current) => [...el.options].map((o) => o.value).find((v) => v !== current),
+    startPreset,
+  );
   if (other) {
     await picker.selectOption(other);
     await until(async () => (await picker.inputValue()) === other, "the style picker keeps the new style");
@@ -112,7 +157,10 @@ try {
   check(!!stored, "the autosave stored a draft");
   const movedOrder = stored ? orderOf(stored.page) : [];
   if (process.env.E2E_DEBUG) process.stdout.write(`${startOrder.join()} -> ${movedOrder.join()}\n`);
-  check(movedOrder[2] === startOrder[1] && movedOrder[1] === startOrder[2], "the draft has the section moved down with Alt+ArrowDown");
+  check(
+    movedOrder[2] === startOrder[1] && movedOrder[1] === startOrder[2],
+    "the draft has the section moved down with Alt+ArrowDown",
+  );
   check(!other || stored?.page.preset.id === other, "the draft has the new style");
   await page.screenshot({ path: path.join(OUT, "01-draft-desktop.png") });
 
@@ -132,8 +180,14 @@ try {
   check(!!changed, "the public page changed after publishing");
 
   // 4 - the owner edits again (a pending draft), then rolls back to the older version: the public page AND the draft are restored.
-  const edited = { ...published.page, sections: [published.page.sections[0], ...published.page.sections.slice(1).reverse()] };
-  check((await api("/api/walker/page/draft", { method: "PUT", data: edited })).status === 200, "the owner has a pending draft before restoring");
+  const edited = {
+    ...published.page,
+    sections: [published.page.sections[0], ...published.page.sections.slice(1).reverse()],
+  };
+  check(
+    (await api("/api/walker/page/draft", { method: "PUT", data: edited })).status === 200,
+    "the owner has a pending draft before restoring",
+  );
   await page.goto(composerUrl);
   await page.getByText(W.history, { exact: true }).click();
   await page.getByRole("button", { name: W.restore, exact: true }).first().click();
@@ -141,9 +195,15 @@ try {
     const d = await draftDoc();
     return d.draft === false ? d : null;
   }, "the rollback resets the draft").catch(() => null);
-  check(!!restored && orderOf(restored.page).join() === startOrder.join(), "after the rollback the draft is the restored page, not the earlier edit");
+  check(
+    !!restored && orderOf(restored.page).join() === startOrder.join(),
+    "after the rollback the draft is the restored page, not the earlier edit",
+  );
   const rolled = await publicView(slug);
-  check(rolled.sections === before.sections && rolled.preset === before.preset, "after the rollback the public page is the restored one");
+  check(
+    rolled.sections === before.sections && rolled.preset === before.preset,
+    "after the rollback the public page is the restored one",
+  );
 
   // 5 - discard: the draft equals the published page.
   await page.goto(composerUrl);
@@ -156,18 +216,28 @@ try {
     const d = await draftDoc();
     return d.draft === false ? d : null;
   }, "the draft is discarded").catch(() => null);
-  check(!!equal && orderOf(equal.page).join() === startOrder.join(), "after discarding, the draft equals the published page");
-  await until(async () => (await page.getByRole("alertdialog").count()) === 0, "the confirmation closes").catch(() => undefined);
+  check(
+    !!equal && orderOf(equal.page).join() === startOrder.join(),
+    "after discarding, the draft equals the published page",
+  );
+  await until(async () => (await page.getByRole("alertdialog").count()) === 0, "the confirmation closes").catch(
+    () => undefined,
+  );
   check((await page.getByRole("alertdialog").count()) === 0, "the composer shows the published page again");
 
   // 6 - never overflows: no horizontal scroll, dark and light, phone and desktop.
-  for (const [name, viewport] of [["phone", { width: 390, height: 844 }], ["desktop", { width: 1440, height: 1000 }]]) {
+  for (const [name, viewport] of [
+    ["phone", { width: 390, height: 844 }],
+    ["desktop", { width: 1440, height: 1000 }],
+  ]) {
     for (const scheme of ["dark", "light"]) {
       await page.setViewportSize(viewport);
       await page.emulateMedia({ colorScheme: scheme });
       await page.goto(composerUrl);
       await sectionsNav.waitFor().catch(() => undefined);
-      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
       check(overflow <= 0, `the console never overflows (${name}, ${scheme})`);
       await page.screenshot({ path: path.join(OUT, `02-composer-${name}-${scheme}.png`) });
     }

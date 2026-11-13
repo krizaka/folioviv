@@ -23,18 +23,11 @@ describe("the neighbourhood board as post-its (#504)", () => {
   });
 
   it("draws a post-it per flyer, held by tape or a pin, with the whole text and a link to the shop", () => {
-    const out = renderToStaticMarkup(
-      <Bulletin
-        flyers={flyers.slice(0, 3)}
-        label="Board"
-        visit={(s) => `See ${s}`}
-      />,
-    );
+    const out = renderToStaticMarkup(<Bulletin flyers={flyers.slice(0, 3)} label="Board" visit={(s) => `See ${s}`} />);
     expect(out.match(/data-postit/g)).toHaveLength(3);
     expect(out).toMatch(/data-hold="(pin|tape)"/);
     expect(out).toContain(flyers[0].text);
-    for (const id of ["a", "b", "c"])
-      expect(out).toContain(`href="/en/s/${id}"`);
+    for (const id of ["a", "b", "c"]) expect(out).toContain(`href="/en/s/${id}"`);
     expect(out).toContain("See Shop a");
     expect(out).not.toContain("bg-surface-1");
     // The board sits inside the page's <main>: a post-it is not a complementary landmark there (axe landmark-complementary-is-top-level, #448).
@@ -42,9 +35,7 @@ describe("the neighbourhood board as post-its (#504)", () => {
   });
 
   it("uses no literal colour: the papers are the page's tokens", () => {
-    const out = renderToStaticMarkup(
-      <Bulletin flyers={flyers.slice(0, 3)} label="Board" />,
-    );
+    const out = renderToStaticMarkup(<Bulletin flyers={flyers.slice(0, 3)} label="Board" />);
     expect(out).not.toMatch(/#[0-9a-f]{3,6}\b|zinc|rgb\(/i);
   });
 });

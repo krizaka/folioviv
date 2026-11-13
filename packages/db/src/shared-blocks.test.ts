@@ -73,11 +73,18 @@ function objectsOf(sql: string): { columns: string[]; functions: string[]; trigg
     }
   }
   for (const m of sql.matchAll(/ALTER TABLE (?:IF EXISTS )?(?:ONLY )?([\w."]+)\s+([^;]+);/gi)) {
-    for (const c of m[2]!.matchAll(/ADD COLUMN (?:IF NOT EXISTS )?([\w"]+)/gi)) columns.push(`${qualified(m[1]!)}.${c[1]!.replaceAll('"', "").toLowerCase()}`);
+    for (const c of m[2]!.matchAll(/ADD COLUMN (?:IF NOT EXISTS )?([\w"]+)/gi))
+      columns.push(`${qualified(m[1]!)}.${c[1]!.replaceAll('"', "").toLowerCase()}`);
   }
   const functions = [...sql.matchAll(/CREATE (?:OR REPLACE )?FUNCTION ([\w."]+)\s*\(/gi)].map((m) => qualified(m[1]!));
-  const triggers = [...sql.matchAll(/CREATE (?:OR REPLACE )?(?:CONSTRAINT )?TRIGGER ([\w"]+)/gi)].map((m) => m[1]!.replaceAll('"', "").toLowerCase());
-  const markers = [...sql.matchAll(/INSERT INTO public\.krizaka_module_versions \(module, version, checksum\) VALUES \('([^']+)', (\d+), '([0-9a-f]+)'\)/gi)].map((m) => `${m[1]}@${m[2]}:${m[3]}`);
+  const triggers = [...sql.matchAll(/CREATE (?:OR REPLACE )?(?:CONSTRAINT )?TRIGGER ([\w"]+)/gi)].map((m) =>
+    m[1]!.replaceAll('"', "").toLowerCase(),
+  );
+  const markers = [
+    ...sql.matchAll(
+      /INSERT INTO public\.krizaka_module_versions \(module, version, checksum\) VALUES \('([^']+)', (\d+), '([0-9a-f]+)'\)/gi,
+    ),
+  ].map((m) => `${m[1]}@${m[2]}:${m[3]}`);
   return { columns, functions, triggers, markers };
 }
 
@@ -87,8 +94,12 @@ beforeAll(async () => {
   t = await freshDatabase();
   const q = async (text: string) => new Set((await t.pool.query<{ x: string }>(text)).rows.map((r) => r.x));
   have = {
-    columns: await q("SELECT table_schema || '.' || table_name || '.' || column_name AS x FROM information_schema.columns"),
-    functions: await q("SELECT n.nspname || '.' || p.proname AS x FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace"),
+    columns: await q(
+      "SELECT table_schema || '.' || table_name || '.' || column_name AS x FROM information_schema.columns",
+    ),
+    functions: await q(
+      "SELECT n.nspname || '.' || p.proname AS x FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace",
+    ),
     triggers: await q("SELECT tgname AS x FROM pg_trigger WHERE NOT tgisinternal"),
     markers: await q("SELECT module || '@' || version || ':' || checksum AS x FROM public.krizaka_module_versions"),
   };
@@ -106,10 +117,22 @@ describe("the baseline holds every shared block as the packages print it today",
   for (const [name, sql] of Object.entries(BLOCKS)) {
     it(name, () => {
       const o = objectsOf(sql);
-      expect(o.columns.filter((c) => !have.columns.has(c)), "columns").toEqual([]);
-      expect(o.functions.filter((f) => !have.functions.has(f)), "functions").toEqual([]);
-      expect(o.triggers.filter((x) => !have.triggers.has(x)), "triggers").toEqual([]);
-      expect(o.markers.filter((m) => !have.markers.has(m)), "module markers (version and checksum)").toEqual([]);
+      expect(
+        o.columns.filter((c) => !have.columns.has(c)),
+        "columns",
+      ).toEqual([]);
+      expect(
+        o.functions.filter((f) => !have.functions.has(f)),
+        "functions",
+      ).toEqual([]);
+      expect(
+        o.triggers.filter((x) => !have.triggers.has(x)),
+        "triggers",
+      ).toEqual([]);
+      expect(
+        o.markers.filter((m) => !have.markers.has(m)),
+        "module markers (version and checksum)",
+      ).toEqual([]);
     });
   }
 });

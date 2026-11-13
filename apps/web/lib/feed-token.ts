@@ -8,7 +8,8 @@ const TOKEN = /^kf1\.[A-Za-z0-9_-]{43}$/;
 
 export const newFeedToken = () => `kf1.${crypto.randomBytes(32).toString("base64url")}`;
 export const isFeedToken = (value: string): boolean => TOKEN.test(value);
-export const feedTokenHash = (token: string, secret: string) => crypto.createHmac("sha256", `feed:${secret}`).update(token).digest("hex");
+export const feedTokenHash = (token: string, secret: string) =>
+  crypto.createHmac("sha256", `feed:${secret}`).update(token).digest("hex");
 
 /** The address a calendar app subscribes to. The token is in the path, never in a query string (logs, referrers). */
 export const feedUrl = (publicUrl: string, token: string) => `${publicUrl.replace(/\/$/, "")}/api/feed/${token}.ics`;

@@ -31,20 +31,48 @@ jest.mock("expo-linking", () => ({ openURL: jest.fn() }));
 
 /** The server, as the screens read it: one function per query, each test says what it answers. */
 jest.mock("@/config", () => {
-  const api = { day: jest.fn(), calendar: jest.fn(), clients: jest.fn(), invoices: jest.fn(), shop: jest.fn(), books: jest.fn(), figures: jest.fn(), me: jest.fn() };
-  const q = (name: keyof typeof api) => (...args: unknown[]) => ({ queryKey: ["folioviv", name, ...args.map((a) => a ?? "-")], queryFn: () => (api[name] as (...a: unknown[]) => unknown)(...args) });
+  const api = {
+    day: jest.fn(),
+    calendar: jest.fn(),
+    clients: jest.fn(),
+    invoices: jest.fn(),
+    shop: jest.fn(),
+    books: jest.fn(),
+    figures: jest.fn(),
+    me: jest.fn(),
+  };
+  const q =
+    (name: keyof typeof api) =>
+    (...args: unknown[]) => ({
+      queryKey: ["folioviv", name, ...args.map((a) => a ?? "-")],
+      queryFn: () => (api[name] as (...a: unknown[]) => unknown)(...args),
+    });
   return {
     api,
     folioviv: { checkIn: jest.fn(), checkOut: jest.fn() },
     webUrl: (path: string) => `https://www.folioviv.com${path}`,
-    queries: { day: q("day"), calendar: q("calendar"), clients: q("clients"), invoices: q("invoices"), shop: q("shop"), books: q("books"), figures: q("figures"), me: q("me") },
+    queries: {
+      day: q("day"),
+      calendar: q("calendar"),
+      clients: q("clients"),
+      invoices: q("invoices"),
+      shop: q("shop"),
+      books: q("books"),
+      figures: q("figures"),
+      me: q("me"),
+    },
   };
 });
 const { api } = jest.requireMock("@/config") as { api: Record<string, jest.Mock> };
 
 const clients: QueryClient[] = [];
 function show(node: React.ReactElement) {
-  const client = createQueryClient({ staleTime: 0, maxRetries: 0, throwOnError: false, defaultOptions: { queries: { gcTime: Infinity } } });
+  const client = createQueryClient({
+    staleTime: 0,
+    maxRetries: 0,
+    throwOnError: false,
+    defaultOptions: { queries: { gcTime: Infinity } },
+  });
   clients.push(client);
   return render(
     <ThemeProvider>
@@ -55,7 +83,17 @@ function show(node: React.ReactElement) {
   );
 }
 
-const visit = { appointmentId: "a1", startsAt: "2026-10-20T13:00:00.000Z", endsAt: "2026-10-20T14:00:00.000Z", status: "booked", service: { fr: "Coupe", en: "Haircut", capacity: 1 }, zone: null, checkedInAt: null, checkedOutAt: null, bookings: [] };
+const visit = {
+  appointmentId: "a1",
+  startsAt: "2026-10-20T13:00:00.000Z",
+  endsAt: "2026-10-20T14:00:00.000Z",
+  status: "booked",
+  service: { fr: "Coupe", en: "Haircut", capacity: 1 },
+  zone: null,
+  checkedInAt: null,
+  checkedOutAt: null,
+  bookings: [],
+};
 const day = (visits: unknown[]) => ({ shopId: SHOP, timezone: "America/Toronto", day: "2026-10-20", visits });
 
 beforeEach(() => {
@@ -89,7 +127,25 @@ describe("the phone app's five tabs, each with its three states (D8)", () => {
 
   it("Aujourd'hui: a visit opens into its detail in the URL, and the detail begins it", async () => {
     mockParams = { day: "2026-10-20", visit: "a1" };
-    api.day!.mockResolvedValue(day([{ ...visit, zone: "Saint-Henri", bookings: [{ bookingId: "b1", clientId: "c1", clientName: "Camille", clientPhone: "514-555-0199", dependant: { name: "Nelson", kind: "dog", profile: null }, hasAccessNotes: false, report: null }] }]));
+    api.day!.mockResolvedValue(
+      day([
+        {
+          ...visit,
+          zone: "Saint-Henri",
+          bookings: [
+            {
+              bookingId: "b1",
+              clientId: "c1",
+              clientName: "Camille",
+              clientPhone: "514-555-0199",
+              dependant: { name: "Nelson", kind: "dog", profile: null },
+              hasAccessNotes: false,
+              report: null,
+            },
+          ],
+        },
+      ]),
+    );
     await show(<Today />);
     expect(await screen.findByText("Saint-Henri")).toBeTruthy();
     expect(screen.getByText("Nelson · Camille")).toBeTruthy();
@@ -110,8 +166,32 @@ describe("the phone app's five tabs, each with its three states (D8)", () => {
     mockParams = {};
     api.figures!.mockResolvedValue({
       period: { start: "2026-07-01", end: "2026-09-30" },
-      figures: [{ id: "invoiced", value: 100_000, unit: "cents", rate: null, formula: [{ label: "invoicesSubtotal", value: 100_000, unit: "cents" }], lexicon: [], sources: [{ kind: "invoice", ids: ["i1"], count: 3 }], period: { start: "2026-07-01", end: "2026-09-30" }, computedAt: "2026-10-20T12:00:00.000Z", cadence: "onChange", staleAfterHours: 24, state: "good" }],
-      actions: [{ kind: "chase", urgency: "now", impactCents: 5_000, why: { number: "F-12", days: 9, amountCents: 5_000, others: 0, totalCents: 5_000 }, target: { route: "invoice", invoiceId: "i9" }, evidence: ["i9"] }],
+      figures: [
+        {
+          id: "invoiced",
+          value: 100_000,
+          unit: "cents",
+          rate: null,
+          formula: [{ label: "invoicesSubtotal", value: 100_000, unit: "cents" }],
+          lexicon: [],
+          sources: [{ kind: "invoice", ids: ["i1"], count: 3 }],
+          period: { start: "2026-07-01", end: "2026-09-30" },
+          computedAt: "2026-10-20T12:00:00.000Z",
+          cadence: "onChange",
+          staleAfterHours: 24,
+          state: "good",
+        },
+      ],
+      actions: [
+        {
+          kind: "chase",
+          urgency: "now",
+          impactCents: 5_000,
+          why: { number: "F-12", days: 9, amountCents: 5_000, others: 0, totalCents: 5_000 },
+          target: { route: "invoice", invoiceId: "i9" },
+          evidence: ["i9"],
+        },
+      ],
     });
     await show(<Figures />);
     expect(await screen.findByText("Relancer la facture F-12")).toBeTruthy();
@@ -125,7 +205,25 @@ describe("the phone app's five tabs, each with its three states (D8)", () => {
     mockParams = { figure: "margin" };
     api.figures!.mockResolvedValue({
       period: { start: "2026-07-01", end: "2026-09-30" },
-      figures: [{ id: "margin", value: 80_000, unit: "cents", rate: 80, formula: [{ label: "invoicesSubtotal", value: 100_000, unit: "cents" }, { label: "expensesBusinessShare", value: 20_000, unit: "cents", op: "−" }], lexicon: ["margin"], sources: [{ kind: "invoice", ids: ["i1"], count: 3 }], period: { start: "2026-07-01", end: "2026-09-30" }, computedAt: "2020-10-20T12:00:00.000Z", cadence: "onChange", staleAfterHours: 24, state: "watch" }],
+      figures: [
+        {
+          id: "margin",
+          value: 80_000,
+          unit: "cents",
+          rate: 80,
+          formula: [
+            { label: "invoicesSubtotal", value: 100_000, unit: "cents" },
+            { label: "expensesBusinessShare", value: 20_000, unit: "cents", op: "−" },
+          ],
+          lexicon: ["margin"],
+          sources: [{ kind: "invoice", ids: ["i1"], count: 3 }],
+          period: { start: "2026-07-01", end: "2026-09-30" },
+          computedAt: "2020-10-20T12:00:00.000Z",
+          cadence: "onChange",
+          staleAfterHours: 24,
+          state: "watch",
+        },
+      ],
       actions: [],
     });
     await show(<Figures />);
@@ -162,7 +260,9 @@ describe("the phone app's five tabs, each with its three states (D8)", () => {
   });
 
   it("Clients: the files of the shop, the search in the URL, « Facturer » at the shop's new invoice", async () => {
-    api.clients!.mockResolvedValue([{ id: "c1", fullName: "Studio Lumen inc. (démo)", phone: null, email: null, hasNotes: false, dependants: [] }]);
+    api.clients!.mockResolvedValue([
+      { id: "c1", fullName: "Studio Lumen inc. (démo)", phone: null, email: null, hasNotes: false, dependants: [] },
+    ]);
     await show(<Clients />);
     expect(await screen.findByText("Studio Lumen inc. (démo)")).toBeTruthy();
     expect(api.clients).toHaveBeenCalledWith(SHOP);
@@ -173,7 +273,9 @@ describe("the phone app's five tabs, each with its three states (D8)", () => {
   it("Clients: empty says what will fill it", async () => {
     api.clients!.mockResolvedValue([]);
     await show(<Clients />);
-    expect(await screen.findByText("Un client qui réserve, ou que vous ajoutez sur le Web, a son dossier ici.")).toBeTruthy();
+    expect(
+      await screen.findByText("Un client qui réserve, ou que vous ajoutez sur le Web, a son dossier ici."),
+    ).toBeTruthy();
   });
 
   it("Factures: the invoices, the one primary « Nouvelle facture » at the shop's address, and the loading state", async () => {
@@ -181,7 +283,21 @@ describe("the phone app's five tabs, each with its three states (D8)", () => {
     api.invoices!.mockReturnValue(new Promise((resolve) => (answer = resolve)));
     await show(<Invoices />);
     expect(await screen.findByText("Chargement…")).toBeTruthy();
-    answer([{ id: "i1", number: "F-00001", issuedOn: "2026-10-20", dueOn: null, language: "fr", creditOf: null, subtotalCents: 4500, gstCents: 225, qstCents: 449, totalCents: 5174, client: null }]);
+    answer([
+      {
+        id: "i1",
+        number: "F-00001",
+        issuedOn: "2026-10-20",
+        dueOn: null,
+        language: "fr",
+        creditOf: null,
+        subtotalCents: 4500,
+        gstCents: 225,
+        qstCents: 449,
+        totalCents: 5174,
+        client: null,
+      },
+    ]);
     expect(await screen.findByText("F-00001")).toBeTruthy();
     await fireEvent.press(screen.getByRole("button", { name: "Nouvelle facture" }));
     expect(mockRouter.navigate).toHaveBeenCalledWith(`/fr/app/${SHOP}/invoices/new`);
@@ -189,7 +305,13 @@ describe("the phone app's five tabs, each with its three states (D8)", () => {
 
   it("Livres: the period's nets, to remit or to claim, the period in the URL — prepared, never filed", async () => {
     mockParams = { period: "2026-Q3" };
-    api.books!.mockResolvedValue({ period: { id: "2026-Q3", start: "2026-07-01", end: "2026-09-30" }, choices: ["2026-Q3", "2026-Q2"], gst: { netCents: 1250, outcome: "remit" }, qst: { netCents: 2494, outcome: "claim" }, preparedOnly: true });
+    api.books!.mockResolvedValue({
+      period: { id: "2026-Q3", start: "2026-07-01", end: "2026-09-30" },
+      choices: ["2026-Q3", "2026-Q2"],
+      gst: { netCents: 1250, outcome: "remit" },
+      qst: { netCents: 2494, outcome: "claim" },
+      preparedOnly: true,
+    });
     await show(<Books />);
     expect(await screen.findByText("À remettre")).toBeTruthy();
     expect(screen.getByText("À réclamer")).toBeTruthy();
@@ -202,7 +324,16 @@ describe("the phone app's five tabs, each with its three states (D8)", () => {
   });
 
   it("Boutique: the shop, its tax status, its services; the long forms on the web", async () => {
-    api.shop!.mockResolvedValue({ shop: { id: SHOP, name: "Studio Lumen inc. (démo)", registrant: true, timezone: "America/Toronto", paymentTermsDays: 30 }, services: [{ id: "v1", nameFr: "Coupe", nameEn: "Haircut", priceCents: 4500, taxCategory: "standard" }] });
+    api.shop!.mockResolvedValue({
+      shop: {
+        id: SHOP,
+        name: "Studio Lumen inc. (démo)",
+        registrant: true,
+        timezone: "America/Toronto",
+        paymentTermsDays: 30,
+      },
+      services: [{ id: "v1", nameFr: "Coupe", nameEn: "Haircut", priceCents: 4500, taxCategory: "standard" }],
+    });
     await show(<Boutique />);
     expect(await screen.findByText("Studio Lumen inc. (démo)")).toBeTruthy();
     expect(screen.getByText("Coupe")).toBeTruthy();
@@ -211,7 +342,16 @@ describe("the phone app's five tabs, each with its three states (D8)", () => {
   });
 
   it("Boutique: the same two groups as the web, each row opening its section there (krizaka-internal#1911)", async () => {
-    api.shop!.mockResolvedValue({ shop: { id: SHOP, name: "Studio Lumen inc. (démo)", registrant: true, timezone: "America/Toronto", paymentTermsDays: 30 }, services: [] });
+    api.shop!.mockResolvedValue({
+      shop: {
+        id: SHOP,
+        name: "Studio Lumen inc. (démo)",
+        registrant: true,
+        timezone: "America/Toronto",
+        paymentTermsDays: 30,
+      },
+      services: [],
+    });
     await show(<Boutique />);
     expect(await screen.findByText("Votre page")).toBeTruthy();
     expect(screen.getByText("Votre activité")).toBeTruthy();

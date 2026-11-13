@@ -4,8 +4,13 @@ import { describe, expect, it, vi } from "vitest";
 
 import { useFrameAccount } from "./use-frame-account";
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }), usePathname: () => "/en/shops/s-1" }));
-vi.mock("@/lib/i18n-client", () => ({ useSay: () => ({ say: (key: string) => ({ "shell.yourAccount": "Your account" })[key] ?? key }) }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
+  usePathname: () => "/en/shops/s-1",
+}));
+vi.mock("@/lib/i18n-client", () => ({
+  useSay: () => ({ say: (key: string) => ({ "shell.yourAccount": "Your account" })[key] ?? key }),
+}));
 
 const accountOf = (name: string | null) => {
   let seen: ReturnType<typeof useFrameAccount>["account"] | undefined;

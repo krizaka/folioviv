@@ -18,7 +18,13 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 /** Step 3 — the times: only those the engine really offers, for this person (or anyone), each a link that opens the booking. */
-export default async function TimesPage({ params, searchParams }: Readonly<{ params: Promise<{ locale: string; slug: string; id: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }>) {
+export default async function TimesPage({
+  params,
+  searchParams,
+}: Readonly<{
+  params: Promise<{ locale: string; slug: string; id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}>) {
   const { locale: raw, slug, id } = await params;
   const query = await searchParams;
   const locale = asLocale(raw);
@@ -27,17 +33,41 @@ export default async function TimesPage({ params, searchParams }: Readonly<{ par
   if (!page || !page.services.some((s) => s.id === id)) notFound();
   const now = requestNow();
   const choice = resolveChoice(page, { staff: searchValue(query.staff), zone: searchValue(query.zone) });
-  const slots = await listSlots(db(), { shopId: page.shop.id, serviceId: id, zoneId: choice.zoneId, staffId: choice.staffId, now, days: 14 });
+  const slots = await listSlots(db(), {
+    shopId: page.shop.id,
+    serviceId: id,
+    zoneId: choice.zoneId,
+    staffId: choice.staffId,
+    now,
+    days: 14,
+  });
   const step = timesStep({ page, locale, now, serviceId: id, staffId: choice.staffId, zoneId: choice.zoneId, slots });
   if (!step) notFound();
   return (
-    <JourneyFrame locale={locale} head={{ shop: page.shop.name, step: t("console.journey.stepOf", { step: 2, total: 4, label: t("console.journey.stepTime") }), edit: { href: step.backHref, label: t("console.journey.edit") } }} path={`/${locale}/s/${slug}/service/${id}/slots`} back={{ href: step.backHref, label: step.title }} title={t("console.journey.pickTime")} lead={[step.who, t("console.journey.pickTimeLead")].filter(Boolean).join(" · ")}>
+    <JourneyFrame
+      locale={locale}
+      head={{
+        shop: page.shop.name,
+        step: t("console.journey.stepOf", { step: 2, total: 4, label: t("console.journey.stepTime") }),
+        edit: { href: step.backHref, label: t("console.journey.edit") },
+      }}
+      path={`/${locale}/s/${slug}/service/${id}/slots`}
+      back={{ href: step.backHref, label: step.title }}
+      title={t("console.journey.pickTime")}
+      lead={[step.who, t("console.journey.pickTimeLead")].filter(Boolean).join(" · ")}
+    >
       <StorefrontLive slug={slug} enabled={await appSettings().get("realtime.storefront.enabled")} />
       <ShopSlots
         days={step.days}
         locale={locale}
         footer={step.footer}
-        labels={{ label: t("console.shopPage.timesLabel"), empty: t("console.journey.noTimes"), previous: t("console.journey.weekPrevious"), today: t("console.journey.weekToday"), next: t("console.journey.weekNext") }}
+        labels={{
+          label: t("console.shopPage.timesLabel"),
+          empty: t("console.journey.noTimes"),
+          previous: t("console.journey.weekPrevious"),
+          today: t("console.journey.weekToday"),
+          next: t("console.journey.weekNext"),
+        }}
       />
       {step.changeHref ? (
         <p className="m-0">

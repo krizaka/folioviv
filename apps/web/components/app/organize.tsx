@@ -46,15 +46,25 @@ export function TagChips({ tags }: Readonly<{ tags: readonly TagLite[] | undefin
   );
 }
 
-const tagForm = createKrizakaForm({ schema: z.object({ name: z.string().trim().min(1).max(80) }), defaultValues: { name: "" } });
+const tagForm = createKrizakaForm({
+  schema: z.object({ name: z.string().trim().min(1).max(80) }),
+  defaultValues: { name: "" },
+});
 
 /** The names of the closed palette, translated (the swatches are named, never colour alone). */
 function useMarkerNames(): Record<Marker, string> {
   const { say } = useSay();
-  return useMemo(() => Object.fromEntries(MARKERS.map((m) => [m, say(`organize.markers.${m}`)])) as Record<Marker, string>, [say]);
+  return useMemo(
+    () => Object.fromEntries(MARKERS.map((m) => [m, say(`organize.markers.${m}`)])) as Record<Marker, string>,
+    [say],
+  );
 }
 
-function NewTagDialog({ kind, open, onOpenChange }: Readonly<{ kind: "client" | "invoice"; open: boolean; onOpenChange: (open: boolean) => void }>) {
+function NewTagDialog({
+  kind,
+  open,
+  onOpenChange,
+}: Readonly<{ kind: "client" | "invoice"; open: boolean; onOpenChange: (open: boolean) => void }>) {
   const { say, locale } = useSay();
   const call = useCall();
   const names = useMarkerNames();
@@ -62,7 +72,9 @@ function NewTagDialog({ kind, open, onOpenChange }: Readonly<{ kind: "client" | 
   const form = tagForm.useForm({
     i18n: { t: (key, vars) => say(key, vars as Record<string, string | number> | undefined), locale },
     onSubmit: async ({ name }) => {
-      if (await call.run(`/api/walker/${kind === "client" ? "clients" : "invoices"}/tags`, { json: { name, marker } })) {
+      if (
+        await call.run(`/api/walker/${kind === "client" ? "clients" : "invoices"}/tags`, { json: { name, marker } })
+      ) {
         form.reset();
         onOpenChange(false);
       }
@@ -92,7 +104,11 @@ function NewTagDialog({ kind, open, onOpenChange }: Readonly<{ kind: "client" | 
  * The binder's dividers per tag (`Tabs.Nav variant="binder"`, krizaka-ui#648): « All » and one divider per tag with its count; the
  * address is the state (`?tags=<id>`), so a divider is a link and a shared link opens the same one. « + New tag » for those who write tags.
  */
-export function TagBinder({ organize, path, own = {} }: Readonly<{ organize: OrganizeData; path: string; own?: Record<string, string | undefined> }>) {
+export function TagBinder({
+  organize,
+  path,
+  own = {},
+}: Readonly<{ organize: OrganizeData; path: string; own?: Record<string, string | undefined> }>) {
   const { say } = useSay();
   const search = useSearchParams();
   const [adding, setAdding] = useState(false);
@@ -102,15 +118,28 @@ export function TagBinder({ organize, path, own = {} }: Readonly<{ organize: Org
   if (organize.tags.length === 0 && !organize.canWrite) return null;
   return (
     <>
-      <Tabs.Nav label={say("organize.binder.label")} variant="binder" current={current} add={organize.canWrite ? { label: say("organize.binder.add"), onAdd: () => setAdding(true) } : undefined}>
+      <Tabs.Nav
+        label={say("organize.binder.label")}
+        variant="binder"
+        current={current}
+        add={organize.canWrite ? { label: say("organize.binder.add"), onAdd: () => setAdding(true) } : undefined}
+      >
         <Tabs.NavLink href={listHref(path, only(), null, own)} exact aria-label={say("organize.binder.all")}>
           {say("organize.binder.all")}
         </Tabs.NavLink>
-        {organize.tags.filter((tag) => (organize.counts[tag.id] ?? 0) > 0 || organize.filters.tags?.includes(tag.id)).map((tag) => (
-          <Tabs.NavLink key={tag.id} href={listHref(path, only(tag.id), null, own)} exact hue={MARKER_HUE[tag.marker]} count={organize.counts[tag.id] ?? 0}>
-            {tag.name}
-          </Tabs.NavLink>
-        ))}
+        {organize.tags
+          .filter((tag) => (organize.counts[tag.id] ?? 0) > 0 || organize.filters.tags?.includes(tag.id))
+          .map((tag) => (
+            <Tabs.NavLink
+              key={tag.id}
+              href={listHref(path, only(tag.id), null, own)}
+              exact
+              hue={MARKER_HUE[tag.marker]}
+              count={organize.counts[tag.id] ?? 0}
+            >
+              {tag.name}
+            </Tabs.NavLink>
+          ))}
       </Tabs.Nav>
       {organize.canWrite ? <NewTagDialog kind={organize.kind} open={adding} onOpenChange={setAdding} /> : null}
     </>
@@ -123,7 +152,11 @@ function useSavedViewsLabels(): Partial<SavedViewsLabels> {
   return useMemo(
     () => ({
       views: say("organize.views.label"),
-      groups: { system: say("organize.savedViews.system"), workspace: say("organize.savedViews.workspace"), mine: say("organize.savedViews.mine") },
+      groups: {
+        system: say("organize.savedViews.system"),
+        workspace: say("organize.savedViews.workspace"),
+        mine: say("organize.savedViews.mine"),
+      },
       menu: (current: string) => say("organize.savedViews.menu", { current }),
       none: say("organize.savedViews.none"),
       modified: say("organize.savedViews.modified"),
@@ -143,16 +176,36 @@ function useSavedViewsLabels(): Partial<SavedViewsLabels> {
  * The views of a list (`SavedViews`): the administrator's, the shop's shared ones and mine, each a link to the filters it holds (the
  * address is the state); « Save view » when the filters in force are not one of them; rename and delete for mine.
  */
-export function ViewsBar({ organize, path, own = {} }: Readonly<{ organize: OrganizeData; path: string; own?: Record<string, string | undefined> }>) {
+export function ViewsBar({
+  organize,
+  path,
+  own = {},
+}: Readonly<{ organize: OrganizeData; path: string; own?: Record<string, string | undefined> }>) {
   const { say, locale } = useSay();
   const call = useCall();
   const labels = useSavedViewsLabels();
   const apiBase = `${base(organize)}/views`;
   const { system, workspace, mine } = organize.views;
   const items: SavedViewItem[] = [
-    ...system.map((v) => ({ id: v.key, label: v.label[locale], group: "system" as const, href: listHref(path, v.filters, v.key, own) })),
-    ...workspace.map((v) => ({ id: v.id, label: v.name, group: "workspace" as const, href: listHref(path, v.filters, v.id, own), editable: false })),
-    ...mine.map((v) => ({ id: v.id, label: v.name, group: "mine" as const, href: listHref(path, v.filters, v.id, own) })),
+    ...system.map((v) => ({
+      id: v.key,
+      label: v.label[locale],
+      group: "system" as const,
+      href: listHref(path, v.filters, v.key, own),
+    })),
+    ...workspace.map((v) => ({
+      id: v.id,
+      label: v.name,
+      group: "workspace" as const,
+      href: listHref(path, v.filters, v.id, own),
+      editable: false,
+    })),
+    ...mine.map((v) => ({
+      id: v.id,
+      label: v.name,
+      group: "mine" as const,
+      href: listHref(path, v.filters, v.id, own),
+    })),
   ];
   const filtered = Object.values(organize.filters).some((v) => (Array.isArray(v) ? v.length > 0 : Boolean(v)));
   if (items.length === 0 && !filtered) return null;
@@ -184,7 +237,11 @@ export function ViewsBar({ organize, path, own = {} }: Readonly<{ organize: Orga
  * The selection bar's bulk tag and untag (given to `DataTable bulkActions`, which draws the bar). At most 200 at a time, one call, one
  * audit line per row; there is no « mark as paid »: an invoice's state follows the ledger.
  */
-export function SelectionTags({ organize, selected, onDone }: Readonly<{ organize: OrganizeData; selected: string[]; onDone: () => void }>) {
+export function SelectionTags({
+  organize,
+  selected,
+  onDone,
+}: Readonly<{ organize: OrganizeData; selected: string[]; onDone: () => void }>) {
   const { say } = useSay();
   const call = useCall();
   const apply = async (change: { add?: string[]; remove?: string[] }) => {
@@ -217,13 +274,18 @@ export function SelectionTags({ organize, selected, onDone }: Readonly<{ organiz
 }
 
 /** One client's tags, from its file: the package's `TagSelector creatable` in a popover — one call per change (the bulk call, for one id). */
-export function TagsEditor({ organize, entityId, worn }: Readonly<{ organize: OrganizeData; entityId: string; worn: TagLite[] }>) {
+export function TagsEditor({
+  organize,
+  entityId,
+  worn,
+}: Readonly<{ organize: OrganizeData; entityId: string; worn: TagLite[] }>) {
   const { say } = useSay();
   const call = useCall();
   const names = useMarkerNames();
   if (!organize.canWrite) return null;
   const value = worn.map((t) => t.id);
-  const change = (add: string[], remove: string[]) => call.run(`${base(organize)}/tags/apply`, { json: { ids: [entityId], add, remove } });
+  const change = (add: string[], remove: string[]) =>
+    call.run(`${base(organize)}/tags/apply`, { json: { ids: [entityId], add, remove } });
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
@@ -236,10 +298,19 @@ export function TagsEditor({ organize, entityId, worn }: Readonly<{ organize: Or
           label={say("organize.file.tags")}
           options={organize.tags.map((t) => ({ value: t.id, label: t.name, marker: t.marker }))}
           value={value}
-          onValueChange={(next) => void change(next.filter((id) => !value.includes(id)), value.filter((id) => !next.includes(id)))}
+          onValueChange={(next) =>
+            void change(
+              next.filter((id) => !value.includes(id)),
+              value.filter((id) => !next.includes(id)),
+            )
+          }
           creatable
           onCreate={async (name, marker) => {
-            const created = await call.run<{ tag: { id: string } }>(`${base(organize)}/tags`, { json: { name, marker } }, { refresh: false });
+            const created = await call.run<{ tag: { id: string } }>(
+              `${base(organize)}/tags`,
+              { json: { name, marker } },
+              { refresh: false },
+            );
             if (created) await change([created.tag.id], []);
           }}
           inputLabel={say("organize.file.add")}

@@ -11,7 +11,10 @@ import { changedKeys, signaturesOf } from "@/lib/wash";
  * kept as React's « information from previous renders » (a state set while rendering), never a ref read during render.
  */
 export function useWash<T>(rows: readonly T[], key: (row: T) => string, signature: (row: T) => string) {
-  const [seen, setSeen] = useState<{ rows: readonly T[]; changed: ReadonlySet<string> }>(() => ({ rows, changed: new Set() }));
+  const [seen, setSeen] = useState<{ rows: readonly T[]; changed: ReadonlySet<string> }>(() => ({
+    rows,
+    changed: new Set(),
+  }));
   let changed = seen.changed;
   if (seen.rows !== rows) {
     changed = changedKeys(signaturesOf(seen.rows, key, signature), rows, key, signature);

@@ -16,20 +16,39 @@ interface Row {
  * protocol, which several providers and self-hosted servers speak). The service, its address and its attribution are the
  * environment's (`APP_GEOCODER_URL`, `APP_GEOCODER_ATTRIBUTION_*`): nothing here names a vendor. Results are limited to Canada.
  */
-export function httpGeocoder(config: { url: string; attribution: GeoAttribution; fetcher?: typeof fetch }): GeocodingPort {
+export function httpGeocoder(config: {
+  url: string;
+  attribution: GeoAttribution;
+  fetcher?: typeof fetch;
+}): GeocodingPort {
   const fetcher = config.fetcher ?? fetch;
   return {
     attribution: config.attribution,
     async search(query, { locale, signal }) {
       const url = new URL(config.url);
-      url.search = new URLSearchParams({ q: query, format: "json", limit: String(RESULTS), countrycodes: "ca", "accept-language": locale }).toString();
-      const res = await fetcher(url, { headers: { "User-Agent": "Folioviv/1.0 (+https://www.folioviv.com)", Accept: "application/json" }, signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(TIMEOUT_MS)]) : AbortSignal.timeout(TIMEOUT_MS) });
+      url.search = new URLSearchParams({
+        q: query,
+        format: "json",
+        limit: String(RESULTS),
+        countrycodes: "ca",
+        "accept-language": locale,
+      }).toString();
+      const res = await fetcher(url, {
+        headers: { "User-Agent": "Folioviv/1.0 (+https://www.folioviv.com)", Accept: "application/json" },
+        signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(TIMEOUT_MS)]) : AbortSignal.timeout(TIMEOUT_MS),
+      });
       if (!res.ok) throw new Error(`geocoder answered ${res.status}`);
       const rows = (await res.json()) as Row[];
       return (Array.isArray(rows) ? rows : []).flatMap((r): GeoPlace[] => {
         const lat = Number(r.lat);
         const lng = Number(r.lon);
-        return typeof r.display_name === "string" && Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180 ? [{ label: r.display_name, lat, lng }] : [];
+        return typeof r.display_name === "string" &&
+          Number.isFinite(lat) &&
+          Number.isFinite(lng) &&
+          Math.abs(lat) <= 90 &&
+          Math.abs(lng) <= 180
+          ? [{ label: r.display_name, lat, lng }]
+          : [];
       });
     },
   };

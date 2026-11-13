@@ -21,7 +21,11 @@ export function deploymentMedia(source: Record<string, string | undefined> = pro
   const pullHostname = source.MEDIA_CDN_HOSTNAME?.trim();
   const environment = source.NODE_ENV === "production" ? "prod" : "dev";
   if (!accessKey || !zone || !pullHostname) return { environment, provider: "none" };
-  return { environment, provider: "http", http: { endpoint: source.MEDIA_STORAGE_ENDPOINT?.trim() || "storage.bunnycdn.com", zone, accessKey, pullHostname } };
+  return {
+    environment,
+    provider: "http",
+    http: { endpoint: source.MEDIA_STORAGE_ENDPOINT?.trim() || "storage.bunnycdn.com", zone, accessKey, pullHostname },
+  };
 }
 
 export interface MediaStorage {
@@ -55,14 +59,22 @@ export interface MediaStorageOptions {
  */
 export async function mediaStorage(options: MediaStorageOptions = {}): Promise<MediaStorage | null> {
   const env = deploymentMedia(options.source);
-  const admin = options.admin ?? (await readStorageSettings((key) => appSettings().get(key) as Promise<string | number>));
+  const admin =
+    options.admin ?? (await readStorageSettings((key) => appSettings().get(key) as Promise<string | number>));
   const resolved = resolveStorage(env, admin);
   if (resolved.provider === "none") return null;
-  const fetchImpl = options.fetchImpl ?? ((url, init) => fetch(url, { method: init.method, headers: init.headers, body: init.body as BodyInit | undefined }));
+  const fetchImpl =
+    options.fetchImpl ??
+    ((url, init) =>
+      fetch(url, { method: init.method, headers: init.headers, body: init.body as BodyInit | undefined }));
   const opened = openResolved(resolved, env, { fetch: fetchImpl, clock: systemClock });
   if (!opened) return null;
   const maxBytes = options.maxBytes ?? resolved.settings.maxMegabytes * 1024 * 1024;
-  const storage = createStorage({ store: opened.store, layout: mediaLayout, limits: { maxBytes, signedUrlSeconds: resolved.settings.signedUrlSeconds } });
+  const storage = createStorage({
+    store: opened.store,
+    layout: mediaLayout,
+    limits: { maxBytes, signedUrlSeconds: resolved.settings.signedUrlSeconds },
+  });
   const cdn = resolved.settings.pullHostname;
   return { storage, cdn, keyOf: (url) => keyOfAddress(cdn, url) };
 }

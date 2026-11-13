@@ -3,7 +3,18 @@ import { describe, expect, it } from "vitest";
 
 import { distanceLabel, mapCenter } from "./explore";
 
-const shop = (point: [number, number] | null): ExploreShop => ({ slug: "s", name: "S", kind: "salon", area: null, taglineFr: null, taglineEn: null, quartiers: [], point, openNow: false, freeToday: false });
+const shop = (point: [number, number] | null): ExploreShop => ({
+  slug: "s",
+  name: "S",
+  kind: "salon",
+  area: null,
+  taglineFr: null,
+  taglineEn: null,
+  quartiers: [],
+  point,
+  openNow: false,
+  freeToday: false,
+});
 
 describe("distance said to the visitor", () => {
   it("in metres under a kilometre (rounded to ten) and in kilometres above, in the language", () => {

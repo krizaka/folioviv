@@ -33,7 +33,9 @@ export function expiredCookie(name: string) {
 
 /** A `Cookie` request header without the named cookies, whether the browser sent them plain or `__Host-` prefixed: what a shop's page is allowed to read (never the app's session). */
 export function dropCookie(header: string | null, ...names: string[]): string {
-  const dropped = new Set(names.flatMap((name) => [name.replace(/^__Host-/, ""), `__Host-${name.replace(/^__Host-/, "")}`]));
+  const dropped = new Set(
+    names.flatMap((name) => [name.replace(/^__Host-/, ""), `__Host-${name.replace(/^__Host-/, "")}`]),
+  );
   return (header ?? "")
     .split(";")
     .map((pair) => pair.trim())

@@ -57,7 +57,19 @@ function rememberSound(on: boolean): void {
  * under reduced motion, which the television decides). The sound starts off: a browser refuses sound without a gesture, so a visitor who kept the sound on
  * last time finds the set not playing by itself, and starts it with their own press. A link to a platform stays behind its facade until the visitor clicks.
  */
-export function ShopVideoTv({ id, title, lead, playlist, transition, label, channel, labels, playLabels, notice, ...rest }: Readonly<ShopVideoTvProps>) {
+export function ShopVideoTv({
+  id,
+  title,
+  lead,
+  playlist,
+  transition,
+  label,
+  channel,
+  labels,
+  playLabels,
+  notice,
+  ...rest
+}: Readonly<ShopVideoTvProps>) {
   // Read once, on the client only: the section is drawn after hydration (`ShopVideoLazy`).
   const [sound] = useState(rememberedSound);
   const wantsSound = sound === "on";
@@ -68,7 +80,16 @@ export function ShopVideoTv({ id, title, lead, playlist, transition, label, chan
     if (!p?.platform || !p.url) {
       return null;
     }
-    return <EmbedFacade platform={p.platform} url={p.url} title={p.title} playLabel={playLabels[p.platform]} poster={p.poster} notice={notice} />;
+    return (
+      <EmbedFacade
+        platform={p.platform}
+        url={p.url}
+        title={p.title}
+        playLabel={playLabels[p.platform]}
+        poster={p.poster}
+        notice={notice}
+      />
+    );
   };
   return (
     <Section id={id} title={title} lead={lead} data-variant="tv" data-shop-key={rest["data-shop-key"]}>

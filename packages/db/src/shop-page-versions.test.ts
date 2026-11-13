@@ -9,7 +9,20 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { migrate } from "./migrate";
 import { SHOP_PAGE_DOCUMENT_MIGRATION_SQL } from "./shop-page-document-migration";
-import { discardShopPageDraft, draftShopPage, publishedShopPage, publishShopPageDraft, readShopPage, rollbackShopPage, SHOP_PAGE_ARCHIVE_KEEP, saveShopPageDraft, setShopAccent, ShopPageInvalidError, shopAccentOf, shopPageVersionsOf } from "./shop-page-versions";
+import {
+  discardShopPageDraft,
+  draftShopPage,
+  publishedShopPage,
+  publishShopPageDraft,
+  readShopPage,
+  rollbackShopPage,
+  SHOP_PAGE_ARCHIVE_KEEP,
+  saveShopPageDraft,
+  setShopAccent,
+  ShopPageInvalidError,
+  shopAccentOf,
+  shopPageVersionsOf,
+} from "./shop-page-versions";
 import { freshDatabase, freshEmptyDatabase } from "./test/db";
 import { walkerShop } from "./test/fixtures";
 
@@ -42,15 +55,23 @@ describe("the shop page document", () => {
     expect((await draftShopPage(t.db, shop.shopId)).draft).toBe(true);
     expect((await publishedShopPage(t.db, shop.shopId)).version).toBe(2);
     expect(await publishShopPageDraft(t.db, shop.shopId, shop.owner.id)).toEqual({ version: 4 });
-    expect((await shopPageVersionsOf(t.db, shop.shopId)).map((v) => [v.version, v.status])).toEqual([[4, "published"], [2, "archived"]]);
+    expect((await shopPageVersionsOf(t.db, shop.shopId)).map((v) => [v.version, v.status])).toEqual([
+      [4, "published"],
+      [2, "archived"],
+    ]);
     expect(await rollbackShopPage(t.db, shop.shopId, 2, shop.owner.id)).toEqual({ version: 5, draftReset: false });
     expect((await publishedShopPage(t.db, shop.shopId)).page.sections.some((s) => s.disabled)).toBe(false);
-    await expect(publishShopPageDraft(t.db, shop.shopId, null)).rejects.toMatchObject({ code: "AK_SHOP_PAGE_NO_DRAFT" });
+    await expect(publishShopPageDraft(t.db, shop.shopId, null)).rejects.toMatchObject({
+      code: "AK_SHOP_PAGE_NO_DRAFT",
+    });
   });
 
   it("refuses an invalid document with the path of each issue, and writes nothing", async () => {
     const shop = await walkerShop(t.db, "doc-invalid");
-    const bad = { ...documentFromLegacy({ sections: full(), trade: "pets" }), sections: [{ key: "s_x", type: "services", variant: "nope", settings: {} }] };
+    const bad = {
+      ...documentFromLegacy({ sections: full(), trade: "pets" }),
+      sections: [{ key: "s_x", type: "services", variant: "nope", settings: {} }],
+    };
     const err = await saveShopPageDraft(t.db, shop.shopId, bad, null).catch((e: unknown) => e);
     expect(err).toBeInstanceOf(ShopPageInvalidError);
     expect((err as ShopPageInvalidError).issues[0]?.path).toMatch(/^sections\.0/);
@@ -61,7 +82,10 @@ describe("the shop page document", () => {
   it("bounds the document at 16 sections", async () => {
     const shop = await walkerShop(t.db, "doc-bounds");
     const doc = documentFromLegacy({ sections: full(), trade: "pets" });
-    const over = { ...doc, sections: [...doc.sections, ...doc.sections.slice(1, 3).map((s, i) => ({ ...s, key: `s_extra_${i}` }))] };
+    const over = {
+      ...doc,
+      sections: [...doc.sections, ...doc.sections.slice(1, 3).map((s, i) => ({ ...s, key: `s_extra_${i}` }))],
+    };
     await expect(saveShopPageDraft(t.db, shop.shopId, over, null)).rejects.toBeInstanceOf(ShopPageInvalidError);
   });
 
@@ -91,7 +115,10 @@ describe("the shop page document", () => {
 });
 
 describe("rollback and discard against the draft (folioviv#427)", () => {
-  const edited = (n: number) => ({ ...documentFromLegacy({ sections: full(), trade: "pets" }), sections: documentFromLegacy({ sections: full(), trade: "pets" }).sections.slice(0, n) });
+  const edited = (n: number) => ({
+    ...documentFromLegacy({ sections: full(), trade: "pets" }),
+    sections: documentFromLegacy({ sections: full(), trade: "pets" }).sections.slice(0, n),
+  });
   async function twoVersions(label: string) {
     const shop = await walkerShop(t.db, label);
     await saveShopPageDraft(t.db, shop.shopId, edited(3), null);
@@ -148,7 +175,10 @@ describe("the page is parsed at read time (folioviv#401)", () => {
   it("refuses to draw a stored document that no longer parses, naming the path, instead of drawing half a page", async () => {
     const shop = await walkerShop(t.db, "doc-read");
     const doc = documentFromLegacy({ sections: full(), trade: "pets" });
-    await t.pool.query(`INSERT INTO shop_page_versions (shop_id, version, status, schema, doc, published_at) VALUES ($1, 1, 'published', 1, $2::jsonb, now())`, [shop.shopId, JSON.stringify({ ...doc, sections: [{ ...doc.sections[0], variant: "nope" }] })]);
+    await t.pool.query(
+      `INSERT INTO shop_page_versions (shop_id, version, status, schema, doc, published_at) VALUES ($1, 1, 'published', 1, $2::jsonb, now())`,
+      [shop.shopId, JSON.stringify({ ...doc, sections: [{ ...doc.sections[0], variant: "nope" }] })],
+    );
     await expect(publishedShopPage(t.db, shop.shopId)).rejects.toBeInstanceOf(ShopPageInvalidError);
   });
 

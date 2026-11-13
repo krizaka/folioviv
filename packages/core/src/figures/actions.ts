@@ -7,7 +7,11 @@ import type { Period } from "./period";
 import { ACTION_KIND, type ActionKind, type FigureThresholds } from "./thresholds";
 
 /** Where an action leads: the app maps each to its address (`shopRoutes`); the domain only says which place and which record. */
-export type ActionTarget = { route: "invoice"; invoiceId: string } | { route: "invoices" } | { route: "books"; period: Period } | { route: "hours" };
+export type ActionTarget =
+  | { route: "invoice"; invoiceId: string }
+  | { route: "invoices" }
+  | { route: "books"; period: Period }
+  | { route: "hours" };
 
 /** The words of an action are catalogue messages (`console.figures.actions.<kind>.title|why`) with these variables: nothing is composed here. */
 export interface NextAction {
@@ -36,14 +40,37 @@ const URGENCY = { now: 0, soon: 1, week: 2 } as const;
  * « Que faire maintenant »: a few ranked actions, each from real data and each with its why and its target (#260). Nothing is invented: an empty
  * shop gets none. The return is prepared, never filed (AGENTS section 2). Only the kinds the administrator offers are considered.
  */
-export function nextActions(input: ActionsInput, thresholds: FigureThresholds, offered: readonly ActionKind[]): NextAction[] {
+export function nextActions(
+  input: ActionsInput,
+  thresholds: FigureThresholds,
+  offered: readonly ActionKind[],
+): NextAction[] {
   const { today, invoices, period } = input.figures;
   const actions: NextAction[] = [];
   const on = (k: ActionKind) => offered.includes(k);
 
   if (on(ACTION_KIND.chase)) {
     const overdue = invoices
-      .map((i) => ({ i, owed: remainingCents({ totalCents: i.totalCents, paidCents: i.paidCents, dueOn: i.dueOn, isCredit: i.isCredit, superseded: i.superseded }), state: invoiceState({ totalCents: i.totalCents, paidCents: i.paidCents, dueOn: i.dueOn, isCredit: i.isCredit, superseded: i.superseded }, today) }))
+      .map((i) => ({
+        i,
+        owed: remainingCents({
+          totalCents: i.totalCents,
+          paidCents: i.paidCents,
+          dueOn: i.dueOn,
+          isCredit: i.isCredit,
+          superseded: i.superseded,
+        }),
+        state: invoiceState(
+          {
+            totalCents: i.totalCents,
+            paidCents: i.paidCents,
+            dueOn: i.dueOn,
+            isCredit: i.isCredit,
+            superseded: i.superseded,
+          },
+          today,
+        ),
+      }))
       .filter((x) => x.state === INVOICE_STATE.overdue && x.owed > 0)
       .sort((a, b) => b.owed - a.owed || (a.i.dueOn ?? "").localeCompare(b.i.dueOn ?? ""));
     const first = overdue[0];
@@ -52,7 +79,13 @@ export function nextActions(input: ActionsInput, thresholds: FigureThresholds, o
         kind: ACTION_KIND.chase,
         urgency: "now",
         impactCents: overdue.reduce((s, x) => s + x.owed, 0),
-        why: { number: first.i.number, days: daysOverdue(first.i.dueOn, today), amountCents: first.owed, others: overdue.length - 1, totalCents: overdue.reduce((s, x) => s + x.owed, 0) },
+        why: {
+          number: first.i.number,
+          days: daysOverdue(first.i.dueOn, today),
+          amountCents: first.owed,
+          others: overdue.length - 1,
+          totalCents: overdue.reduce((s, x) => s + x.owed, 0),
+        },
         target: { route: "invoice", invoiceId: first.i.id },
         evidence: overdue.map((x) => x.i.id),
       });
@@ -75,7 +108,10 @@ export function nextActions(input: ActionsInput, thresholds: FigureThresholds, o
 
   if (on(ACTION_KIND.slot)) {
     const empty = input.slots
-      .filter((s) => s.offered >= thresholds.emptySlotMinOffered && s.booked * 100 <= s.offered * thresholds.emptySlotMaxFillPct)
+      .filter(
+        (s) =>
+          s.offered >= thresholds.emptySlotMinOffered && s.booked * 100 <= s.offered * thresholds.emptySlotMaxFillPct,
+      )
       .sort((a, b) => a.booked / a.offered - b.booked / b.offered || b.offered - a.offered)[0];
     if (empty) {
       actions.push({
@@ -89,5 +125,7 @@ export function nextActions(input: ActionsInput, thresholds: FigureThresholds, o
     }
   }
 
-  return actions.sort((a, b) => URGENCY[a.urgency] - URGENCY[b.urgency] || b.impactCents - a.impactCents).slice(0, Math.max(0, thresholds.maxActions));
+  return actions
+    .sort((a, b) => URGENCY[a.urgency] - URGENCY[b.urgency] || b.impactCents - a.impactCents)
+    .slice(0, Math.max(0, thresholds.maxActions));
 }

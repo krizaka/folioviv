@@ -20,17 +20,34 @@ export interface Proposals {
 
 const alt = (locale: "fr" | "en", altKey: string): string => {
   const [, type, slot, n] = altKey.split(".");
-  return (getDictionary(locale).console.defaultMedia as Record<string, Record<string, Record<string, string>>>)[type!]![slot!]![n!]!;
+  return (getDictionary(locale).console.defaultMedia as Record<string, Record<string, Record<string, string>>>)[type!]![
+    slot!
+  ]![n!]!;
 };
 
 /** The proposals of the offered trades, built from the manifest (a file the manifest lacks is left out). */
 export function proposalsFor(types: readonly ShopType[] = SHOP_TYPES): Record<ShopType, Proposals> {
   const out = {} as Record<ShopType, Proposals>;
   for (const type of types) {
-    const video = defaultsFor(type, "cover").map(defaultVideo).find((v) => v !== null) ?? null;
+    const video =
+      defaultsFor(type, "cover")
+        .map(defaultVideo)
+        .find((v) => v !== null) ?? null;
     out[type] = {
-      cover: video ? { id: video.id, src: video.poster, webm: video.webm, mp4: video.mp4, altFr: alt("fr", video.altKey), altEn: alt("en", video.altKey) } : null,
-      gallery: defaultsFor(type, "gallery").map(defaultImage).filter((i) => i !== null).map((i) => ({ id: i.id, src: i.src, altFr: alt("fr", i.altKey), altEn: alt("en", i.altKey) })),
+      cover: video
+        ? {
+            id: video.id,
+            src: video.poster,
+            webm: video.webm,
+            mp4: video.mp4,
+            altFr: alt("fr", video.altKey),
+            altEn: alt("en", video.altKey),
+          }
+        : null,
+      gallery: defaultsFor(type, "gallery")
+        .map(defaultImage)
+        .filter((i) => i !== null)
+        .map((i) => ({ id: i.id, src: i.src, altFr: alt("fr", i.altKey), altEn: alt("en", i.altKey) })),
     };
   }
   return out;

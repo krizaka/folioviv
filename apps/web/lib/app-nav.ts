@@ -23,13 +23,24 @@ export type AppPlace = (typeof SHOP_PLACES)[number]["key"] | "bookings";
 export const CLIENT_PLACES: readonly AppPlace[] = ["bookings"];
 
 /** The rail of a role: five at most, in the order of the day. */
-export const placesFor = (role: ShopRole): AppPlace[] => SHOP_PLACES.filter((p) => p.needs.some((need) => may(role, need))).map((p) => p.key);
+export const placesFor = (role: ShopRole): AppPlace[] =>
+  SHOP_PLACES.filter((p) => p.needs.some((need) => may(role, need))).map((p) => p.key);
 
 /** Where a place leads for a person working in `shopId` as `role` (or in none: a client). */
-export function placeHrefFor(locale: RouteLocale, member: { shopId: string; role: ShopRole } | null, place: AppPlace): string {
+export function placeHrefFor(
+  locale: RouteLocale,
+  member: { shopId: string; role: ShopRole } | null,
+  place: AppPlace,
+): string {
   if (place === "bookings" || member === null) return accountRoutes(locale).home;
   const shop = shopRoutes(locale, member.shopId);
-  const hrefs: Record<Exclude<AppPlace, "bookings">, string> = { today: shop.today(), clients: shop.clients, invoices: shop.invoices, books: shop.books(), shop: may(member.role, "settings") ? shop.setup : shop.team };
+  const hrefs: Record<Exclude<AppPlace, "bookings">, string> = {
+    today: shop.today(),
+    clients: shop.clients,
+    invoices: shop.invoices,
+    books: shop.books(),
+    shop: may(member.role, "settings") ? shop.setup : shop.team,
+  };
   return hrefs[place];
 }
 
@@ -39,4 +50,5 @@ export function placeHrefFor(locale: RouteLocale, member: { shopId: string; role
  * screens (send, correct, issue) and a new shop. The header yields wherever the page holds it: never two primaries.
  */
 const PAGE_HOLDS_PRIMARY = /\/app\/[^/]+\/(today|settings|invoices\/[^/?]+|shop\/new)(\/|\?|$)/;
-export const screenPrimary = (pathname: string): "header" | "page" => (PAGE_HOLDS_PRIMARY.test(pathname) ? "page" : "header");
+export const screenPrimary = (pathname: string): "header" | "page" =>
+  PAGE_HOLDS_PRIMARY.test(pathname) ? "page" : "header";

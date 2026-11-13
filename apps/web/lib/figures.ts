@@ -1,4 +1,13 @@
-import { computeFigures, declarationPeriod, type Figure, type FigureId, FILING, type NextAction, nextActions, type Period } from "@folioviv/core";
+import {
+  computeFigures,
+  declarationPeriod,
+  type Figure,
+  type FigureId,
+  FILING,
+  type NextAction,
+  nextActions,
+  type Period,
+} from "@folioviv/core";
 import { figuresSnapshot, shopFigureOverrides } from "@folioviv/db";
 
 import { db } from "./db";
@@ -15,9 +24,18 @@ export interface ShopFigures {
  * computed by `@folioviv/core`, judged by the administrator's thresholds. The period is the declaration period that contains `today` (or the
  * one asked for); the shop's filing frequency is not captured yet, so quarters, as « Vos livres » prepares them.
  */
-export async function loadFigures(shop: { id: string }, today: string, now: Date, period?: Period): Promise<ShopFigures> {
+export async function loadFigures(
+  shop: { id: string },
+  today: string,
+  now: Date,
+  period?: Period,
+): Promise<ShopFigures> {
   const range = period ?? declarationPeriod(today, FILING.quarterly);
-  const { input, slots } = await figuresSnapshot(db(), shop.id, { today, computedAt: now.toISOString(), period: range });
+  const { input, slots } = await figuresSnapshot(db(), shop.id, {
+    today,
+    computedAt: now.toISOString(),
+    period: range,
+  });
   const { thresholds, offered } = await figureRules(() => shopFigureOverrides(db(), shop.id));
   return {
     figures: computeFigures(input, thresholds),

@@ -1,6 +1,21 @@
 import { type FramePaper, protectedTermsIssues, type ShopType, TEMPLATES } from "@folioviv/core";
 import { PASSWORD_RESET_MAX_MINUTES, PASSWORD_RESET_MIN_MINUTES, PASSWORD_RESET_TTL_MINUTES } from "@krizaka/auth";
-import { bilingual, choice, defineSettings, DISPLAY_NAME_KEY, displayNameSetting, flag, GLOBAL_ONLY, integer, postgresSettings, SCOPE, type SettingsService, subset, text, WORKSPACE_SCOPES } from "@krizaka/settings";
+import {
+  bilingual,
+  choice,
+  defineSettings,
+  DISPLAY_NAME_KEY,
+  displayNameSetting,
+  flag,
+  GLOBAL_ONLY,
+  integer,
+  postgresSettings,
+  SCOPE,
+  type SettingsService,
+  subset,
+  text,
+  WORKSPACE_SCOPES,
+} from "@krizaka/settings";
 import { storageSettings } from "@krizaka/storage/settings";
 import { z } from "zod";
 
@@ -14,18 +29,27 @@ import { refuse } from "./http";
  */
 /** The ids of the catalogue: what the administrator can offer or preselect. */
 const TEMPLATE_IDS = [...new Set(TEMPLATES.map((t) => t.id))] as unknown as readonly [string, ...string[]];
-const defaultTemplate = (type: ShopType) => choice("storefront", TEMPLATE_IDS, TEMPLATES.find((t) => t.shopTypes.includes(type))!.id, GLOBAL_ONLY);
+const defaultTemplate = (type: ShopType) =>
+  choice("storefront", TEMPLATE_IDS, TEMPLATES.find((t) => t.shopTypes.includes(type))!.id, GLOBAL_ONLY);
 
 /** The console saves the protected terms only when every line can be kept: a pattern that does not compile or could backtrack catastrophically (ReDoS) is refused before it is stored (#537). */
 function withTermsCheck<T extends { schema: z.ZodType<string> }>(def: T): T {
-  return { ...def, schema: def.schema.refine((value) => protectedTermsIssues(value).length === 0, { message: "A term is not a word or a safe /pattern/" }) };
+  return {
+    ...def,
+    schema: def.schema.refine((value) => protectedTermsIssues(value).length === 0, {
+      message: "A term is not a word or a safe /pattern/",
+    }),
+  };
 }
 
 export const SETTINGS = {
   // The name shown to people (krizaka-internal#2035): the administrator sets it, the default is the commercial name of @krizaka/org.
   [DISPLAY_NAME_KEY]: displayNameSetting(BRAND_ID),
   "app.maintenance": flag("general", false),
-  "app.maintenanceMessage": bilingual("general", { fr: `${PRODUCT_NAME} est en maintenance. Revenez dans quelques minutes.`, en: `${PRODUCT_NAME} is down for maintenance. Please come back in a few minutes.` }),
+  "app.maintenanceMessage": bilingual("general", {
+    fr: `${PRODUCT_NAME} est en maintenance. Revenez dans quelques minutes.`,
+    en: `${PRODUCT_NAME} is down for maintenance. Please come back in a few minutes.`,
+  }),
   // API keys (#178): the global switch, what a plan holds, the pace of one key.
   "features.apiKeys": flag("features", true, WORKSPACE_SCOPES),
   "features.webhooks": flag("features", true, WORKSPACE_SCOPES),
@@ -61,7 +85,40 @@ export const SETTINGS = {
   "limits.translationsPerShopPerDay": integer("limits", 20, { min: 1, max: 500, unit: "runs" }, GLOBAL_ONLY),
   // The private calendar feeds of the shop and its staff (#282, ADR-004): off, every feed address answers 404 and none can be made.
   // Anti-phishing shop addresses (ADR-005 slice 4, #537): one term per line (a word, or /regex/ on the folded slug; # comments). A slug wearing one is held for review, never refused (core slug-guard). Seed (CTO decision, reversible): the Krizaka family names, the reserved technical words and the lure words; third-party brands are added in the console when there is a reason.
-  "slugs.protectedTerms": withTermsCheck(text("slugs", ["krizaka", "folioviv", "verikora", "sovkora", "admin", "api", "www", "app", "auth", "login", "signin", "help", "support", "billing", "mail", "status", "security", "secure", "account", "dashboard", "verify", "verification", "password", "wallet", "payment"].join("\n"), { max: 4000, empty: true }, GLOBAL_ONLY)),
+  "slugs.protectedTerms": withTermsCheck(
+    text(
+      "slugs",
+      [
+        "krizaka",
+        "folioviv",
+        "verikora",
+        "sovkora",
+        "admin",
+        "api",
+        "www",
+        "app",
+        "auth",
+        "login",
+        "signin",
+        "help",
+        "support",
+        "billing",
+        "mail",
+        "status",
+        "security",
+        "secure",
+        "account",
+        "dashboard",
+        "verify",
+        "verification",
+        "password",
+        "wallet",
+        "payment",
+      ].join("\n"),
+      { max: 4000, empty: true },
+      GLOBAL_ONLY,
+    ),
+  ),
   "exports.icsFeed.enabled": flag("exports", true, GLOBAL_ONLY),
   // The owner's data downloads (#420, ADR-004 §5): appointments (CSV, ICS), clients and invoices (CSV). Off, none is served.
   "exports.data.enabled": flag("exports", true, GLOBAL_ONLY),
@@ -92,7 +149,12 @@ export const SETTINGS = {
   "figures.actions": subset("figures", ["chase", "taxes", "slot"] as const, ["chase", "taxes", "slot"], GLOBAL_ONLY),
   // The proposed images and videos of the storefronts (#267): the switch, and the trades whose defaults are offered.
   "features.defaultMedia": flag("features", true, GLOBAL_ONLY),
-  "storefront.defaultMedia.types": subset("storefront", ["salon", "coaching", "workshop", "cleaning", "pets", "consulting"] as const, ["salon", "coaching", "workshop", "cleaning", "pets", "consulting"], GLOBAL_ONLY),
+  "storefront.defaultMedia.types": subset(
+    "storefront",
+    ["salon", "coaching", "workshop", "cleaning", "pets", "consulting"] as const,
+    ["salon", "coaching", "workshop", "cleaning", "pets", "consulting"],
+    GLOBAL_ONLY,
+  ),
   // The storefront templates (#261): the switch (off until the picker ships), the templates offered, and the one preselected for each trade (it never applies by itself).
   "features.storefrontTemplates": flag("features", true, GLOBAL_ONLY),
   "storefront.templates.offered": subset("storefront", TEMPLATE_IDS, [...TEMPLATE_IDS], GLOBAL_ONLY),
@@ -103,12 +165,22 @@ export const SETTINGS = {
   "storefront.templates.default.pets": defaultTemplate("pets"),
   "storefront.templates.default.consulting": defaultTemplate("consulting"),
   // The account (@krizaka/auth): how long a password reset link lives; the expiry and the mailed text both read it.
-  "auth.passwordResetTtlMinutes": integer("auth", PASSWORD_RESET_TTL_MINUTES, { min: PASSWORD_RESET_MIN_MINUTES, max: PASSWORD_RESET_MAX_MINUTES, unit: "minutes" }, GLOBAL_ONLY),
+  "auth.passwordResetTtlMinutes": integer(
+    "auth",
+    PASSWORD_RESET_TTL_MINUTES,
+    { min: PASSWORD_RESET_MIN_MINUTES, max: PASSWORD_RESET_MAX_MINUTES, unit: "minutes" },
+    GLOBAL_ONLY,
+  ),
   // Where the owners' and clients' files live (ADR-010): the provider and its coordinates, chosen by the administrator; `local` (the default) follows the deployment's environment.
   ...storageSettings,
   "realtime.storefront.enabled": flag("realtime", true, GLOBAL_ONLY),
   "realtime.storefront.heartbeatSeconds": integer("realtime", 15, { min: 5, max: 60, unit: "seconds" }, GLOBAL_ONLY),
-  "realtime.storefront.maxStreamsPerPage": integer("realtime", 100, { min: 1, max: 1000, unit: "streams" }, GLOBAL_ONLY),
+  "realtime.storefront.maxStreamsPerPage": integer(
+    "realtime",
+    100,
+    { min: 1, max: 1000, unit: "streams" },
+    GLOBAL_ONLY,
+  ),
 } as const;
 
 export const settings = defineSettings(SETTINGS);
@@ -118,7 +190,10 @@ export type SettingKey = keyof typeof SETTINGS;
 const holder = globalThis as unknown as { __foliovivSettings?: SettingsService<typeof SETTINGS> };
 
 export function appSettings(): SettingsService<typeof SETTINGS> {
-  holder.__foliovivSettings ??= postgresSettings(settings, { query: async (sql, params) => query(sql, params as unknown[]) as never, clock: () => performance.now() });
+  holder.__foliovivSettings ??= postgresSettings(settings, {
+    query: async (sql, params) => query(sql, params as unknown[]) as never,
+    clock: () => performance.now(),
+  });
   return holder.__foliovivSettings;
 }
 
@@ -127,7 +202,9 @@ export const resetAppSettings = () => {
   holder.__foliovivSettings = undefined;
 };
 
-export async function shopSectionFeatures(): Promise<Record<"wall" | "reels" | "follow" | "reviews" | "announcements", boolean>> {
+export async function shopSectionFeatures(): Promise<
+  Record<"wall" | "reels" | "follow" | "reviews" | "announcements", boolean>
+> {
   const service = appSettings();
   const options = { userId: null };
   const [wall, reels, follow, reviews, announcements] = await Promise.all([
@@ -149,16 +226,23 @@ export async function cahierStorefrontOn(userId: string | null): Promise<boolean
 }
 
 /** The paper under a shop page: the applied template's while the notebook storefront is on for the shop's owner, else none (the look's own). */
-export async function shopPaperShown(paper: FramePaper | null, ownerId: string | null): Promise<FramePaper | undefined> {
+export async function shopPaperShown(
+  paper: FramePaper | null,
+  ownerId: string | null,
+): Promise<FramePaper | undefined> {
   if (!paper) return undefined;
   return (await cahierStorefrontOn(ownerId)) ? paper : undefined;
 }
 
 /** The features that can be switched off: the server refuses what is off, whatever the browser shows. */
-export const FEATURE = { apiKeys: "features.apiKeys", webhooks: "features.webhooks" } as const satisfies Record<string, SettingKey>;
+export const FEATURE = { apiKeys: "features.apiKeys", webhooks: "features.webhooks" } as const satisfies Record<
+  string,
+  SettingKey
+>;
 export type Feature = keyof typeof FEATURE;
 
 /** 403 FEATURE_OFF when the feature is switched off for this person. */
 export async function assertFeature(feature: Feature, userId: string | null): Promise<void> {
-  if (!(await appSettings().get(FEATURE[feature], { userId }))) throw refuse(403, "FEATURE_OFF", "This feature is switched off", { feature });
+  if (!(await appSettings().get(FEATURE[feature], { userId })))
+    throw refuse(403, "FEATURE_OFF", "This feature is switched off", { feature });
 }

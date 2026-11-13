@@ -12,6 +12,12 @@ export const DELETE = (req: Request, { params }: { params: Promise<{ id: string 
     const { session } = await requireOwner(req);
     const { id } = await params;
     await keyAct(() => apiKeys(systemClock).revoke(session.account.id, id));
-    await audit({ action: "apikey.revoked", actorId: session.account.id, actorLabel: session.account.email, targetId: id, headers: req.headers });
+    await audit({
+      action: "apikey.revoked",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: id,
+      headers: req.headers,
+    });
     return Response.json({ ok: true });
   });

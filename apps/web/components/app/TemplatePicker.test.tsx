@@ -14,13 +14,36 @@ import { TemplatePreview } from "./TemplatePreview";
 
 const en = bindProduct(enRaw);
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: () => undefined, replace: () => undefined, push: () => undefined }), usePathname: () => "/en/app/s1/shop", useSearchParams: () => new URLSearchParams() }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: () => undefined, replace: () => undefined, push: () => undefined }),
+  usePathname: () => "/en/app/s1/shop",
+  useSearchParams: () => new URLSearchParams(),
+}));
 
-const data = (over: Partial<TemplateChoices> = {}): TemplateChoices => ({ shopType: "salon", choices: templatesFor("salon"), preselected: "salon-carte", current: null, updateAvailable: null, sectionsCustom: false, ...over });
-const render = (d: TemplateChoices, locale: "en" | "fr" = "en") => renderIn(locale, "professional", <TemplatePicker data={d} shopId="s1" />);
-const text = (h: string) => h.replace(/<[^>]*>/g, " ").replace(/&#x27;/g, "'").replace(/&quot;/g, '"').replace(/&[a-z#0-9]+;/gi, " ").replace(/\s+/g, " ");
+const data = (over: Partial<TemplateChoices> = {}): TemplateChoices => ({
+  shopType: "salon",
+  choices: templatesFor("salon"),
+  preselected: "salon-carte",
+  current: null,
+  updateAvailable: null,
+  sectionsCustom: false,
+  ...over,
+});
+const render = (d: TemplateChoices, locale: "en" | "fr" = "en") =>
+  renderIn(locale, "professional", <TemplatePicker data={d} shopId="s1" />);
+const text = (h: string) =>
+  h
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&#x27;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&[a-z#0-9]+;/gi, " ")
+    .replace(/\s+/g, " ");
 /** Whether the tile that names `name` is the chosen one of the radio group. */
-const checked = (html: string, name: string) => html.split("aria-checked=").find((seg) => seg.includes(`>${name}<`))?.startsWith('"true"');
+const checked = (html: string, name: string) =>
+  html
+    .split("aria-checked=")
+    .find((seg) => seg.includes(`>${name}<`))
+    ?.startsWith('"true"');
 const labels = Object.fromEntries(Object.entries(en.console.shopSetup.layout.sections));
 
 describe("« Page template » inside « Look » (#261, step 4)", () => {
@@ -28,7 +51,18 @@ describe("« Page template » inside « Look » (#261, step 4)", () => {
     const html = render(data());
     const t = text(html);
     expect(html).toContain('aria-label="Templates for your trade"');
-    for (const word of ["Page template", "Salon", "Light, airy, mirrors and plants.", "By appointment", "The menu of cuts and colour, booking first.", "Showcase", "Menu", "Suggested", "Use this template"]) expect(t).toContain(word);
+    for (const word of [
+      "Page template",
+      "Salon",
+      "Light, airy, mirrors and plants.",
+      "By appointment",
+      "The menu of cuts and colour, booking first.",
+      "Showcase",
+      "Menu",
+      "Suggested",
+      "Use this template",
+    ])
+      expect(t).toContain(word);
     expect(checked(html, "By appointment")).toBe(true);
     expect(checked(html, "Salon")).toBe(false);
     expect(t).not.toContain("Your template");
@@ -54,8 +88,11 @@ describe("« Page template » inside « Look » (#261, step 4)", () => {
 
   it("speaks French, and says when nothing is offered", () => {
     const t = text(render(data(), "fr"));
-    for (const word of ["Modèle de page", "Suggéré", "Utiliser ce modèle", "Vitrine", "Carte"]) expect(t).toContain(word);
-    expect(text(render(data({ choices: [], preselected: null })))).toContain("No template is offered for your trade yet.");
+    for (const word of ["Modèle de page", "Suggéré", "Utiliser ce modèle", "Vitrine", "Carte"])
+      expect(t).toContain(word);
+    expect(text(render(data({ choices: [], preselected: null })))).toContain(
+      "No template is offered for your trade yet.",
+    );
   });
 });
 
@@ -64,9 +101,17 @@ describe("the preview of a template (#261, step 4)", () => {
     for (const template of TEMPLATES) {
       const html = renderIn("en", "professional", <TemplatePreview template={template} labels={labels} />);
       const t = text(html);
-      const positions = template.sections.filter((s) => s.visible).map((s) => t.indexOf(labels[s.id as keyof typeof labels]!));
-      expect(positions.every((p) => p >= 0), template.id).toBe(true);
-      expect([...positions].sort((a, b) => a - b), template.id).toEqual(positions);
+      const positions = template.sections
+        .filter((s) => s.visible)
+        .map((s) => t.indexOf(labels[s.id as keyof typeof labels]!));
+      expect(
+        positions.every((p) => p >= 0),
+        template.id,
+      ).toBe(true);
+      expect(
+        [...positions].sort((a, b) => a - b),
+        template.id,
+      ).toEqual(positions);
       expect(html.includes("data-hue="), template.id).toBe(template.hue !== "brand-folioviv");
       expect(html).toContain(`data-paper="${template.paper}"`);
       expect(html).toContain('aria-hidden="true"');
@@ -77,14 +122,17 @@ describe("the preview of a template (#261, step 4)", () => {
     const t = text(renderIn("en", "professional", <TemplatePreview template={null} labels={labels} />));
     expect(t.indexOf("Story, contact and policies")).toBeLessThan(t.indexOf("Photo gallery"));
     expect(t.indexOf("Services")).toBeLessThan(t.indexOf("Story, contact and policies"));
-    expect(renderIn("en", "professional", <TemplatePreview template={null} labels={labels} />)).not.toContain("data-hue=");
+    expect(renderIn("en", "professional", <TemplatePreview template={null} labels={labels} />)).not.toContain(
+      "data-hue=",
+    );
   });
 });
 
 describe("« Update available » (#261, step 5)", () => {
   const two = { ...TEMPLATES.find((t) => t.id === "salon-vitrine")!, version: 2 };
   const choices = templatesFor("salon").map((t) => (t.id === "salon-vitrine" ? two : t));
-  const outdated = (over: Partial<TemplateChoices> = {}) => data({ choices, current: { id: "salon-vitrine", version: 1 }, updateAvailable: { version: 2 }, ...over });
+  const outdated = (over: Partial<TemplateChoices> = {}) =>
+    data({ choices, current: { id: "salon-vitrine", version: 1 }, updateAvailable: { version: 2 }, ...over });
 
   it("marks the applied tile, chooses it, explains and offers the update — the shop keeps its version until then", () => {
     const html = render(outdated());
@@ -119,7 +167,11 @@ describe("the picker's tiles are dressed (#261, step 4)", () => {
   it("the grid wears @krizaka/ui's story classes, whose stylesheet the locale layout loads", () => {
     const grid = readFileSync(join(process.cwd(), "node_modules/@krizaka/ui/dist/choice-grid.js"), "utf8");
     expect(grid).toContain("kzs-choice-grid");
-    expect(readFileSync(join(process.cwd(), "node_modules/@krizaka/ui/dist/story.css"), "utf8")).toContain(".kzs-choice-grid");
-    expect(readFileSync(join(process.cwd(), "app/[locale]/layout.tsx"), "utf8")).toMatch(/import "@krizaka\/ui\/story\.css";/);
+    expect(readFileSync(join(process.cwd(), "node_modules/@krizaka/ui/dist/story.css"), "utf8")).toContain(
+      ".kzs-choice-grid",
+    );
+    expect(readFileSync(join(process.cwd(), "app/[locale]/layout.tsx"), "utf8")).toMatch(
+      /import "@krizaka\/ui\/story\.css";/,
+    );
   });
 });

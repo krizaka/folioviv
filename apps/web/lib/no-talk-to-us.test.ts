@@ -15,7 +15,10 @@ const SALES_CALL = /talk to us|parlez-nous/i;
 const ROOT = join(__dirname, "..");
 
 describe("no « Talk to us » or « Parlez-nous » on a public page", () => {
-  it.each([["en", en], ["fr", fr]] as const)("the %s catalogue carries no sales-call wording", (_, messages) => {
+  it.each([
+    ["en", en],
+    ["fr", fr],
+  ] as const)("the %s catalogue carries no sales-call wording", (_, messages) => {
     expect(JSON.stringify(messages)).not.toMatch(SALES_CALL);
   });
 

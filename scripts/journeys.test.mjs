@@ -12,7 +12,9 @@ describe("the critical journeys", () => {
   const config = read("apps/web/e2e/journeys/playwright.config.mjs");
 
   it("calls the org's journeys workflow under the job id `journeys` (the check is `journeys / gate`), pinned by SHA, on PR, queue and main", () => {
-    expect(workflow).toMatch(/^ {2}journeys:\n {4}uses: krizaka\/\.github\/\.github\/workflows\/journeys\.yml@[0-9a-f]{40}/m);
+    expect(workflow).toMatch(
+      /^ {2}journeys:\n {4}uses: krizaka\/\.github\/\.github\/workflows\/journeys\.yml@[0-9a-f]{40}/m,
+    );
     for (const trigger of ["pull_request", "merge_group", "push"]) expect(workflow).toContain(trigger);
     expect(workflow).toContain("--project=critical");
     expect(config).toContain('name: "critical"');
@@ -29,7 +31,18 @@ describe("the critical journeys", () => {
   });
 
   it("walks the guest booking in both languages and proves the refused check mails nothing", () => {
-    for (const step of ["/slots", "/confirm?", "data-guest-summary", "codeFor(email)", "captchaSolved", "confirmation", "data-booked-stamp", "toBe(400)", 'for (const locale of ["en", "fr"])']) expect(spec).toContain(step);
+    for (const step of [
+      "/slots",
+      "/confirm?",
+      "data-guest-summary",
+      "codeFor(email)",
+      "captchaSolved",
+      "confirmation",
+      "data-booked-stamp",
+      "toBe(400)",
+      'for (const locale of ["en", "fr"])',
+    ])
+      expect(spec).toContain(step);
     expect(spec).toContain("@folioviv.test");
   });
 });

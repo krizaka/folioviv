@@ -40,14 +40,14 @@ describe("the rail of each role (docs/ux/2026-10-full-review.md § 4.1): five de
  * invoice's screens (send, correct, issue). Every page of the shop's space is in this table (an old address that answers 308 is a redirect of `next.config.mjs`, not a page): a new one must say who holds its primary.
  */
 const OWNER_SCREENS: Record<string, "header" | "page"> = {
-  "today": "page",
-  "books": "header",
-  "settings": "page",
+  today: "page",
+  books: "header",
+  settings: "page",
   "settings/[section]": "page",
-  "brief": "header",
-  "clients": "header",
+  brief: "header",
+  clients: "header",
   "clients/[id]": "header",
-  "invoices": "header",
+  invoices: "header",
   "invoices/[id]": "page",
   "invoices/[id]/correct": "page",
   "invoices/new": "page",
@@ -56,7 +56,9 @@ const OWNER_SCREENS: Record<string, "header" | "page"> = {
 
 const SHOP_SPACE = fileURLToPath(new URL("../app/[locale]/(app)/app/[shop]/", import.meta.url));
 const ownerRoutes = (): string[] =>
-  (readdirSync(SHOP_SPACE, { recursive: true }) as string[]).filter((f) => f.endsWith("page.tsx")).map((f) => f.replace(/\\/g, "/").replace(/\/?page\.tsx$/, ""));
+  (readdirSync(SHOP_SPACE, { recursive: true }) as string[])
+    .filter((f) => f.endsWith("page.tsx"))
+    .map((f) => f.replace(/\\/g, "/").replace(/\/?page\.tsx$/, ""));
 const sample = (route: string) => `/fr/app/s-1/${route.replace("[id]", "abc123").replace("[section]", "page")}`;
 
 describe("one primary per screen: the header's « Nouvelle facture » or the page's own, never both", () => {

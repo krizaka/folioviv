@@ -17,16 +17,49 @@ interface Change {
 }
 
 export const PRICE_SCHEDULE: readonly (Change & { label: string })[] = [
-  { label: SCHEDULE_LABEL, key: "folioviv.starter", seed: { unit: "month", amountCents: 4500, availability: "public", limits: { cardFeeBps: 0, directDebitBps: 50, directDebitCapCents: 1500 } }, patch: { amountCents: 2900 }, limits: { trialDays: 90 } },
-  { label: SCHEDULE_LABEL, key: "folioviv.scale", seed: { unit: "month", amountCents: 9900, availability: "public", limits: { cardFeeBps: 0, directDebitBps: 25, directDebitCapCents: 1000 } }, patch: { amountCents: 6900 } },
-  { label: SCHEDULE_LABEL, key: "folioviv.founder", seed: { unit: "month", amountCents: 3900, availability: "founder-limited", limits: { founderCap: 20, cardFeeBps: 0, directDebitBps: 50, directDebitCapCents: 1500 } }, patch: { availability: "internal" } },
+  {
+    label: SCHEDULE_LABEL,
+    key: "folioviv.starter",
+    seed: {
+      unit: "month",
+      amountCents: 4500,
+      availability: "public",
+      limits: { cardFeeBps: 0, directDebitBps: 50, directDebitCapCents: 1500 },
+    },
+    patch: { amountCents: 2900 },
+    limits: { trialDays: 90 },
+  },
+  {
+    label: SCHEDULE_LABEL,
+    key: "folioviv.scale",
+    seed: {
+      unit: "month",
+      amountCents: 9900,
+      availability: "public",
+      limits: { cardFeeBps: 0, directDebitBps: 25, directDebitCapCents: 1000 },
+    },
+    patch: { amountCents: 6900 },
+  },
+  {
+    label: SCHEDULE_LABEL,
+    key: "folioviv.founder",
+    seed: {
+      unit: "month",
+      amountCents: 3900,
+      availability: "founder-limited",
+      limits: { founderCap: 20, cardFeeBps: 0, directDebitBps: 50, directDebitCapCents: 1500 },
+    },
+    patch: { availability: "internal" },
+  },
 ];
 
 const json = (value: unknown) => JSON.stringify(value).replaceAll("'", "''");
 const full = (seed: Change["seed"]) => ({ ...seed, currency: "CAD", taxes: "plus-taxes" });
 
 /** A seed with the schedule's change of its key applied (a key not scheduled is returned as it is). */
-export function scheduledPrice<T extends { amountCents: number | null; availability: string; limits: Record<string, number> }>(key: string, seed: T): T {
+export function scheduledPrice<
+  T extends { amountCents: number | null; availability: string; limits: Record<string, number> },
+>(key: string, seed: T): T {
   const change = PRICE_SCHEDULE.find((c) => c.key === key);
   if (!change) return seed;
   return { ...seed, ...change.patch, limits: { ...seed.limits, ...change.limits } };

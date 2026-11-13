@@ -7,7 +7,17 @@ const SAFE = new Set(["GET", "HEAD", "OPTIONS"]);
  * a script or a webhook that carries no session cookie. A request that carries the session cookie but says where it comes from nowhere is
  * refused: a browser always says. Pure, so every case is tested without a server.
  */
-export function refusesCrossSiteWrite({ method, headers, origin, sessionCookie }: { method: string; headers: Headers; origin: string; sessionCookie: string }): boolean {
+export function refusesCrossSiteWrite({
+  method,
+  headers,
+  origin,
+  sessionCookie,
+}: {
+  method: string;
+  headers: Headers;
+  origin: string;
+  sessionCookie: string;
+}): boolean {
   if (SAFE.has(method.toUpperCase())) return false;
   if (/^bearer\s/i.test(headers.get("authorization") ?? "")) return false;
   const site = headers.get("sec-fetch-site");

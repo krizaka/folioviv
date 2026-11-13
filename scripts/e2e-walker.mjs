@@ -127,7 +127,8 @@ async function caption(page, text) {
       el = document.createElement("div");
       el.id = "e2e-caption";
       el.setAttribute("aria-hidden", "true");
-      el.style.cssText = "position:fixed;left:10px;right:10px;bottom:10px;z-index:2147483647;padding:10px 14px;border-radius:12px;background:rgba(9,9,11,.92);color:#fff;font:600 15px/1.3 system-ui,sans-serif;text-align:center;pointer-events:none";
+      el.style.cssText =
+        "position:fixed;left:10px;right:10px;bottom:10px;z-index:2147483647;padding:10px 14px;border-radius:12px;background:rgba(9,9,11,.92);color:#fff;font:600 15px/1.3 system-ui,sans-serif;text-align:center;pointer-events:none";
       document.body.appendChild(el);
       // Room under the caption: nothing the viewer needs to see hides behind it.
       document.documentElement.style.scrollPaddingBottom = "110px";
@@ -146,12 +147,26 @@ async function open(browser, name) {
     timezoneId: "America/Toronto",
     isMobile: true,
     hasTouch: true,
-    ...(VIDEO ? { recordVideo: { dir: path.join(OUT, "video", name), size: { width: PHONE.width * 2, height: PHONE.height * 2 } } } : {}),
+    ...(VIDEO
+      ? {
+          recordVideo: {
+            dir: path.join(OUT, "video", name),
+            size: { width: PHONE.width * 2, height: PHONE.height * 2 },
+          },
+        }
+      : {}),
   });
   const page = await context.newPage();
   page.on("response", (res) => {
     const url = new URL(res.url());
-    if (url.pathname.startsWith("/api/")) calls.push({ part: name, method: res.request().method(), path: url.pathname, status: res.status(), requestId: res.headers()["x-request-id"] ?? null });
+    if (url.pathname.startsWith("/api/"))
+      calls.push({
+        part: name,
+        method: res.request().method(),
+        path: url.pathname,
+        status: res.status(),
+        requestId: res.headers()["x-request-id"] ?? null,
+      });
   });
   page.on("pageerror", (e) => check(false, `no page error (${e.message.slice(0, 120)})`));
   return { context, page };
@@ -184,13 +199,18 @@ try {
   await caption(c.page, W.captions.signIn);
   await signIn(c.page, client);
   await c.page.getByRole("button", { name: W.addAnother }).waitFor();
-  check(/\/s\/[^/]+\/service\/[^/]+\/confirm/.test(c.page.url()), "after signing in she is back on the last step of the booking path");
+  check(
+    /\/s\/[^/]+\/service\/[^/]+\/confirm/.test(c.page.url()),
+    "after signing in she is back on the last step of the booking path",
+  );
   await caption(c.page, W.captions.dog);
   await c.page.getByRole("button", { name: W.addAnother }).click();
   await c.page.getByLabel(W.dogName, { exact: true }).fill("Miso");
   await c.page.getByLabel(W.breed).fill("Shiba inu");
   await c.page.getByLabel(W.size).selectOption({ index: 1 });
-  await c.page.getByLabel(W.temperament).fill(LOCALE === "fr" ? "Curieux, adore les autres chiens" : "Curious, loves other dogs");
+  await c.page
+    .getByLabel(W.temperament)
+    .fill(LOCALE === "fr" ? "Curieux, adore les autres chiens" : "Curious, loves other dogs");
   await beat(c.page, 700);
   await c.page.getByRole("button", { name: W.addDog }).click();
   await c.page.getByRole("checkbox", { name: "Miso" }).waitFor();
@@ -266,7 +286,13 @@ try {
   writeFileSync(photoPath, Buffer.from(photo, "base64"));
   for (const dog of ["Tofu", "Miso"]) {
     const box = card.getByRole("form", { name: W.reportTitle(dog) });
-    await box.getByLabel(W.note).fill(LOCALE === "fr" ? `${dog} a bien marché, 45 min autour du canal Lachine, pipi ✓` : `${dog} walked well, 45 min along the Lachine canal, pee ✓`);
+    await box
+      .getByLabel(W.note)
+      .fill(
+        LOCALE === "fr"
+          ? `${dog} a bien marché, 45 min autour du canal Lachine, pipi ✓`
+          : `${dog} walked well, 45 min along the Lachine canal, pee ✓`,
+      );
     await box.locator("input[type=file]").setInputFiles(photoPath);
     await box.getByRole("button", { name: W.save }).click();
     await box.getByText(W.saved).waitFor();
@@ -278,7 +304,10 @@ try {
   const send = card.getByRole("form", { name: W.reportTitle("Miso") }).getByRole("button", { name: W.send("Sofia") });
   await send.scrollIntoViewIfNeeded();
   await send.click();
-  await card.getByRole("form", { name: W.reportTitle("Miso") }).getByText(W.afterSend).waitFor();
+  await card
+    .getByRole("form", { name: W.reportTitle("Miso") })
+    .getByText(W.afterSend)
+    .waitFor();
   check(true, "the report was sent (or queued when no mail provider is set)");
   await beat(w.page, 2200);
   await close(w);
@@ -292,7 +321,14 @@ try {
   const reportImage = r.page.locator("img[src*='/api/me/reports/']").first();
   await reportImage.waitFor();
   await reportImage.scrollIntoViewIfNeeded();
-  const loaded = await r.page.waitForFunction((img) => img.complete && img.naturalWidth > 0, await reportImage.elementHandle(), { timeout: 10_000 }).then(() => true, () => false);
+  const loaded = await r.page
+    .waitForFunction((img) => img.complete && img.naturalWidth > 0, await reportImage.elementHandle(), {
+      timeout: 10_000,
+    })
+    .then(
+      () => true,
+      () => false,
+    );
   check(loaded, "the photo of the report loads in her space");
   await beat(r.page, 2500);
   await r.page.screenshot({ path: path.join(OUT, "05-client-report.png") });
@@ -303,7 +339,10 @@ try {
 }
 const failedCalls = calls.filter((x) => x.status >= 500);
 check(failedCalls.length === 0, "no API call answered with a server error");
-check(calls.every((x) => x.requestId), "every API call carries a request id");
+check(
+  calls.every((x) => x.requestId),
+  "every API call carries a request id",
+);
 process.stdout.write(`${calls.length} API calls recorded in ${path.join(OUT, "journey.json")}\n`);
 if (VIDEO) process.stdout.write(`videos: ${readdirSync(path.join(OUT, "video")).join(", ")}\n`);
 process.exit(failed ? 1 : 0);

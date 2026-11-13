@@ -9,13 +9,24 @@ describe("where sign-in sends the visitor back to", () => {
     expect(safeNext("/fr/app", "fr")).toBe("/fr/app");
   });
   it("refuses another language's page, another site, a protocol-relative address and anything with odd characters", () => {
-    for (const bad of ["/en/app", "https://evil.test/fr/app", "//evil.test", "/fr//evil.test", "/fr/app?next=<script>", "/fr/app?x=1#frag", "javascript:alert(1)", "/fr/../admin"]) {
+    for (const bad of [
+      "/en/app",
+      "https://evil.test/fr/app",
+      "//evil.test",
+      "/fr//evil.test",
+      "/fr/app?next=<script>",
+      "/fr/app?x=1#frag",
+      "javascript:alert(1)",
+      "/fr/../admin",
+    ]) {
       expect(safeNext(bad, "fr"), bad).toBe("/fr/app");
     }
     expect(safeNext(undefined, "fr")).toBe("/fr/app");
   });
   it("builds the return address from the path and the query of the page that asked for the sign-in", () => {
-    expect(backToHere("/fr/s/pattes/book", { service: "s1", zone: ["z1", "z2"], start: undefined, empty: "" })).toBe("/fr/s/pattes/book?service=s1&zone=z1");
+    expect(backToHere("/fr/s/pattes/book", { service: "s1", zone: ["z1", "z2"], start: undefined, empty: "" })).toBe(
+      "/fr/s/pattes/book?service=s1&zone=z1",
+    );
     expect(backToHere("/fr/s/pattes/book", {})).toBe("/fr/s/pattes/book");
   });
 });

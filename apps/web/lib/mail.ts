@@ -1,6 +1,19 @@
 import { randomBytes } from "node:crypto";
 
-import { type Db, enqueueInvoiceDelivery, enqueueMail, invoiceDetail, invoiceMailSettings, invoiceTokenHash, issueReportLink, mailById, markMailAttempt, markMailSent, pendingMail, scrubMail } from "@folioviv/db";
+import {
+  type Db,
+  enqueueInvoiceDelivery,
+  enqueueMail,
+  invoiceDetail,
+  invoiceMailSettings,
+  invoiceTokenHash,
+  issueReportLink,
+  mailById,
+  markMailAttempt,
+  markMailSent,
+  pendingMail,
+  scrubMail,
+} from "@folioviv/db";
 import { addDays } from "date-fns";
 
 import { productName } from "./brand-name";
@@ -17,10 +30,17 @@ const MAX_ATTEMPTS = 5;
 
 type Pending = NonNullable<Awaited<ReturnType<typeof mailById>>>;
 
-export const mailConfigured = (settings: MailSettings): boolean => settings.provider === "mailgun" && !!settings.apiKey && !!settings.domain;
+export const mailConfigured = (settings: MailSettings): boolean =>
+  settings.provider === "mailgun" && !!settings.apiKey && !!settings.domain;
 
 /** One delivery attempt through the provider: `sent`, or `pending`/`failed` with the reason (never a secret). */
-export async function deliver(db: Db, mail: Pending, now: Date, settings: MailSettings, send: typeof fetch = fetch): Promise<"sent" | "pending" | "failed"> {
+export async function deliver(
+  db: Db,
+  mail: Pending,
+  now: Date,
+  settings: MailSettings,
+  send: typeof fetch = fetch,
+): Promise<"sent" | "pending" | "failed"> {
   if (!mailConfigured(settings)) {
     return markMailAttempt(db, mail.id, "MAIL_NOT_CONFIGURED", MAX_ATTEMPTS);
   }
@@ -28,15 +48,24 @@ export async function deliver(db: Db, mail: Pending, now: Date, settings: MailSe
   const configuredFrom = settings.from || `${await productName()} <no-reply@${settings.domain}>`;
   const address = /<([^<>]+)>/.exec(configuredFrom)?.[1] ?? configuredFrom;
   const from = mail.fromName ? `${mail.fromName.replace(/[\r\n<>]/g, "").slice(0, 120)} <${address}>` : configuredFrom;
-  const form = new URLSearchParams({ from, to: mail.toEmail, subject: mail.subject, text: mail.bodyText, html: mail.html });
+  const form = new URLSearchParams({
+    from,
+    to: mail.toEmail,
+    subject: mail.subject,
+    text: mail.bodyText,
+    html: mail.html,
+  });
   if (mail.ccEmail) form.set("cc", mail.ccEmail);
   try {
     const credentials = Buffer.from(`api:${settings.apiKey}`).toString("base64");
-    const response = await send(`${settings.apiUrl.replace(/\/+$/, "")}/v3/${encodeURIComponent(settings.domain!)}/messages`, {
-      method: "POST",
-      headers: { Authorization: `Basic ${credentials}`, "Content-Type": "application/x-www-form-urlencoded" },
-      body: form,
-    });
+    const response = await send(
+      `${settings.apiUrl.replace(/\/+$/, "")}/v3/${encodeURIComponent(settings.domain!)}/messages`,
+      {
+        method: "POST",
+        headers: { Authorization: `Basic ${credentials}`, "Content-Type": "application/x-www-form-urlencoded" },
+        body: form,
+      },
+    );
     if (response.ok) {
       await markMailSent(db, mail.id, now);
       return "sent";
@@ -48,7 +77,13 @@ export async function deliver(db: Db, mail: Pending, now: Date, settings: MailSe
 }
 
 /** Tries every pending mail once (the walker's « send again », or a scheduled flush). */
-export async function flushOutbox(db: Db, now: Date, settings: MailSettings, send: typeof fetch = fetch, scope: { ids?: readonly string[] } = {}) {
+export async function flushOutbox(
+  db: Db,
+  now: Date,
+  settings: MailSettings,
+  send: typeof fetch = fetch,
+  scope: { ids?: readonly string[] } = {},
+) {
   const counts = { sent: 0, pending: 0, failed: 0 };
   for (const mail of await pendingMail(db, 50, scope)) {
     counts[await deliver(db, mail, now, settings, send)] += 1;
@@ -57,15 +92,28 @@ export async function flushOutbox(db: Db, now: Date, settings: MailSettings, sen
 }
 
 const formatter = (locale: MailLocale) => ({
-  date: new Intl.DateTimeFormat(locale === "fr" ? "fr-CA" : "en-CA", { dateStyle: "long", timeZone: "America/Toronto" }),
-  time: new Intl.DateTimeFormat(locale === "fr" ? "fr-CA" : "en-CA", { timeStyle: "short", timeZone: "America/Toronto" }),
+  date: new Intl.DateTimeFormat(locale === "fr" ? "fr-CA" : "en-CA", {
+    dateStyle: "long",
+    timeZone: "America/Toronto",
+  }),
+  time: new Intl.DateTimeFormat(locale === "fr" ? "fr-CA" : "en-CA", {
+    timeStyle: "short",
+    timeZone: "America/Toronto",
+  }),
 });
 
 /**
  * The walk report of one booking, e-mailed to its client: a fresh private link, the template in the client's language,
  * the outbox, one delivery attempt. Refused (a ShopError) when the client erased their file or withdrew the consent.
  */
-export async function sendWalkReport(db: Db, shopId: string, bookingId: string, now: Date, settings: MailSettings, send: typeof fetch = fetch) {
+export async function sendWalkReport(
+  db: Db,
+  shopId: string,
+  bookingId: string,
+  now: Date,
+  settings: MailSettings,
+  send: typeof fetch = fetch,
+) {
   const ctx = await issueReportLink(db, shopId, bookingId, now);
   const appUrl = settings.appUrl;
   const f = formatter(ctx.language);
@@ -86,14 +134,33 @@ export async function sendWalkReport(db: Db, shopId: string, bookingId: string, 
     },
     { locale: ctx.language, appUrl, now, product: await productName() },
   );
-  const id = await enqueueMail(db, { to: ctx.to, locale: mail.locale, template: "walk-report", subject: mail.subject, html: mail.html, text: mail.text, relatedKind: "visit_report", relatedId: ctx.reportId });
+  const id = await enqueueMail(db, {
+    to: ctx.to,
+    locale: mail.locale,
+    template: "walk-report",
+    subject: mail.subject,
+    html: mail.html,
+    text: mail.text,
+    relatedKind: "visit_report",
+    relatedId: ctx.reportId,
+  });
   const queued = await mailById(db, id);
   const status = queued ? await deliver(db, queued, now, settings, send) : "pending";
   return { mailId: id, status, reportId: ctx.reportId };
 }
 
 /** Issues one private link, queues the invoice e-mail, then gives the outbox its normal first attempt. */
-export async function sendInvoiceMail(db: Db, shopId: string, invoiceId: string, toEmail: string, message: string | undefined, now: Date, settings: MailSettings, maxPerShopPerDay: number, send: typeof fetch = fetch) {
+export async function sendInvoiceMail(
+  db: Db,
+  shopId: string,
+  invoiceId: string,
+  toEmail: string,
+  message: string | undefined,
+  now: Date,
+  settings: MailSettings,
+  maxPerShopPerDay: number,
+  send: typeof fetch = fetch,
+) {
   const [invoice, config] = await Promise.all([invoiceDetail(db, shopId, invoiceId), invoiceMailSettings(db, shopId)]);
   if (!invoice || !invoice.clientId || invoice.creditOf || !config) throw new Error("AK_INVOICE_UNKNOWN");
   if (!invoice.client?.email && !toEmail) throw new Error("AK_INVOICE_RECIPIENT");
@@ -103,9 +170,7 @@ export async function sendInvoiceMail(db: Db, shopId: string, invoiceId: string,
   const f = formatter(locale);
   const money = new Intl.NumberFormat(locale === "fr" ? "fr-CA" : "en-CA", { style: "currency", currency: "CAD" });
   const onReceipt = locale === "fr" ? "À réception" : "On receipt";
-  const dueDate = invoice.dueOn
-    ? f.date.format(new Date(`${invoice.dueOn}T12:00:00Z`))
-    : onReceipt;
+  const dueDate = invoice.dueOn ? f.date.format(new Date(`${invoice.dueOn}T12:00:00Z`)) : onReceipt;
   const optionalMessage = message ?? config.shop.message;
   const rendered = renderMailTemplate(
     "invoice-issued",
@@ -146,8 +211,23 @@ export async function sendInvoiceMail(db: Db, shopId: string, invoiceId: string,
  * The mail that carries a sign-in code: one attempt, then the outbox keeps no body (the code is a secret that lives 15 minutes; a retry would
  * reach nobody in time). True only when the provider accepted it.
  */
-export async function sendCodeMail(db: Db, to: string, mail: { subject: string; text: string; html: string }, locale: MailLocale, now: Date, settings: MailSettings, send: typeof fetch = fetch): Promise<boolean> {
-  const id = await enqueueMail(db, { to, locale, template: "verification-code", subject: mail.subject, html: mail.html, text: mail.text });
+export async function sendCodeMail(
+  db: Db,
+  to: string,
+  mail: { subject: string; text: string; html: string },
+  locale: MailLocale,
+  now: Date,
+  settings: MailSettings,
+  send: typeof fetch = fetch,
+): Promise<boolean> {
+  const id = await enqueueMail(db, {
+    to,
+    locale,
+    template: "verification-code",
+    subject: mail.subject,
+    html: mail.html,
+    text: mail.text,
+  });
   const queued = await mailById(db, id);
   const status = queued ? await deliver(db, queued, now, settings, send) : "pending";
   await scrubMail(db, id);

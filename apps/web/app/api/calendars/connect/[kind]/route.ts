@@ -13,7 +13,12 @@ import { appSettings } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
-const body = z.object({ label: z.string().trim().min(1).max(80), staffId: z.string().uuid().nullable().default(null), locale: z.enum(["en", "fr"]), consent: z.literal(true) });
+const body = z.object({
+  label: z.string().trim().min(1).max(80),
+  staffId: z.string().uuid().nullable().default(null),
+  locale: z.enum(["en", "fr"]),
+  consent: z.literal(true),
+});
 
 /**
  * Starts the owner's consent at the provider (OAuth authorization code with PKCE and a signed state). Answers the address to go to; the
@@ -26,16 +31,42 @@ export function POST(req: Request, { params }: { params: Promise<{ kind: string 
     const input = await readJson(req, body);
     limit("calendar-connect", req, null, [20, 3600]);
     const s = appSettings();
-    if (!(await s.get("features.calendarSync")) || !(await s.get(`calendarSync.${kind}.enabled`))) throw refuse(403, "FEATURE_OFF", "This feature is switched off", { feature: "calendarSync" });
+    if (!(await s.get("features.calendarSync")) || !(await s.get(`calendarSync.${kind}.enabled`)))
+      throw refuse(403, "FEATURE_OFF", "This feature is switched off", { feature: "calendarSync" });
     const source = connectable(kind, oauthApps());
     if (!source) throw refuse(403, "FEATURE_OFF", "This feature is switched off", { feature: "calendarSync" });
     const { shop, role, session } = await requireShop(req, "agenda");
     const overview = await calendarOverview(shop.id, agendaScope(role, session.account.id));
-    if (input.staffId === null ? !overview.wholeShop : !overview.people.some((p) => p.id === input.staffId)) throw refuse(404, "NOT_FOUND", "Not found");
-    const { state, nonce } = signState({ kind, shopId: shop.id, staffId: input.staffId, accountId: session.account.id, label: input.label, locale: input.locale }, sessionSecret(), systemClock.now());
+    if (input.staffId === null ? !overview.wholeShop : !overview.people.some((p) => p.id === input.staffId))
+      throw refuse(404, "NOT_FOUND", "Not found");
+    const { state, nonce } = signState(
+      {
+        kind,
+        shopId: shop.id,
+        staffId: input.staffId,
+        accountId: session.account.id,
+        label: input.label,
+        locale: input.locale,
+      },
+      sessionSecret(),
+      systemClock.now(),
+    );
     const pkce = newPkce();
     const redirectUri = `${env().APP_PUBLIC_URL.replace(/\/$/, "")}/api/calendars/callback/${kind}`;
-    const url = source.authorizeUrl({ state, redirectUri, codeChallenge: pkce.challenge, loginHint: session.account.email });
-    return Response.json({ url, consent: CALENDAR_CONSENT_VERSION }, { headers: { "Cache-Control": "private, no-store", "Set-Cookie": pkceCookie(nonce, pkce.verifier, redirectUri.startsWith("https:")) } });
+    const url = source.authorizeUrl({
+      state,
+      redirectUri,
+      codeChallenge: pkce.challenge,
+      loginHint: session.account.email,
+    });
+    return Response.json(
+      { url, consent: CALENDAR_CONSENT_VERSION },
+      {
+        headers: {
+          "Cache-Control": "private, no-store",
+          "Set-Cookie": pkceCookie(nonce, pkce.verifier, redirectUri.startsWith("https:")),
+        },
+      },
+    );
   });
 }

@@ -5,7 +5,11 @@ export const CARD = Object.freeze({ number: "4242 4242 4242 4242", expiry: "12 /
 
 /** A bearer for an account (the native client of the sign-in route); it is returned, never printed. */
 export async function signIn(base, email, pass) {
-  const res = await fetch(`${base}/api/auth/sign-in`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email, password: pass, client: "native" }) });
+  const res = await fetch(`${base}/api/auth/sign-in`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email, password: pass, client: "native" }),
+  });
   if (res.status !== 200) throw new Error(`sign-in refused for a persona (${res.status})`);
   const answer = await res.json();
   if (typeof answer.token !== "string") throw new Error("sign-in gave no session");

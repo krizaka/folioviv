@@ -11,7 +11,12 @@ import { ASSOCIATION, FOUNDER, type PriceKey, SCALE, STARTER } from "./pricing";
 export const PLAN_IDS = ["founder", "starter", "scale", "association"] as const;
 export type PlanId = (typeof PLAN_IDS)[number];
 
-export const PLAN_KEY: Record<PlanId, PriceKey> = { founder: FOUNDER, starter: STARTER, scale: SCALE, association: ASSOCIATION };
+export const PLAN_KEY: Record<PlanId, PriceKey> = {
+  founder: FOUNDER,
+  starter: STARTER,
+  scale: SCALE,
+  association: ASSOCIATION,
+};
 
 export const isPlanId = (value: unknown): value is PlanId => PLAN_IDS.includes(value as PlanId);
 
@@ -38,17 +43,35 @@ export class TrialRefused extends Error {
  * The free days to give this checkout: the entry's, once per account (`eligible`: it never had a subscription). A trial on a live
  * processor key is refused (not given silently): the founder wants it proven in test mode first.
  */
-export function trialDaysFor(entry: Pick<PriceEntry, "limits">, options: { eligible: boolean; liveMode: boolean }): number {
+export function trialDaysFor(
+  entry: Pick<PriceEntry, "limits">,
+  options: { eligible: boolean; liveMode: boolean },
+): number {
   const days = trialDaysOf(entry);
-  if (days === 0 || !options.eligible) {return 0;}
-  if (options.liveMode) {throw new TrialRefused();}
+  if (days === 0 || !options.eligible) {
+    return 0;
+  }
+  if (options.liveMode) {
+    throw new TrialRefused();
+  }
   return days;
 }
 
 /** Why a plan cannot be bought now, or null when it can: not on sale, or the Association plan without an approved proof. */
-export function planRefusal(plan: PlanId, entry: Pick<PriceEntry, "availability" | "amountCents">, options: { associationApproved: boolean }): "PLAN_NOT_ON_SALE" | "ASSOCIATION_NOT_APPROVED" | null {
-  const onSale = entry.amountCents !== null && (entry.availability === AVAILABILITY.public || (plan === "founder" && entry.availability === AVAILABILITY.founderLimited));
-  if (!onSale) {return "PLAN_NOT_ON_SALE";}
-  if (plan === "association" && !options.associationApproved) {return "ASSOCIATION_NOT_APPROVED";}
+export function planRefusal(
+  plan: PlanId,
+  entry: Pick<PriceEntry, "availability" | "amountCents">,
+  options: { associationApproved: boolean },
+): "PLAN_NOT_ON_SALE" | "ASSOCIATION_NOT_APPROVED" | null {
+  const onSale =
+    entry.amountCents !== null &&
+    (entry.availability === AVAILABILITY.public ||
+      (plan === "founder" && entry.availability === AVAILABILITY.founderLimited));
+  if (!onSale) {
+    return "PLAN_NOT_ON_SALE";
+  }
+  if (plan === "association" && !options.associationApproved) {
+    return "ASSOCIATION_NOT_APPROVED";
+  }
   return null;
 }

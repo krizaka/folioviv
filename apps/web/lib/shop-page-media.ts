@@ -33,9 +33,17 @@ const identity = (src: string) => src.split("?")[0]!;
 type Section = Pick<ShopPage, "sections">["sections"][number];
 
 /** The photos a gallery section takes from the pool: the wall's polaroids for `wall`, the gallery otherwise, the picked ones for `pick`, bounded. */
-function galleryPhotos(section: Extract<Section, { type: "gallery" }>, pool: PhotoPool, take: (src: string) => boolean): readonly PlacedPhoto[] {
+function galleryPhotos(
+  section: Extract<Section, { type: "gallery" }>,
+  pool: PhotoPool,
+  take: (src: string) => boolean,
+): readonly PlacedPhoto[] {
   const source = section.variant === "wall" ? pool.wall : pool.gallery;
-  const picked = new Set(section.settings.source === "pick" ? (section.blocks ?? []).flatMap((b) => (b.type === "photo" ? [b.settings.mediaId] : [])) : []);
+  const picked = new Set(
+    section.settings.source === "pick"
+      ? (section.blocks ?? []).flatMap((b) => (b.type === "photo" ? [b.settings.mediaId] : []))
+      : [],
+  );
   const wanted = section.settings.source === "pick" ? source.filter((p) => picked.has(p.id)) : source;
   const placed: PlacedPhoto[] = [];
   for (const p of wanted) {
@@ -69,7 +77,10 @@ export function planPhotos(doc: Pick<ShopPage, "sections">, pool: PhotoPool): Ph
 }
 
 /** Every address a plan draws, the cover included: a page that lists one twice is wrong. */
-export const placedAddresses = (plan: PhotoPlan): string[] => [...(plan.cover ? [identity(plan.cover.src)] : []), ...Object.values(plan.sections).flatMap((photos) => photos.map((p) => identity(p.src)))];
+export const placedAddresses = (plan: PhotoPlan): string[] => [
+  ...(plan.cover ? [identity(plan.cover.src)] : []),
+  ...Object.values(plan.sections).flatMap((photos) => photos.map((p) => identity(p.src))),
+];
 
 /** The rest of the page's pictures (a video's poster) claim their address after the plan: one already drawn is left out (the video shows its own frame), never repeated. */
 export function photoLedger(plan: PhotoPlan): (src: string | null | undefined) => string | undefined {

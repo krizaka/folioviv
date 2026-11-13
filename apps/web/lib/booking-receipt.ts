@@ -11,7 +11,8 @@ import type { MailSettings } from "@/lib/mail-settings";
 import { SITE_URL } from "@/lib/site";
 
 /** The link in the mail is https (the template refuses anything else): the deployment's own address, else the public site's (a local run is http). */
-const manageBase = (appUrl: string | undefined): string => (appUrl?.startsWith("https://") ? appUrl : SITE_URL).replace(/\/$/, "");
+const manageBase = (appUrl: string | undefined): string =>
+  (appUrl?.startsWith("https://") ? appUrl : SITE_URL).replace(/\/$/, "");
 
 export interface ReceiptRecipient {
   accountId: string;
@@ -38,10 +39,29 @@ export async function sendBookingReceipt(recipient: ReceiptRecipient, bookingId:
   const manageUrl = `${manageBase(settings.appUrl)}/${recipient.locale}/s/${detail.shop.slug}/service/${detail.service.id}/confirmation?booking=${detail.id}`;
   const mail = await renderEmail(
     "bookingReceipt",
-    { brand: BRAND_ID, businessName: detail.shop.name, serviceName: step.title, when: step.when, who: step.who, where: step.where, priceLine: step.price, cancelRule: step.cancelRule, manageUrl },
+    {
+      brand: BRAND_ID,
+      businessName: detail.shop.name,
+      serviceName: step.title,
+      when: step.when,
+      who: step.who,
+      where: step.where,
+      priceLine: step.price,
+      cancelRule: step.cancelRule,
+      manageUrl,
+    },
     { locale: recipient.locale },
   );
-  const id = await enqueueMail(db(), { to: recipient.email, locale: recipient.locale, template: "booking-receipt", subject: mail.subject, html: mail.html, text: mail.text, relatedKind: "booking", relatedId: bookingId });
+  const id = await enqueueMail(db(), {
+    to: recipient.email,
+    locale: recipient.locale,
+    template: "booking-receipt",
+    subject: mail.subject,
+    html: mail.html,
+    text: mail.text,
+    relatedKind: "booking",
+    relatedId: bookingId,
+  });
   const queued = await mailById(db(), id);
   if (queued) {
     await deliver(db(), queued, now, settings);

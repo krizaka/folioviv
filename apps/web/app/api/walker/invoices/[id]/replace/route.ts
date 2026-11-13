@@ -17,7 +17,17 @@ export function POST(req: Request, { params }: { params: Promise<{ id: string }>
     const originalId = idParam((await params).id);
     const input = await readJson(req, invoiceInputSchema);
     const { credit, replacement, totals } = await replaceInvoice(db(), shop.id, originalId, input);
-    await audit({ action: "invoice.corrected", actorId: session.account.id, actorLabel: session.account.email, targetId: originalId, detail: { credit: credit.number, replacement: replacement.number }, headers: req.headers });
-    return Response.json({ id: replacement.id, number: replacement.number, creditNumber: credit.number, totalCents: totals.totalCents }, { status: 201 });
+    await audit({
+      action: "invoice.corrected",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: originalId,
+      detail: { credit: credit.number, replacement: replacement.number },
+      headers: req.headers,
+    });
+    return Response.json(
+      { id: replacement.id, number: replacement.number, creditNumber: credit.number, totalCents: totals.totalCents },
+      { status: 201 },
+    );
   });
 }

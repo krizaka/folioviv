@@ -12,14 +12,22 @@ import { fileURLToPath } from "node:url";
 import { processorCatalogue, type ProcessorPlans } from "../lib/payments/processor-catalogue";
 import { appPrices } from "../lib/price-catalogue";
 
-const plans = JSON.parse(readFileSync(fileURLToPath(new URL("../../../infra/payments/plans.json", import.meta.url)), "utf8")) as ProcessorPlans;
+const plans = JSON.parse(
+  readFileSync(fileURLToPath(new URL("../../../infra/payments/plans.json", import.meta.url)), "utf8"),
+) as ProcessorPlans;
 const catalogue = processorCatalogue(plans, await appPrices().catalogue(new Date()));
 const dir = mkdtempSync(join(tmpdir(), "folioviv-catalogue-"));
 const file = join(dir, "catalogue.json");
 try {
   writeFileSync(file, JSON.stringify(catalogue), { mode: 0o600 });
-  for (const p of catalogue.plans) {console.log(`${p.lookupKey}: ${p.amount} ${p.currency} / ${p.interval} (from the database)`);}
-  const run = spawnSync(fileURLToPath(new URL("../node_modules/.bin/krizaka-payments-setup", import.meta.url)), ["--catalogue", file, ...process.argv.slice(2)], { stdio: "inherit" });
+  for (const p of catalogue.plans) {
+    console.log(`${p.lookupKey}: ${p.amount} ${p.currency} / ${p.interval} (from the database)`);
+  }
+  const run = spawnSync(
+    fileURLToPath(new URL("../node_modules/.bin/krizaka-payments-setup", import.meta.url)),
+    ["--catalogue", file, ...process.argv.slice(2)],
+    { stdio: "inherit" },
+  );
   process.exitCode = run.status ?? 1;
 } finally {
   rmSync(dir, { recursive: true, force: true });

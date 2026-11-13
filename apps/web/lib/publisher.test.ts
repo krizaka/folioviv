@@ -12,7 +12,11 @@ const frMessages = bindProduct(frRaw);
 
 describe("publisher (folioviv#375): the legal facts come from @krizaka/org", () => {
   it("reads the legal name, the city and the region from the org JSON", () => {
-    expect(publisherVars()).toEqual({ publisher: org.company.legalName, city: org.company.city, region: org.company.region });
+    expect(publisherVars()).toEqual({
+      publisher: org.company.legalName,
+      city: org.company.city,
+      region: org.company.region,
+    });
   });
 
   it("no catalogue hand-writes the publisher's legal name", () => {

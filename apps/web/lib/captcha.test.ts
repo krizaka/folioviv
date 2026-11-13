@@ -4,7 +4,11 @@ import { captchaConfigured, captchaMissing, isTurnstileTestKey, verifyCaptcha } 
 
 const now = () => new Date("2026-10-30T12:00:00Z");
 const answer = (success: boolean) => async () => ({ ok: true, json: async () => ({ success }) });
-const configured = { ABUSE_CAPTCHA_PROVIDER: "turnstile", ABUSE_CAPTCHA_SECRET_KEY: "test-key", NODE_ENV: "development" };
+const configured = {
+  ABUSE_CAPTCHA_PROVIDER: "turnstile",
+  ABUSE_CAPTCHA_SECRET_KEY: "test-key",
+  NODE_ENV: "development",
+};
 
 describe("the CAPTCHA of the public forms", () => {
   it("is off outside production when unconfigured, and a refusal in production", async () => {
@@ -21,7 +25,10 @@ describe("the CAPTCHA of the public forms", () => {
   });
 
   it("refuses Cloudflare's test keys in production, accepts them elsewhere (the CI journeys)", async () => {
-    const test = { ABUSE_CAPTCHA_PROVIDER: "turnstile", ABUSE_CAPTCHA_SECRET_KEY: "1x0000000000000000000000000000000AA" };
+    const test = {
+      ABUSE_CAPTCHA_PROVIDER: "turnstile",
+      ABUSE_CAPTCHA_SECRET_KEY: "1x0000000000000000000000000000000AA",
+    };
     const prod = { ...test, NODE_ENV: "production", APP_ENVIRONMENT: "prod" };
     expect(isTurnstileTestKey(test.ABUSE_CAPTCHA_SECRET_KEY)).toBe(true);
     expect(isTurnstileTestKey("0x4AAAAAAAreal")).toBe(false);

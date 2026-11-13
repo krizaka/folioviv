@@ -17,25 +17,52 @@ export interface JourneyHead {
 }
 
 /** The frame of one step of the booking journey: the bar, a thin paper head, a back link, the title, the step, the footer. Plain controls, no motion of its own. */
-export function JourneyFrame({ locale, path, back, title, lead, head, children }: Readonly<{ locale: Locale; path: string; back: { href: string; label: string }; title: string; lead?: string; head?: JourneyHead; children: ReactNode }>) {
+export function JourneyFrame({
+  locale,
+  path,
+  back,
+  title,
+  lead,
+  head,
+  children,
+}: Readonly<{
+  locale: Locale;
+  path: string;
+  back: { href: string; label: string };
+  title: string;
+  lead?: string;
+  head?: JourneyHead;
+  children: ReactNode;
+}>) {
   return (
     <>
       <SiteHeader locale={locale} current="home" path={path} />
       <main id="content" className="pt-20">
         {head ? (
-          <header data-journey-head="" className="mx-auto flex w-full max-w-(--kz-page-max,72rem) flex-col gap-2 px-(--kz-page-gutter,1rem) pt-4">
+          <header
+            data-journey-head=""
+            className="mx-auto flex w-full max-w-(--kz-page-max,72rem) flex-col gap-2 px-(--kz-page-gutter,1rem) pt-4"
+          >
             <div className="flex min-h-11 flex-wrap items-center justify-between gap-x-4 gap-y-1">
               <p className="m-0 font-display text-lg text-fg">{head.shop}</p>
               <p className="m-0 flex items-center gap-2 text-sm text-fg-secondary">
-                <Stamp tone="ink" size="sm">{head.step}</Stamp>
-                {head.edit ? <Link href={head.edit.href} className="text-fg-accent underline underline-offset-4">{head.edit.label}</Link> : null}
+                <Stamp tone="ink" size="sm">
+                  {head.step}
+                </Stamp>
+                {head.edit ? (
+                  <Link href={head.edit.href} className="text-fg-accent underline underline-offset-4">
+                    {head.edit.label}
+                  </Link>
+                ) : null}
               </p>
             </div>
             <Separator variant="hand" shape="stroke" />
           </header>
         ) : null}
         <PageHero back={back} linkAs={Link} title={title} lead={lead} backdrop="plain" size="narrow" />
-        <div className="mx-auto flex w-full max-w-(--kz-page-max,72rem) flex-col gap-6 px-(--kz-page-gutter,1rem) pb-16">{children}</div>
+        <div className="mx-auto flex w-full max-w-(--kz-page-max,72rem) flex-col gap-6 px-(--kz-page-gutter,1rem) pb-16">
+          {children}
+        </div>
       </main>
       <SiteFooter locale={locale} />
     </>

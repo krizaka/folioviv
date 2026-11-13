@@ -14,7 +14,10 @@ test.afterAll(() => mailbox.stop());
 
 const email = `e2e-honest-${Date.now()}@folioviv.test`;
 
-test("an honest booking: choices carried, taxes included, the cancellation window said before, the same price on the receipt", async ({ page, baseURL }) => {
+test("an honest booking: choices carried, taxes included, the cancellation window said before, the same price on the receipt", async ({
+  page,
+  baseURL,
+}) => {
   await page.goto(`${baseURL}/en/s/${SLUG}`);
   await page.locator('a[href*="/service/"]').first().click();
   await page.waitForURL(/\/service\/[^/?]+(\?.*)?$/);
@@ -26,7 +29,11 @@ test("an honest booking: choices carried, taxes included, the cancellation windo
   const outside = page.locator('a[href*="/confirm?"]:not(:has-text("No free cancellation"))').first();
   await expect(page.locator('a[href*="/confirm?"]').first()).toBeVisible();
   for (let week = 0; week < 2 && (await outside.count()) === 0; week += 1) {
-    await page.getByRole("button", { name: "Next week" }).or(page.getByRole("link", { name: "Next week" })).first().click();
+    await page
+      .getByRole("button", { name: "Next week" })
+      .or(page.getByRole("link", { name: "Next week" }))
+      .first()
+      .click();
   }
   await outside.click();
   await page.waitForURL(/\/confirm\?/);
@@ -41,7 +48,9 @@ test("an honest booking: choices carried, taxes included, the cancellation windo
   }
   // The cancellation window is said before the person confirms.
   const rule = page.locator("[data-booking-cancel-rule]");
-  await expect(rule, "a time outside the window says until when the cancellation is free").toHaveText(/^Free cancellation until \d+ h before\.$/);
+  await expect(rule, "a time outside the window says until when the cancellation is free").toHaveText(
+    /^Free cancellation until \d+ h before\.$/,
+  );
   const ruleY = (await rule.boundingBox()).y;
   const sendY = (await page.getByRole("button", { name: "Send me the code" }).boundingBox()).y;
   expect(ruleY, "the rule is above the button that books").toBeLessThan(sendY);
@@ -55,7 +64,16 @@ test("an honest booking: choices carried, taxes included, the cancellation windo
     await dog.fill("Miso");
   }
   await page.getByRole("checkbox", { name: /^I agree that/ }).check();
-  await expect.poll(() => page.locator('input[name="cf-turnstile-response"]').inputValue().catch(() => ""), { timeout: 30_000 }).not.toBe("");
+  await expect
+    .poll(
+      () =>
+        page
+          .locator('input[name="cf-turnstile-response"]')
+          .inputValue()
+          .catch(() => ""),
+      { timeout: 30_000 },
+    )
+    .not.toBe("");
   await page.getByRole("button", { name: "Send me the code" }).click();
   const code = await mailbox.codeFor(email);
   expect(code, "the code arrives by e-mail").not.toBeNull();

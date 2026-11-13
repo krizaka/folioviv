@@ -7,7 +7,9 @@ import { db } from "./db";
 
 const { appointments, clients, services, staff } = schema;
 
-const whoComes = sql<string | null>`COALESCE(${appointments.clientId}, (SELECT b.client_id FROM bookings b WHERE b.appointment_id = ${appointments.id} AND b.status = 'booked' ORDER BY b.created_at LIMIT 1))`;
+const whoComes = sql<
+  string | null
+>`COALESCE(${appointments.clientId}, (SELECT b.client_id FROM bookings b WHERE b.appointment_id = ${appointments.id} AND b.status = 'booked' ORDER BY b.created_at LIMIT 1))`;
 
 export interface TodayAppointment {
   id: string;
@@ -41,19 +43,47 @@ export interface TodayView {
  * shop's time zone. `staffAccountId` narrows it to the appointments of that person (a staff member sees their own agenda).
  * The client of an appointment is read from the appointment or, for a booked visit, from its first booking.
  */
-export async function todayView(shop: { id: string; name: string; registrant: boolean; timezone: string }, options: { day?: string; staffAccountId?: string; /** The instant of the request (`requestNow()`): the shop's today follows it, never the database clock. */ now: Date }): Promise<TodayView> {
+export async function todayView(
+  shop: { id: string; name: string; registrant: boolean; timezone: string },
+  options: {
+    day?: string;
+    staffAccountId?: string;
+    /** The instant of the request (`requestNow()`): the shop's today follows it, never the database clock. */ now: Date;
+  },
+): Promise<TodayView> {
   const requested = options.day;
   const today = localDay(options.now, shop.timezone);
   const day = isIsoDay(requested) ? requested : today;
   const rows = await db()
-    .select({ a: appointments, staff: staff.name, nameFr: services.nameFr, nameEn: services.nameEn, price: services.priceCents, category: services.taxCategory, clientId: clients.id, client: clients.fullName, start: sql<string>`lower(${appointments.during})`, end: sql<string>`upper(${appointments.during})` })
+    .select({
+      a: appointments,
+      staff: staff.name,
+      nameFr: services.nameFr,
+      nameEn: services.nameEn,
+      price: services.priceCents,
+      category: services.taxCategory,
+      clientId: clients.id,
+      client: clients.fullName,
+      start: sql<string>`lower(${appointments.during})`,
+      end: sql<string>`upper(${appointments.during})`,
+    })
     .from(appointments)
     .innerJoin(staff, eq(staff.id, appointments.staffId))
     .innerJoin(services, eq(services.id, appointments.serviceId))
     .leftJoin(clients, sql`${clients.id} = ${whoComes}`)
-    .where(and(eq(appointments.shopId, shop.id), options.staffAccountId ? eq(staff.accountId, options.staffAccountId) : undefined, ne(appointments.status, "cancelled"), sql`(lower(${appointments.during}) AT TIME ZONE ${shop.timezone})::date = ${day}::date`))
+    .where(
+      and(
+        eq(appointments.shopId, shop.id),
+        options.staffAccountId ? eq(staff.accountId, options.staffAccountId) : undefined,
+        ne(appointments.status, "cancelled"),
+        sql`(lower(${appointments.during}) AT TIME ZONE ${shop.timezone})::date = ${day}::date`,
+      ),
+    )
     .orderBy(sql`lower(${appointments.during})`);
-  const conflicts = await agendaConflicts(db(), rows.map((r) => r.a.id));
+  const conflicts = await agendaConflicts(
+    db(),
+    rows.map((r) => r.a.id),
+  );
   return {
     shop: { id: shop.id, name: shop.name, registrant: shop.registrant, timezone: shop.timezone },
     day,

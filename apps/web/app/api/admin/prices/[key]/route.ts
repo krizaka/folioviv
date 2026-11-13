@@ -29,8 +29,20 @@ export function POST(req: Request, { params }: Ctx) {
     const { effectiveFrom, ...change } = await readJson(req, body);
     const now = systemClock.now();
     const actor = { id: admin.account.id, label: admin.account.email };
-    const entry = await appPrices().schedule(actor, key, change as never, effectiveFrom ? new Date(effectiveFrom) : now, now);
-    await audit({ action: "price.scheduled", actorId: admin.account.id, actorLabel: admin.account.email, detail: { key, versionId: entry.versionId, effectiveFrom: entry.effectiveFrom.toISOString() }, headers: req.headers });
+    const entry = await appPrices().schedule(
+      actor,
+      key,
+      change as never,
+      effectiveFrom ? new Date(effectiveFrom) : now,
+      now,
+    );
+    await audit({
+      action: "price.scheduled",
+      actorId: admin.account.id,
+      actorLabel: admin.account.email,
+      detail: { key, versionId: entry.versionId, effectiveFrom: entry.effectiveFrom.toISOString() },
+      headers: req.headers,
+    });
     return Response.json({ entry: { ...entry, effectiveFrom: entry.effectiveFrom.toISOString() } });
   });
 }

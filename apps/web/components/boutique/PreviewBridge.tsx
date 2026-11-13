@@ -10,6 +10,9 @@ import { useEffect } from "react";
  */
 export function PreviewBridge() {
   const router = useRouter();
-  useEffect(() => connectShopPreview({ composerOrigin: window.location.origin, onRefresh: () => router.refresh() }), [router]);
+  useEffect(
+    () => connectShopPreview({ composerOrigin: window.location.origin, onRefresh: () => router.refresh() }),
+    [router],
+  );
   return null;
 }
