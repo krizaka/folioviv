@@ -58,7 +58,7 @@ function VisitAction({ appointment }: Readonly<{ appointment: TodayAppointment }
       variant="ghost"
       loading={call.pending}
       data-kz-status={succeeded ? "success" : undefined}
-      onClick={run}
+      onClick={() => void run()}
     >
       {say(appointment.checkedInAt ? "today.finish" : "today.start")}
     </Button>

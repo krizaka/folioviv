@@ -337,7 +337,7 @@ function ZonesCard({ zones }: Readonly<{ zones: SetupData["zones"] }>) {
                 variant="ghost"
                 shape="pill"
                 aria-label={say("shopSetup.zones.remove", { name: z.name })}
-                onClick={() => call.run(`/api/walker/zones/${z.id}`, { method: "DELETE" })}
+                onClick={() => void call.run(`/api/walker/zones/${z.id}`, { method: "DELETE" })}
               >
                 ×
               </Button>
@@ -465,7 +465,7 @@ function ServicesCard({ services }: Readonly<{ services: SetupData["services"] }
                   variant="ghost"
                   aria-label={say("shopSetup.services.remove", { name: { fr: s.nameFr, en: s.nameEn }[locale] })}
                   onClick={() =>
-                    call.run("/api/walker/services", {
+                    void call.run("/api/walker/services", {
                       json: {
                         id: s.id,
                         nameFr: s.nameFr,
@@ -794,7 +794,7 @@ export function HoursCard({
                     from: w.startsAt.slice(0, 5),
                     to: w.endsAt.slice(0, 5),
                   })}
-                  onClick={() => call.run(`/api/walker/hours/${w.id}`, { method: "DELETE" })}
+                  onClick={() => void call.run(`/api/walker/hours/${w.id}`, { method: "DELETE" })}
                 >
                   ×
                 </Button>
@@ -840,7 +840,7 @@ export function HoursCard({
                 variant="ghost"
                 shape="pill"
                 aria-label={say("shopSetup.hours.dayOffRemove", { day: d.onDate })}
-                onClick={() => call.run(`/api/walker/days-off/${d.onDate}`, { method: "DELETE" })}
+                onClick={() => void call.run(`/api/walker/days-off/${d.onDate}`, { method: "DELETE" })}
               >
                 ×
               </Button>

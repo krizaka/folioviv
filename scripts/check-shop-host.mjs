@@ -74,20 +74,20 @@ async function main() {
   const appOrigin = `http://localhost:${port}`;
   const shopHost = `${slug}.${domain}:${port}`;
   const problems = [];
-  const expect = (ok, what) => ok || problems.push(what);
+  const holds = (ok, what) => ok || problems.push(what);
 
   const page = await ask(base, shopHost, "/fr", { cookie: "folioviv_session=forged; theme=dark" });
   problems.push(...shopPageProblems(page, { origin, appOrigin }).map((p) => `GET ${shopHost}/fr: ${p}`));
-  expect(!page.body.includes("forged"), "the session cookie reached the page");
+  holds(!page.body.includes("forged"), "the session cookie reached the page");
 
   const hop = await ask(base, shopHost, `/fr/s/${slug}/service/1/confirm?slot=9`);
-  expect(
+  holds(
     leadsTo(hop, `${appOrigin}/fr/s/${slug}/service/1/confirm?slot=9`, { listenOrigin: appOrigin }),
     `the booking hop is ${hop.status} ${hop.headers.location}`,
   );
 
   const ghost = await ask(base, `no-such-shop.${domain}:${port}`, "/fr");
-  expect(
+  holds(
     ghost.status === 404 &&
       String(ghost.headers["x-robots-tag"]).includes("noindex") &&
       !ghost.body.includes("no-such-shop"),
@@ -95,29 +95,29 @@ async function main() {
   );
 
   const robots = await ask(base, shopHost, "/robots.txt");
-  expect(
+  holds(
     robots.body.includes("Disallow: /") && robots.body.includes(`Sitemap: ${origin}/sitemap.xml`),
     "robots.txt is not closed with its Sitemap line",
   );
   const sitemap = await ask(base, shopHost, "/sitemap.xml");
-  expect(
+  holds(
     sitemap.status === 200 && sitemap.body.includes(`<loc>${origin}/fr</loc>`),
     `the shop sitemap answered ${sitemap.status} without ${origin}/fr`,
   );
 
   const old = await ask(base, `localhost:${port}`, `/fr/s/${slug}?look=b`);
-  expect(
+  holds(
     old.status === 308 && old.headers.location === `${origin}/fr?look=b`,
     `the old path address is ${old.status} ${old.headers.location}`,
   );
   const legacy = await ask(base, `${slug}.localhost:${port}`, "/fr");
-  expect(
+  holds(
     legacy.status === 308 && legacy.headers.location === `${origin}/fr`,
     `the legacy host is ${legacy.status} ${legacy.headers.location}`,
   );
 
   const stranger = await ask(base, `${slug}.${domain}.evil.example`, "/fr");
-  expect(stranger.status === 421, `a look-alike host answered ${stranger.status}`);
+  holds(stranger.status === 421, `a look-alike host answered ${stranger.status}`);
 
   console.log(`check-shop-host: ${printable(slug)} on ${printable(shopHost)}, 9 requests`);
   if (problems.length) {

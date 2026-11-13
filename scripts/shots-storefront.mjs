@@ -13,6 +13,8 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { toolPath } from "./lib/tool-path.mjs";
+
 /** The views captured: where they are (the shop's id and slug fill the address) and what must be visible before the shot. */
 export const SCENES = {
   look: {
@@ -282,7 +284,7 @@ async function main() {
   mkdirSync(OUT, { recursive: true });
 
   const started = spawnSync(
-    "docker",
+    toolPath("docker"),
     [
       "run",
       "-d",
@@ -308,7 +310,7 @@ async function main() {
     const db = await connectWhenUp(pg, DATABASE_URL);
     out("shots: database up");
 
-    app = spawn("pnpm", ["--filter", "@folioviv/web", "exec", "next", "dev", "-p", String(PORT)], {
+    app = spawn(toolPath("pnpm"), ["--filter", "@folioviv/web", "exec", "next", "dev", "-p", String(PORT)], {
       cwd: root,
       env,
       stdio: "ignore",
@@ -317,7 +319,7 @@ async function main() {
     out("shots: app up, schema there");
 
     const run = (args, extra = {}) => {
-      const r = spawnSync("pnpm", args, { cwd: root, env: { ...env, ...extra }, encoding: "utf8" });
+      const r = spawnSync(toolPath("pnpm"), args, { cwd: root, env: { ...env, ...extra }, encoding: "utf8" });
       if (r.status !== 0) throw new Error(`${args.join(" ")} failed:\n${r.stdout}\n${r.stderr}`);
     };
     run(["--filter", "@folioviv/web", "exec", "tsx", "scripts/seed-saint-henri.mjs"], {
@@ -397,7 +399,7 @@ async function main() {
     out(`shots: ${taken.length} capture(s) in ${OUT}`);
   } finally {
     if (app) app.kill("SIGTERM");
-    spawnSync("docker", ["rm", "-f", container], { stdio: "ignore" });
+    spawnSync(toolPath("docker"), ["rm", "-f", container], { stdio: "ignore" });
   }
 }
 

@@ -7,6 +7,8 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
+import { toolPath } from "./tool-path.mjs";
+
 /** ffmpeg by its absolute path (never looked up in a writable PATH directory): the FFMPEG variable when set, else the first install found. */
 function ffmpegBin() {
   const found = [process.env.FFMPEG, "/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg", "/usr/bin/ffmpeg"].find(
@@ -177,9 +179,9 @@ export async function createTake({
   for (const [id, w] of Object.entries(words)) {
     if (!w[locale]) continue;
     const f = path.join(sayDir, `${id}.aiff`);
-    execFileSync("say", ["-v", voices[locale], "-r", String(SPEECH_RATE[locale]), "-o", f, w[locale]]);
+    execFileSync(toolPath("say"), ["-v", voices[locale], "-r", String(SPEECH_RATE[locale]), "-o", f, w[locale]]);
     speech[id] = Number(
-      execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", f])
+      execFileSync(toolPath("ffprobe"), ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", f])
         .toString()
         .trim(),
     );
@@ -232,7 +234,7 @@ export async function createTake({
       const outBeats = beats.map((b) => ({ id: b.id, at: Number(retime(b.at, spans).toFixed(3)) }));
       const base0 = path.join(outDir, name);
       const input = ["-f", "concat", "-safe", "0", "-i", path.join(frameDir, "list.txt")];
-      const ff = (...a) => execFileSync("ffmpeg", ["-y", "-loglevel", "error", ...a], { stdio: "inherit" });
+      const ff = (...a) => execFileSync(ffmpegBin(), ["-y", "-loglevel", "error", ...a], { stdio: "inherit" });
       const vf = `fps=30,scale=${Math.round(viewport.width * (mobile ? 2 : 1))}:-2:flags=lanczos`;
       ff(
         ...input,
@@ -272,7 +274,12 @@ export async function createTake({
           });
         const args = [];
         parts.forEach((p) => args.push("-i", p.aiff));
-        const filter = `${parts.map((p, i) => `[${i + 1}:a]adelay=${Math.round(p.at * 1000)}|${Math.round(p.at * 1000)}[a${i}]`).join(";")};${parts.map((_, i) => `[a${i}]`).join("")}amix=inputs=${parts.length}:normalize=0[voice]`;
+        const delays = parts.map((p, i) => {
+          const ms = Math.round(p.at * 1000);
+          return `[${i + 1}:a]adelay=${ms}|${ms}[a${i}]`;
+        });
+        const inputs = parts.map((_, i) => `[a${i}]`).join("");
+        const filter = `${delays.join(";")};${inputs}amix=inputs=${parts.length}:normalize=0[voice]`;
         ff(
           "-i",
           `${base0}.mp4`,

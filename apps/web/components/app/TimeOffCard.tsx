@@ -71,7 +71,7 @@ export function TimeOffCard({ data }: Readonly<{ data: TimeOffData }>) {
                 variant="ghost"
                 aria-label={say("team.timeOff.remove", { name: t.name, when: when(t.from, t.to) })}
                 onClick={() =>
-                  call.run("/api/walker/time-off", {
+                  void call.run("/api/walker/time-off", {
                     method: "DELETE",
                     json: { staffId: t.staffId, from: t.from, to: t.to },
                   })

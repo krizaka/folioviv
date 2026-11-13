@@ -15,25 +15,18 @@ export function AccessNotes({ clientId, clientName }: Readonly<{ clientId: strin
   const { say } = useSay();
   const call = useCall();
   const [notes, setNotes] = useState<string | null | undefined>(undefined);
+  const reveal = async () => {
+    const answer = await call.run<{ notes: string | null }>(
+      `/api/walker/clients/${clientId}/access-notes`,
+      { method: "GET" },
+      { refresh: false },
+    );
+    setNotes(answer?.notes ?? null);
+  };
   if (notes === undefined) {
     return (
       <>
-        <Button
-          size="sm"
-          variant="outline"
-          loading={call.pending}
-          onClick={async () =>
-            setNotes(
-              ((
-                await call.run<{ notes: string | null }>(
-                  `/api/walker/clients/${clientId}/access-notes`,
-                  { method: "GET" },
-                  { refresh: false },
-                )
-              )?.notes ?? null) as string | null,
-            )
-          }
-        >
+        <Button size="sm" variant="outline" loading={call.pending} onClick={() => void reveal()}>
           {say("walker.reveal")}
         </Button>
         {call.problem ? <Alert tone="danger">{call.problem}</Alert> : null}

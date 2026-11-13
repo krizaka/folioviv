@@ -127,7 +127,7 @@ export function VisitProgress({
           variant="primary"
           className={className}
           loading={call.pending}
-          onClick={() => call.run(`/api/walker/visits/${visit.appointmentId}/check-in`)}
+          onClick={() => void call.run(`/api/walker/visits/${visit.appointmentId}/check-in`)}
         >
           {say("walker.checkIn")}
         </Button>
@@ -138,7 +138,7 @@ export function VisitProgress({
           variant="primary"
           className={className}
           loading={call.pending}
-          onClick={() => call.run(`/api/walker/visits/${visit.appointmentId}/check-out`)}
+          onClick={() => void call.run(`/api/walker/visits/${visit.appointmentId}/check-out`)}
         >
           {say("walker.checkOut")}
         </Button>

@@ -61,7 +61,7 @@ function SourceRow({ c, who }: Readonly<{ c: CalendarOverview["connections"][num
           size="md"
           variant="secondary"
           disabled={call.pending}
-          onClick={() => call.run(`/api/walker/calendars/${c.id}/sync`)}
+          onClick={() => void call.run(`/api/walker/calendars/${c.id}/sync`)}
         >
           {t("refresh")}
         </Button>

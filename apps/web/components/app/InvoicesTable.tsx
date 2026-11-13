@@ -277,7 +277,7 @@ export function InvoicesTable({
                   variant="ghost"
                   disabled={call.pending}
                   onClick={() =>
-                    call.run(`/api/walker/invoices/${i.id}/payments`, { json: { method, amountCents: left } })
+                    void call.run(`/api/walker/invoices/${i.id}/payments`, { json: { method, amountCents: left } })
                   }
                 >
                   {say("invoices.detail.cash", {

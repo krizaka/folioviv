@@ -402,7 +402,7 @@ function Explorer({ locale, words }: Readonly<{ locale: string; words: ExploreWo
           words={words}
           onPick={(p) => {
             setPlaceLabel(p.label);
-            apply({ ...state, near: [p.lng, p.lat] });
+            void apply({ ...state, near: [p.lng, p.lat] });
             setSelected(null);
           }}
         />
@@ -422,8 +422,8 @@ function Explorer({ locale, words }: Readonly<{ locale: string; words: ExploreWo
         words={words.filters}
         count={shops.isSuccess ? count : words.loading}
         busy={shops.isPlaceholderData}
-        onChange={apply}
-        onClear={() => apply(clearExplore())}
+        onChange={(next) => void apply(next)}
+        onClear={() => void apply(clearExplore())}
       />
       <div role="group" aria-label={`${words.view.list} / ${words.view.map}`} className="flex gap-2 lg:hidden">
         <Button
@@ -459,7 +459,7 @@ function Explorer({ locale, words }: Readonly<{ locale: string; words: ExploreWo
             shown={shown}
             ready={shops.isSuccess}
             filtersOn={hasExploreFilters(state)}
-            onReset={() => apply(clearExplore())}
+            onReset={() => void apply(clearExplore())}
             locale={locale}
             words={words}
             selected={selected}
@@ -479,7 +479,7 @@ function Explorer({ locale, words }: Readonly<{ locale: string; words: ExploreWo
               origin={origin}
               center={center}
               zoom={camera?.zoom ?? null}
-              onMoveEnd={setCamera}
+              onMoveEnd={(next) => void setCamera(next)}
               locale={locale}
               label={words.map.label}
               youLabel={words.map.you}

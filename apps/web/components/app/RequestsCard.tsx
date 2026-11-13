@@ -109,7 +109,7 @@ export function RequestsCard({ data }: Readonly<{ data: RequestsData }>) {
                     variant="ghost"
                     aria-label={say("client.requests.delete", { title: r.title })}
                     onClick={() =>
-                      call.run(`/api/me/requests/${r.id}`, { method: "DELETE", json: { clientId: data.clientId } })
+                      void call.run(`/api/me/requests/${r.id}`, { method: "DELETE", json: { clientId: data.clientId } })
                     }
                   >
                     ×
@@ -196,7 +196,7 @@ function RequestFiles({
             shape="pill"
             aria-label={say("client.requests.fileRemove")}
             onClick={() =>
-              call.run(`/api/me/requests/${request.id}/files/${f.id}`, { method: "DELETE", json: { clientId } })
+              void call.run(`/api/me/requests/${request.id}/files/${f.id}`, { method: "DELETE", json: { clientId } })
             }
           >
             ×
@@ -209,7 +209,12 @@ function RequestFiles({
         accept="image/jpeg,image/png,image/webp,application/pdf"
         className="sr-only"
         aria-label={say("client.requests.attach")}
-        onChange={(e) => e.target.files?.[0] && send(e.target.files[0])}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            void send(file);
+          }
+        }}
       />
       <Button size="sm" variant="ghost" onClick={() => input.current?.click()}>
         {say("client.requests.attach")}

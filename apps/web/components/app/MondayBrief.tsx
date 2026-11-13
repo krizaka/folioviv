@@ -157,7 +157,7 @@ function InviteButton({
         size="sm"
         variant="primary"
         disabled={pending}
-        onClick={async () => setResult((await run<Result>("/api/walker/brief/invite", { json: { id } })) ?? null)}
+        onClick={() => void run<Result>("/api/walker/brief/invite", { json: { id } }).then((r) => setResult(r ?? null))}
       >
         {say("brief.gaps.action", { invitees })}
       </Button>

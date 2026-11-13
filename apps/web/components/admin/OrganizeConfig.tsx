@@ -157,7 +157,7 @@ export function OrganizeConfig({ stored }: Readonly<{ stored: StoredKind }>) {
         size="md"
         className="self-start"
         disabled={call.pending || problems.length > 0}
-        onClick={save}
+        onClick={() => void save()}
       >
         {say("admin.organize.save")}
       </Button>

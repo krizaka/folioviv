@@ -70,7 +70,7 @@ function clientFile(db: Db, key: Buffer | null): PrivacyContributor {
           createdAt: client.createdAt.toISOString(),
           accessNotes,
         },
-        dependants: pets
+        dependants: [...pets]
           .sort((a, b) => a.name.localeCompare(b.name))
           .map((p) => ({ kind: p.kind, name: p.name, profile: p.profile })),
       };
