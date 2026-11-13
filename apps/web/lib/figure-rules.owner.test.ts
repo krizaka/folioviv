@@ -8,17 +8,15 @@ vi.mock("@/lib/settings", () => ({ appSettings: vi.fn() }));
 const shopFigureOverrides = vi.fn();
 
 const settings = (tunable: boolean) =>
-  vi
-    .mocked(appSettings)
-    .mockReturnValue({
-      get: vi.fn(async (key: string) =>
-        key === "figures.ownerTunable"
-          ? tunable
-          : key === "figures.actions"
-            ? ["chase", "taxes", "slot"]
-            : DEFAULT_FIGURE_THRESHOLDS[key.replace("figures.", "") as keyof typeof DEFAULT_FIGURE_THRESHOLDS],
-      ),
-    } as never);
+  vi.mocked(appSettings).mockReturnValue({
+    get: vi.fn(async (key: string) =>
+      key === "figures.ownerTunable"
+        ? tunable
+        : key === "figures.actions"
+          ? ["chase", "taxes", "slot"]
+          : DEFAULT_FIGURE_THRESHOLDS[key.replace("figures.", "") as keyof typeof DEFAULT_FIGURE_THRESHOLDS],
+    ),
+  } as never);
 
 describe("the thresholds a shop's figures are judged by (#260)", () => {
   afterEach(() => vi.clearAllMocks());

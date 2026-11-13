@@ -168,17 +168,15 @@ export async function rollbackShopPage(
       .update(shopPageVersions)
       .set({ status: "archived" })
       .where(and(eq(shopPageVersions.shopId, shopId), eq(shopPageVersions.status, "published")));
-    await tx
-      .insert(shopPageVersions)
-      .values({
-        shopId,
-        version: next,
-        status: "published",
-        schema: page.schema,
-        doc: page,
-        authorId,
-        publishedAt: sql`now()`,
-      });
+    await tx.insert(shopPageVersions).values({
+      shopId,
+      version: next,
+      status: "published",
+      schema: page.schema,
+      doc: page,
+      authorId,
+      publishedAt: sql`now()`,
+    });
     await pruneArchive(tx as unknown as Db, shopId);
     // The draft is what the owner was editing BEFORE the restore: unless asked to keep it, it goes, so the composer shows the restored page.
     const draftReset = options.keepDraft

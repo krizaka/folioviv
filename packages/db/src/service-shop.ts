@@ -938,23 +938,21 @@ export async function saveShopMedia(
       ...gallery.map((g) => ({ ...g, role: MediaRole.Gallery })),
     ];
     if (rows.length === 0) return;
-    await tx
-      .insert(shopMedia)
-      .values(
-        rows.map((m, position) => ({
-          shopId,
-          role: m.role,
-          url: m.url,
-          webmUrl: m.webmUrl ?? null,
-          mp4Url: m.mp4Url ?? null,
-          altFr: m.altFr,
-          altEn: m.altEn,
-          captionFr: m.captionFr ?? null,
-          captionEn: m.captionEn ?? null,
-          wide: m.wide,
-          position,
-        })),
-      );
+    await tx.insert(shopMedia).values(
+      rows.map((m, position) => ({
+        shopId,
+        role: m.role,
+        url: m.url,
+        webmUrl: m.webmUrl ?? null,
+        mp4Url: m.mp4Url ?? null,
+        altFr: m.altFr,
+        altEn: m.altEn,
+        captionFr: m.captionFr ?? null,
+        captionEn: m.captionEn ?? null,
+        wide: m.wide,
+        position,
+      })),
+    );
   });
 }
 

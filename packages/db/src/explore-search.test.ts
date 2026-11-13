@@ -260,14 +260,12 @@ describe("Explorer's combined search (real PostgreSQL)", () => {
       })
       .returning();
     await raises("a calendar's busy time", () =>
-      t.db
-        .insert(busyIntervals)
-        .values({
-          connectionId: connection!.id,
-          shopId: studio.shopId,
-          staffId: null,
-          during: "[2026-10-22T14:00:00Z,2026-10-22T15:00:00Z)",
-        }),
+      t.db.insert(busyIntervals).values({
+        connectionId: connection!.id,
+        shopId: studio.shopId,
+        staffId: null,
+        during: "[2026-10-22T14:00:00Z,2026-10-22T15:00:00Z)",
+      }),
     );
     await t.db.delete(schedules).where(eq(schedules.weekday, 6));
     await t.db.delete(daysOff).where(eq(daysOff.staffId, member!.id));

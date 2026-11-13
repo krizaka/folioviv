@@ -42,14 +42,12 @@ describe("the owner's figures read the ledger and the shop's rows in its own cal
     await t.db
       .insert(payments)
       .values({ invoiceId: a.id, method: "cash", amountCents: 5_000, receivedAt: new Date("2026-10-06T03:30:00Z") });
-    await t.db
-      .insert(payments)
-      .values({
-        invoiceId: b.id,
-        method: "card",
-        amountCents: b.totalCents,
-        receivedAt: new Date("2026-10-20T15:00:00Z"),
-      });
+    await t.db.insert(payments).values({
+      invoiceId: b.id,
+      method: "card",
+      amountCents: b.totalCents,
+      receivedAt: new Date("2026-10-20T15:00:00Z"),
+    });
     await creditNote(t.db, b.id, "2026-10-12");
     await recordExpense(t.db, {
       shopId: s.shop.id,

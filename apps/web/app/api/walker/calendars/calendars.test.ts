@@ -55,13 +55,11 @@ const send = (route: (req: Request) => Promise<Response>, method: string, json: 
     }),
   );
 const asRole = (role: "owner" | "manager" | "staff") =>
-  vi
-    .mocked(requireShop)
-    .mockResolvedValue({
-      role,
-      shop: { id: "s1", timezone: "America/Toronto" },
-      session: { account: { id: "acc", email: "o@example.com" } },
-    } as never);
+  vi.mocked(requireShop).mockResolvedValue({
+    role,
+    shop: { id: "s1", timezone: "America/Toronto" },
+    session: { account: { id: "acc", email: "o@example.com" } },
+  } as never);
 const good = {
   kind: "ics",
   url: "webcal://calendar.example.com/secret-token/me.ics",

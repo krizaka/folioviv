@@ -181,9 +181,7 @@ export async function reachableClients(
   );
 }
 /** The shops whose Monday brief may be e-mailed: the owner's address and language, the time zone, the last week sent. */
-export async function briefMailShops(
-  db: Db,
-): Promise<
+export async function briefMailShops(db: Db): Promise<
   {
     id: string;
     name: string;

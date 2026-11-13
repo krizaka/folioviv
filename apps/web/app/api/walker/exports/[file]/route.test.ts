@@ -40,13 +40,11 @@ const appointment = (n: number) => ({
 const get = (file: string, query = "") =>
   GET(new Request(`http://localhost/api/walker/exports/${file}${query}`), { params: Promise.resolve({ file }) });
 const asOwner = () =>
-  vi
-    .mocked(requireShop)
-    .mockResolvedValue({
-      role: "owner",
-      shop: { id: "s1", name: "Salon Laurier", timezone: "America/Toronto" },
-      session: { account: { id: "acc", email: "o@example.com" } },
-    } as never);
+  vi.mocked(requireShop).mockResolvedValue({
+    role: "owner",
+    shop: { id: "s1", name: "Salon Laurier", timezone: "America/Toronto" },
+    session: { account: { id: "acc", email: "o@example.com" } },
+  } as never);
 
 describe("the owner's data exports (#420)", () => {
   beforeEach(() => {

@@ -29,20 +29,18 @@ import { ShopError } from "./errors";
 
 const post = (tx: Tx, shopId: string, entries: LedgerEntry[]) =>
   entries.length
-    ? tx
-        .insert(taxLedger)
-        .values(
-          entries.map((e) => ({
-            shopId,
-            period: e.period,
-            tax: e.tax,
-            direction: e.direction,
-            amountCents: e.amountCents,
-            sourceKind: e.source.kind,
-            sourceId: e.source.id,
-            sourceLabel: e.source.label,
-          })),
-        )
+    ? tx.insert(taxLedger).values(
+        entries.map((e) => ({
+          shopId,
+          period: e.period,
+          tax: e.tax,
+          direction: e.direction,
+          amountCents: e.amountCents,
+          sourceKind: e.source.kind,
+          sourceId: e.source.id,
+          sourceLabel: e.source.label,
+        })),
+      )
     : Promise.resolve();
 
 /**
@@ -94,20 +92,18 @@ export async function issueInvoice(
         totalCents: totals.totalCents,
       })
       .returning();
-    await tx
-      .insert(invoiceLines)
-      .values(
-        totals.lines.map((l, i) => ({
-          invoiceId: invoice!.id,
-          position: i + 1,
-          description: l.description,
-          quantityHundredths: l.quantityHundredths,
-          unitPriceCents: l.unitPriceCents,
-          discountCents: l.discountCents ?? 0,
-          taxCategory: l.category,
-          amountCents: l.amountCents,
-        })),
-      );
+    await tx.insert(invoiceLines).values(
+      totals.lines.map((l, i) => ({
+        invoiceId: invoice!.id,
+        position: i + 1,
+        description: l.description,
+        quantityHundredths: l.quantityHundredths,
+        unitPriceCents: l.unitPriceCents,
+        discountCents: l.discountCents ?? 0,
+        taxCategory: l.category,
+        amountCents: l.amountCents,
+      })),
+    );
     await post(
       tx,
       shop.id,

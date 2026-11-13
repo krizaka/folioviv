@@ -34,13 +34,11 @@ const send = (route: (req: Request) => Promise<Response>, method: string, json: 
     }),
   );
 const asRole = (role: "owner" | "manager" | "staff") =>
-  vi
-    .mocked(requireShop)
-    .mockResolvedValue({
-      role,
-      shop: { id: "s1" },
-      session: { account: { id: "acc", email: "o@example.com" } },
-    } as never);
+  vi.mocked(requireShop).mockResolvedValue({
+    role,
+    shop: { id: "s1" },
+    session: { account: { id: "acc", email: "o@example.com" } },
+  } as never);
 
 describe("managing the private feeds (#282)", () => {
   beforeEach(() => {

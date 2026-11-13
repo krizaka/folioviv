@@ -41,29 +41,25 @@ vi.mock("@folioviv/db", async (original) => ({
 
 const params = (kind: string) => ({ params: Promise.resolve({ kind }) });
 const flags = (over: Record<string, unknown> = {}) =>
-  vi
-    .mocked(appSettings)
-    .mockReturnValue({
-      get: vi.fn(async (key: string) =>
-        key in over
-          ? over[key]
-          : key === "calendarSync.maxCalendarsPerShop"
-            ? 5
-            : key.endsWith("intervalMinutes")
-              ? 30
-              : key.endsWith("windowDays")
-                ? 60
-                : true,
-      ),
-    } as never);
+  vi.mocked(appSettings).mockReturnValue({
+    get: vi.fn(async (key: string) =>
+      key in over
+        ? over[key]
+        : key === "calendarSync.maxCalendarsPerShop"
+          ? 5
+          : key.endsWith("intervalMinutes")
+            ? 30
+            : key.endsWith("windowDays")
+              ? 60
+              : true,
+    ),
+  } as never);
 const asOwner = () =>
-  vi
-    .mocked(requireShop)
-    .mockResolvedValue({
-      role: "owner",
-      shop: { id: "s1", timezone: "America/Toronto" },
-      session: { account: { id: "acc", email: "o@example.com" } },
-    } as never);
+  vi.mocked(requireShop).mockResolvedValue({
+    role: "owner",
+    shop: { id: "s1", timezone: "America/Toronto" },
+    session: { account: { id: "acc", email: "o@example.com" } },
+  } as never);
 const post = (kind: string, json: unknown) =>
   connect(
     new Request(`http://localhost/api/calendars/connect/${kind}`, {

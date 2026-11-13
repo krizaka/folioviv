@@ -86,16 +86,14 @@ describe("private invoice delivery links", () => {
     const expired = `iv1.${"B".repeat(43)}`;
     const revoked = `iv1.${"C".repeat(43)}`;
     const make = (token: string, expiresAt: Date, revokedAt: Date | null) =>
-      t.db
-        .insert(invoiceDeliveries)
-        .values({
-          invoiceId: invoice.id,
-          viewTokenHash: invoiceTokenHash(token),
-          toEmail: "client@example.com",
-          createdAt: NOW,
-          expiresAt,
-          revokedAt,
-        });
+      t.db.insert(invoiceDeliveries).values({
+        invoiceId: invoice.id,
+        viewTokenHash: invoiceTokenHash(token),
+        toEmail: "client@example.com",
+        createdAt: NOW,
+        expiresAt,
+        revokedAt,
+      });
     await make(expired, new Date("2026-10-23T11:59:59.000Z"), null);
     await make(revoked, new Date("2026-11-23T12:00:00.000Z"), NOW);
     expect(await invoiceByToken(t.db, expired, NOW)).toBeNull();

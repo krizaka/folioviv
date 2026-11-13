@@ -11,15 +11,13 @@ import { bookingCodes } from "./schema";
 export function dbCodeStore(db: Db): CodeStore {
   return {
     async put(challenge: Challenge) {
-      await db
-        .insert(bookingCodes)
-        .values({
-          id: challenge.id,
-          proof: challenge.proof,
-          attempts: challenge.attempts,
-          expiresAt: challenge.expiresAt,
-          payload: challenge.payload,
-        });
+      await db.insert(bookingCodes).values({
+        id: challenge.id,
+        proof: challenge.proof,
+        attempts: challenge.attempts,
+        expiresAt: challenge.expiresAt,
+        payload: challenge.payload,
+      });
     },
     async get(id: string) {
       const [row] = await db.select().from(bookingCodes).where(eq(bookingCodes.id, id));
