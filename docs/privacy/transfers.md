@@ -36,7 +36,7 @@
 | DigitalOcean | Hosting | Everything the application and database hold | Yes | Proven for the two stores above; backups and replicas: **to confirm** | Provider's data processing terms: **to collect** |
 | Bunny | Media storage and CDN | Photos and files; the CDN edge serves them | Yes | Storage: New York; CDN edge locations: **to confirm** | **to collect** |
 | Mailgun | E-mail delivery | Recipient address and body of a walk report or invoice mail | No (off) | **to confirm** | **to collect** |
-| Stripe | Payment processor (the subscription only) | The subscriber's e-mail and payment details, on its hosted page; never a shop client's data | No | **to confirm** | **to collect** |
+| Stripe | Payment processor (the subscription only) | The subscriber's e-mail and payment details, on its hosted page; never a shop client's data | Yes (the spec declares its keys) | **to confirm** | **to collect** |
 | Sovkora (Krizaka's engine) | Translation of a shop page (off) | The page's texts and a glossary; never anything about a client | No | **to confirm** | **to write** |
 
 « **to confirm** » means the region has not been checked in the supplier's console; that check and the collection of the signed terms wait on the founder: [krizaka/.github#285](https://github.com/krizaka/.github/issues/285). The company-wide list is the [supplier register](https://github.com/krizaka/.github/blob/main/docs/security/isms/supplier-register.json).

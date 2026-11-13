@@ -98,8 +98,25 @@ services:
         scope: RUN_TIME
         type: SECRET
         value: __APP_DATA_ENCRYPTION_KEY__
-      # Outgoing mail (the walk report). Not configured on dev yet: every mail stays `pending` in the outbox. To enable, add
-      # MAIL_PROVIDER=mailgun, MAIL_DOMAIN, MAIL_FROM (values) and MAIL_API_KEY (SECRET).
+      # Outgoing mail (the walk report). Not configured on dev yet: every mail stays `pending` in the outbox. To enable, set
+      # MAIL_PROVIDER=mailgun and add MAIL_DOMAIN, MAIL_FROM (values) and MAIL_API_KEY (SECRET).
+      # Subscription payments (ADR-003): the vendor is a value, the three keys are SECRETs filled from the vault at apply time. The webhook
+      # (POST /api/webhooks/payments) is verified with PAYMENTS_STRIPE_WEBHOOK_SECRET; without it, payments answer 503 (fails closed).
+      - key: PAYMENTS_PROVIDER
+        scope: RUN_TIME
+        value: stripe
+      - key: PAYMENTS_STRIPE_SECRET_KEY
+        scope: RUN_TIME
+        type: SECRET
+        value: __PAYMENTS_STRIPE_SECRET_KEY__
+      - key: PAYMENTS_STRIPE_PUBLISHABLE_KEY
+        scope: RUN_TIME
+        type: SECRET
+        value: __PAYMENTS_STRIPE_PUBLISHABLE_KEY__
+      - key: PAYMENTS_STRIPE_WEBHOOK_SECRET
+        scope: RUN_TIME
+        type: SECRET
+        value: __PAYMENTS_STRIPE_WEBHOOK_SECRET__
       - key: DATABASE_URL
         scope: RUN_TIME
         type: SECRET
