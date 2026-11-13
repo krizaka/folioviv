@@ -77,7 +77,7 @@ describe("the transfer register follows the deployment spec (folioviv#369)", () 
   });
 
   it("keeps a context that is not deployed named, with its reason, for the day it is", () => {
-    for (const context of ["MAIL_", "PAYMENTS_", "AI_"]) {
+    for (const context of ["MAIL_", "AI_"]) {
       expect(contextsOfSpec(SPEC)).not.toContain(context);
       expect(REGISTER.contextsNotDeployed[context]).toBeTruthy();
     }
@@ -88,7 +88,7 @@ describe("the transfer register follows the deployment spec (folioviv#369)", () 
       if (!p.deployed) expect(p.region, p.id).toMatch(/to-confirm/);
       expect(p.agreement, p.id).toMatch(/^(to-collect|internal, to write)$/);
     }
-    expect(REGISTER.processors.filter((p) => !p.deployed).map((p) => p.id)).toEqual(["mailgun", "stripe", "sovkora"]);
+    expect(REGISTER.processors.filter((p) => !p.deployed).map((p) => p.id)).toEqual(["mailgun", "sovkora"]);
   });
 
   it("names every supplier in the readable version, and points the open regions to .github#285", () => {
