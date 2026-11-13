@@ -15,7 +15,7 @@
   "dependencies": {
     "@folioviv/core": "workspace:*",
     "@krizaka/app-client": "^0.3.1",
-    "@krizaka/query": "^0.2.2",
+    "@krizaka/query": "^0.3.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {

@@ -1,4 +1,4 @@
-import { API_KEY_CODE, type ApiKeyCode, ApiKeyError, type ApiKeyRules, type ApiKeys, type Clock, createApiKeys, pgApiKeyStore } from "@krizaka/api-keys";
+import { API_KEY_CODE, type ApiKeyCode, ApiKeyError, type ApiKeyRules, type ApiKeys, type Clock, createApiKeys, dbApiKeyStore } from "@krizaka/api-keys";
 
 import { subscriptionOf } from "./billing";
 import { query } from "./db";
@@ -17,7 +17,10 @@ export const FOLIOVIV_API_KEY_RULES: ApiKeyRules = {
 };
 
 
-export const apiKeys = (clock: Clock): ApiKeys => createApiKeys({ store: pgApiKeyStore(query), rules: FOLIOVIV_API_KEY_RULES, clock });
+/** The store's `Query` leaves the row type to its caller; ours is the pool's. */
+const run = async <T>(text: string, values?: unknown[]): Promise<T[]> => (await query(text, values)) as T[];
+
+export const apiKeys = (clock: Clock): ApiKeys => createApiKeys({ store: dbApiKeyStore(run), rules: FOLIOVIV_API_KEY_RULES, clock });
 
 /** The HTTP answer of each refusal of the module: stable codes the page translates and the API documents. */
 const ANSWER: Record<ApiKeyCode, number> = {
