@@ -159,7 +159,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.error(`${problems.length} responsive problem(s):\n  ${problems.join("\n  ")}`);
     process.exit(1);
   }
+  const framePages = FRAME_PAGES.length * FRAME_LOCALES.length;
+  const shopStates = states.length ? ", as the busy, the empty and the one-item shop" : "";
+  const signedIn = email && secret ? ` and ${framePages} pages of the signed-in frame${shopStates}` : "";
   console.log(
-    `no horizontal overflow: ${PAGES.length} public pages${email && secret ? ` and ${FRAME_PAGES.length * FRAME_LOCALES.length} pages of the signed-in frame${states.length ? `, as the busy, the empty and the one-item shop` : ""}` : ""} x ${WIDTHS.length} widths x ${THEMES.length} themes`,
+    `no horizontal overflow: ${PAGES.length} public pages${signedIn} x ${WIDTHS.length} widths x ${THEMES.length} themes`,
   );
 }

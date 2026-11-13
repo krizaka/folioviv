@@ -38,6 +38,19 @@ export default function NewInvoice() {
   const services = shop.data?.services ?? [];
   const registrant = shop.data?.shop.registrant ?? true;
   const totals = previewTotals(lines, services, registrant);
+  const seenLines = new Map<string, number>();
+  const lineRows = lines.map((line) => {
+    const text =
+      "serviceId" in line
+        ? `${line.quantity} × ${nameOf(
+            services.find((s) => s.id === line.serviceId),
+            locale,
+          )}`
+        : line.description;
+    const nth = (seenLines.get(text) ?? 0) + 1;
+    seenLines.set(text, nth);
+    return { key: `${text}#${nth}`, text };
+  });
   const clientName = clients.data?.find((c) => c.id === client)?.fullName;
 
   const issue = useMutation({
@@ -86,15 +99,8 @@ export default function NewInvoice() {
         <Card.Root>
           <Card.Body>
             <Txt variant="label">{t("invoices.lines")}</Txt>
-            {lines.map((line, index) => (
-              <Txt key={index}>
-                {"serviceId" in line
-                  ? `${line.quantity} × ${nameOf(
-                      services.find((s) => s.id === line.serviceId),
-                      locale,
-                    )}`
-                  : line.description}
-              </Txt>
+            {lineRows.map((row) => (
+              <Txt key={row.key}>{row.text}</Txt>
             ))}
           </Card.Body>
         </Card.Root>

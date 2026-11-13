@@ -11,11 +11,7 @@ export function StopBrief({
 }: Readonly<{ token: string; words: { button: string; done: string; invalid: string } }>) {
   const [state, setState] = useState<"idle" | "busy" | "done" | "invalid">("idle");
   if (state === "done" || state === "invalid")
-    return (
-      <p role="status" className="text-fg">
-        {state === "done" ? words.done : words.invalid}
-      </p>
-    );
+    return <output className="block text-fg">{state === "done" ? words.done : words.invalid}</output>;
   return (
     <Button
       variant="primary"

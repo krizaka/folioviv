@@ -32,13 +32,9 @@ export function POST(req: Request, { params }: { params: Promise<{ id: string }>
     const maxPerShopPerDay = await appSettings().get("limits.invoiceEmailsPerShopPerDay");
     const result = await sendInvoiceMail(
       db(),
-      shop.id,
-      invoiceId,
-      input.toEmail,
-      input.message,
+      { shopId: shop.id, invoiceId, toEmail: input.toEmail, message: input.message, maxPerShopPerDay },
       systemClock.now(),
       mailSettings(),
-      maxPerShopPerDay,
     );
     await audit({
       action: "invoice.sent",

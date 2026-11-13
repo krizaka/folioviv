@@ -25,16 +25,13 @@ const option = (name, fallback) => {
   return at >= 0 && args[at + 1] ? args[at + 1] : fallback;
 };
 const value = JSON.parse(raw);
-const kind = option(
-  "--kind",
-  typeof value === "boolean"
-    ? "flag"
-    : typeof value === "number"
-      ? "integer"
-      : Array.isArray(value)
-        ? "subset"
-        : "choice",
-);
+function kindOf(value) {
+  if (typeof value === "boolean") return "flag";
+  if (typeof value === "number") return "integer";
+  return Array.isArray(value) ? "subset" : "choice";
+}
+
+const kind = option("--kind", kindOf(value));
 const actor = option("--actor", "set-setting.mjs");
 const user = option("--user", "").trim().toLowerCase();
 const group = key.split(".")[0];

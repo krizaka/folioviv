@@ -22,7 +22,7 @@ export function VisitRow({
   return (
     <Pressable
       role="button"
-      aria-selected={selected}
+      accessibilityState={{ selected }}
       accessibilityLabel={`${timeOf(visit.startsAt, timeZone, locale)} ${visit.service[locale]}`}
       onPress={onOpen}
       style={{ paddingVertical: 12, paddingHorizontal: 16, gap: 4 }}

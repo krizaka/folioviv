@@ -214,9 +214,8 @@ export function computeFigures(input: FiguresInput, thresholds: FigureThresholds
     rate: number | null,
     formula: FormulaTerm[],
     sources: FigureSource[],
-    state: FigureState,
-    extra: Partial<Figure> = {},
-  ): Figure => ({ id, value, unit, rate, formula, lexicon: TERMS[id], sources, state, ...base, ...extra });
+    outcome: Pick<Figure, "state"> & Partial<Figure>,
+  ): Figure => ({ id, value, unit, rate, formula, lexicon: TERMS[id], sources, ...base, ...outcome });
 
   return {
     invoiced: figure(
@@ -231,7 +230,7 @@ export function computeFigures(input: FiguresInput, thresholds: FigureThresholds
           issued.map((i) => i.id),
         ),
       ],
-      issued.length ? FIGURE_STATE.good : FIGURE_STATE.info,
+      { state: issued.length ? FIGURE_STATE.good : FIGURE_STATE.info },
     ),
     collected: figure(
       FIGURE_ID.collected,
@@ -248,7 +247,13 @@ export function computeFigures(input: FiguresInput, thresholds: FigureThresholds
           periodPayments.map((p) => p.id),
         ),
       ],
-      judge(collectedRate, { watch: thresholds.collectedWatchPct, alert: thresholds.collectedAlertPct }, "higher"),
+      {
+        state: judge(
+          collectedRate,
+          { watch: thresholds.collectedWatchPct, alert: thresholds.collectedAlertPct },
+          "higher",
+        ),
+      },
     ),
     toCollect: figure(
       FIGURE_ID.toCollect,
@@ -266,8 +271,10 @@ export function computeFigures(input: FiguresInput, thresholds: FigureThresholds
           open.map((x) => x.i.id),
         ),
       ],
-      judge(overdueRate, { watch: thresholds.overdueWatchPct, alert: thresholds.overdueAlertPct }, "lower"),
-      { period: null },
+      {
+        state: judge(overdueRate, { watch: thresholds.overdueWatchPct, alert: thresholds.overdueAlertPct }, "lower"),
+        period: null,
+      },
     ),
     gstCollected: figure(
       FIGURE_ID.gstCollected,
@@ -276,7 +283,7 @@ export function computeFigures(input: FiguresInput, thresholds: FigureThresholds
       null,
       [{ label: "gstOnInvoices", value: gst.collected, unit: "cents" }],
       [ledgerSources[0]!],
-      FIGURE_STATE.info,
+      { state: FIGURE_STATE.info },
     ),
     qstCollected: figure(
       FIGURE_ID.qstCollected,
@@ -285,7 +292,7 @@ export function computeFigures(input: FiguresInput, thresholds: FigureThresholds
       null,
       [{ label: "qstOnInvoices", value: qst.collected, unit: "cents" }],
       [ledgerSources[0]!],
-      FIGURE_STATE.info,
+      { state: FIGURE_STATE.info },
     ),
     gstToRemit: figure(
       FIGURE_ID.gstToRemit,
@@ -297,7 +304,7 @@ export function computeFigures(input: FiguresInput, thresholds: FigureThresholds
         { label: "gstOnExpenses", value: gst.credits, unit: "cents", op: "−" },
       ],
       ledgerSources,
-      FIGURE_STATE.info,
+      { state: FIGURE_STATE.info },
     ),
     qstToRemit: figure(
       FIGURE_ID.qstToRemit,
@@ -309,7 +316,7 @@ export function computeFigures(input: FiguresInput, thresholds: FigureThresholds
         { label: "qstOnExpenses", value: qst.credits, unit: "cents", op: "−" },
       ],
       ledgerSources,
-      FIGURE_STATE.info,
+      { state: FIGURE_STATE.info },
     ),
     margin: figure(
       FIGURE_ID.margin,
@@ -330,7 +337,7 @@ export function computeFigures(input: FiguresInput, thresholds: FigureThresholds
           paidExpenses.map((e) => e.id),
         ),
       ],
-      judge(marginRate, { watch: thresholds.marginWatchPct, alert: thresholds.marginAlertPct }, "higher"),
+      { state: judge(marginRate, { watch: thresholds.marginWatchPct, alert: thresholds.marginAlertPct }, "higher") },
     ),
     appointments: figure(
       FIGURE_ID.appointments,
@@ -344,8 +351,7 @@ export function computeFigures(input: FiguresInput, thresholds: FigureThresholds
           done.map((a) => a.id),
         ),
       ],
-      done.length ? FIGURE_STATE.good : FIGURE_STATE.info,
-      { cadence: CADENCE.onChange },
+      { state: done.length ? FIGURE_STATE.good : FIGURE_STATE.info, cadence: CADENCE.onChange },
     ),
     noShows: figure(
       FIGURE_ID.noShows,
@@ -362,7 +368,7 @@ export function computeFigures(input: FiguresInput, thresholds: FigureThresholds
           missed.map((a) => a.id),
         ),
       ],
-      judge(noShowRate, { watch: thresholds.noShowWatchPct, alert: thresholds.noShowAlertPct }, "lower"),
+      { state: judge(noShowRate, { watch: thresholds.noShowWatchPct, alert: thresholds.noShowAlertPct }, "lower") },
     ),
   };
 }

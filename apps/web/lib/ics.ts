@@ -16,7 +16,11 @@ export const stamp = (d: Date) =>
     .replace(/[-:]/g, "")
     .replace(/\.\d{3}Z$/, "Z");
 export const escape = (text: string) =>
-  text.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+  text
+    .replaceAll("\\", String.raw`\\`)
+    .replaceAll(";", String.raw`\;`)
+    .replaceAll(",", String.raw`\,`)
+    .replace(/\r?\n/g, String.raw`\n`);
 
 // @fixed: RFC 5545 §3.1 — a content line is folded before 75 octets
 const FOLD = 75;

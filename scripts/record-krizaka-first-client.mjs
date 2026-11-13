@@ -263,7 +263,7 @@ await clip("invoice", async ({ take, page, go, glide }) => {
   const totals = english ? ["1,950.00", "97.50", "194.51", "2,242.01"] : ["1 625,00", "81,25", "162,09", "1 868,34"];
   for (const figure of totals)
     await page
-      .getByText(new RegExp(figure.replace(/[.,]/g, "[.,]").replace(/ /g, "\\s")))
+      .getByText(new RegExp(figure.replace(/[.,]/g, "[.,]").replaceAll(" ", String.raw`\s`)))
       .first()
       .waitFor({ timeout: 15_000 });
   await page.waitForTimeout(800);

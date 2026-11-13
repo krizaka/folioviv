@@ -12,6 +12,15 @@ import { team, teamAct } from "@/lib/team";
 
 export const dynamic = "force-dynamic";
 
+/** `a@b.c`: no space, one `@`, something before it, and a dot inside what follows. Linear, unlike the pattern that says the same. */
+const looksLikeEmail = (value: string) => {
+  const at = value.indexOf("@");
+  if (at < 1 || /\s/.test(value) || value.indexOf("@", at + 1) !== -1) {
+    return false;
+  }
+  return value.slice(at + 2, -1).includes(".");
+};
+
 const escapeHtml = (text: string) =>
   text.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 
@@ -24,7 +33,7 @@ export const POST = (req: Request) =>
     const { session, shop } = await requireShop(req, "team");
     limit("invite", req, session.account.id, [30, 3600]);
     const input = await readJson(req, z.object({ email: z.string().max(320), role: z.string().max(20) }));
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(input.email.trim()))
+    if (!looksLikeEmail(input.email.trim()))
       return Response.json({ error: "Not an e-mail address", code: "BAD_REQUEST" }, { status: 400 });
     const { token, invitation } = await teamAct(() =>
       team().invite(shop.id, { id: session.account.id }, input, systemClock.now()),
@@ -38,7 +47,7 @@ export const POST = (req: Request) =>
       template: "team-invitation",
       subject: `Invitation — ${shop.name}`,
       text,
-      html: `<p>${escapeHtml(text).replace(/\n\n/g, "</p><p>").replace(/\n/g, "<br>")}</p>`,
+      html: `<p>${escapeHtml(text).replaceAll("\n\n", "</p><p>").replaceAll("\n", "<br>")}</p>`,
     });
     await audit({
       action: "team.invited",

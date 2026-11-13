@@ -60,11 +60,7 @@ export function ShopVideoLazy(props: Readonly<TvProps>) {
         className="mx-auto aspect-[4/5] max-h-[36rem] w-full max-w-4xl overflow-hidden border border-border-default bg-surface-2 sm:aspect-[16/10] sm:max-h-none"
       >
         {poster ? (
-          <div
-            role="presentation"
-            className="h-full w-full bg-cover bg-center opacity-70"
-            style={{ backgroundImage: `url(${poster})` }}
-          />
+          <div className="h-full w-full bg-cover bg-center opacity-70" style={{ backgroundImage: `url(${poster})` }} />
         ) : null}
       </div>
     </Section>

@@ -95,10 +95,13 @@ const arg = (name, fallback) => {
 /** In the page, before any script: collects the LCP (and whether its element is in the hero) with its attribution (the web-vitals
  *  split: TTFB, resource load delay, resource load duration, element render delay) and the layout shifts without recent input, with their sources. */
 function observe(heroSelector) {
-  const describe = (n) =>
-    n
-      ? `${n.nodeName.toLowerCase()}${n.id ? `#${n.id}` : ""}${typeof n.className === "string" && n.className ? `.${n.className.trim().split(/\s+/).slice(0, 2).join(".")}` : ""}`
-      : "(removed)";
+  const describe = (n) => {
+    if (!n) return "(removed)";
+    const id = n.id ? "#" + n.id : "";
+    const classes =
+      typeof n.className === "string" && n.className ? "." + n.className.trim().split(/\s+/).slice(0, 2).join(".") : "";
+    return n.nodeName.toLowerCase() + id + classes;
+  };
   window.__perf = { lcp: 0, hero: false, cls: 0, attribution: null, shifts: [] };
   new PerformanceObserver((list) => {
     const e = list.getEntries().at(-1);
@@ -127,7 +130,7 @@ function observe(heroSelector) {
     for (const e of list.getEntries()) {
       if (e.hadRecentInput) continue;
       window.__perf.cls += e.value;
-      window.__perf.shifts.push({
+      globalThis.__perf.shifts.push({
         value: Math.round(e.value * 1000) / 1000,
         at: Math.round(e.startTime),
         sources: (e.sources || []).map((x) => ({

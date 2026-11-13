@@ -125,7 +125,7 @@ export function nextActions(
     }
   }
 
-  return actions
-    .sort((a, b) => URGENCY[a.urgency] - URGENCY[b.urgency] || b.impactCents - a.impactCents)
-    .slice(0, Math.max(0, thresholds.maxActions));
+  const ranked = [...actions];
+  ranked.sort((a, b) => URGENCY[a.urgency] - URGENCY[b.urgency] || b.impactCents - a.impactCents);
+  return ranked.slice(0, Math.max(0, thresholds.maxActions));
 }

@@ -20,7 +20,7 @@ export function poolConfig(url: string, caCert?: string, max = 5): pg.PoolConfig
     connectionString: parsed.toString(),
     max,
     idleTimeoutMillis: 30_000,
-    ...(tls ? { ssl: { ca: caCert?.replace(/\\n/g, "\n"), rejectUnauthorized: true } } : {}),
+    ...(tls ? { ssl: { ca: caCert?.replaceAll(String.raw`\n`, "\n"), rejectUnauthorized: true } } : {}),
   };
 }
 

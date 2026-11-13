@@ -208,17 +208,7 @@ function ShopPageCard({
       ) : null}
       <ul className="m-0 flex list-none flex-col gap-2 p-0">
         {config.sections.map(({ id, visible }, index) => (
-          <li
-            key={id}
-            tabIndex={0}
-            className="flex flex-wrap items-center gap-2 rounded-lg border border-border-default p-2"
-            onKeyDown={(event) => {
-              if (event.key === "ArrowUp" || event.key === "ArrowDown") {
-                event.preventDefault();
-                reorder(id, event.key === "ArrowUp" ? -1 : 1);
-              }
-            }}
-          >
+          <li key={id} className="flex flex-wrap items-center gap-2 rounded-lg border border-border-default p-2">
             <Checkbox
               checked={visible}
               onCheckedChange={(checked) =>

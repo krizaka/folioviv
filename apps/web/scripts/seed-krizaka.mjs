@@ -15,8 +15,10 @@ import { hashPassword } from "./qa-accounts.mjs";
 
 const need = (name, min = 1) => {
   const value = process.env[name];
-  if (!value || value.length < min)
-    throw new Error(`${name} is missing${min > 1 ? ` or shorter than ${min} characters` : ""}`);
+  if (!value || value.length < min) {
+    const shorter = min > 1 ? ` or shorter than ${min} characters` : "";
+    throw new Error(`${name} is missing${shorter}`);
+  }
   return value;
 };
 

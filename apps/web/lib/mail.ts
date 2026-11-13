@@ -59,7 +59,7 @@ export async function deliver(
   try {
     const credentials = Buffer.from(`api:${settings.apiKey}`).toString("base64");
     const response = await send(
-      `${settings.apiUrl.replace(/\/+$/, "")}/v3/${encodeURIComponent(settings.domain!)}/messages`,
+      `${withoutTrailingSlashes(settings.apiUrl)}/v3/${encodeURIComponent(settings.domain!)}/messages`,
       {
         method: "POST",
         headers: { Authorization: `Basic ${credentials}`, "Content-Type": "application/x-www-form-urlencoded" },
@@ -149,18 +149,30 @@ export async function sendWalkReport(
   return { mailId: id, status, reportId: ctx.reportId };
 }
 
+/** The address without the slashes that end it (a loop: a pattern for them backtracks). */
+const withoutTrailingSlashes = (url: string) => {
+  let end = url.length;
+  while (end > 0 && url[end - 1] === "/") {
+    end -= 1;
+  }
+  return url.slice(0, end);
+};
+
 /** Issues one private link, queues the invoice e-mail, then gives the outbox its normal first attempt. */
 export async function sendInvoiceMail(
   db: Db,
-  shopId: string,
-  invoiceId: string,
-  toEmail: string,
-  message: string | undefined,
+  request: {
+    shopId: string;
+    invoiceId: string;
+    toEmail: string;
+    message: string | undefined;
+    maxPerShopPerDay: number;
+  },
   now: Date,
   settings: MailSettings,
-  maxPerShopPerDay: number,
   send: typeof fetch = fetch,
 ) {
+  const { shopId, invoiceId, toEmail, message, maxPerShopPerDay } = request;
   const [invoice, config] = await Promise.all([invoiceDetail(db, shopId, invoiceId), invoiceMailSettings(db, shopId)]);
   if (!invoice || !invoice.clientId || invoice.creditOf || !config) throw new Error("AK_INVOICE_UNKNOWN");
   if (!invoice.client?.email && !toEmail) throw new Error("AK_INVOICE_RECIPIENT");

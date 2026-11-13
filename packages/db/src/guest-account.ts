@@ -25,7 +25,7 @@ export async function guestAccountFor(
     .values({ email, role: OPEN.role, locale: input.locale, name: input.name, emailVerifiedAt: now })
     .onConflictDoNothing({ target: accounts.email });
   const [row] = await db.select().from(accounts).where(eq(accounts.email, email));
-  if (!row || row.role !== OPEN.role || row.status !== OPEN.status || row.passwordHash !== null)
+  if (row?.role !== OPEN.role || row.status !== OPEN.status || row.passwordHash !== null)
     return { ok: false, reason: "sign-in-required" };
   await db
     .update(accounts)

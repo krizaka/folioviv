@@ -61,7 +61,7 @@ export interface ExploreWords {
 
 const WIDE = "(min-width: 1024px)";
 const subscribeWide = (cb: () => void) => {
-  const m = window.matchMedia(WIDE);
+  const m = globalThis.matchMedia(WIDE);
   m.addEventListener("change", cb);
   return () => m.removeEventListener("change", cb);
 };
@@ -211,9 +211,7 @@ function PlacePicker({
 }>) {
   if (answer.places.length === 0)
     return (
-      <p role="status" className="m-0 text-sm text-fg-secondary">
-        {words.search.none.replace("{query}", query)}
-      </p>
+      <output className="m-0 block text-sm text-fg-secondary">{words.search.none.replace("{query}", query)}</output>
     );
   return (
     <div className="flex flex-col gap-2">
@@ -335,7 +333,7 @@ function Explorer({ locale, words }: Readonly<{ locale: string; words: ExploreWo
   const [view, setView] = useState<"list" | "map">("list");
   const wide = useSyncExternalStore(
     subscribeWide,
-    () => window.matchMedia(WIDE).matches,
+    () => globalThis.matchMedia(WIDE).matches,
     () => false,
   );
   const origin: Origin | null = state.near ? { point: [state.near[0], state.near[1]], label: placeLabel } : null;

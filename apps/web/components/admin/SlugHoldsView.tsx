@@ -412,7 +412,13 @@ export function TermItem({
           submit={say("admin.slugHolds.terms.save")}
           initial={row.text}
           busy={busy}
-          onSubmit={(line) => onEdit(line).then((ok) => (ok && setEditing(false), ok))}
+          onSubmit={async (line) => {
+            const ok = await onEdit(line);
+            if (ok) {
+              setEditing(false);
+            }
+            return ok;
+          }}
           onCancel={() => setEditing(false)}
         />
       </li>

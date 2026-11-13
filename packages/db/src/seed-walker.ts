@@ -317,6 +317,32 @@ export async function seedSaintHenriBooks(
   }
 }
 
+/** The persona's five clients join the shop, each with their dogs (and the access notes, sealed with `key`). */
+async function joinSaintHenriClients(db: Db, key: Buffer, shopId: string) {
+  const clientIds: Record<string, string> = {};
+  const dogIds: Record<string, string> = {};
+  for (const c of SAINT_HENRI.clients) {
+    const [acc] = await db.select().from(accounts).where(eq(accounts.email, c.email));
+    if (!acc) throw new Error(`no account ${c.email}: create the accounts first`);
+    const { clientId } = await joinShop(db, acc.id, acc.email, shopId, {
+      fullName: c.name,
+      phone: c.phone,
+      language: c.language,
+      consentService: true,
+      consentReminders: c.language === "fr",
+    });
+    clientIds[c.email] = clientId;
+    for (const d of c.dogs)
+      dogIds[d.name] = await addDependant(db, clientId, {
+        kind: "dog",
+        name: d.name,
+        profile: { breed: d.breed, size: d.size, temperament: d.temperament },
+      });
+    if (c.notes) await setAccessNotes(db, key, clientId, c.notes);
+  }
+  return { clientIds, dogIds };
+}
+
 export async function seedSaintHenri(
   db: Db,
   key: Buffer,
@@ -344,27 +370,7 @@ export async function seedSaintHenri(
   for (const w of SAINT_HENRI.hours) await addWindow(db, shopId, w);
   await saveShopPage(db, owner.id, { ...page, published: true });
 
-  const clientIds: Record<string, string> = {};
-  const dogIds: Record<string, string> = {};
-  for (const c of SAINT_HENRI.clients) {
-    const [acc] = await db.select().from(accounts).where(eq(accounts.email, c.email));
-    if (!acc) throw new Error(`no account ${c.email}: create the accounts first`);
-    const { clientId } = await joinShop(db, acc.id, acc.email, shopId, {
-      fullName: c.name,
-      phone: c.phone,
-      language: c.language,
-      consentService: true,
-      consentReminders: c.language === "fr",
-    });
-    clientIds[c.email] = clientId;
-    for (const d of c.dogs)
-      dogIds[d.name] = await addDependant(db, clientId, {
-        kind: "dog",
-        name: d.name,
-        profile: { breed: d.breed, size: d.size, temperament: d.temperament },
-      });
-    if (c.notes) await setAccessNotes(db, key, clientId, c.notes);
-  }
+  const { clientIds, dogIds } = await joinSaintHenriClients(db, key, shopId);
 
   const group = services["Group walk 60 min"]!;
   const zone = zones["Saint-Henri"]!;

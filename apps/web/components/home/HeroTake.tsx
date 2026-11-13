@@ -20,7 +20,7 @@ export function HeroTake({
     const video = ref.current;
     if (!video) return;
     const calm =
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+      globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches ||
       (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
     if (calm) return;
     const watch = new IntersectionObserver(([entry]) => {

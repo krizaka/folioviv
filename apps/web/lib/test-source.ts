@@ -8,5 +8,5 @@ export const compact = (source: string): string =>
   source
     .replace(/\s+/g, "")
     .replace(/,([)}\]])/g, "$1")
-    .replace(/\(</g, "<")
-    .replace(/>\)/g, ">");
+    .replaceAll("(<", "<")
+    .replaceAll(">)", ">");

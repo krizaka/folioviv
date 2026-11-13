@@ -14,17 +14,7 @@ import { and, desc, eq, gte, inArray, isNull, lte, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import type { Db, Tx } from "./client";
-import {
-  appointments,
-  bookings,
-  clients,
-  expenses,
-  invoiceLines,
-  invoices,
-  services,
-  shops,
-  taxLedger,
-} from "./schema";
+import { appointments, clients, expenses, invoiceLines, invoices, services, shops, taxLedger } from "./schema";
 import { ShopError } from "./errors";
 
 const post = (tx: Tx, shopId: string, entries: LedgerEntry[]) =>

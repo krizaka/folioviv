@@ -31,19 +31,19 @@ export const SIGN_IN_LINK = '[data-site-bar] a[href$="/sign-in"]';
  * (CTO decision, krizaka-ui#827, Option 1). Under `html[data-session]` (set by the head script from the `kz-session` hint)
  * every such link must carry `data-signed-out-only` AND be computed `display: none` from the first paint on: the DOM may hold
  * the link, the eye never sees it. The computed style is read at the first paint (stylesheets block it, so the rule is
- * there) and again at every later mutation. Problems land in `window.__signInProblems`.
+ * there) and again at every later mutation. Problems land in `globalThis.__signInProblems`.
  */
 export const watchSignInLink = () => {
-  window.__signInProblems = [];
+  globalThis.__signInProblems = [];
   window.__sawSignIn = false;
   let painted = false;
   const flag = (why) => {
-    if (!window.__signInProblems.includes(why)) window.__signInProblems.push(why);
+    if (!globalThis.__signInProblems.includes(why)) globalThis.__signInProblems.push(why);
   };
   const inspect = () => {
     const links = document.querySelectorAll('[data-site-bar] a[href$="/sign-in"]');
     if (links.length) window.__sawSignIn = true;
-    const hinted = document.documentElement.hasAttribute("data-session");
+    const hinted = "session" in document.documentElement.dataset;
     for (const link of links) {
       if (!hinted)
         flag(
@@ -114,8 +114,8 @@ export async function check({ base, locale = "fr", email, password }) {
       )
       .catch(() => {});
     const seen = await page.evaluate(() => ({
-      hinted: document.documentElement.hasAttribute("data-session"),
-      problems: window.__signInProblems,
+      hinted: "session" in document.documentElement.dataset,
+      problems: globalThis.__signInProblems,
     }));
     if (!seen.hinted)
       problems.push(

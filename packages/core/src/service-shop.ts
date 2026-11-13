@@ -200,8 +200,8 @@ export function sniffImage(bytes: Uint8Array): "jpeg" | "png" | "webp" | null {
     return "png";
   if (
     bytes.length > 12 &&
-    String.fromCharCode(...bytes.slice(0, 4)) === "RIFF" &&
-    String.fromCharCode(...bytes.slice(8, 12)) === "WEBP"
+    String.fromCodePoint(...bytes.slice(0, 4)) === "RIFF" &&
+    String.fromCodePoint(...bytes.slice(8, 12)) === "WEBP"
   )
     return "webp";
   return null;

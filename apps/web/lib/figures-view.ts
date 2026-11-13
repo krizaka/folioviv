@@ -18,9 +18,11 @@ import type { ShopRoutes } from "./routes";
 type FiguresMessages = ReturnType<typeof getDictionary>["console"]["figures"];
 
 /** The state words of `KpiExplained` (`ok | watch | act`) for the domain's states (`good | watch | alert | info`). */
+type KpiState = "ok" | "watch" | "act";
+
 export const KPI_STATE = { good: "ok", watch: "watch", alert: "act", info: "ok" } as const satisfies Record<
   FigureState,
-  "ok" | "watch" | "act"
+  KpiState
 >;
 
 /**

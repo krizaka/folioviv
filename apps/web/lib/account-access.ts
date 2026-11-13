@@ -33,7 +33,7 @@ export const accountsAt = (baseUrl: string, options: { passwordResetTtlMinutes?:
         template: accountMailTemplate(mail.text),
         subject: mail.subject,
         text: mail.text,
-        html: `<p>${escapeHtml(mail.text).replace(/\n\n/g, "</p><p>").replace(/\n/g, "<br>")}</p>`,
+        html: `<p>${escapeHtml(mail.text).replaceAll("\n\n", "</p><p>").replaceAll("\n", "<br>")}</p>`,
       });
     },
     baseUrl,

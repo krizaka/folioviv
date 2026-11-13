@@ -656,7 +656,7 @@ function mergeWindows(
   const out: { weekday: number; startsAt: string; endsAt: string }[] = [];
   for (const w of sorted) {
     const last = out[out.length - 1];
-    if (last && last.weekday === w.weekday && w.startsAt <= last.endsAt)
+    if (last?.weekday === w.weekday && w.startsAt <= last.endsAt)
       last.endsAt = w.endsAt > last.endsAt ? w.endsAt : last.endsAt;
     else out.push({ weekday: w.weekday, startsAt: w.startsAt, endsAt: w.endsAt });
   }
@@ -732,6 +732,19 @@ export interface PublicShop {
   community?: CommunityView;
 }
 
+/** A media row as the public page shows it. */
+const toPublicMedia = (m: typeof shopMedia.$inferSelect): PublicMedia => ({
+  id: m.id,
+  url: m.url,
+  webmUrl: m.webmUrl,
+  mp4Url: m.mp4Url,
+  altFr: m.altFr,
+  altEn: m.altEn,
+  captionFr: m.captionFr,
+  captionEn: m.captionEn,
+  wide: m.wide,
+});
+
 /** The public page of a published shop, by its address; null when there is none (or it is not published). Projected here, once: a caller cannot leak a column. */
 /** Where a former address of a published shop now leads: its current slug, or null (unknown, or the shop is not public). */
 export async function currentSlugOf(db: Db, formerSlug: string): Promise<string | null> {
@@ -784,17 +797,6 @@ async function publicShopOf(db: Db, row: typeof shops.$inferSelect): Promise<Pub
        GROUP BY a.service_id`),
     communityOf(db, row.id),
   ]);
-  const publicMedia = (m: typeof shopMedia.$inferSelect): PublicMedia => ({
-    id: m.id,
-    url: m.url,
-    webmUrl: m.webmUrl,
-    mp4Url: m.mp4Url,
-    altFr: m.altFr,
-    altEn: m.altEn,
-    captionFr: m.captionFr,
-    captionEn: m.captionEn,
-    wide: m.wide,
-  });
   const bookingCounts = (counts.rows as { service_id: string; bookings: number }[]).map((r) => ({
     serviceId: r.service_id,
     bookings: r.bookings,
@@ -838,8 +840,8 @@ async function publicShopOf(db: Db, row: typeof shops.$inferSelect): Promise<Pub
     daysOff: full.daysOff.map((d) => d.onDate),
     rules: { cancellationHours: full.rules.cancellationHours, bookingHorizonDays: full.rules.bookingHorizonDays },
     media: {
-      cover: media.filter((m) => m.role === MediaRole.Cover).map(publicMedia)[0] ?? null,
-      gallery: media.filter((m) => m.role === MediaRole.Gallery).map(publicMedia),
+      cover: media.filter((m) => m.role === MediaRole.Cover).map(toPublicMedia)[0] ?? null,
+      gallery: media.filter((m) => m.role === MediaRole.Gallery).map(toPublicMedia),
     },
     pageConfig,
     languages,
@@ -1336,20 +1338,9 @@ export async function shopMediaOf(
   shopId: string,
 ): Promise<{ cover: PublicMedia | null; gallery: PublicMedia[] }> {
   const rows = await db.select().from(shopMedia).where(eq(shopMedia.shopId, shopId)).orderBy(asc(shopMedia.position));
-  const one = (m: typeof shopMedia.$inferSelect): PublicMedia => ({
-    id: m.id,
-    url: m.url,
-    webmUrl: m.webmUrl,
-    mp4Url: m.mp4Url,
-    altFr: m.altFr,
-    altEn: m.altEn,
-    captionFr: m.captionFr,
-    captionEn: m.captionEn,
-    wide: m.wide,
-  });
   return {
-    cover: rows.filter((m) => m.role === MediaRole.Cover).map(one)[0] ?? null,
-    gallery: rows.filter((m) => m.role === MediaRole.Gallery).map(one),
+    cover: rows.filter((m) => m.role === MediaRole.Cover).map(toPublicMedia)[0] ?? null,
+    gallery: rows.filter((m) => m.role === MediaRole.Gallery).map(toPublicMedia),
   };
 }
 

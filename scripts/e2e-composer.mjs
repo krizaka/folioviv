@@ -94,7 +94,7 @@ const publicView = async (slug) => {
   const html = String((await api(`/${LOCALE}/s/${slug}`)).body);
   return {
     sections: [...html.matchAll(/data-shop-key="([^"]+)"/g)].map((m) => m[1]).join(),
-    preset: html.match(/data-shop-preset="([^"]+)"/)?.[1] ?? "",
+    preset: /data-shop-preset="([^"]+)"/.exec(html)?.[1] ?? "",
   };
 };
 
