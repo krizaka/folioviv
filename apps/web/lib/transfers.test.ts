@@ -115,7 +115,7 @@ describe("the transfer register follows the deployment spec (folioviv#369)", () 
   it("names every supplier in the readable version, and points the open regions to .github#285", () => {
     for (const p of REGISTER.processors) expect(TRANSFERS_MD, p.id).toContain(p.name);
     expect(TRANSFERS_MD).toContain("krizaka/.github#285");
-    expect(TRANSFERS_MD).toContain("Canadian hosting for production is *planned*");
+    expect(TRANSFERS_MD.replaceAll("_", "*")).toContain("Canadian hosting for production is *planned*");
     expect(TRANSFERS_MD).toContain("https://www.legisquebec.gouv.qc.ca/");
   });
 
