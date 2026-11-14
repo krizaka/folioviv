@@ -30,7 +30,8 @@ export const COMMANDS = {
   },
   async list(db) {
     const stray = await usersOutsideCast(db, castEmails(process.env));
-    return `journey-users: ${stray.length} user(s) outside the cast${stray.length ? `: ${stray.join(", ")}` : ""}`;
+    const names = stray.length ? `: ${stray.join(", ")}` : "";
+    return `journey-users: ${stray.length} user(s) outside the cast${names}`;
   },
 };
 

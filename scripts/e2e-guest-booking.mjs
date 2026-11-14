@@ -28,15 +28,17 @@ const MAIL_PORT = Number(process.env.E2E_MAIL_PORT ?? 3299);
 const EMAIL = `e2e-guest-${Date.now()}@folioviv.test`;
 /** No junk user: the visitor this run made is deleted, or the run says how to. */
 function deleteVisitor() {
-  const run = ["exec", "tsx", "scripts/journey-users.mjs", "delete", EMAIL];
   if (!process.env.DATABASE_URL) {
     console.error(
-      `this run left the user ${EMAIL}: delete it with DATABASE_URL=… pnpm --filter @folioviv/web ${run.join(" ")}`,
+      `this run left the user ${EMAIL}: delete it with DATABASE_URL=… pnpm --filter @folioviv/web exec tsx scripts/journey-users.mjs delete ${EMAIL}`,
     );
     process.exitCode = 1;
     return;
   }
-  execFileSync("pnpm", ["--filter", "@folioviv/web", ...run], { stdio: "inherit" });
+  execFileSync(process.execPath, ["--import", "tsx", "scripts/journey-users.mjs", "delete", EMAIL], {
+    cwd: new URL("../apps/web", import.meta.url),
+    stdio: "inherit",
+  });
 }
 if (OUT) mkdirSync(OUT, { recursive: true });
 

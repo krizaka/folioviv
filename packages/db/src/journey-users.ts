@@ -8,9 +8,20 @@ import { cleanDemoLeftovers, type DemoCast } from "./demo-clean";
  * reserved test domain with an `e2e-` address and deletes it when it ends; a teardown check compares the users outside the cast before and
  * after the run and fails on any difference.
  */
-export const JOURNEY_ADDRESS = /^e2e-[a-z0-9-]+@folioviv\.test$/;
+export const JOURNEY_PREFIX = "e2e-";
+export const JOURNEY_DOMAIN = "@folioviv.test";
 
-export const isJourneyAddress = (email: string) => JOURNEY_ADDRESS.test(email.trim().toLowerCase());
+/** `e2e-<label>@folioviv.test`, a plain label: the only kind of address a journey may create and delete. */
+export function isJourneyAddress(email: string): boolean {
+  const address = email.trim().toLowerCase();
+  const label = address.slice(JOURNEY_PREFIX.length, address.length - JOURNEY_DOMAIN.length);
+  return (
+    address.startsWith(JOURNEY_PREFIX) &&
+    address.endsWith(JOURNEY_DOMAIN) &&
+    label.length > 0 &&
+    [...label].every((c) => /[a-z0-9-]/.test(c))
+  );
+}
 
 /** The addresses of the accounts the cast does not name, sorted. Pure reading. */
 export async function usersOutsideCast(db: Db, castEmails: readonly string[]): Promise<string[]> {
