@@ -21,7 +21,7 @@ GST/QST return **prepared** for the merchant to review and file.
 [![License: FSL-1.1-ALv2](https://img.shields.io/badge/license-FSL--1.1--ALv2-blue.svg)](LICENSE.md)
 [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=krizaka_folioviv&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=krizaka_folioviv) [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=krizaka_folioviv&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=krizaka_folioviv) [![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=krizaka_folioviv&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=krizaka_folioviv) [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=krizaka_folioviv&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=krizaka_folioviv) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=krizaka_folioviv&metric=coverage)](https://sonarcloud.io/summary/new_code?id=krizaka_folioviv)
 
-Folioviv (商い *akinai*, trade) is a Krizaka product **in development**: nothing is deployed, sign-up is closed. The
+Folioviv (商い _akinai_, trade) is a Krizaka product **in development**: nothing is deployed, sign-up is closed. The
 know-how it shows: **running a shop, for less** — one tool instead of five, bookings to taxes prepared.
 
 ## What is built
@@ -88,16 +88,17 @@ The database tests run on a real PostgreSQL 16: CI's service, or a Testcontainer
 
 ## Inside
 
-| Path | |
-| :-- | :-- |
-| `apps/web` | Next.js 16: the public page, sign-in (`@krizaka/ui/auth-layout`), the shop's day (appointments, plus the latest invoices and overdue count for members with invoice access), the administration (admin.folioviv.com), the BFF, the e-mail templates |
-| `apps/mobile` | the Expo skeleton (joins the workspace in the mobile phase) |
-| `packages/core` | the domain, pure: money, GST/QST, the ledger, the return and its reconciliation, consent, the POS gate |
-| `packages/db` | PostgreSQL schema (Drizzle), versioned SQL migrations with the rules the database enforces, the shop's operations |
+| Path            |                                                                                                                                                                                                                                                     |
+| :-------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/web`      | Next.js 16: the public page, sign-in (`@krizaka/ui/auth-layout`), the shop's day (appointments, plus the latest invoices and overdue count for members with invoice access), the administration (admin.folioviv.com), the BFF, the e-mail templates |
+| `apps/mobile`   | the Expo skeleton (joins the workspace in the mobile phase)                                                                                                                                                                                         |
+| `packages/core` | the domain, pure: money, GST/QST, the ledger, the return and its reconciliation, consent, the POS gate                                                                                                                                              |
+| `packages/db`   | PostgreSQL schema (Drizzle), versioned SQL migrations with the rules the database enforces, the shop's operations                                                                                                                                   |
 
 Rules for contributors and agents: [AGENTS.md](AGENTS.md). Security: [SECURITY.md](SECURITY.md).
 
 <!-- krizaka:workflows:start -->
+
 ## Workflows
 
 What runs in the Actions tab of this repository.
@@ -118,6 +119,7 @@ What runs in the Actions tab of this repository.
 - **Security scan** (`security.yml`): Secret scan (gitleaks) and workflow scan (zizmor); both are required checks. Runs on every pull request, in the merge queue, on push.
 - **Update visual baselines** (`update-visual-baselines.yml`): Refreshes the visual baselines on demand. Runs on demand.
 - **Visual regression** (`visual.yml`): Compares the main pages with their baselines; a required check. Runs on every pull request, in the merge queue.
+
 <!-- krizaka:workflows:end -->
 
 ### CI sleep
@@ -140,26 +142,27 @@ One cast (`@krizaka/org`) and one idempotent seed serve local, CI, Maestro, the 
 
 The three demo shops come with `pnpm run dev:seed-demos` (shops, pages, then each owner's `features.cahierStorefront` through `set-setting.mjs --user`, `DEMO_OWNER_FLAGS`): the dev deployment runs the same command.
 
-**Reproduce a hot fix locally**: start a Postgres (`docker run -d -p 5432:5432 -e POSTGRES_USER=folioviv -e POSTGRES_PASSWORD=folioviv -e POSTGRES_DB=folioviv postgres:17-alpine`), `export DATABASE_URL=postgres://folioviv:folioviv@localhost:5432/folioviv`, `pnpm run dev:seed`, `pnpm dev`, and sign in as `lea.beaulieu@folioviv.test` (local password `local-cast-password-0123`). `dev:seed --check` compares the counts per table with `apps/web/scripts/cast-fingerprint.json`; the dev database refuses GitHub's runners (and is not opened to their ranges), so the dev seed runs **from a trusted machine** with the same `--check` (exact on a local database; on the lived-in dev one, « everything recorded is there »): the maintainers' `seed-dev.sh folioviv` reads the credentials at run time and prints none.
+**No junk user in the dev database.** Journeys sign in as a persona of the cast, or create their user at an `e2e-…@folioviv.test` address and delete it when they end (`apps/web/e2e/journeys/own-users.mjs`). `scripts/ci-journeys-run.sh` checks that the users after a run equal the users before, so a journey that leaves one fails the suite. On the dev deployment, from a trusted machine: `DATABASE_URL=… BASE_URL=<dev url> bash scripts/ci-journeys-run.sh --project=critical`, then, read-only, `QA_USER_EMAIL=… QA_ADMIN_EMAIL=… pnpm --filter @folioviv/web exec tsx scripts/journey-users.mjs list` (the cast e-mails from the `APP_QA_*` secrets) must print `0 user(s) outside the cast`. The seed takes those e-mails from the environment on a shared host, never a built-in address.
 
+**Reproduce a hot fix locally**: start a Postgres (`docker run -d -p 5432:5432 -e POSTGRES_USER=folioviv -e POSTGRES_PASSWORD=folioviv -e POSTGRES_DB=folioviv postgres:17-alpine`), `export DATABASE_URL=postgres://folioviv:folioviv@localhost:5432/folioviv`, `pnpm run dev:seed`, `pnpm dev`, and sign in as `lea.beaulieu@folioviv.test` (local password `local-cast-password-0123`). `dev:seed --check` compares the counts per table with `apps/web/scripts/cast-fingerprint.json`; the dev database refuses GitHub's runners (and is not opened to their ranges), so the dev seed runs **from a trusted machine** with the same `--check` (exact on a local database; on the lived-in dev one, « everything recorded is there »): the maintainers' `seed-dev.sh folioviv` reads the credentials at run time and prints none.
 
 ## Manual tools
 
 Scripts a person runs by hand (ADR-026: nothing runs unlisted). Each opens with a header that says why, how to run it and who owns it. The shared pieces they import (`scripts/lib/take.mjs`, `scripts/lib/krizaka-shop.mjs`, `scripts/e2e-shoot.mjs`) are tested libraries, not tools.
 
-| Script | What it does |
-| :-- | :-- |
-| `apps/web/scripts/seed-krizaka.mjs` | seeds the « Krizaka (démo) » first-client shop on one deployment |
-| `apps/web/scripts/apply-shop-template.mjs` | puts a storefront template on a shop by slug (recorders) |
-| `apps/web/scripts/enrich-saint-henri.mjs` | gives the Saint-Henri walker persona her storefront on one deployment |
-| `apps/web/scripts/qa-reset-walker.mjs` | resets the walker persona's dev data before a recording |
-| `apps/web/scripts/seed-staff.mjs` | gives a tester a staff/manager account in a shop (sign-up is closed) |
-| `apps/web/scripts/seed-staff-day.mjs` | adds a booking to a staff member's day (run seed-staff first) |
-| `apps/web/scripts/explore-plan.mjs` | prints the query plan and timings of Explorer's search on a synthetic set (ADR-006) |
-| `scripts/record-journey.mjs` | records the continuous phone take of the walker's journey on a running deployment |
-| `scripts/record-krizaka-first-client.mjs` | records the four narrated « Krizaka, first client » walkthroughs on dev |
-| `scripts/setup-krizaka-shop.mjs` | sets up Krizaka's page through the owner console (folioviv#489) |
+| Script                                     | What it does                                                                        |
+| :----------------------------------------- | :---------------------------------------------------------------------------------- |
+| `apps/web/scripts/seed-krizaka.mjs`        | seeds the « Krizaka (démo) » first-client shop on one deployment                    |
+| `apps/web/scripts/apply-shop-template.mjs` | puts a storefront template on a shop by slug (recorders)                            |
+| `apps/web/scripts/enrich-saint-henri.mjs`  | gives the Saint-Henri walker persona her storefront on one deployment               |
+| `apps/web/scripts/qa-reset-walker.mjs`     | resets the walker persona's dev data before a recording                             |
+| `apps/web/scripts/seed-staff.mjs`          | gives a tester a staff/manager account in a shop (sign-up is closed)                |
+| `apps/web/scripts/seed-staff-day.mjs`      | adds a booking to a staff member's day (run seed-staff first)                       |
+| `apps/web/scripts/explore-plan.mjs`        | prints the query plan and timings of Explorer's search on a synthetic set (ADR-006) |
+| `scripts/record-journey.mjs`               | records the continuous phone take of the walker's journey on a running deployment   |
+| `scripts/record-krizaka-first-client.mjs`  | records the four narrated « Krizaka, first client » walkthroughs on dev             |
+| `scripts/setup-krizaka-shop.mjs`           | sets up Krizaka's page through the owner console (folioviv#489)                     |
 
 ## Tests
 
-Unit tests (`pnpm test`), the page audit and the **page journeys** (`apps/web/e2e/visual/journeys.visual.mjs`: the landing, a shop page, a service, sign-in and the walker's day, as the seeded cast; pixels of whole pages taken in CI only). To update a baseline run Actions > *Update visual baselines* on your branch; how the layers work and how to read a diff: [krizaka/.github docs/standards/ui-testing.md](https://github.com/krizaka/.github/blob/main/docs/standards/ui-testing.md).
+Unit tests (`pnpm test`), the page audit and the **page journeys** (`apps/web/e2e/visual/journeys.visual.mjs`: the landing, a shop page, a service, sign-in and the walker's day, as the seeded cast; pixels of whole pages taken in CI only). To update a baseline run Actions > _Update visual baselines_ on your branch; how the layers work and how to read a diff: [krizaka/.github docs/standards/ui-testing.md](https://github.com/krizaka/.github/blob/main/docs/standards/ui-testing.md).

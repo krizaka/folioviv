@@ -27,4 +27,10 @@ describe("e2e-guest-booking (a client with no account books)", () => {
     expect(source).toContain("recordVideo");
     expect(source).toContain("@folioviv.test");
   });
+
+  it("deletes the visitor it made, or says it left one (no junk user in a shared database)", () => {
+    expect(source).toContain("journey-users.mjs");
+    expect(source).toContain("deleteVisitor()");
+    expect(source).toContain("this run left the user");
+  });
 });

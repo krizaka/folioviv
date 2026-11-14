@@ -45,4 +45,16 @@ describe("the critical journeys", () => {
       expect(spec).toContain(step);
     expect(spec).toContain("@folioviv.test");
   });
+
+  it("leaves no junk user (krizaka-internal#2716): journeys create e2e- users and delete them, the run checks the users before = after", () => {
+    const run = read("scripts/ci-journeys-run.sh");
+    expect(workflow).toContain("bash scripts/ci-journeys-run.sh");
+    expect(run).toMatch(/snapshot[\s\S]*playwright test[\s\S]*check/);
+    for (const file of ["guest-booking", "booking-honest"]) {
+      const journey = read(`apps/web/e2e/journeys/${file}.critical.mjs`);
+      expect(journey).toContain("ownUsers()");
+      expect(journey).toContain("users.cleanup()");
+      expect(journey).not.toMatch(/`e2e-[^`]*@folioviv\.test`/);
+    }
+  });
 });

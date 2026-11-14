@@ -3,6 +3,7 @@
 // under @folioviv.test addresses; the mail goes to the journey's own mailbox, the security check runs on Cloudflare's always-pass TEST key.
 import { expect, test } from "@playwright/test";
 
+import { ownUsers } from "./own-users.mjs";
 import { testMailbox } from "./test-mailbox.mjs";
 
 const SLUG = "pattes-saint-henri";
@@ -10,9 +11,13 @@ const MAIL_PORT = Number(process.env.E2E_MAIL_PORT ?? 3299);
 
 const mailbox = testMailbox(MAIL_PORT);
 test.beforeAll(() => mailbox.start());
-test.afterAll(() => mailbox.stop());
+const users = ownUsers();
+test.afterAll(() => {
+  mailbox.stop();
+  users.cleanup(); // the visitor this journey made is deleted: no junk user stays in the database
+});
 
-const email = `e2e-honest-${Date.now()}@folioviv.test`;
+const email = users.address("honest");
 
 test("an honest booking: choices carried, taxes included, the cancellation window said before, the same price on the receipt", async ({
   page,

@@ -67,6 +67,7 @@ describe("the cast is the only source of the personas", () => {
       QA_KRIZAKA_PASSWORD: "k".repeat(14),
       QA_USER_PASSWORD: "u".repeat(14),
       QA_ADMIN_EMAIL: "Boss@x.test",
+      QA_USER_EMAIL: "member@x.test",
     });
     expect(remote.at(-1)).toMatchObject({ email: "boss@x.test", role: "ADMIN" });
     expect(remote.find((a: { persona: { id: string } }) => a.persona.id === "krizaka")).toMatchObject({
@@ -80,6 +81,8 @@ describe("the cast is the only source of the personas", () => {
         QA_CLIENTS_PASSWORD: "c".repeat(14),
         QA_ADMIN_PASSWORD: "a".repeat(14),
         QA_USER_PASSWORD: "u".repeat(14),
+        QA_USER_EMAIL: "member@x.test",
+        QA_ADMIN_EMAIL: "boss@x.test",
       }),
     ).toThrow(/QA_KRIZAKA_PASSWORD/);
   });
