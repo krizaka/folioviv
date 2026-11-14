@@ -76,6 +76,9 @@ export const retiredAddresses = [
   },
 ];
 
+/** Where the basemap's tiles and glyphs come from (`APP_MAPS_UPSTREAM`, read once; the media CDN by default). */
+const mapsUpstream = (process.env.APP_MAPS_UPSTREAM ?? "https://krizaka-assets.b-cdn.net/org/v1/maps").replace(/\/$/, "");
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
@@ -93,7 +96,7 @@ const nextConfig = {
   serverExternalPackages: ["pg", "opendal", "@krizaka/email"],
   // The basemap of the shop pages: Protomaps tiles on the media CDN, read through this origin (the CDN sends no CORS headers).
   async rewrites() {
-    return [{ source: "/maps/v1/:path*", destination: "https://krizaka-assets.b-cdn.net/org/v1/maps/:path*" }];
+    return [{ source: "/maps/v1/:path*", destination: `${mapsUpstream}/:path*` }];
   },
   // The retired pages answer 308 to what replaced them.
   async redirects() {

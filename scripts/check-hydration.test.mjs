@@ -8,6 +8,9 @@ import {
   ACCOUNT_PAGES,
   BROWSER,
   detailPagesFor,
+  externalRequest,
+  guardExternal,
+  TILE_FIXTURE,
   firstRecord,
   isHydrationError,
   OWNER_PAGES,
@@ -176,5 +179,50 @@ describe("no shift between loading and loaded (D6)", () => {
       expect(shiftProblem(path, 0.02), path).toMatch(/layout shift 0\.020/);
     }
     expect(shiftProblem("/fr/s/pattes-saint-henri", 0.3)).toBeNull();
+  });
+});
+
+describe("the check makes no external request (folioviv#3640)", () => {
+  const base = "http://localhost:3000";
+
+  it("names a request to any host but the app's own, and lets localhost, data: and blob: through", () => {
+    expect(externalRequest("http://localhost:3000/fr", base)).toBeNull();
+    expect(externalRequest("http://127.0.0.1:3000/fr", base)).toBeNull();
+    expect(externalRequest("data:image/png;base64,AAAA", base)).toBeNull();
+    expect(externalRequest("blob:http://localhost:3000/abc", base)).toBeNull();
+    const cdn = "https://krizaka-assets.b-cdn.net/org/v1/maps/tiles/quebec-20261012.pmtiles";
+    expect(externalRequest(cdn, base)).toBe(cdn);
+  });
+
+  it("fails the run with the offending URL, and aborts the request", async () => {
+    let handler;
+    const context = { route: async (_pattern, fn) => (handler = fn) };
+    const problems = [];
+    await guardExternal(context, { base, problems });
+    const url = "https://krizaka-assets.b-cdn.net/org/v1/maps/tiles/quebec-20261012.pmtiles";
+    const calls = [];
+    const route = (u) => ({
+      request: () => ({ url: () => u }),
+      abort: async () => calls.push(`abort ${u}`),
+      continue: async () => calls.push(`continue ${u}`),
+    });
+    await handler(route(url));
+    await handler(route(`${base}/fr`));
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toContain(url);
+    expect(problems[0]).toMatch(/external request/);
+    expect(calls).toEqual([`abort ${url}`, `continue ${base}/fr`]);
+  });
+
+  it("serves the map's tiles from a local fixture, so the basemap still draws", () => {
+    expect(TILE_FIXTURE.endsWith("basemap-empty.pmtiles")).toBe(true);
+    expect(readFileSync(TILE_FIXTURE).subarray(0, 7).toString()).toBe("PMTiles");
+    const source = readFileSync(new URL("./check-hydration.mjs", import.meta.url), "utf8");
+    expect(source).toContain("TILE_PATH.test(new URL(url).pathname)");
+  });
+
+  it("reads the tile upstream from a setting, read once, never a URL in the rewrite", () => {
+    const config = readFileSync(new URL("../apps/web/next.config.mjs", import.meta.url), "utf8");
+    expect(config).toContain("APP_MAPS_UPSTREAM");
   });
 });

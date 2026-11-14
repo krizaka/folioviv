@@ -8,6 +8,9 @@
 //     node scripts/check-hydration.mjs --base http://localhost:3000 [--locale en-US] [--timezone America/Vancouver]
 //
 // Without credentials only the public pages are crawled. Passwords stay in the environment; nothing but the checks is printed.
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
 import { chromium } from "playwright-core";
 
 /** A visitor's browser: Montréal's clock and the product's first language — never the server's UTC. */
@@ -126,6 +129,36 @@ const arg = (name, fallback) => {
   return i >= 0 ? process.argv[i + 1] : fallback;
 };
 
+/** A small local PMTiles file: the basemap's tiles, answered by the check itself so the run never reaches the media CDN (folioviv#3640). */
+export const TILE_FIXTURE = fileURLToPath(new URL("./fixtures/basemap-empty.pmtiles", import.meta.url));
+/** The basemap's tiles and glyphs, under `/maps/v1` (next.config proxies it to the CDN). */
+const TILE_PATH = /\/maps\/v1\//;
+const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
+
+/** The URL when it leaves the app's own host (http and https only: data: and blob: stay in the page), else null. Pure. */
+export function externalRequest(url, base) {
+  const { protocol, hostname, host } = new URL(url);
+  if (protocol !== "http:" && protocol !== "https:") return null;
+  return LOCAL_HOSTS.has(hostname) || host === new URL(base).host ? null : url;
+}
+
+/** Every request of the context: the tiles come from the local fixture, any other host fails the run (with its URL) and is aborted. */
+export async function guardExternal(context, { base, problems }) {
+  const tiles = readFileSync(TILE_FIXTURE);
+  await context.route("**/*", async (route) => {
+    const url = route.request().url();
+    const external = externalRequest(url, base);
+    if (external) {
+      problems.push(`external request to ${external} (the check talks to ${new URL(base).host} only)`);
+      return route.abort();
+    }
+    if (TILE_PATH.test(new URL(url).pathname))
+      return route.fulfill({ status: 200, contentType: "application/octet-stream", body: tiles });
+    return route.continue();
+  });
+  return context;
+}
+
 /** Signs the context in through the product's own route; the cookie lands in the context's jar. */
 async function signIn(context, base, email, password) {
   const answer = await context.request.post(`${base}/api/auth/sign-in`, { data: { email, password } });
@@ -135,6 +168,7 @@ async function signIn(context, base, email, password) {
 /** Visits every path, in both themes and at both widths, and records what the browser reported. */
 async function crawl(browser, { base, paths, theme, account, problems, visited, visitor }) {
   const context = await browser.newContext({ ...visitor, colorScheme: theme });
+  await guardExternal(context, { base, problems });
   await context.addInitScript((t) => {
     try {
       localStorage.setItem("kz-theme", t);
@@ -209,6 +243,7 @@ export async function check({ base, owner, client, visitor = BROWSER }) {
       await crawl(browser, { base, paths: PUBLIC_PAGES, theme, problems, visited, visitor });
       if (owner) {
         const context = await browser.newContext(visitor);
+        await guardExternal(context, { base, problems });
         await signIn(context, base, owner.email, owner.password);
         const page = await context.newPage();
         await page.goto(`${base}/fr/app`, { waitUntil: "load" });
