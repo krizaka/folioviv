@@ -118,8 +118,8 @@
 
 ## 6. Checks — local first, CI always
 
-- **Before every push**: `pnpm run check` (lint · typecheck · tests), run by `.githooks/pre-push` (installed by
-  `pnpm install`). Never push "to see what CI says". Never merge with a pending or red check (CodeQL included).
+- **Before every push**: `pnpm run check` (lint · typecheck · tests), run by the `precheck` script (install, then check) that the pre-push of `krizaka-hooks`
+  (@krizaka/config, ADR-026; installed by `pnpm install`) runs. Never push "to see what CI says". Never merge with a pending or red check (CodeQL included).
 - **No test, not done**: every feature and fix ships with its tests; a fix starts with a failing test. The database rules
   are proven on a real PostgreSQL, never with mocks.
 - Every visible page is checked in dark and light, desktop and phone. PR captures go to Bunny, never into the repository.
