@@ -1,9 +1,9 @@
 {
-  "reason": "2026-11-13: +3462 B (942350 -> 945812) from the @krizaka/* upgrades of krizaka-internal#3387 (ui/tokens 4.3.0, i18n 0.2.7, query, intl 0.4.1...); no Folioviv code changed. Previous: 2026-11-06: +530 B (941820 -> 942350) from @krizaka/ui 4.0.0, whose footer and family block grew (krizaka-internal#2720).",
+  "reason": "2026-11-14: +4 B (945902 -> 945906) @krizaka release 4.5.0 (ui, tokens, tailwind), +4 B, krizaka-internal#3621; no Folioviv code changed. 2026-11-14: +90 B (945812 -> 945902) from the @krizaka/* patch releases (ui/tokens/tailwind 4.4.1, app-client 0.3.2, discovery 0.1.4, folioviv#726); no Folioviv code changed. 2026-11-13: +3462 B (942350 -> 945812) from the @krizaka/* upgrades of krizaka-internal#3387 (ui/tokens 4.3.0, i18n 0.2.7, query, intl 0.4.1...); no Folioviv code changed. Previous: 2026-11-06: +530 B (941820 -> 942350) from @krizaka/ui 4.0.0, whose footer and family block grew (krizaka-internal#2720).",
   "jsBytes": {
-    "/en/s/cedre-ciseaux": 945812,
-    "/fr/s/cedre-ciseaux": 945812,
-    "/en/s/pattes-saint-henri": 945812,
-    "/fr/s/pattes-saint-henri": 945812
+    "/en/s/cedre-ciseaux": 945906,
+    "/fr/s/cedre-ciseaux": 945906,
+    "/en/s/pattes-saint-henri": 945906,
+    "/fr/s/pattes-saint-henri": 945906
   }
 }
