@@ -33,7 +33,7 @@ jobs:
         packages/*/coverage/lcov.info
       test-script: test:coverage
       # CI_SLEEP (README, « CI sleep »): the image build and the build + SEO/overflow leg sleep; lint, typecheck, tests, Sonar, duplication and the CI gate keep running.
-      container: ${{ vars.CI_SLEEP != 'true' }}      # the image is built on every PR that can break it (Dockerfile, manifests, lockfiles, COPY paths)
+      container: ${{ vars.CI_SLEEP != 'true' }} # the image is built on every PR that can break it (Dockerfile, manifests, lockfiles, COPY paths)
       build-script: ${{ vars.CI_SLEEP != 'true' && 'build' || '' }}
       container-dockerfile: deploy/docker/Dockerfile
       container-image: app:ci
@@ -41,12 +41,13 @@ jobs:
       container-build-args: |
         APP_SEARCH_INDEXING=off
         APP_COMMIT_SHA=ci
-      duplication: true      # jscpd + dup-ratchet.json: duplicated lines may only go down
+      duplication: true # jscpd + dup-ratchet.json: duplicated lines may only go down
       package-manager: pnpm
       # The build + SEO/overflow checks take 24-25 min on a busy runner: the 25 min default cancelled Verify (build) on #594 and #627 (2026-10-30). The merge queue allows 60.
       timeout-minutes: 40
-      parallel: true      # lint, typecheck, tests and build+SEO/overflow checks side by side
+      parallel: true # lint, typecheck, tests and build+SEO/overflow checks side by side
       typecheck-script: typecheck
+      format-script: format:check # prettier --check, with the lint step (the `formatter` rule, krizaka/.github#427)
       next-cache-paths: apps/web/.next/cache
       postgres-image: postgres:16
       postgres-name: folioviv

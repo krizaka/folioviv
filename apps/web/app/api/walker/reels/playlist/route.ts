@@ -11,7 +11,9 @@ import { announcePage } from "@/lib/realtime";
 
 export const dynamic = "force-dynamic";
 
-const body = z.object({ order: z.array(z.string().uuid()).max(12).optional(), transition: z.enum(REEL_TRANSITIONS).optional() }).refine((b) => b.order !== undefined || b.transition !== undefined, { message: "Nothing to change" });
+const body = z
+  .object({ order: z.array(z.string().uuid()).max(12).optional(), transition: z.enum(REEL_TRANSITIONS).optional() })
+  .refine((b) => b.order !== undefined || b.transition !== undefined, { message: "Nothing to change" });
 
 /**
  * The playlist of the shop's television (folioviv#469): the order of the videos (exactly the shop's own, each once - anything else is a 409 and changes
@@ -28,7 +30,14 @@ export function PUT(req: Request) {
     if (transition) {
       await setReelTransition(db(), shop.id, transition);
     }
-    await audit({ action: "shop.reel_playlist_changed", actorId: session.account.id, actorLabel: session.account.email, targetId: shop.id, detail: { reordered: Boolean(order), transition: transition ?? null }, headers: req.headers });
+    await audit({
+      action: "shop.reel_playlist_changed",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: shop.id,
+      detail: { reordered: Boolean(order), transition: transition ?? null },
+      headers: req.headers,
+    });
     await announcePage(shop.id);
     return Response.json({ ok: true });
   });

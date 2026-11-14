@@ -28,7 +28,10 @@ const log = (m) => process.stdout.write(`${m}\n`);
 
 const browser = await chromium.launch();
 const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
-const signIn = () => context.request.post(`${BASE}/api/auth/sign-in`, { data: { email: need("E2E_EMAIL"), password: need("E2E_PASSWORD") } });
+const signIn = () =>
+  context.request.post(`${BASE}/api/auth/sign-in`, {
+    data: { email: need("E2E_EMAIL"), password: need("E2E_PASSWORD") },
+  });
 let res = await signIn();
 // The sign-in is rate-limited (429 + Retry-After): wait it out rather than hammer it.
 for (let tries = 0; res.status() === 429 && tries < 6; tries++) {
@@ -39,7 +42,8 @@ if (!res.ok()) throw new Error(`sign-in refused (${res.status()})`);
 const page = await context.newPage();
 const refusals = [];
 page.on("response", (r) => {
-  if (r.url().includes("/api/") && r.request().method() !== "GET" && r.status() >= 400) refusals.push(`${r.status()} ${new URL(r.url()).pathname}`);
+  if (r.url().includes("/api/") && r.request().method() !== "GET" && r.status() >= 400)
+    refusals.push(`${r.status()} ${new URL(r.url()).pathname}`);
 });
 
 /** The shop's id: the one given, or the shop the owner already has, or a new one opened from the form. */
@@ -66,7 +70,10 @@ const tab = async (name) => {
   await page.waitForTimeout(600);
 };
 const save = async (label) => {
-  await page.getByRole("button", { name: /^(Save this section|Save the photos|Save the rules)$/ }).first().click();
+  await page
+    .getByRole("button", { name: /^(Save this section|Save the photos|Save the rules)$/ })
+    .first()
+    .click();
   await page.waitForTimeout(1200);
   log(`saved: ${label}`);
 };
@@ -128,7 +135,21 @@ for (const p of gallery) {
 // The gallery is one line per picture: `address | alt (fr) | alt (en) | caption (fr) | caption (en)`; the uploads gave the addresses, the alt texts are completed here.
 const box = page.locator('textarea[name="gallery"]');
 const lines = (await box.inputValue()).split("\n").filter(Boolean);
-await box.fill(lines.map((line, i) => [line.split("|")[0].trim(), gallery[i]?.altFr ?? "", gallery[i]?.altEn ?? "", gallery[i]?.captionFr ?? "", gallery[i]?.captionEn ?? ""].join(" | ").replace(/( \| )+$/, "")).join("\n"));
+await box.fill(
+  lines
+    .map((line, i) =>
+      [
+        line.split("|")[0].trim(),
+        gallery[i]?.altFr ?? "",
+        gallery[i]?.altEn ?? "",
+        gallery[i]?.captionFr ?? "",
+        gallery[i]?.captionEn ?? "",
+      ]
+        .join(" | ")
+        .replace(/( \| )+$/, ""),
+    )
+    .join("\n"),
+);
 await save("photos");
 
 await tab("publish");

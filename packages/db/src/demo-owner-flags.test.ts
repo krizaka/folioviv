@@ -8,7 +8,8 @@ describe("the demo owners' switches (local = deployed)", () => {
     expect(owners.length).toBeGreaterThanOrEqual(3);
     const args = demoOwnerFlagArgs();
     expect(args).toHaveLength(owners.length * Object.keys(DEMO_OWNER_FLAGS).length);
-    for (const email of owners) expect(args).toContainEqual(["features.cahierStorefront", "true", "--user", email, "--actor", "seed-demo-flags"]);
+    for (const email of owners)
+      expect(args).toContainEqual(["features.cahierStorefront", "true", "--user", email, "--actor", "seed-demo-flags"]);
   });
   it("only the seed's own .test addresses are ever switched", () => {
     for (const a of demoOwnerFlagArgs()) expect(a[3]).toMatch(/@folioviv\.test$/);

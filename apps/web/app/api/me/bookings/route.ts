@@ -14,7 +14,21 @@ export function POST(req: Request) {
     const input = await readJson(req, bookingRequest);
     const { session, client } = await requireOwnClient(req, input.clientId);
     limit("book", req, session.account.id, [60, 600]);
-    const result = await bookAndAnnounce({ clientId: client.id, shopId: client.shopId, serviceId: input.serviceId, zoneId: input.zoneId, dependantIds: input.dependantIds, startsAt: input.startsAt, staffId: input.staffId, receiptTo: { accountId: session.account.id, email: session.account.email, locale: asLocale(client.language), settings: mailSettings() } });
+    const result = await bookAndAnnounce({
+      clientId: client.id,
+      shopId: client.shopId,
+      serviceId: input.serviceId,
+      zoneId: input.zoneId,
+      dependantIds: input.dependantIds,
+      startsAt: input.startsAt,
+      staffId: input.staffId,
+      receiptTo: {
+        accountId: session.account.id,
+        email: session.account.email,
+        locale: asLocale(client.language),
+        settings: mailSettings(),
+      },
+    });
     return Response.json(result, { status: 201 });
   });
 }

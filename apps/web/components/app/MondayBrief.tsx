@@ -26,7 +26,17 @@ type Result = Partial<Record<"sent" | "pending" | "failed" | "skipped", number>>
  * seconds. The figures are the shop's own (its appointments, its invoices), the assumption written under them; nothing is sent
  * without a press. Today announces it with `BriefBanner`.
  */
-export function MondayBrief({ items, done, services, publicPage }: Readonly<{ items: BriefCard[]; done: Record<string, Result>; services: Record<string, { fr: string; en: string }>; publicPage: boolean }>) {
+export function MondayBrief({
+  items,
+  done,
+  services,
+  publicPage,
+}: Readonly<{
+  items: BriefCard[];
+  done: Record<string, Result>;
+  services: Record<string, { fr: string; en: string }>;
+  publicPage: boolean;
+}>) {
   const { say, locale } = useSay();
   const money = (cents: number) => formatMoney(cents, locale);
   return (
@@ -35,7 +45,13 @@ export function MondayBrief({ items, done, services, publicPage }: Readonly<{ it
         <ul className="grid gap-3 md:grid-cols-3">
           {items.map((item) => (
             <li key={item.id} className="flex">
-              <BriefItem item={item} done={done[item.id] ?? null} serviceName={services[item.subject]?.[locale] ?? ""} publicPage={publicPage} money={money} />
+              <BriefItem
+                item={item}
+                done={done[item.id] ?? null}
+                serviceName={services[item.subject]?.[locale] ?? ""}
+                publicPage={publicPage}
+                money={money}
+              />
             </li>
           ))}
         </ul>
@@ -44,14 +60,46 @@ export function MondayBrief({ items, done, services, publicPage }: Readonly<{ it
   );
 }
 
-function BriefItem({ item, done, serviceName, publicPage, money }: Readonly<{ item: BriefCard; done: Result | null; serviceName: string; publicPage: boolean; money: (c: number) => string }>) {
+function BriefItem({
+  item,
+  done,
+  serviceName,
+  publicPage,
+  money,
+}: Readonly<{
+  item: BriefCard;
+  done: Result | null;
+  serviceName: string;
+  publicPage: boolean;
+  money: (c: number) => string;
+}>) {
   const { say } = useSay();
   const routes = useShopRoutes();
   const f = item.figures;
   const text = {
-    gaps: { title: say("brief.gaps.title", { slots: f.freeSlots ?? 0 }), figure: money(f.missedCents ?? 0), line: say("brief.gaps.line", { invitees: f.invitees ?? 0, weeks: Math.round((f.dormantDays ?? 42) / 7) }) },
-    pricing: { title: say("brief.pricing.title", { service: serviceName, time: f.timeSharePct ?? 0, revenue: f.revenueSharePct ?? 0 }), figure: `+${money(f.monthlyGainCents ?? 0)}`, line: say("brief.pricing.line", { suggested: money(f.suggestedCents ?? 0), current: money(f.currentCents ?? 0) }) },
-    taxes: { title: say("brief.taxes.title"), figure: money(f.setAsideCents ?? 0), line: say("brief.taxes.line", { invoiced: money(f.invoicedCents ?? 0), credits: money(f.creditsCents ?? 0), available: money(f.availableCents ?? 0) }) },
+    gaps: {
+      title: say("brief.gaps.title", { slots: f.freeSlots ?? 0 }),
+      figure: money(f.missedCents ?? 0),
+      line: say("brief.gaps.line", { invitees: f.invitees ?? 0, weeks: Math.round((f.dormantDays ?? 42) / 7) }),
+    },
+    pricing: {
+      title: say("brief.pricing.title", {
+        service: serviceName,
+        time: f.timeSharePct ?? 0,
+        revenue: f.revenueSharePct ?? 0,
+      }),
+      figure: `+${money(f.monthlyGainCents ?? 0)}`,
+      line: say("brief.pricing.line", { suggested: money(f.suggestedCents ?? 0), current: money(f.currentCents ?? 0) }),
+    },
+    taxes: {
+      title: say("brief.taxes.title"),
+      figure: money(f.setAsideCents ?? 0),
+      line: say("brief.taxes.line", {
+        invoiced: money(f.invoicedCents ?? 0),
+        credits: money(f.creditsCents ?? 0),
+        available: money(f.availableCents ?? 0),
+      }),
+    },
   }[item.kind];
   return (
     <Card.Root className="w-full">
@@ -67,7 +115,9 @@ function BriefItem({ item, done, serviceName, publicPage, money }: Readonly<{ it
           </p>
         ))}
         <Card.Footer>
-          {item.kind === "gaps" ? <InviteButton id={item.id} invitees={f.invitees ?? 0} done={done} publicPage={publicPage} /> : null}
+          {item.kind === "gaps" ? (
+            <InviteButton id={item.id} invitees={f.invitees ?? 0} done={done} publicPage={publicPage} />
+          ) : null}
           {item.kind === "pricing" ? (
             <Button asChild size="sm" variant="secondary">
               <Link href={routes.setup}>{say("brief.pricing.action")}</Link>
@@ -84,7 +134,12 @@ function BriefItem({ item, done, serviceName, publicPage, money }: Readonly<{ it
   );
 }
 
-function InviteButton({ id, invitees, done, publicPage }: Readonly<{ id: string; invitees: number; done: Result | null; publicPage: boolean }>) {
+function InviteButton({
+  id,
+  invitees,
+  done,
+  publicPage,
+}: Readonly<{ id: string; invitees: number; done: Result | null; publicPage: boolean }>) {
   const { say } = useSay();
   const { run, pending, problem } = useCall();
   const [result, setResult] = useState<Result | null>(done);
@@ -98,10 +153,19 @@ function InviteButton({ id, invitees, done, publicPage }: Readonly<{ id: string;
   if (!publicPage) return <p className="text-sm text-fg-secondary">{say("brief.gaps.notPublic")}</p>;
   return (
     <div className="flex flex-col gap-1">
-      <Button size="sm" variant="primary" disabled={pending} onClick={async () => setResult((await run<Result>("/api/walker/brief/invite", { json: { id } })) ?? null)}>
+      <Button
+        size="sm"
+        variant="primary"
+        disabled={pending}
+        onClick={() => void run<Result>("/api/walker/brief/invite", { json: { id } }).then((r) => setResult(r ?? null))}
+      >
         {say("brief.gaps.action", { invitees })}
       </Button>
-      {problem ? <p role="alert" className="text-xs text-danger">{problem}</p> : null}
+      {problem ? (
+        <p role="alert" className="text-xs text-danger">
+          {problem}
+        </p>
+      ) : null}
     </div>
   );
 }

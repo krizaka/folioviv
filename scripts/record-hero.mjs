@@ -15,6 +15,7 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
+import { newPhoneContext } from "./lib/demo-walk.mjs";
 import { ffmpeg, glide, listenScreencast, spanOf, writeConcatList } from "./lib/take.mjs";
 
 export const PHONE = { width: 390, height: 844 };
@@ -25,7 +26,11 @@ export const filesOf = (locale) => ({
   mp4: `hero-${locale}.mp4`,
   webm: `hero-${locale}.webm`,
   poster: `phone-hero-${locale}.jpg`,
-  stills: { book: `phone-book-${locale}.jpg`, invoice: `phone-invoice-${locale}.jpg`, books: `phone-books-${locale}.jpg` },
+  stills: {
+    book: `phone-book-${locale}.jpg`,
+    invoice: `phone-invoice-${locale}.jpg`,
+    books: `phone-books-${locale}.jpg`,
+  },
 });
 
 /** The words a scene waits for before it is shot (the page is in this language, or the capture is not of today's text). */
@@ -60,22 +65,12 @@ async function main() {
   const mark = (name) => beats.push({ name, at: Number(now().toFixed(3)) });
 
   const browser = await chromium.launch();
-  const context = await browser.newContext({ viewport: PHONE, deviceScaleFactor: SCALE, locale: LOCALE === "fr" ? "fr-CA" : "en-CA", timezoneId: "America/Toronto", isMobile: true, hasTouch: true, colorScheme: "dark" });
-  await context.addInitScript(() => {
-    try {
-      localStorage.setItem("kz-theme", "dark");
-    } catch {
-      /* none */
-    }
-    // The development server's own indicator is not the product.
-    const style = document.createElement("style");
-    style.textContent = "nextjs-portal{display:none!important}";
-    document.addEventListener("DOMContentLoaded", () => document.head.append(style));
-  });
+  const context = await newPhoneContext(browser, { viewport: PHONE, scale: SCALE, locale: LOCALE });
   const page = await context.newPage();
   page.on("response", (res) => {
     const url = new URL(res.url());
-    if (url.pathname.startsWith("/api/")) calls.push({ method: res.request().method(), path: url.pathname, status: res.status() });
+    if (url.pathname.startsWith("/api/"))
+      calls.push({ method: res.request().method(), path: url.pathname, status: res.status() });
   });
   page.on("pageerror", (e) => log(false, `no page error (${e.message.slice(0, 120)})`));
   const cdp = await listenScreencast(context, page, frames);
@@ -99,7 +94,13 @@ async function main() {
     await still(files.stills.book);
     await page.evaluate(() => window.scrollTo(0, 0));
 
-    await cdp.send("Page.startScreencast", { format: "jpeg", quality: 88, maxWidth: PHONE.width * SCALE, maxHeight: PHONE.height * SCALE, everyNthFrame: 1 });
+    await cdp.send("Page.startScreencast", {
+      format: "jpeg",
+      quality: 88,
+      maxWidth: PHONE.width * SCALE,
+      maxHeight: PHONE.height * SCALE,
+      everyNthFrame: 1,
+    });
     await page.waitForTimeout(1100);
     mark("storefront");
     await glide(page, 560, 1900);
@@ -109,7 +110,9 @@ async function main() {
     await glide(page, -1200, 1500);
 
     // 1 — Éric signs in: Today, what to do now.
-    const res = await context.request.post(`${BASE}/api/auth/sign-in`, { data: { email: eric.email, password: eric.password } });
+    const res = await context.request.post(`${BASE}/api/auth/sign-in`, {
+      data: { email: eric.email, password: eric.password },
+    });
     calls.push({ method: "POST", path: "/api/auth/sign-in", status: res.status() });
     if (!res.ok()) throw new Error(`sign-in refused (${res.status()})`);
     await page.goto(`${BASE}/${LOCALE}/app`, { waitUntil: "networkidle" });
@@ -127,7 +130,11 @@ async function main() {
     await page.goto(`${BASE}/${LOCALE}/app/${shopId}/invoices`, { waitUntil: "networkidle" });
     await page.waitForTimeout(1300);
     mark("invoices");
-    const href = await page.evaluate(() => [...document.querySelectorAll("a[href*='/invoices/']")].map((a) => a.getAttribute("href")).find((h) => h && !h.includes("/new")));
+    const href = await page.evaluate(() =>
+      [...document.querySelectorAll("a[href*='/invoices/']")]
+        .map((a) => a.getAttribute("href"))
+        .find((h) => h && !h.includes("/new")),
+    );
     if (!href) throw new Error("no invoice to open");
     await glide(page, 360, 1300);
     await page.waitForTimeout(700);
@@ -160,19 +167,50 @@ async function main() {
   const list = writeConcatList(frames, FRAMES);
   const ff = ffmpeg;
   const input = ["-f", "concat", "-safe", "0", "-i", list, "-vf", "fps=30,scale=540:-2:flags=lanczos", "-an"];
-  ff([...input, "-c:v", "libx264", "-crf", "24", "-preset", "slow", "-pix_fmt", "yuv420p", "-movflags", "+faststart", path.join(OUT, files.mp4)]);
+  ff([
+    ...input,
+    "-c:v",
+    "libx264",
+    "-crf",
+    "24",
+    "-preset",
+    "slow",
+    "-pix_fmt",
+    "yuv420p",
+    "-movflags",
+    "+faststart",
+    path.join(OUT, files.mp4),
+  ]);
   ff([...input, "-c:v", "libvpx-vp9", "-crf", "36", "-b:v", "0", "-row-mt", "1", path.join(OUT, files.webm)]);
   // The poster is the take's first second at the stills' size (780 × 1688): the page's LCP.
-  ff(["-i", path.join(FRAMES, "00010.jpg"), "-vf", "scale=780:1688:flags=lanczos", "-q:v", "3", path.join(OUT, files.poster)]);
+  ff([
+    "-i",
+    path.join(FRAMES, "00010.jpg"),
+    "-vf",
+    "scale=780:1688:flags=lanczos",
+    "-q:v",
+    "3",
+    path.join(OUT, files.poster),
+  ]);
   rmSync(FRAMES, { recursive: true, force: true });
 
   const gaps = frames.slice(1).map((f, i) => f.t - frames[i].t);
   const moving = gaps.filter((g) => g < 0.1);
   const activeFps = moving.length / moving.reduce((s, g) => s + g, 0);
-  writeFileSync(path.join(OUT, `journey-${LOCALE}.json`), `${JSON.stringify({ base: BASE, locale: LOCALE, persona: "eric", durationSeconds: Number(duration.toFixed(2)), activeCaptureFps: Number(activeFps.toFixed(1)), beats, calls }, null, 2)}\n`);
-  log(activeFps >= 25, `capture rate while moving: ${activeFps.toFixed(1)} fps (${frames.length} frames over ${duration.toFixed(1)} s)`);
-  log(calls.every((c) => c.status < 500), "no API call answered with a server error");
-  process.stdout.write(`take: ${path.join(OUT, files.mp4)}\nbeats: ${beats.map((b) => `${b.name}@${b.at}`).join(" ")}\n`);
+  writeFileSync(
+    path.join(OUT, `journey-${LOCALE}.json`),
+    `${JSON.stringify({ base: BASE, locale: LOCALE, persona: "eric", durationSeconds: Number(duration.toFixed(2)), activeCaptureFps: Number(activeFps.toFixed(1)), beats, calls }, null, 2)}\n`,
+  );
+  log(
+    activeFps >= 25,
+    `capture rate while moving: ${activeFps.toFixed(1)} fps (${frames.length} frames over ${duration.toFixed(1)} s)`,
+  );
+  log(
+    calls.every((c) => c.status < 500),
+    "no API call answered with a server error",
+  );
+  const beatList = beats.map((b) => `${b.name}@${b.at}`).join(" ");
+  process.stdout.write(`take: ${path.join(OUT, files.mp4)}\nbeats: ${beatList}\n`);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

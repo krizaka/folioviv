@@ -7,7 +7,11 @@ import { CARD, signIn, startTrialCheckout } from "./lib/e2e-pricing.mjs";
 test("the persona walk uses the processor's test card and asks for the plan in the address", async () => {
   assert.match(CARD.number, /^4242 4242 4242 4242$/);
   const seen = [];
-  await startTrialCheckout(async (bearer, path, init) => (seen.push([bearer, path, init.method]), { status: 200, body: {} }), "t", "association");
+  await startTrialCheckout(
+    async (bearer, path, init) => (seen.push([bearer, path, init.method]), { status: 200, body: {} }),
+    "t",
+    "association",
+  );
   assert.deepEqual(seen, [["t", "/api/billing/checkout?plan=association&locale=en", "POST"]]);
 });
 
@@ -15,7 +19,10 @@ test("a refused sign-in throws without repeating the credential", async () => {
   const real = globalThis.fetch;
   globalThis.fetch = async () => new Response("{}", { status: 401 });
   try {
-    await assert.rejects(signIn("http://x", "a@b.test", "hunter2-hunter2"), (e) => !String(e.message).includes("hunter2"));
+    await assert.rejects(
+      signIn("http://x", "a@b.test", "hunter2-hunter2"),
+      (e) => !String(e.message).includes("hunter2"),
+    );
   } finally {
     globalThis.fetch = real;
   }

@@ -13,7 +13,9 @@ export function GET(req: Request) {
     await requireAdmin(req);
     const catalogue = appPrices();
     const described = await describePrices(catalogue, systemClock.now());
-    const history = Object.fromEntries(await Promise.all(described.entries.map(async (e) => [e.key, await catalogue.history(e.key)] as const)));
+    const history = Object.fromEntries(
+      await Promise.all(described.entries.map(async (e) => [e.key, await catalogue.history(e.key)] as const)),
+    );
     return Response.json({ ...described, history });
   });
 }

@@ -21,7 +21,11 @@ export function POST(req: Request) {
   return handle(async () => {
     const { session, shop } = await requireOwner(req);
     const { hostname } = body.parse(await req.json());
-    const row = await addOwnerDomain(shop.id, hostname, { actorId: session.account.id, actorLabel: session.account.email, headers: req.headers });
+    const row = await addOwnerDomain(shop.id, hostname, {
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      headers: req.headers,
+    });
     return Response.json({ id: row.id, hostname: row.hostname }, { status: 201 });
   });
 }

@@ -12,6 +12,12 @@ export const DELETE = (req: Request, { params }: { params: Promise<{ id: string 
     const { session, shop } = await requireShop(req, "team");
     const id = idParam((await params).id);
     await teamAct(() => team().revokeInvitation(shop.id, { id: session.account.id }, id, systemClock.now()));
-    await audit({ action: "team.invitation_revoked", actorId: session.account.id, actorLabel: session.account.email, targetId: id, headers: req.headers });
+    await audit({
+      action: "team.invitation_revoked",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: id,
+      headers: req.headers,
+    });
     return Response.json({ ok: true });
   });

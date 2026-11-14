@@ -1,10 +1,25 @@
 import { describe, expect, it } from "vitest";
 
-import { applyOwnerOverrides, DEFAULT_FIGURE_THRESHOLDS, OWNER_BOUNDS, OWNER_TUNABLE, parseOwnerOverrides } from "./thresholds";
+import {
+  applyOwnerOverrides,
+  DEFAULT_FIGURE_THRESHOLDS,
+  OWNER_BOUNDS,
+  OWNER_TUNABLE,
+  parseOwnerOverrides,
+} from "./thresholds";
 
 describe("the owner's thresholds (#260)", () => {
   it("keeps only tunable whole numbers inside the bounds", () => {
-    expect(parseOwnerOverrides({ overdueWatchPct: 15, collectedWatchPct: 0, marginWatchPct: 12.5, maxActions: 9, noShowWatchPct: "7", taxPeriodSoonDays: 61 })).toEqual({ overdueWatchPct: 15 });
+    expect(
+      parseOwnerOverrides({
+        overdueWatchPct: 15,
+        collectedWatchPct: 0,
+        marginWatchPct: 12.5,
+        maxActions: 9,
+        noShowWatchPct: "7",
+        taxPeriodSoonDays: 61,
+      }),
+    ).toEqual({ overdueWatchPct: 15 });
     expect(parseOwnerOverrides(null)).toEqual({});
     expect(parseOwnerOverrides([1])).toEqual({});
   });

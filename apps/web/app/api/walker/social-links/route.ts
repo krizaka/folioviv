@@ -22,8 +22,15 @@ export function PUT(req: Request) {
   return handle(async () => {
     const { shop } = await requireShop(req, "catalogue");
     await assertShopFeature("features.shopReels");
-    const links = await readJson(req, z.object(Object.fromEntries(SOCIAL_PLATFORMS.map((p) => [p, z.string().max(300).nullable().optional()]))));
-    await saveSocialLinks(db(), shop.id, Object.fromEntries(Object.entries(links).filter(([, v]) => v !== undefined)) as never);
+    const links = await readJson(
+      req,
+      z.object(Object.fromEntries(SOCIAL_PLATFORMS.map((p) => [p, z.string().max(300).nullable().optional()]))),
+    );
+    await saveSocialLinks(
+      db(),
+      shop.id,
+      Object.fromEntries(Object.entries(links).filter(([, v]) => v !== undefined)) as never,
+    );
     await announcePage(shop.id);
     return Response.json({ links: await socialLinksOf(db(), shop.id) });
   });

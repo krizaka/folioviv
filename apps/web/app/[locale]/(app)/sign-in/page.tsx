@@ -19,7 +19,10 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 }
 
 /** Sign-in on @krizaka/ui's auth template, Folioviv's mark and its owl. Sign-up is closed — the page says so. */
-export default async function SignInPage({ params, searchParams }: Readonly<{ params: Promise<{ locale: string }>; searchParams: Promise<{ next?: string }> }>) {
+export default async function SignInPage({
+  params,
+  searchParams,
+}: Readonly<{ params: Promise<{ locale: string }>; searchParams: Promise<{ next?: string }> }>) {
   const locale = asLocale((await params).locale);
   // Back to where the person was going — an address of this site only, in this language (never an open redirect).
   const wanted = (await searchParams).next;

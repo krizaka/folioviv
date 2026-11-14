@@ -8,7 +8,7 @@ import { allowsCaptcha, contentSecurityPolicy, isShopPath, newNonce, upgradesIns
 import { refusesCrossSiteWrite } from "./lib/csrf";
 import { type HostRoute, isAdminHost, ownShopRoute, routeFor, type ShopHosting } from "./lib/host";
 import { CLOSED_ROBOTS, closedRobots, devRedirect, indexableOn, isDevHost, NOINDEX } from "./lib/indexing";
-import { LOCALE_HEADER, negotiateLocale, pageLocaleOf,PATH_HEADER } from "./lib/locale-negotiation";
+import { LOCALE_HEADER, negotiateLocale, pageLocaleOf, PATH_HEADER } from "./lib/locale-negotiation";
 import { SESSION_COOKIE } from "./lib/session-cookie";
 import { customHostVerdict, SHOP_SITEMAP_PATH, shopVerdict, Verdict } from "./lib/shop-directory";
 import { appOriginOf, shopDomain, shopHostOf, shopOriginOf } from "./lib/shop-domain";
@@ -21,15 +21,33 @@ const LOCALE_COOKIE = cookieName("NEXT_LOCALE");
 
 /** ADR-005 slice 1 (folioviv#534): a write to the API that carries the web session comes from this origin, else 403 (a shop host is same-site: SameSite=Lax does not stop it). */
 function crossSiteWrite(request: NextRequest): NextResponse | null {
-  if (!request.nextUrl.pathname.startsWith("/api/")) {return null;}
-  const refused = refusesCrossSiteWrite({ method: request.method, headers: request.headers, origin: process.env.APP_PUBLIC_URL ?? SITE_URL, sessionCookie: SESSION_COOKIE });
-  return refused ? NextResponse.json({ error: { code: "CROSS_SITE_WRITE", message: "This request does not come from the app" } }, { status: 403 }) : null;
+  if (!request.nextUrl.pathname.startsWith("/api/")) {
+    return null;
+  }
+  const refused = refusesCrossSiteWrite({
+    method: request.method,
+    headers: request.headers,
+    origin: process.env.APP_PUBLIC_URL ?? SITE_URL,
+    sessionCookie: SESSION_COOKIE,
+  });
+  return refused
+    ? NextResponse.json(
+        { error: { code: "CROSS_SITE_WRITE", message: "This request does not come from the app" } },
+        { status: 403 },
+      )
+    : null;
 }
 
 /** The policy of a response (lib/csp.ts), read per request: the nonce of a shop page is this response's own, the declared origin is the runtime's. */
 function policy(nonce?: string, appOrigin?: string, captcha = false): string {
   const production = process.env.NODE_ENV === "production";
-  return contentSecurityPolicy({ nonce, production, upgradeInsecure: upgradesInsecure(production, process.env.APP_PUBLIC_URL), appOrigin, captcha });
+  return contentSecurityPolicy({
+    nonce,
+    production,
+    upgradeInsecure: upgradesInsecure(production, process.env.APP_PUBLIC_URL),
+    appOrigin,
+    captcha,
+  });
 }
 
 /**
@@ -38,7 +56,9 @@ function policy(nonce?: string, appOrigin?: string, captcha = false): string {
  */
 function stampPolicy(forwarded: Headers, route: HostRoute, pathname: string, appOrigin?: string): string {
   const path = route.kind === "rewrite" ? route.path : pathname;
-  if (!isShopPath(path)) {return policy();}
+  if (!isShopPath(path)) {
+    return policy();
+  }
   const nonce = newNonce();
   const csp = policy(nonce, appOrigin, allowsCaptcha(path, process.env.NEXT_PUBLIC_ABUSE_CAPTCHA_SITE_KEY));
   forwarded.set("content-security-policy", csp);
@@ -57,18 +77,27 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   const pathname = request.nextUrl.pathname;
   // ADR-005 slice 4 (#536): a host this deployment does not serve is answered 421 before anything is routed or built from it (the platform's health check names its own).
   // A merchant's own domain (ADR-005 §3, #539) is the one other host: served only while the database says it is active (verified TXT, certificate, option on, shop published).
-  const custom = HOST_FREE_PATHS.includes(pathname) || isAllowedHost(host, process.env) ? null : await customHostOf(host);
-  if (!custom && !HOST_FREE_PATHS.includes(pathname) && !isAllowedHost(host, process.env)) {return misdirected();}
+  const custom =
+    HOST_FREE_PATHS.includes(pathname) || isAllowedHost(host, process.env) ? null : await customHostOf(host);
+  if (!custom && !HOST_FREE_PATHS.includes(pathname) && !isAllowedHost(host, process.env)) {
+    return misdirected();
+  }
   // The dev host serves the API too: the check comes first.
   const refused = crossSiteWrite(request);
-  if (refused) {return refused;}
+  if (refused) {
+    return refused;
+  }
   // dev.<product>.com (APP_DEV_HOST): robots.txt closes everything; a page goes to www (308); the API, .well-known and
   // healthz keep serving - all noindex. Nothing below runs for it.
   if (isDevHost(host)) {
     const headers = { "x-robots-tag": NOINDEX };
-    if (pathname === "/robots.txt") {return new NextResponse(closedRobots(), { headers: { ...headers, "content-type": "text/plain" } });}
+    if (pathname === "/robots.txt") {
+      return new NextResponse(closedRobots(), { headers: { ...headers, "content-type": "text/plain" } });
+    }
     const to = devRedirect(request.method, pathname, request.nextUrl.search, process.env.APP_PUBLIC_URL ?? SITE_URL);
-    if (to) {return NextResponse.redirect(to, { status: 308, headers });}
+    if (to) {
+      return NextResponse.redirect(to, { status: 308, headers });
+    }
     const response = NextResponse.next();
     response.headers.set("x-robots-tag", NOINDEX);
     response.headers.set("Content-Security-Policy", policy());
@@ -77,7 +106,9 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   // The API and /.well-known pass untouched; on a host closed to search engines they say noindex.
   if (pathname.startsWith("/api/") || pathname.startsWith("/.well-known/")) {
     const response = NextResponse.next();
-    if (closed) {response.headers.set("x-robots-tag", NOINDEX);}
+    if (closed) {
+      response.headers.set("x-robots-tag", NOINDEX);
+    }
     response.headers.set("Content-Security-Policy", policy());
     return response;
   }
@@ -86,10 +117,25 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   const shop = shopHostOf(host, process.env);
   if (shop) {
     return shopVerdict(shop.slug).then((verdict) => {
-      if (verdict.kind === Verdict.None) {return new NextResponse("Not found", { status: 404, headers: { "content-type": "text/plain", "x-robots-tag": NOINDEX, "cache-control": "private, no-store" } });}
+      if (verdict.kind === Verdict.None) {
+        return new NextResponse("Not found", {
+          status: 404,
+          headers: { "content-type": "text/plain", "x-robots-tag": NOINDEX, "cache-control": "private, no-store" },
+        });
+      }
       // Once the shop has a verified domain of its own, that is its one canonical address (ADR-005 §9): every other address leads there.
-      if (verdict.kind === Verdict.Shop && verdict.domain) {return NextResponse.redirect(`https://${verdict.domain}${pathname}${request.nextUrl.search}`, { status: 308, headers: { "x-robots-tag": NOINDEX } });}
-      if (verdict.kind === Verdict.Moved) {return NextResponse.redirect(`${shopOriginOf(verdict.slug, process.env)}${pathname}${request.nextUrl.search}`, { status: 308, headers: { "x-robots-tag": NOINDEX } });}
+      if (verdict.kind === Verdict.Shop && verdict.domain) {
+        return NextResponse.redirect(`https://${verdict.domain}${pathname}${request.nextUrl.search}`, {
+          status: 308,
+          headers: { "x-robots-tag": NOINDEX },
+        });
+      }
+      if (verdict.kind === Verdict.Moved) {
+        return NextResponse.redirect(`${shopOriginOf(verdict.slug, process.env)}${pathname}${request.nextUrl.search}`, {
+          status: 308,
+          headers: { "x-robots-tag": NOINDEX },
+        });
+      }
       return serve(request, closed, shop.own);
     });
   }
@@ -97,7 +143,11 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 }
 
 /** 421: never stored, never indexed. */
-const misdirected = () => new NextResponse("Misdirected Request", { status: 421, headers: { "content-type": "text/plain", "x-robots-tag": NOINDEX, "cache-control": "private, no-store" } });
+const misdirected = () =>
+  new NextResponse("Misdirected Request", {
+    status: 421,
+    headers: { "content-type": "text/plain", "x-robots-tag": NOINDEX, "cache-control": "private, no-store" },
+  });
 
 /** The origin a shop's robots.txt names its sitemap on: its verified custom host, else its shop-domain address; none off a shop host. */
 function sitemapOrigin(custom: CustomHost | null, shop: { slug: string } | null, site: string): string | null {
@@ -123,41 +173,67 @@ function hostingOf(): ShopHosting | null {
 }
 
 /** `ownShopHost`: the request is on `<slug>.<APP_SHOP_DOMAIN>`, where nothing of the app's session ever goes (ADR-005 §1, §4). */
-function serve(request: NextRequest, closed: boolean, ownShopHost: boolean, custom: CustomHost | null = null): NextResponse {
+function serve(
+  request: NextRequest,
+  closed: boolean,
+  ownShopHost: boolean,
+  custom: CustomHost | null = null,
+): NextResponse {
   const host = request.headers.get("host");
   const pathname = request.nextUrl.pathname;
   const chosen = negotiateLocale(request.cookies.get(LOCALE_COOKIE)?.value, request.headers.get("accept-language"));
   const site = process.env.APP_PUBLIC_URL ?? SITE_URL;
-  const route = custom ? ownShopRoute(custom.slug, pathname, site) : routeFor(host, request.nextUrl.pathname, chosen, site, hostingOf());
+  const route = custom
+    ? ownShopRoute(custom.slug, pathname, site)
+    : routeFor(host, request.nextUrl.pathname, chosen, site, hostingOf());
   const admin = isAdminHost(host);
   // A shop's address shows a page that www may also serve: never indexed twice.
   const shop = custom ?? shopHostOf(host, process.env);
   const shopHost = shop !== null;
   // A shop's own page is nobody's landing: the app's session never goes there (ADR-005), so no hint can send a visitor away from it.
-  const home = admin || shop ? null : landingRedirect(request, { cookie: SESSION_COOKIE, landing: LANDING, home: () => `/${pageLocaleOf(pathname, chosen)}/app`, origin: site });
-  if (home) {return NextResponse.redirect(home.headers.get("location") ?? "/", { status: home.status, headers: home.headers });}
+  const home =
+    admin || shop
+      ? null
+      : landingRedirect(request, {
+          cookie: SESSION_COOKIE,
+          landing: LANDING,
+          home: () => `/${pageLocaleOf(pathname, chosen)}/app`,
+          origin: site,
+        });
+  if (home) {
+    return NextResponse.redirect(home.headers.get("location") ?? "/", { status: home.status, headers: home.headers });
+  }
   // A host closed to search engines (indexing not explicitly on for the public host): robots.txt disallows everything (the sitemap is still served, noindexed).
   // A shop's host falls through to its own closed robots.txt below, which names its own sitemap.
-  if (closed && !shop && request.nextUrl.pathname === "/robots.txt") {return new NextResponse(CLOSED_ROBOTS, { headers: { "content-type": "text/plain", "x-robots-tag": NOINDEX } });}
+  if (closed && !shop && request.nextUrl.pathname === "/robots.txt") {
+    return new NextResponse(CLOSED_ROBOTS, { headers: { "content-type": "text/plain", "x-robots-tag": NOINDEX } });
+  }
   // The language of the address, handed to the pages (the 404 has no params): set on the request, never trusted from the client.
   const forwarded = new Headers(request.headers);
   forwarded.set(LOCALE_HEADER, pageLocaleOf(pathname, chosen));
   forwarded.set(PATH_HEADER, pathname + request.nextUrl.search);
   // No session ever reaches a shop's page (it renders for a stranger): the app's cookie is dropped from what the page reads, whatever the browser sent.
-  if (shopHost) {forwarded.set("cookie", dropCookie(request.headers.get("cookie"), SESSION_COOKIE));}
+  if (shopHost) {
+    forwarded.set("cookie", dropCookie(request.headers.get("cookie"), SESSION_COOKIE));
+  }
   const csp = stampPolicy(forwarded, route, pathname, ownShopHost ? appOriginOf(process.env) : undefined);
   let response: NextResponse;
   switch (route.kind) {
     case "robotsClosed": {
       const origin = sitemapOrigin(custom, shop, site);
       const sitemap = origin ? `Sitemap: ${origin}/sitemap.xml\n` : "";
-      return new NextResponse(`User-agent: *\nDisallow: /\n${sitemap}`, { headers: { "content-type": "text/plain", "x-robots-tag": "noindex, nofollow" } });
+      return new NextResponse(`User-agent: *\nDisallow: /\n${sitemap}`, {
+        headers: { "content-type": "text/plain", "x-robots-tag": "noindex, nofollow" },
+      });
     }
     case "shopSitemap":
       response = NextResponse.rewrite(new URL(SHOP_SITEMAP_PATH, request.url), { request: { headers: forwarded } });
       break;
     case "notFound":
-      return new NextResponse("Not found", { status: 404, headers: admin ? { "x-robots-tag": "noindex, nofollow" } : {} });
+      return new NextResponse("Not found", {
+        status: 404,
+        headers: admin ? { "x-robots-tag": "noindex, nofollow" } : {},
+      });
     case "redirect":
       return redirectOf(request, route, host);
     case "rewrite":
@@ -166,33 +242,64 @@ function serve(request: NextRequest, closed: boolean, ownShopHost: boolean, cust
     default:
       response = NextResponse.next({ request: { headers: forwarded } });
   }
-  return dressed(response, request, { csp, noindex: admin || closed || shopHost, noStore: ownShopHost, hint: !shopHost });
+  return dressed(response, request, {
+    csp,
+    noindex: admin || closed || shopHost,
+    noStore: ownShopHost,
+    hint: !shopHost,
+  });
 }
 
 /** A redirect on the public host, not the platform's internal one: admin.folioviv.com stays admin.folioviv.com. */
-function redirectOf(request: NextRequest, route: Extract<HostRoute, { kind: "redirect" }>, host: string | null): NextResponse {
+function redirectOf(
+  request: NextRequest,
+  route: Extract<HostRoute, { kind: "redirect" }>,
+  host: string | null,
+): NextResponse {
   const proto = request.headers.get("x-forwarded-proto") ?? request.nextUrl.protocol.replace(":", "");
   const target = new URL(route.path, host ? `${proto}://${host}` : request.url);
   // A move of the shop domain keeps the query and answers 308 (the booking hop and the old addresses); the others keep their 307.
-  if (route.permanent) {target.search = request.nextUrl.search;}
-  return NextResponse.redirect(target, route.permanent ? { status: 308, headers: { "x-robots-tag": NOINDEX } } : undefined);
+  if (route.permanent) {
+    target.search = request.nextUrl.search;
+  }
+  return NextResponse.redirect(
+    target,
+    route.permanent ? { status: 308, headers: { "x-robots-tag": NOINDEX } } : undefined,
+  );
 }
 
 /** What every served response wears: the language of its address in a cookie, no index where the page is not for search, no shared cache on a shop's host, the policy. */
-function dressed(response: NextResponse, request: NextRequest, { csp, noindex, noStore, hint }: { csp: string; noindex: boolean; noStore: boolean; hint: boolean }): NextResponse {
+function dressed(
+  response: NextResponse,
+  request: NextRequest,
+  { csp, noindex, noStore, hint }: { csp: string; noindex: boolean; noStore: boolean; hint: boolean },
+): NextResponse {
   const segment = request.nextUrl.pathname.split("/")[1];
   if ((segment === "en" || segment === "fr") && request.cookies.get(LOCALE_COOKIE)?.value !== segment) {
     response.cookies.set(ownCookie(LOCALE_COOKIE, segment, { httpOnly: false, maxAge: 60 * 60 * 24 * 365 }));
   }
-  if (noindex) {response.headers.set("x-robots-tag", NOINDEX);}
+  if (noindex) {
+    response.headers.set("x-robots-tag", NOINDEX);
+  }
   // The page of a shop is for one request: never shared from a cache whose key could lose the host (ADR-005 §3).
-  if (noStore) {response.headers.set("cache-control", "private, no-store");}
+  if (noStore) {
+    response.headers.set("cache-control", "private, no-store");
+  }
   response.headers.set("Content-Security-Policy", csp);
   // The readable hint is the app's own: a shop's host never carries it (no session reaches a shop page).
-  if (!hint) {return response;}
+  if (!hint) {
+    return response;
+  }
   return sessionHint(response, request, { cookie: SESSION_COOKIE, secure: process.env.NODE_ENV === "production" });
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|og.png|favicon.ico|icon.svg|maplibre/|google[0-9a-f]+\\.html$|.*\\.(?:js|mjs|css|map|png|jpe?g|webp|avif|gif|svg|ico|woff2?|ttf|otf|webm|mp4|vtt|json|pbf|pmtiles|webmanifest|txt|xml|pdf|zip)$).*)", "/robots.txt", "/sitemap.xml", "/llms.txt", "/api/:path*", "/.well-known/:path*"],
+  matcher: [
+    "/((?!api|_next/static|_next/image|og.png|favicon.ico|icon.svg|maplibre/|google[0-9a-f]+\\.html$|.*\\.(?:js|mjs|css|map|png|jpe?g|webp|avif|gif|svg|ico|woff2?|ttf|otf|webm|mp4|vtt|json|pbf|pmtiles|webmanifest|txt|xml|pdf|zip)$).*)",
+    "/robots.txt",
+    "/sitemap.xml",
+    "/llms.txt",
+    "/api/:path*",
+    "/.well-known/:path*",
+  ],
 };

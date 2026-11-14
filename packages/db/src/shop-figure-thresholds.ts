@@ -6,7 +6,10 @@ import { shopFigureRules } from "./schema";
 
 /** The thresholds the owner changed for their shop (#260); `{}` when they never did. Whatever the row holds is read through the bounds again. */
 export async function shopFigureOverrides(db: Db, shopId: string): Promise<OwnerOverrides> {
-  const [row] = await db.select({ overrides: shopFigureRules.overrides }).from(shopFigureRules).where(eq(shopFigureRules.shopId, shopId));
+  const [row] = await db
+    .select({ overrides: shopFigureRules.overrides })
+    .from(shopFigureRules)
+    .where(eq(shopFigureRules.shopId, shopId));
   return parseOwnerOverrides(row?.overrides);
 }
 
@@ -17,6 +20,10 @@ export async function shopFigureOverrides(db: Db, shopId: string): Promise<Owner
 export async function saveShopFigureOverrides(db: Db, shopId: string, input: unknown): Promise<OwnerOverrides> {
   const kept = parseOwnerOverrides(input);
   if (Object.keys(kept).length === 0) await db.delete(shopFigureRules).where(eq(shopFigureRules.shopId, shopId));
-  else await db.insert(shopFigureRules).values({ shopId, overrides: kept }).onConflictDoUpdate({ target: shopFigureRules.shopId, set: { overrides: kept, updatedAt: sql`now()` } });
+  else
+    await db
+      .insert(shopFigureRules)
+      .values({ shopId, overrides: kept })
+      .onConflictDoUpdate({ target: shopFigureRules.shopId, set: { overrides: kept, updatedAt: sql`now()` } });
   return kept;
 }

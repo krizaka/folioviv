@@ -7,12 +7,15 @@ import { I18nProvider } from "@/lib/i18n-client";
 import enRaw from "@/messages/en.json";
 import frRaw from "@/messages/fr.json";
 
-import { type ClientFileView,ClientHome } from "./ClientHome";
+import { type ClientFileView, ClientHome } from "./ClientHome";
 
 const en = bindProduct(enRaw);
 const fr = bindProduct(frRaw);
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }), usePathname: () => "/fr/app" }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
+  usePathname: () => "/fr/app",
+}));
 
 const MESSAGES = { en: { console: en.console }, fr: { console: fr.console } } as const;
 const render = (files: ClientFileView[], locale: "en" | "fr" = "fr") =>
@@ -23,17 +26,46 @@ const render = (files: ClientFileView[], locale: "en" | "fr" = "fr") =>
       </I18nProvider>
     </KrizakaQueryProvider>,
   );
-const text = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/&#x27;/g, "'").replace(/&amp;/g, "&").replace(/\s+/g, " ");
+const text = (html: string) =>
+  html
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&#x27;/g, "'")
+    .replace(/&amp;/g, "&")
+    .replace(/\s+/g, " ");
 /** The buttons and button links of a render, with their variant (the @krizaka/ui Button marks it). */
-const buttons = (html: string) => [...html.matchAll(/<(?:a|button)\b[^>]*data-variant="(\w+)"[^>]*>(.*?)<\/(?:a|button)>/g)].map((m) => ({ variant: m[1]!, label: text(m[2]!).trim() }));
+const buttons = (html: string) =>
+  [...html.matchAll(/<(?:a|button)\b[^>]*data-variant="(\w+)"[^>]*>(.*?)<\/(?:a|button)>/g)].map((m) => ({
+    variant: m[1]!,
+    label: text(m[2]!).trim(),
+  }));
 
 const file = (shopName: string, slug: string | null, id = slug ?? "x"): ClientFileView => ({
   client: { id: `c-${id}`, fullName: "Camille Tremblay", shopName, shopSlug: slug, businessType: "pets" },
   dogs: [],
   bookings: [
-    { bookingId: `b-${id}`, status: "booked", visitStatus: "booked", startsAt: "2026-11-03T14:00:00.000Z", service: { fr: "Promenade", en: "Walk" }, zone: "Saint-Henri", dependantName: "Biscuit", report: null },
+    {
+      bookingId: `b-${id}`,
+      status: "booked",
+      visitStatus: "booked",
+      startsAt: "2026-11-03T14:00:00.000Z",
+      service: { fr: "Promenade", en: "Walk" },
+      zone: "Saint-Henri",
+      dependantName: "Biscuit",
+      report: null,
+    },
   ],
-  invoices: [{ id: `i-${id}`, number: "2026-0007", issuedOn: "2026-10-20", dueOn: "2026-11-19", totalCents: 3449, paidCents: 0, creditOf: null, superseded: false }],
+  invoices: [
+    {
+      id: `i-${id}`,
+      number: "2026-0007",
+      issuedOn: "2026-10-20",
+      dueOn: "2026-11-19",
+      totalCents: 3449,
+      paidCents: 0,
+      creditOf: null,
+      superseded: false,
+    },
+  ],
   requests: { clientId: `c-${id}`, shopSlug: slug, requests: [], catalogue: null },
   now: "2026-10-24T12:00:00.000Z",
   today: "2026-10-24",
@@ -77,7 +109,11 @@ describe("the client space (K7, docs/ux/2026-10-full-review.md H2)", () => {
 
   it("gives the primary to the first shop with a page when the first has none", () => {
     const html = render([file("Ancienne boutique", null, "old"), file("Salon Rosemont", "rosemont")]);
-    expect(buttons(html).filter((b) => b.variant === "primary").map((b) => b.label)).toEqual(["Réserver chez Salon Rosemont"]);
+    expect(
+      buttons(html)
+        .filter((b) => b.variant === "primary")
+        .map((b) => b.label),
+    ).toEqual(["Réserver chez Salon Rosemont"]);
   });
 
   it("lists the bookings and invoices of every shop the client deals with, each invoice at the account's own address", () => {
@@ -96,7 +132,8 @@ describe("the client space (K7, docs/ux/2026-10-full-review.md H2)", () => {
     expect(html).toMatch(/<h2 class="[^"]*min-w-0[^"]*break-words[^"]*"[^>]*>Toilettage/);
     const erase = html.match(/<button[^>]*class="([^"]*)"[^>]*>Effacer mon dossier chez Toilettage/)![1]!.split(" ");
     for (const rule of ["whitespace-normal", "w-full", "sm:w-auto"]) expect(erase).toContain(rule);
-    for (const label of ["Réserver chez Toilettage", "Ouvrir une boutique"]) expect(html).toMatch(new RegExp(`<a[^>]*class="[^"]*w-full sm:w-auto[^"]*"[^>]*>${label}`));
+    for (const label of ["Réserver chez Toilettage", "Ouvrir une boutique"])
+      expect(html).toMatch(new RegExp(`<a[^>]*class="[^"]*w-full sm:w-auto[^"]*"[^>]*>${label}`));
   });
 
   it("lists the invoices as rows with their derived state and amount — never a raw « Ouvrir la facture » link (D7)", () => {
@@ -105,26 +142,88 @@ describe("the client space (K7, docs/ux/2026-10-full-review.md H2)", () => {
       {
         ...f,
         invoices: [
-          { id: "i-paid", number: "KZ-00021", issuedOn: "2026-09-02", dueOn: "2026-10-02", totalCents: 31_043, paidCents: 31_043, creditOf: null, superseded: false },
-          { id: "i-late", number: "KZ-00022", issuedOn: "2026-09-10", dueOn: "2026-10-10", totalCents: 11_498, paidCents: 0, creditOf: null, superseded: false },
-          { id: "i-due", number: "KZ-00023", issuedOn: "2026-10-20", dueOn: "2026-11-19", totalCents: 3_449, paidCents: 0, creditOf: null, superseded: false },
+          {
+            id: "i-paid",
+            number: "KZ-00021",
+            issuedOn: "2026-09-02",
+            dueOn: "2026-10-02",
+            totalCents: 31_043,
+            paidCents: 31_043,
+            creditOf: null,
+            superseded: false,
+          },
+          {
+            id: "i-late",
+            number: "KZ-00022",
+            issuedOn: "2026-09-10",
+            dueOn: "2026-10-10",
+            totalCents: 11_498,
+            paidCents: 0,
+            creditOf: null,
+            superseded: false,
+          },
+          {
+            id: "i-due",
+            number: "KZ-00023",
+            issuedOn: "2026-10-20",
+            dueOn: "2026-11-19",
+            totalCents: 3_449,
+            paidCents: 0,
+            creditOf: null,
+            superseded: false,
+          },
         ],
       },
     ]);
     expect(text(html)).not.toMatch(/Ouvrir la facture/);
-    expect([...html.matchAll(/data-state="(credit|cancelled|paid|partial|overdue|due)"/g)].map((m) => m[1])).toEqual(["paid", "overdue", "due"]);
-    for (const [label, state] of [["Payée", "paid"], ["En retard", "overdue"], ["À payer", "due"]]) expect(html).toMatch(new RegExp(`data-state="${state}"[^>]*>${label}<`));
+    expect([...html.matchAll(/data-state="(credit|cancelled|paid|partial|overdue|due)"/g)].map((m) => m[1])).toEqual([
+      "paid",
+      "overdue",
+      "due",
+    ]);
+    for (const [label, state] of [
+      ["Payée", "paid"],
+      ["En retard", "overdue"],
+      ["À payer", "due"],
+    ])
+      expect(html).toMatch(new RegExp(`data-state="${state}"[^>]*>${label}<`));
     expect(html).toContain('href="/fr/app/invoices/i-late"');
     expect(text(html)).toMatch(/KZ-00022 .*114,98/);
   });
 
   it("folds the request form behind « Garder une demande », a secondary that opens it in place; renewing is never a second primary", () => {
     const f = file("Studio Lumen inc. (démo)", "lumen");
-    const request = { id: "r1", title: "Coupe et balayage", note: null, serviceId: "s1", serviceNameFr: "Coupe", serviceNameEn: "Cut", staffId: null, staffName: null, zoneId: null, files: [] };
-    const html = render([{ ...f, requests: { ...f.requests, requests: [request], catalogue: { services: [{ id: "s1", nameFr: "Coupe", nameEn: "Cut" }], staff: [] } } }]);
+    const request = {
+      id: "r1",
+      title: "Coupe et balayage",
+      note: null,
+      serviceId: "s1",
+      serviceNameFr: "Coupe",
+      serviceNameEn: "Cut",
+      staffId: null,
+      staffName: null,
+      zoneId: null,
+      files: [],
+    };
+    const html = render([
+      {
+        ...f,
+        requests: {
+          ...f.requests,
+          requests: [request],
+          catalogue: { services: [{ id: "s1", nameFr: "Coupe", nameEn: "Cut" }], staff: [] },
+        },
+      },
+    ]);
     expect(html).not.toMatch(/<form[^>]*aria-label="Garder cette demande"/);
-    expect(html).toMatch(/<button[^>]*aria-expanded="false"[^>]*data-variant="secondary"[^>]*>Garder une demande<|<button[^>]*data-variant="secondary"[^>]*aria-expanded="false"[^>]*>Garder une demande</);
-    expect(buttons(html).filter((b) => b.variant === "primary").map((b) => b.label)).toEqual(["Réserver chez Studio Lumen inc. (démo)"]);
+    expect(html).toMatch(
+      /<button[^>]*aria-expanded="false"[^>]*data-variant="secondary"[^>]*>Garder une demande<|<button[^>]*data-variant="secondary"[^>]*aria-expanded="false"[^>]*>Garder une demande</,
+    );
+    expect(
+      buttons(html)
+        .filter((b) => b.variant === "primary")
+        .map((b) => b.label),
+    ).toEqual(["Réserver chez Studio Lumen inc. (démo)"]);
     expect(buttons(html)).toContainEqual({ variant: "secondary", label: "Reprendre" });
   });
 

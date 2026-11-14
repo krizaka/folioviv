@@ -6,7 +6,8 @@ vi.mock("@/lib/db", () => ({ db: () => ({}) }));
 
 import { GET } from "./route";
 
-const ask = (host: string, url = "http://localhost:3000/api/internal/shop-sitemap") => GET(new Request(url, { headers: { host } }));
+const ask = (host: string, url = "http://localhost:3000/api/internal/shop-sitemap") =>
+  GET(new Request(url, { headers: { host } }));
 
 // A route handler reads the URL the client asked, never the query of the proxy's rewrite: the shop is the one the Host names (found on a real server, #563).
 describe("a shop host's sitemap route", () => {

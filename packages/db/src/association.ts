@@ -38,13 +38,24 @@ export function normalizeReference(kind: AssociationKind, raw: string): string |
 }
 
 const columns = {
-  id: associationProofs.id, kind: associationProofs.kind, reference: associationProofs.reference, note: associationProofs.note,
-  status: associationProofs.status, submittedAt: associationProofs.submittedAt, decidedAt: associationProofs.decidedAt, decisionNote: associationProofs.decisionNote,
+  id: associationProofs.id,
+  kind: associationProofs.kind,
+  reference: associationProofs.reference,
+  note: associationProofs.note,
+  status: associationProofs.status,
+  submittedAt: associationProofs.submittedAt,
+  decidedAt: associationProofs.decidedAt,
+  decisionNote: associationProofs.decisionNote,
 };
 
 /** The account's latest proof, whatever its state, or null. */
 export async function associationProofOf(db: Db, accountId: string): Promise<AssociationProof | null> {
-  const [row] = await db.select(columns).from(associationProofs).where(eq(associationProofs.accountId, accountId)).orderBy(desc(associationProofs.submittedAt), desc(associationProofs.id)).limit(1);
+  const [row] = await db
+    .select(columns)
+    .from(associationProofs)
+    .where(eq(associationProofs.accountId, accountId))
+    .orderBy(desc(associationProofs.submittedAt), desc(associationProofs.id))
+    .limit(1);
   return (row as AssociationProof | undefined) ?? null;
 }
 
@@ -54,22 +65,36 @@ export async function associationApproved(db: Db, accountId: string): Promise<bo
 }
 
 /** Submits the proof. One pending at a time; none once approved; a malformed number is refused. Returns the proof's id. */
-export async function submitAssociationProof(db: Db, accountId: string, input: { kind: AssociationKind; reference: string; note?: string }): Promise<string> {
+export async function submitAssociationProof(
+  db: Db,
+  accountId: string,
+  input: { kind: AssociationKind; reference: string; note?: string },
+): Promise<string> {
   const reference = normalizeReference(input.kind, input.reference);
   if (!reference) throw new ShopError("AK_ASSOCIATION_REFERENCE");
   return db.transaction(async (tx) => {
     // Serialises the account's submissions: two at once cannot both find nothing pending.
     await tx.select({ id: accounts.id }).from(accounts).where(eq(accounts.id, accountId)).for("update");
-    const [latest] = await tx.select({ status: associationProofs.status }).from(associationProofs).where(eq(associationProofs.accountId, accountId)).orderBy(desc(associationProofs.submittedAt), desc(associationProofs.id)).limit(1);
+    const [latest] = await tx
+      .select({ status: associationProofs.status })
+      .from(associationProofs)
+      .where(eq(associationProofs.accountId, accountId))
+      .orderBy(desc(associationProofs.submittedAt), desc(associationProofs.id))
+      .limit(1);
     if (latest?.status === ASSOCIATION_STATUS.pending) throw new ShopError("AK_ASSOCIATION_PENDING");
     if (latest?.status === ASSOCIATION_STATUS.approved) throw new ShopError("AK_ASSOCIATION_APPROVED");
-    const [row] = await tx.insert(associationProofs).values({ accountId, kind: input.kind, reference, note: input.note?.trim().slice(0, 500) || null }).returning({ id: associationProofs.id });
+    const [row] = await tx
+      .insert(associationProofs)
+      .values({ accountId, kind: input.kind, reference, note: input.note?.trim().slice(0, 500) || null })
+      .returning({ id: associationProofs.id });
     return row!.id;
   });
 }
 
 /** The proofs waiting for a decision, oldest first, with the e-mail of the account that submitted them: the administrator's queue. */
-export async function pendingAssociations(db: Db): Promise<(AssociationProof & { accountId: string; email: string })[]> {
+export async function pendingAssociations(
+  db: Db,
+): Promise<(AssociationProof & { accountId: string; email: string })[]> {
   const rows = await db
     .select({ ...columns, accountId: associationProofs.accountId, email: accounts.email })
     .from(associationProofs)
@@ -80,7 +105,14 @@ export async function pendingAssociations(db: Db): Promise<(AssociationProof & {
 }
 
 /** The administrator decides a pending proof, once. False when it is unknown or already decided. */
-export async function decideAssociation(db: Db, proofId: string, adminId: string, decision: "approved" | "rejected", now: Date, note?: string): Promise<boolean> {
+export async function decideAssociation(
+  db: Db,
+  proofId: string,
+  adminId: string,
+  decision: "approved" | "rejected",
+  now: Date,
+  note?: string,
+): Promise<boolean> {
   const done = await db
     .update(associationProofs)
     .set({ status: decision, decidedAt: now, decidedBy: adminId, decisionNote: note?.trim().slice(0, 500) || null })

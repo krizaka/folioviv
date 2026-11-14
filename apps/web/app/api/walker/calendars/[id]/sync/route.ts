@@ -16,7 +16,10 @@ export const dynamic = "force-dynamic";
 /** « Refresh now »: reads this calendar again, whatever its schedule. */
 export function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   return handle(async () => {
-    const id = z.string().uuid().safeParse((await params).id);
+    const id = z
+      .string()
+      .uuid()
+      .safeParse((await params).id);
     if (!id.success) throw refuse(404, "NOT_FOUND", "Not found");
     const { shop, role, session } = await requireShop(req, "agenda");
     limit("calendar-sync", req, session.account.id, [10, 60]);

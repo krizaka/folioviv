@@ -232,9 +232,7 @@
           {
             "id": "steps",
             "h": "The client's four steps",
-            "p": [
-              "Everything is in the address, so a booking can be shared or resumed."
-            ],
+            "p": ["Everything is in the address, so a booking can be shared or resumed."],
             "items": [
               "Choose a service on your page.",
               "Choose a person, or anyone free, and an area if you travel.",
@@ -261,9 +259,7 @@
           {
             "id": "today",
             "h": "On your side",
-            "p": [
-              "The bookings are on Today, day by day."
-            ],
+            "p": ["The bookings are on Today, day by day."],
             "items": []
           }
         ]
@@ -346,9 +342,7 @@
           {
             "id": "export",
             "h": "Export",
-            "p": [
-              "In your account, Your data, Export gives you everything held about the account as one file."
-            ],
+            "p": ["In your account, Your data, Export gives you everything held about the account as one file."],
             "items": []
           },
           {
@@ -443,7 +437,10 @@
     "trialLine": "{trial}, then {price} a month plus taxes. You enter your card to start: nothing is charged during the free period, and you can cancel before it ends.",
     "plannedLine": "Planned price: {price} a month plus taxes. Nothing is on sale yet and no card is asked.",
     "plannedPerMonth": "a month plus taxes, planned price",
-    "faqFreePeriodPlanned": { "q": "How does the free period work?", "a": "The free months come with the first subscription to Starter, once plans are on sale. Today nothing is on sale and {product} asks for no card: the prices shown are planned." },
+    "faqFreePeriodPlanned": {
+      "q": "How does the free period work?",
+      "a": "The free months come with the first subscription to Starter, once plans are on sale. Today nothing is on sale and {product} asks for no card: the prices shown are planned."
+    },
     "associationLine": "Associations: {months} months free, then {price} a month plus taxes. For registered non-profits (OBNL) and charities.",
     "associationLineDays": "Associations: {days} days free, then {price} a month plus taxes. For registered non-profits (OBNL) and charities.",
     "associationHow": "Send your NEQ, your registered charity number or your incorporation document’s reference from your billing page. We check it; until it is approved you are on Starter.",
@@ -1512,7 +1509,7 @@
         "currentPlan": "Current plan",
         "plannedNote": "Plans are not on sale yet: the prices are planned and no card is asked.",
         "changePlan": "Change plan",
-        "plan": {"founder": "Founder offer", "starter": "Starter", "scale": "Pro", "association": "Association"},
+        "plan": { "founder": "Founder offer", "starter": "Starter", "scale": "Pro", "association": "Association" },
         "unavailable": "No plan is on sale yet.",
         "yourPrice": "Your price",
         "yourPriceHint": "The price your subscription was sold at: you keep it as long as you stay.",

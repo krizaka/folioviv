@@ -15,7 +15,14 @@ export function HeroPhone({ locale }: Readonly<{ locale: Locale }>) {
   return (
     <figure className="m-0 flex flex-col items-center gap-3 py-2">
       <DeviceFrame kind="phone" className="w-[15.5rem] max-w-full">
-        <HeroTake poster={take.poster} webm={take.webm} mp4={take.mp4} alt={t.visualAlt} width={HERO_TAKE.width} height={HERO_TAKE.height} />
+        <HeroTake
+          poster={take.poster}
+          webm={take.webm}
+          mp4={take.mp4}
+          alt={t.visualAlt}
+          width={HERO_TAKE.width}
+          height={HERO_TAKE.height}
+        />
       </DeviceFrame>
       <figcaption className="max-w-[28ch] text-center font-mono text-xs text-fg-muted">{t.caption}</figcaption>
     </figure>

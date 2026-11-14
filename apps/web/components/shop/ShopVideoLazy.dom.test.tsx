@@ -6,19 +6,34 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { ShopVideoLazy } from "./ShopVideoLazy";
 
 vi.mock("next/dynamic", () => ({ default: () => () => <div data-testid="tv" /> }));
-vi.mock("@krizaka/ui/page", () => ({ Section: ({ children, title }: { children: ReactNode; title: ReactNode }) => <section><h2>{title}</h2>{children}</section> }));
+vi.mock("@krizaka/ui/page", () => ({
+  Section: ({ children, title }: { children: ReactNode; title: ReactNode }) => (
+    <section>
+      <h2>{title}</h2>
+      {children}
+    </section>
+  ),
+}));
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 let callback: ((e: { isIntersecting: boolean }[]) => void) | null = null;
 const disconnect = vi.fn();
 class FakeObserver {
-  constructor(cb: typeof callback) { callback = cb; }
+  constructor(cb: typeof callback) {
+    callback = cb;
+  }
   observe = vi.fn();
   disconnect = disconnect;
 }
-afterEach(() => { callback = null; disconnect.mockClear(); });
+afterEach(() => {
+  callback = null;
+  disconnect.mockClear();
+});
 
-const props = { title: "Videos", playlist: [{ id: "a", title: "A", poster: "https://cdn.example/p.jpg" }] } as unknown as Parameters<typeof ShopVideoLazy>[0];
+const props = {
+  title: "Videos",
+  playlist: [{ id: "a", title: "A", poster: "https://cdn.example/p.jpg" }],
+} as unknown as Parameters<typeof ShopVideoLazy>[0];
 
 describe("ShopVideoLazy: the television is downloaded when it nears the screen (client JS budget, no layout shift)", () => {
   it("holds the heading and the poster frame until the frame is near, then mounts the set once", async () => {

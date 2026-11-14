@@ -2,7 +2,21 @@ import { readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 
-import { ACCOUNT_PAGES, BROWSER, detailPagesFor, firstRecord, isHydrationError, OWNER_PAGES, primaryProblem, PUBLIC_PAGES, shiftProblem, THEMES, VIEWPORTS } from "./check-hydration.mjs";
+import { compact } from "../apps/web/lib/test-source";
+
+import {
+  ACCOUNT_PAGES,
+  BROWSER,
+  detailPagesFor,
+  firstRecord,
+  isHydrationError,
+  OWNER_PAGES,
+  primaryProblem,
+  PUBLIC_PAGES,
+  shiftProblem,
+  THEMES,
+  VIEWPORTS,
+} from "./check-hydration.mjs";
 
 describe("the hydration crawl (one rendering for the server and the browser, K0)", () => {
   it("hydrates in a visitor's browser — Montréal's clock and the product's first language — never the server's UTC", () => {
@@ -11,8 +25,20 @@ describe("the hydration crawl (one rendering for the server and the browser, K0)
   });
 
   it("covers every screen the review found broken: the legal page, the storefronts, the owner's day, clients, invoices, books, team, the account", () => {
-    for (const page of ["/fr/privacy", "/fr/s/cedre-ciseaux", "/fr/s/encre-vive", "/fr/s/pattes-saint-henri", "/en/s/pattes-saint-henri?look=journal", "/fr/s/cedre-ciseaux?look=gallery", "/fr", "/fr/sign-in", "/fr/nope"]) expect(PUBLIC_PAGES).toContain(page);
-    for (const page of ["/today", "/clients", "/invoices", "/invoices/new", "/books", "/team", "/shop"]) expect(OWNER_PAGES).toContain(page);
+    for (const page of [
+      "/fr/privacy",
+      "/fr/s/cedre-ciseaux",
+      "/fr/s/encre-vive",
+      "/fr/s/pattes-saint-henri",
+      "/en/s/pattes-saint-henri?look=journal",
+      "/fr/s/cedre-ciseaux?look=gallery",
+      "/fr",
+      "/fr/sign-in",
+      "/fr/nope",
+    ])
+      expect(PUBLIC_PAGES).toContain(page);
+    for (const page of ["/today", "/clients", "/invoices", "/invoices/new", "/books", "/team", "/shop"])
+      expect(OWNER_PAGES).toContain(page);
     for (const page of ["/app/profile", "/app/profile/security"]) expect(ACCOUNT_PAGES).toContain(page);
     expect(THEMES).toEqual(["dark", "light"]);
     expect(VIEWPORTS.map((v) => v.width)).toEqual([1440, 390, 360]);
@@ -20,56 +46,115 @@ describe("the hydration crawl (one rendering for the server and the browser, K0)
 
   it("owes every page one h1 (the page's, never the frame's) and no sideways scroll, down to 360 px", () => {
     const source = readFileSync(new URL("./check-hydration.mjs", import.meta.url), "utf8");
-    for (const needle of ['document.querySelectorAll("h1").length', "scrollWidth > document.documentElement.clientWidth", 'report("h1"', 'report("overflow"']) expect(source).toContain(needle);
+    for (const needle of [
+      'document.querySelectorAll("h1").length',
+      "scrollWidth > document.documentElement.clientWidth",
+      'report("h1"',
+      'report("overflow"',
+    ])
+      expect(compact(source)).toContain(compact(needle));
   });
 
   it("recognises React's hydration errors, minified or not", () => {
-    expect(isHydrationError("Minified React error #418; visit https://react.dev/errors/418?args[]=text&args[]= for the full message")).toBe(true);
+    expect(
+      isHydrationError(
+        "Minified React error #418; visit https://react.dev/errors/418?args[]=text&args[]= for the full message",
+      ),
+    ).toBe(true);
     expect(isHydrationError("Minified React error #425; visit …")).toBe(true);
     expect(isHydrationError("Hydration failed because the server rendered text didn't match the client.")).toBe(true);
-    expect(isHydrationError("A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.")).toBe(true);
+    expect(
+      isHydrationError(
+        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
+      ),
+    ).toBe(true);
     expect(isHydrationError("Failed to load resource: the server responded with a status of 404")).toBe(false);
   });
 
   it("refuses a console error and an uncaught exception on any page, and signs in through the product's own route", () => {
     const source = readFileSync(new URL("./check-hydration.mjs", import.meta.url), "utf8");
-    for (const needle of ['page.on("console"', 'page.on("pageerror"', "/api/auth/sign-in", 'localStorage.setItem("kz-theme"']) expect(source).toContain(needle);
+    for (const needle of [
+      'page.on("console"',
+      'page.on("pageerror"',
+      "/api/auth/sign-in",
+      'localStorage.setItem("kz-theme"',
+    ])
+      expect(compact(source)).toContain(compact(needle));
   });
 
   it("crawls the first record of a list, never its creation page nor a deeper address", () => {
     const shop = "/fr/app/0b1c";
-    const invoices = [`${shop}/invoices/new`, `${shop}/invoices/i-1`, `${shop}/invoices/i-2`, `${shop}/invoices/i-1/correct`];
+    const invoices = [
+      `${shop}/invoices/new`,
+      `${shop}/invoices/i-1`,
+      `${shop}/invoices/i-2`,
+      `${shop}/invoices/i-1/correct`,
+    ];
     expect(firstRecord(invoices, `${shop}/invoices`)).toBe(`${shop}/invoices/i-1`);
-    expect(firstRecord([`${shop}/invoices/new?client=c-1`, `${shop}/invoices/i-1/correct`, `${shop}/clients/c-1`], `${shop}/invoices`)).toBeNull();
-    expect(firstRecord([`${shop}/clients`, null, `${shop}/clients/c-9`], `${shop}/clients`)).toBe(`${shop}/clients/c-9`);
+    expect(
+      firstRecord(
+        [`${shop}/invoices/new?client=c-1`, `${shop}/invoices/i-1/correct`, `${shop}/clients/c-1`],
+        `${shop}/invoices`,
+      ),
+    ).toBeNull();
+    expect(firstRecord([`${shop}/clients`, null, `${shop}/clients/c-9`], `${shop}/clients`)).toBe(
+      `${shop}/clients/c-9`,
+    );
   });
 
   it("lets another visitor be tried (--locale, --timezone) and expects the two 404 checks to answer 404", () => {
     const source = readFileSync(new URL("./check-hydration.mjs", import.meta.url), "utf8");
-    for (const needle of ['arg("timezone", BROWSER.timezoneId)', 'arg("locale", BROWSER.locale)', "expected404 ? status !== 404 : status >= 400"]) expect(source).toContain(needle);
-    expect(PUBLIC_PAGES.filter((p) => p.endsWith("/nope"))).toEqual(["/fr/s/nope", "/fr/s/cedre-ciseaux/service/nope", "/fr/nope"]);
+    for (const needle of [
+      'arg("timezone", BROWSER.timezoneId)',
+      'arg("locale", BROWSER.locale)',
+      "expected404 ? status !== 404 : status >= 400",
+    ])
+      expect(source).toContain(needle);
+    expect(PUBLIC_PAGES.filter((p) => p.endsWith("/nope"))).toEqual([
+      "/fr/s/nope",
+      "/fr/s/cedre-ciseaux/service/nope",
+      "/fr/nope",
+    ]);
   });
 
   it("crawls the correction screen of the first invoice too, and the page of a client's file as it is", () => {
     const shop = "/fr/app/0b1c";
-    expect(detailPagesFor(`${shop}/invoices`, `${shop}/invoices/i-1`)).toEqual([`${shop}/invoices/i-1`, `${shop}/invoices/i-1/correct`]);
+    expect(detailPagesFor(`${shop}/invoices`, `${shop}/invoices/i-1`)).toEqual([
+      `${shop}/invoices/i-1`,
+      `${shop}/invoices/i-1/correct`,
+    ]);
     expect(detailPagesFor(`${shop}/clients`, `${shop}/clients/c-9`)).toEqual([`${shop}/clients/c-9`]);
   });
 
   it("owes the client with no file and the correction screen a page heading of their own (the frame renders none)", () => {
-    const acct = readFileSync(new URL("../apps/web/app/[locale]/(app)/app/(account)/page.tsx", import.meta.url), "utf8");
+    const acct = readFileSync(
+      new URL("../apps/web/app/[locale]/(app)/app/(account)/page.tsx", import.meta.url),
+      "utf8",
+    );
     const home = readFileSync(new URL("../apps/web/components/app/ClientHome.tsx", import.meta.url), "utf8");
-    const correct = readFileSync(new URL("../apps/web/app/[locale]/(app)/app/[shop]/invoices/[id]/correct/page.tsx", import.meta.url), "utf8");
+    const correct = readFileSync(
+      new URL("../apps/web/app/[locale]/(app)/app/[shop]/invoices/[id]/correct/page.tsx", import.meta.url),
+      "utf8",
+    );
     // The client space (K7) renders its heading before the empty state, with or without a file (ClientHome.test.tsx counts the h1).
     expect(acct).toContain("<ClientHome");
-    expect(home).toMatch(/<PageHeader[\s\S]*files\.length === 0 \? <EmptyState/);
+    expect(compact(home)).toMatch(/<PageHeader.*files\.length===0\?<EmptyState/);
     expect(correct).toContain("<PageHeader");
   });
 });
 
 describe("one primary per screen, crawled on every owner page (D1b)", () => {
   it("wants exactly one on the day, the lists and an invoice's screens", () => {
-    for (const path of ["/fr/app/s-1/today", "/fr/app/s-1/clients", "/fr/app/s-1/clients/c-1", "/fr/app/s-1/invoices", "/fr/app/s-1/invoices/new", "/fr/app/s-1/invoices/i-1", "/fr/app/s-1/invoices/i-1/correct", "/en/app/s-1/books"]) {
+    for (const path of [
+      "/fr/app/s-1/today",
+      "/fr/app/s-1/clients",
+      "/fr/app/s-1/clients/c-1",
+      "/fr/app/s-1/invoices",
+      "/fr/app/s-1/invoices/new",
+      "/fr/app/s-1/invoices/i-1",
+      "/fr/app/s-1/invoices/i-1/correct",
+      "/en/app/s-1/books",
+    ]) {
       expect(primaryProblem(path, 1), path).toBeNull();
       expect(primaryProblem(path, 0), path).toMatch(/one expected/);
       expect(primaryProblem(path, 2), path).toMatch(/one at most/);

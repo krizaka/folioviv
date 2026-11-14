@@ -29,7 +29,33 @@ for (const [type, slots] of Object.entries(types)) {
       const file = join(out, `${type}-${slot}-${i + 1}.png`);
       if (existsSync(file)) continue;
       const [w, h] = slot === "cover" ? [1280, 720] : [1024, 768];
-      const run = spawnSync(sd, ["--diffusion-model", join(models, "flux2-klein-4b/flux-2-klein-4b-Q8_0.gguf"), "--vae", join(models, "flux2-klein-4b/flux2-vae.safetensors"), "--llm", join(models, "flux2-klein-4b/Qwen3-4B-Q8_0.gguf"), "-p", `${prompt}, ${style}`, "--cfg-scale", "1.0", "--steps", "4", "-W", String(w), "-H", String(h), "--diffusion-fa", "-s", String(seed), "-o", file], { encoding: "utf8" });
+      const run = spawnSync(
+        sd,
+        [
+          "--diffusion-model",
+          join(models, "flux2-klein-4b/flux-2-klein-4b-Q8_0.gguf"),
+          "--vae",
+          join(models, "flux2-klein-4b/flux2-vae.safetensors"),
+          "--llm",
+          join(models, "flux2-klein-4b/Qwen3-4B-Q8_0.gguf"),
+          "-p",
+          `${prompt}, ${style}`,
+          "--cfg-scale",
+          "1.0",
+          "--steps",
+          "4",
+          "-W",
+          String(w),
+          "-H",
+          String(h),
+          "--diffusion-fa",
+          "-s",
+          String(seed),
+          "-o",
+          file,
+        ],
+        { encoding: "utf8" },
+      );
       console.log(file, existsSync(file) ? "ok" : `FAILED (${run.status})`);
     }
   }

@@ -33,7 +33,12 @@ export interface Line extends LineInput {
 export function quantityHundredths(quantity: number): number {
   const scaled = Math.round(quantity * 100);
   // `quantity * 100` carries float noise (1.1 → 110.00000000000001): a quantity is fine when it is within it of a whole hundredth.
-  if (!Number.isFinite(quantity) || scaled === 0 || Math.abs(quantity * 100 - scaled) > 1e-6 || !Number.isSafeInteger(scaled)) {
+  if (
+    !Number.isFinite(quantity) ||
+    scaled === 0 ||
+    Math.abs(quantity * 100 - scaled) > 1e-6 ||
+    !Number.isSafeInteger(scaled)
+  ) {
     throw new RangeError(`quantity must be a non-zero number with at most two decimals: ${quantity}`);
   }
   return scaled;
@@ -66,11 +71,13 @@ export interface InvoiceTotals {
 export function invoiceTotals(input: readonly LineInput[], shop: { registrant: boolean }): InvoiceTotals {
   const lines = input.map((l) => {
     const hundredths = quantityHundredths(l.quantity);
-    if (!Number.isSafeInteger(l.unitPriceCents) || !Number.isSafeInteger(l.discountCents ?? 0)) throw new RangeError("amounts are whole cents");
+    if (!Number.isSafeInteger(l.unitPriceCents) || !Number.isSafeInteger(l.discountCents ?? 0))
+      throw new RangeError("amounts are whole cents");
     const discount = l.discountCents ?? 0;
     if (discount < 0) throw new RangeError(`discount cannot be negative: ${discount}`);
     const gross = lineAmount(hundredths, l.unitPriceCents);
-    if (gross > 0 && discount > gross) throw new RangeError(`discount cannot exceed line total: ${discount} > ${gross}`);
+    if (gross > 0 && discount > gross)
+      throw new RangeError(`discount cannot exceed line total: ${discount} > ${gross}`);
     return { ...l, quantityHundredths: hundredths, amountCents: gross - discount };
   });
   const sum = (c: TaxCategory) => lines.filter((l) => l.category === c).reduce((s, l) => s + l.amountCents, 0);
@@ -80,7 +87,16 @@ export function invoiceTotals(input: readonly LineInput[], shop: { registrant: b
   const subtotalCents = taxableCents + zeroRatedCents + exemptCents;
   const gstCents = shop.registrant ? applyRate(taxableCents, GST) : 0;
   const qstCents = shop.registrant ? applyRate(taxableCents, QST) : 0;
-  return { lines, taxableCents, zeroRatedCents, exemptCents, subtotalCents, gstCents, qstCents, totalCents: subtotalCents + gstCents + qstCents };
+  return {
+    lines,
+    taxableCents,
+    zeroRatedCents,
+    exemptCents,
+    subtotalCents,
+    gstCents,
+    qstCents,
+    totalCents: subtotalCents + gstCents + qstCents,
+  };
 }
 
 /** A GST/HST registration number (9 digits + RT + 4 digits) and a QST number (10 digits + TQ + 4 digits). */

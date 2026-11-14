@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 
-import { type Db,dbCodeStore } from "@folioviv/db";
+import { type Db, dbCodeStore } from "@folioviv/db";
 import { createEmailVerification, VERIFY_FAILURE, type VerifyResult } from "@krizaka/email-verification";
 import { z } from "zod";
 
@@ -30,7 +30,10 @@ export type GuestStart = z.infer<typeof guestStart>;
 export const guestConfirm = z.object({
   challengeId: z.string().min(8).max(200),
   email: z.string().trim().toLowerCase().email().max(320),
-  code: z.string().trim().regex(/^\d{6}$/),
+  code: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/),
 });
 
 /** What is held until the address answers: the request without the CAPTCHA token, and the shop it was made at. */
@@ -43,8 +46,17 @@ export function guestVerification(db: Db, now: () => Date, secret: string) {
 }
 
 /** Why a code was refused, as the API says it (the page translates the code). */
-export function codeRefusal(result: Extract<VerifyResult<unknown>, { ok: false }>): { status: number; code: string; attemptsLeft?: number } {
-  if (result.reason === VERIFY_FAILURE.invalid) return { status: 400, code: "CODE_INVALID", ...(result.attemptsLeft === undefined ? {} : { attemptsLeft: result.attemptsLeft }) };
+export function codeRefusal(result: Extract<VerifyResult<unknown>, { ok: false }>): {
+  status: number;
+  code: string;
+  attemptsLeft?: number;
+} {
+  if (result.reason === VERIFY_FAILURE.invalid)
+    return {
+      status: 400,
+      code: "CODE_INVALID",
+      ...(result.attemptsLeft === undefined ? {} : { attemptsLeft: result.attemptsLeft }),
+    };
   if (result.reason === VERIFY_FAILURE.locked) return { status: 429, code: "CODE_LOCKED" };
   return { status: 410, code: "CODE_EXPIRED" };
 }

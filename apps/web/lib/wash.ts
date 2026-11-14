@@ -5,9 +5,18 @@
  */
 export type Signatures = ReadonlyMap<string, string>;
 
-export const signaturesOf = <T>(rows: readonly T[], key: (row: T) => string, signature: (row: T) => string): Signatures => new Map(rows.map((row) => [key(row), signature(row)]));
+export const signaturesOf = <T>(
+  rows: readonly T[],
+  key: (row: T) => string,
+  signature: (row: T) => string,
+): Signatures => new Map(rows.map((row) => [key(row), signature(row)]));
 
-export function changedKeys<T>(before: Signatures | null, rows: readonly T[], key: (row: T) => string, signature: (row: T) => string): Set<string> {
+export function changedKeys<T>(
+  before: Signatures | null,
+  rows: readonly T[],
+  key: (row: T) => string,
+  signature: (row: T) => string,
+): Set<string> {
   if (before === null) return new Set();
   return new Set(rows.filter((row) => before.get(key(row)) !== signature(row)).map(key));
 }

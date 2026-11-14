@@ -2,7 +2,11 @@ import { holdSlug } from "@folioviv/core";
 import { describe, expect, it, vi } from "vitest";
 
 const stored = vi.hoisted(() => ({ value: "login\n/(a+)+$/\n/^bank(ing)?$/" }));
-vi.mock("./settings", () => ({ appSettings: () => ({ get: async (key: string) => (key === "slugs.protectedTerms" ? stored.value : key === "limits.slugChanges" ? 3 : 30) }) }));
+vi.mock("./settings", () => ({
+  appSettings: () => ({
+    get: async (key: string) => (key === "slugs.protectedTerms" ? stored.value : key === "limits.slugChanges" ? 3 : 30),
+  }),
+}));
 
 import { slugPolicy } from "./slug-policy";
 

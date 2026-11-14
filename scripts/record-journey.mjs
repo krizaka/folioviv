@@ -17,6 +17,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 
+import { drawWalkPhoto, newPhoneContext } from "./lib/demo-walk.mjs";
 import { ffmpeg, glide, listenScreencast, spanOf, writeConcatList } from "./lib/take.mjs";
 
 const require = createRequire(import.meta.url);
@@ -34,8 +35,34 @@ const client = { email: need("E2E_CLIENT_EMAIL"), password: need("E2E_CLIENT_PAS
 const walker = { email: need("E2E_WALKER_EMAIL"), password: need("E2E_WALKER_PASSWORD") };
 
 const W = {
-  fr: { book: "Réserver", confirm: "Réserver cette promenade", done: "Réservé!", checkIn: "Commencer la promenade", checkOut: "Terminer la promenade", note: "Note pour le propriétaire", save: "Enregistrer le rapport", saved: "Rapport enregistré.", next: "Jour suivant", afterSend: /Envoyé à|Enregistré et en attente/, reportTitle: (d) => `Rapport pour ${d}`, send: /^Envoyer à/ },
-  en: { book: "Book", confirm: "Book this walk", done: "Booked!", checkIn: "Start the walk", checkOut: "End the walk", note: "Note for the owner", save: "Save the report", saved: "Report saved.", next: "Next day", afterSend: /Sent to|Saved and waiting/, reportTitle: (d) => `Report for ${d}`, send: /^Send to/ },
+  fr: {
+    book: "Réserver",
+    confirm: "Réserver cette promenade",
+    done: "Réservé!",
+    checkIn: "Commencer la promenade",
+    checkOut: "Terminer la promenade",
+    note: "Note pour le propriétaire",
+    save: "Enregistrer le rapport",
+    saved: "Rapport enregistré.",
+    next: "Jour suivant",
+    afterSend: /Envoyé à|Enregistré et en attente/,
+    reportTitle: (d) => `Rapport pour ${d}`,
+    send: /^Envoyer à/,
+  },
+  en: {
+    book: "Book",
+    confirm: "Book this walk",
+    done: "Booked!",
+    checkIn: "Start the walk",
+    checkOut: "End the walk",
+    note: "Note for the owner",
+    save: "Save the report",
+    saved: "Report saved.",
+    next: "Next day",
+    afterSend: /Sent to|Saved and waiting/,
+    reportTitle: (d) => `Report for ${d}`,
+    send: /^Send to/,
+  },
 }[LOCALE];
 
 const PHONE = { width: 390, height: 844 };
@@ -54,22 +81,30 @@ const hold = (page, ms) => page.waitForTimeout(ms);
 
 async function signInAs(context, who) {
   await context.clearCookies();
-  const res = await context.request.post(`${BASE}/api/auth/sign-in`, { data: { email: who.email, password: who.password } });
-  calls.push({ method: "POST", path: "/api/auth/sign-in", status: res.status(), requestId: res.headers()["x-request-id"] ?? null });
+  const res = await context.request.post(`${BASE}/api/auth/sign-in`, {
+    data: { email: who.email, password: who.password },
+  });
+  calls.push({
+    method: "POST",
+    path: "/api/auth/sign-in",
+    status: res.status(),
+    requestId: res.headers()["x-request-id"] ?? null,
+  });
   if (!res.ok()) throw new Error(`sign-in refused (${res.status()})`);
 }
 
 const browser = await chromium.launch();
-const context = await browser.newContext({ viewport: PHONE, deviceScaleFactor: SCALE, locale: LOCALE === "fr" ? "fr-CA" : "en-CA", timezoneId: "America/Toronto", isMobile: true, hasTouch: true, colorScheme: "dark" });
-await context.addInitScript(() => {
-  try {
-    localStorage.setItem("kz-theme", "dark");
-  } catch {}
-});
+const context = await newPhoneContext(browser, { viewport: PHONE, scale: SCALE, locale: LOCALE });
 const page = await context.newPage();
 page.on("response", (res) => {
   const url = new URL(res.url());
-  if (url.pathname.startsWith("/api/")) calls.push({ method: res.request().method(), path: url.pathname, status: res.status(), requestId: res.headers()["x-request-id"] ?? null });
+  if (url.pathname.startsWith("/api/"))
+    calls.push({
+      method: res.request().method(),
+      path: url.pathname,
+      status: res.status(),
+      requestId: res.headers()["x-request-id"] ?? null,
+    });
 });
 page.on("pageerror", (e) => log(false, `no page error (${e.message.slice(0, 120)})`));
 
@@ -77,7 +112,13 @@ const cdp = await listenScreencast(context, page, frames);
 
 try {
   await page.goto(`${BASE}/${LOCALE}/s/${SLUG}`, { waitUntil: "networkidle" });
-  await cdp.send("Page.startScreencast", { format: "jpeg", quality: 88, maxWidth: PHONE.width * SCALE, maxHeight: PHONE.height * SCALE, everyNthFrame: 1 });
+  await cdp.send("Page.startScreencast", {
+    format: "jpeg",
+    quality: 88,
+    maxWidth: PHONE.width * SCALE,
+    maxHeight: PHONE.height * SCALE,
+    everyNthFrame: 1,
+  });
   await hold(page, 900);
   mark("storefront");
 
@@ -121,7 +162,12 @@ try {
   mark("day");
   await hold(page, 900);
   // The booked walk is the 15:00 one (the persona's reset leaves each client an open 14:00 walk): step forward to its day.
-  const mine = () => page.locator("[aria-labelledby^=visit-]").filter({ hasText: client.dog }).filter({ hasText: /15 h 00\s*[–-]\s*16 h 00|3:00.{0,8}4:00/ }).filter({ has: page.getByRole("button", { name: W.checkIn }) });
+  const mine = () =>
+    page
+      .locator("[aria-labelledby^=visit-]")
+      .filter({ hasText: client.dog })
+      .filter({ hasText: /15 h 00\s*[–-]\s*16 h 00|3:00.{0,8}4:00/ })
+      .filter({ has: page.getByRole("button", { name: W.checkIn }) });
   for (let i = 0; i < 16 && (await mine().count()) === 0; i++) {
     const day = new Date(Date.now() + i * 86_400_000).toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
     await page.goto(`${BASE}/${LOCALE}/app?day=${day}`, { waitUntil: "networkidle" });
@@ -138,28 +184,17 @@ try {
   const box = card.getByRole("form", { name: W.reportTitle(client.dog) });
   await box.waitFor();
   mark("report");
-  const photo = await page.evaluate(() => {
-    const canvas = document.createElement("canvas");
-    canvas.width = 1280;
-    canvas.height = 960;
-    const g = canvas.getContext("2d");
-    const sky = g.createLinearGradient(0, 0, 0, 960);
-    sky.addColorStop(0, "#9ad0ff");
-    sky.addColorStop(1, "#d9f0c8");
-    g.fillStyle = sky;
-    g.fillRect(0, 0, 1280, 960);
-    g.fillStyle = "#4f9d4a";
-    g.fillRect(0, 700, 1280, 260);
-    g.font = "360px serif";
-    g.fillText("🐕", 300, 700);
-    g.font = "bold 44px sans-serif";
-    g.fillStyle = "#0c3b1f";
-    g.fillText("Illustration — Folioviv demo", 330, 860);
-    return canvas.toDataURL("image/jpeg", 0.85).split(",")[1];
-  });
+  const photo = await drawWalkPhoto(page);
   const photoPath = path.join(OUT, "walk.jpg");
   writeFileSync(photoPath, Buffer.from(photo, "base64"));
-  await box.getByLabel(W.note).pressSequentially(LOCALE === "fr" ? `${client.dog} a bien marché, 52 min autour du canal Lachine, pipi ✓` : `${client.dog} walked well, 52 min along the Lachine canal, pee ✓`, { delay: 28 });
+  await box
+    .getByLabel(W.note)
+    .pressSequentially(
+      LOCALE === "fr"
+        ? `${client.dog} a bien marché, 52 min autour du canal Lachine, pipi ✓`
+        : `${client.dog} walked well, 52 min along the Lachine canal, pee ✓`,
+      { delay: 28 },
+    );
   await hold(page, 500);
   await box.locator("input[type=file]").setInputFiles(photoPath);
   await hold(page, 900);
@@ -182,7 +217,12 @@ try {
   const image = page.locator("img[src*='/api/me/reports/']").first();
   await image.waitFor();
   await image.scrollIntoViewIfNeeded();
-  const loaded = await page.waitForFunction((el) => el.complete && el.naturalWidth > 0, await image.elementHandle(), { timeout: 10_000 }).then(() => true, () => false);
+  const loaded = await page
+    .waitForFunction((el) => el.complete && el.naturalWidth > 0, await image.elementHandle(), { timeout: 10_000 })
+    .then(
+      () => true,
+      () => false,
+    );
   log(loaded, "the photo of the report loads in her space");
   mark("client");
   await hold(page, 2200);
@@ -213,14 +253,52 @@ try {
 const duration = spanOf(frames);
 const list = writeConcatList(frames, FRAMES);
 const full = path.join(OUT, `take-${LOCALE}.mp4`);
-ffmpeg(["-f", "concat", "-safe", "0", "-i", list, "-vf", "fps=30,scale=780:-2:flags=lanczos", "-c:v", "libx264", "-crf", "20", "-preset", "slow", "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-an", full]);
+ffmpeg([
+  "-f",
+  "concat",
+  "-safe",
+  "0",
+  "-i",
+  list,
+  "-vf",
+  "fps=30,scale=780:-2:flags=lanczos",
+  "-c:v",
+  "libx264",
+  "-crf",
+  "20",
+  "-preset",
+  "slow",
+  "-pix_fmt",
+  "yuv420p",
+  "-movflags",
+  "+faststart",
+  "-an",
+  full,
+]);
 
 // The real capture rate: frames the compositor painted per second while the page was moving (gaps under 100 ms).
 const gaps = frames.slice(1).map((f, i) => f.t - frames[i].t);
 const moving = gaps.filter((g) => g < 0.1);
 const activeFps = moving.length / moving.reduce((s, g) => s + g, 0);
-const meta = { base: BASE, locale: LOCALE, viewport: PHONE, scale: SCALE, durationSeconds: Number(duration.toFixed(2)), frames: frames.length, activeCaptureFps: Number(activeFps.toFixed(1)), outputFps: 30, beats, calls };
+const meta = {
+  base: BASE,
+  locale: LOCALE,
+  viewport: PHONE,
+  scale: SCALE,
+  durationSeconds: Number(duration.toFixed(2)),
+  frames: frames.length,
+  activeCaptureFps: Number(activeFps.toFixed(1)),
+  outputFps: 30,
+  beats,
+  calls,
+};
 writeFileSync(path.join(OUT, `journey-${LOCALE}.json`), JSON.stringify(meta, null, 2));
-log(activeFps >= 25, `capture rate while moving: ${activeFps.toFixed(1)} fps (${frames.length} frames over ${duration.toFixed(1)} s)`);
-log(calls.every((c) => c.status < 500), "no API call answered with a server error");
+log(
+  activeFps >= 25,
+  `capture rate while moving: ${activeFps.toFixed(1)} fps (${frames.length} frames over ${duration.toFixed(1)} s)`,
+);
+log(
+  calls.every((c) => c.status < 500),
+  "no API call answered with a server error",
+);
 process.stdout.write(`take: ${full}\nbeats: ${beats.map((b) => `${b.name}@${b.at}`).join(" ")}\n`);

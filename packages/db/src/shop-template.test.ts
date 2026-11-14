@@ -10,7 +10,15 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { migrate } from "./migrate";
 import { shopPage, shops } from "./schema";
 import { shopPaperOf } from "./shop-page-versions";
-import { applyTemplate, DEFAULT_SHOP_PAGE_SECTIONS, saveShopPageConfig, SHOP_PAGE_SECTIONS, sectionsFromTemplate, shopPageConfigOf, withTrust } from "./shop-page";
+import {
+  applyTemplate,
+  DEFAULT_SHOP_PAGE_SECTIONS,
+  saveShopPageConfig,
+  SHOP_PAGE_SECTIONS,
+  sectionsFromTemplate,
+  shopPageConfigOf,
+  withTrust,
+} from "./shop-page";
 import { freshDatabase, freshEmptyDatabase } from "./test/db";
 import { walkerShop } from "./test/fixtures";
 
@@ -51,7 +59,9 @@ describe("applying a template", () => {
     expect(applied).toMatchObject({ id: "salon-carte", version: 1 });
     const config = await shopPageConfigOf(t.db, shop.shopId);
     expect(config).toMatchObject({ templateId: "salon-carte", templateVersion: 1, sectionsCustom: false });
-    const listed = SALON.sections.map((s) => s.id).filter((id) => (SHOP_PAGE_SECTIONS as readonly string[]).includes(id));
+    const listed = SALON.sections
+      .map((s) => s.id)
+      .filter((id) => (SHOP_PAGE_SECTIONS as readonly string[]).includes(id));
     expect(config.sections.slice(0, listed.length).map((s) => s.id)).toEqual(listed);
     expect(config.sections.map((s) => s.id).sort()).toEqual([...SHOP_PAGE_SECTIONS].sort()); // nothing lost, nothing twice
   });
@@ -61,10 +71,16 @@ describe("applying a template", () => {
     const config = await shopPageConfigOf(t.db, shop.shopId);
     const mine = [...config.sections].reverse();
     await saveShopPageConfig(t.db, shop.shopId, { ...config, sections: mine });
-    await expect(applyTemplate(t.db, shop.shopId, { templateId: "salon-carte" })).rejects.toMatchObject({ code: "AK_SECTIONS_CUSTOM" });
+    await expect(applyTemplate(t.db, shop.shopId, { templateId: "salon-carte" })).rejects.toMatchObject({
+      code: "AK_SECTIONS_CUSTOM",
+    });
     expect((await shopPageConfigOf(t.db, shop.shopId)).templateId).toBeNull();
     await applyTemplate(t.db, shop.shopId, { templateId: "salon-carte", keepOrder: true });
-    expect(await shopPageConfigOf(t.db, shop.shopId)).toMatchObject({ templateId: "salon-carte", sectionsCustom: true, sections: mine });
+    expect(await shopPageConfigOf(t.db, shop.shopId)).toMatchObject({
+      templateId: "salon-carte",
+      sectionsCustom: true,
+      sections: mine,
+    });
     await applyTemplate(t.db, shop.shopId, { templateId: "salon-vitrine", keepOrder: false });
     const replaced = await shopPageConfigOf(t.db, shop.shopId);
     expect(replaced).toMatchObject({ templateId: "salon-vitrine", sectionsCustom: false });
@@ -73,7 +89,10 @@ describe("applying a template", () => {
 
   it("never touches the shop's content: texts, media and what the owner wrote stay as they are", async () => {
     const shop = await walkerShop(t.db, "tpl-content");
-    await t.db.update(shops).set({ taglineFr: "Des promenades de quartier", bioEn: "I walk dogs." }).where(eq(shops.id, shop.shopId));
+    await t.db
+      .update(shops)
+      .set({ taglineFr: "Des promenades de quartier", bioEn: "I walk dogs." })
+      .where(eq(shops.id, shop.shopId));
     const before = (await t.db.select().from(shops).where(eq(shops.id, shop.shopId)))[0]!;
     await applyTemplate(t.db, shop.shopId, { templateId: "pets-histoire" });
     await applyTemplate(t.db, shop.shopId, { templateId: "pets-vitrine" });
@@ -92,7 +111,12 @@ describe("applying a template", () => {
 
   it("an unknown id or version, or one the administrator does not offer, is the same refusal and changes nothing", async () => {
     const shop = await walkerShop(t.db, "tpl-unknown");
-    for (const input of [{ templateId: "nope-nope" }, { templateId: "salon-carte", templateVersion: 9 }, { templateId: "salon-carte", offered: ["salon-vitrine"] }, { templateId: "salon-carte", offered: [] }]) {
+    for (const input of [
+      { templateId: "nope-nope" },
+      { templateId: "salon-carte", templateVersion: 9 },
+      { templateId: "salon-carte", offered: ["salon-vitrine"] },
+      { templateId: "salon-carte", offered: [] },
+    ]) {
       await expect(applyTemplate(t.db, shop.shopId, input)).rejects.toMatchObject({ code: "AK_TEMPLATE_UNKNOWN" });
     }
     expect((await shopPageConfigOf(t.db, shop.shopId)).templateId).toBeNull();
@@ -101,26 +125,70 @@ describe("applying a template", () => {
   it("maps a template onto the sections, `trust` included, keeping the rest as they are", () => {
     const current = DEFAULT_SHOP_PAGE_SECTIONS.map((s) => (s.id === "wall" ? { ...s, visible: false } : { ...s }));
     const out = sectionsFromTemplate(SALON, current);
-    expect(out.map((s) => s.id)).toEqual(["services", "hours", "team", "trust", "gallery", "zones", "wall", "reels", "announcements", "reviews", "follow"]);
+    expect(out.map((s) => s.id)).toEqual([
+      "services",
+      "hours",
+      "team",
+      "trust",
+      "gallery",
+      "zones",
+      "wall",
+      "reels",
+      "announcements",
+      "reviews",
+      "follow",
+    ]);
     expect(out.find((s) => s.id === "wall")!.visible).toBe(false);
   });
 
   it("the database refuses a template id without its version, and a malformed id", async () => {
     const shop = await walkerShop(t.db, "tpl-check");
-    await expect(t.pool.query("INSERT INTO shop_page (shop_id, template_id) VALUES ($1, 'salon-carte')", [shop.shopId])).rejects.toThrow();
-    await expect(t.pool.query("INSERT INTO shop_page (shop_id, template_id, template_version) VALUES ($1, 'Salon Carte', 1)", [shop.shopId])).rejects.toThrow();
+    await expect(
+      t.pool.query("INSERT INTO shop_page (shop_id, template_id) VALUES ($1, 'salon-carte')", [shop.shopId]),
+    ).rejects.toThrow();
+    await expect(
+      t.pool.query("INSERT INTO shop_page (shop_id, template_id, template_version) VALUES ($1, 'Salon Carte', 1)", [
+        shop.shopId,
+      ]),
+    ).rejects.toThrow();
     expect((await t.db.select().from(shopPage).where(eq(shopPage.shopId, shop.shopId))).length).toBe(0);
   });
 });
 
 describe("`trust` is an orderable section (#261, step 3)", () => {
-  const LEGACY = ["services", "team", "hours", "zones", "gallery", "wall", "reels", "announcements", "reviews", "follow"].map((id) => ({ id, visible: true }));
+  const LEGACY = [
+    "services",
+    "team",
+    "hours",
+    "zones",
+    "gallery",
+    "wall",
+    "reels",
+    "announcements",
+    "reviews",
+    "follow",
+  ].map((id) => ({ id, visible: true }));
 
   it("a page saved before it, with ten sections, is read with `trust` just before `gallery`: today's placement, nothing changes", async () => {
     const shop = await walkerShop(t.db, "tpl-legacy");
-    await t.pool.query("INSERT INTO shop_page (shop_id, sections) VALUES ($1, $2)", [shop.shopId, JSON.stringify(LEGACY)]);
+    await t.pool.query("INSERT INTO shop_page (shop_id, sections) VALUES ($1, $2)", [
+      shop.shopId,
+      JSON.stringify(LEGACY),
+    ]);
     const config = await shopPageConfigOf(t.db, shop.shopId);
-    expect(config.sections.map((s) => s.id)).toEqual(["services", "team", "hours", "zones", "trust", "gallery", "wall", "reels", "announcements", "reviews", "follow"]);
+    expect(config.sections.map((s) => s.id)).toEqual([
+      "services",
+      "team",
+      "hours",
+      "zones",
+      "trust",
+      "gallery",
+      "wall",
+      "reels",
+      "announcements",
+      "reviews",
+      "follow",
+    ]);
     expect(config.sections.find((s) => s.id === "trust")!.visible).toBe(true);
     expect(config.sectionsCustom).toBe(false); // an untouched legacy page is not « customised » by the new id
     expect(DEFAULT_SHOP_PAGE_SECTIONS.map((s) => s.id)).toEqual(config.sections.map((s) => s.id));
@@ -129,9 +197,16 @@ describe("`trust` is an orderable section (#261, step 3)", () => {
   it("an owner's hidden gallery or reorder on a legacy page is kept, with `trust` where it always was", async () => {
     const shop = await walkerShop(t.db, "tpl-legacy-custom");
     const mine = [{ id: "gallery", visible: false }, ...LEGACY.filter((s) => s.id !== "gallery")];
-    await t.pool.query("INSERT INTO shop_page (shop_id, sections, sections_custom) VALUES ($1, $2, true)", [shop.shopId, JSON.stringify(mine)]);
+    await t.pool.query("INSERT INTO shop_page (shop_id, sections, sections_custom) VALUES ($1, $2, true)", [
+      shop.shopId,
+      JSON.stringify(mine),
+    ]);
     // `trust` was always drawn right before the gallery, wherever the owner put it: it keeps doing so.
-    expect((await shopPageConfigOf(t.db, shop.shopId)).sections.map((s) => s.id).slice(0, 3)).toEqual(["trust", "gallery", "services"]);
+    expect((await shopPageConfigOf(t.db, shop.shopId)).sections.map((s) => s.id).slice(0, 3)).toEqual([
+      "trust",
+      "gallery",
+      "services",
+    ]);
     expect(withTrust(mine)[1]).toMatchObject({ id: "gallery", visible: false });
   });
 
@@ -145,25 +220,43 @@ describe("`trust` is an orderable section (#261, step 3)", () => {
 
   it("a template's story-first layout can now put `trust` first, and applying it to a legacy page works", async () => {
     const shop = await walkerShop(t.db, "tpl-story");
-    await t.pool.query("INSERT INTO shop_page (shop_id, sections) VALUES ($1, $2)", [shop.shopId, JSON.stringify(LEGACY)]);
+    await t.pool.query("INSERT INTO shop_page (shop_id, sections) VALUES ($1, $2)", [
+      shop.shopId,
+      JSON.stringify(LEGACY),
+    ]);
     await applyTemplate(t.db, shop.shopId, { templateId: "pets-histoire" });
     expect((await shopPageConfigOf(t.db, shop.shopId)).sections[0]!.id).toBe("trust");
   });
 
   it("every section id of every template is a configurable section", () => {
-    for (const template of TEMPLATES) for (const section of template.sections) expect(SHOP_PAGE_SECTIONS as readonly string[], `${template.id}/${section.id}`).toContain(section.id);
+    for (const template of TEMPLATES)
+      for (const section of template.sections)
+        expect(SHOP_PAGE_SECTIONS as readonly string[], `${template.id}/${section.id}`).toContain(section.id);
   });
 });
 
 describe("the update to the notebook's version (folioviv#316)", () => {
   it("moves a shop from @1 to @2 and keeps its content: its trade, logo and image defaults", async () => {
     const shop = await walkerShop(t.db, "to-v2");
-    await saveShopPageConfig(t.db, shop.shopId, { shopType: "salon", logoUrl: "https://example.test/logo.png", useDefaults: false });
+    await saveShopPageConfig(t.db, shop.shopId, {
+      shopType: "salon",
+      logoUrl: "https://example.test/logo.png",
+      useDefaults: false,
+    });
     await applyTemplate(t.db, shop.shopId, { templateId: "salon-vitrine" });
-    expect(await shopPageConfigOf(t.db, shop.shopId)).toMatchObject({ templateId: "salon-vitrine", templateVersion: 1 });
+    expect(await shopPageConfigOf(t.db, shop.shopId)).toMatchObject({
+      templateId: "salon-vitrine",
+      templateVersion: 1,
+    });
     const catalogue = [...TEMPLATES, ...TEMPLATES_V2];
     await applyTemplate(t.db, shop.shopId, { templateId: "salon-vitrine", keepOrder: false }, catalogue);
-    expect(await shopPageConfigOf(t.db, shop.shopId)).toMatchObject({ templateId: "salon-vitrine", templateVersion: 2, shopType: "salon", logoUrl: "https://example.test/logo.png", useDefaults: false });
+    expect(await shopPageConfigOf(t.db, shop.shopId)).toMatchObject({
+      templateId: "salon-vitrine",
+      templateVersion: 2,
+      shopType: "salon",
+      logoUrl: "https://example.test/logo.png",
+      useDefaults: false,
+    });
   });
 });
 
@@ -179,6 +272,8 @@ describe("the paper of the applied template (folioviv#305)", () => {
   it("refuses a paper the notebook does not have", async () => {
     const a = await walkerShop(t.db, "paper-bad");
     await t.db.insert(shopPage).values({ shopId: a.shopId });
-    await expect(t.pool.query("UPDATE shop_page SET paper = 'dot-grid' WHERE shop_id = $1", [a.shopId])).rejects.toThrow(/shop_page_paper/);
+    await expect(
+      t.pool.query("UPDATE shop_page SET paper = 'dot-grid' WHERE shop_id = $1", [a.shopId]),
+    ).rejects.toThrow(/shop_page_paper/);
   });
 });

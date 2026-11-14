@@ -19,13 +19,24 @@ import { useSay } from "@/lib/i18n-client";
 import type { PaletteItem } from "@/lib/palette";
 
 const VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? "";
-const ICONS: Record<AppPlace, React.ReactNode> = { today: <ClockIcon />, clients: <UsersIcon />, invoices: <BillingIcon />, books: <BookmarkIcon />, shop: <HomeIcon />, bookings: <CalendarIcon /> };
+const ICONS: Record<AppPlace, React.ReactNode> = {
+  today: <ClockIcon />,
+  clients: <UsersIcon />,
+  invoices: <BillingIcon />,
+  books: <BookmarkIcon />,
+  shop: <HomeIcon />,
+  bookings: <CalendarIcon />,
+};
 
 export interface ShopFrameProps {
   locale: "en" | "fr";
   account: { id?: string; email: string; name?: string | null; avatarSeed?: string | null };
   /** The rail's destinations, in the order of the day, each with where it leads: five at most (a phone's tab bar). */
-  places: readonly { key: AppPlace; href: string; /** Other addresses the place is the current one for (« Boutique » also at the team). */ also?: readonly string[] }[];
+  places: readonly {
+    key: AppPlace;
+    href: string;
+    /** Other addresses the place is the current one for (« Boutique » also at the team). */ also?: readonly string[];
+  }[];
   /** The shop the frame is about and the others the account works in; none for a client. */
   shop?: { current: ChipShop; others: ChipShop[]; addHref: string | null };
   /** The lists' primary action, « Nouvelle facture », for who may issue invoices (it yields where the page holds its own). */
@@ -51,10 +62,34 @@ export interface ShopFrameProps {
  * where the page holds its own (`screenPrimary`); the page's `h1` is in the content (`PageHeader`), never here. The administration
  * is `AppFrame.tsx`.
  */
-export function ShopFrame({ locale, account, places, shop, newInvoiceHref, search = false, counts = {}, dev = false, productName, home, profileHref, children }: Readonly<ShopFrameProps>) {
+export function ShopFrame({
+  locale,
+  account,
+  places,
+  shop,
+  newInvoiceHref,
+  search = false,
+  counts = {},
+  dev = false,
+  productName,
+  home,
+  profileHref,
+  children,
+}: Readonly<ShopFrameProps>) {
   const { say } = useSay();
   const [searchOpen, setSearchOpen] = useState(false);
-  const { path, account: who, language } = useFrameAccount({ locale, id: account.id, email: account.email, name: account.name, avatarSeed: account.avatarSeed, profileHref });
+  const {
+    path,
+    account: who,
+    language,
+  } = useFrameAccount({
+    locale,
+    id: account.id,
+    email: account.email,
+    name: account.name,
+    avatarSeed: account.avatarSeed,
+    profileHref,
+  });
   const isCurrent = (to: string) => {
     const pathname = to.split("?")[0]!;
     return path === pathname || path.startsWith(`${pathname}/`);
@@ -63,59 +98,94 @@ export function ShopFrame({ locale, account, places, shop, newInvoiceHref, searc
   const badgeOf = (key: AppPlace) => {
     const counted: Partial<Record<AppPlace, number>> = { today: counts.today, invoices: counts.toCollect };
     const n = counted[key];
-    return n ? { badge: n, badgeLabel: say(key === "today" ? "shell.badges.today" : "shell.badges.toCollect", { count: n }) } : {};
+    return n
+      ? { badge: n, badgeLabel: say(key === "today" ? "shell.badges.today" : "shell.badges.toCollect", { count: n }) }
+      : {};
   };
-  const sections: FrameSection[] = places.map(({ key, href }) => ({ id: key, label: say(`shell.${key}`), href, icon: ICONS[key], ...badgeOf(key) }));
+  const sections: FrameSection[] = places.map(({ key, href }) => ({
+    id: key,
+    label: say(`shell.${key}`),
+    href,
+    icon: ICONS[key],
+    ...badgeOf(key),
+  }));
   const currentId = places.find(({ href, also }) => isCurrent(href) || (also ?? []).some(isCurrent))?.key;
   const actions: PaletteItem[] = [
-    ...(newInvoiceHref ? [{ id: "action:new-invoice", group: "actions" as const, label: say("shell.newInvoice"), href: newInvoiceHref }] : []),
-    ...places.map(({ key, href }) => ({ id: `place:${key}`, group: "actions" as const, label: say(`shell.${key}`), href })),
+    ...(newInvoiceHref
+      ? [{ id: "action:new-invoice", group: "actions" as const, label: say("shell.newInvoice"), href: newInvoiceHref }]
+      : []),
+    ...places.map(({ key, href }) => ({
+      id: `place:${key}`,
+      group: "actions" as const,
+      label: say(`shell.${key}`),
+      href,
+    })),
   ];
   const searchable = search && shop;
   return (
     <>
       <SkipLink>{say("shell.skip")}</SkipLink>
       <FrameSlot>
-      <AppFrame
-        name={productName}
-        mark={<FoliovivLogo size={28} animated={false} />}
-        headerMark={<FoliovivLogo size={22} animated={false} />}
-        homeHref={home}
-        accent={BRAND_ID}
-        sections={sections}
-        currentId={currentId}
-        account={who}
-        language={language}
-        locale={locale}
-        linkAs={Link}
-        chips={
-          <>
-            {shop ? <ShopChip locale={locale} current={shop.current} others={shop.others} addHref={shop.addHref} /> : null}
-            {dev ? (
-              <Badge tone="warning" className="hidden sm:inline-flex" data-testid="app-version" title={VERSION ? say("shell.devBuild", { version: VERSION }) : undefined}>
-                {say("shell.dev")}
-              </Badge>
-            ) : null}
-          </>
-        }
-        search={searchable ? { label: say("shell.search.open"), onOpen: () => setSearchOpen(true) } : undefined}
-        primary={
-          newInvoiceHref && screenPrimary(path) === "header" ? (
-            <Button asChild variant="primary" size="sm" className="font-bold">
-              <Link href={newInvoiceHref} aria-label={say("shell.newInvoice")} data-testid="primary-action" data-primary>
-                <PlusIcon size={16} strokeWidth={2.5} aria-hidden />
-                <span className="hidden sm:inline">{say("shell.newInvoice")}</span>
-              </Link>
-            </Button>
-          ) : undefined
-        }
-      >
-        <main id="content" className="flex-1 p-4 md:p-6">
-          {children}
-        </main>
-      </AppFrame>
+        <AppFrame
+          name={productName}
+          mark={<FoliovivLogo size={28} animated={false} />}
+          headerMark={<FoliovivLogo size={22} animated={false} />}
+          homeHref={home}
+          accent={BRAND_ID}
+          sections={sections}
+          currentId={currentId}
+          account={who}
+          language={language}
+          locale={locale}
+          linkAs={Link}
+          chips={
+            <>
+              {shop ? (
+                <ShopChip locale={locale} current={shop.current} others={shop.others} addHref={shop.addHref} />
+              ) : null}
+              {dev ? (
+                <Badge
+                  tone="warning"
+                  className="hidden sm:inline-flex"
+                  data-testid="app-version"
+                  title={VERSION ? say("shell.devBuild", { version: VERSION }) : undefined}
+                >
+                  {say("shell.dev")}
+                </Badge>
+              ) : null}
+            </>
+          }
+          search={searchable ? { label: say("shell.search.open"), onOpen: () => setSearchOpen(true) } : undefined}
+          primary={
+            newInvoiceHref && screenPrimary(path) === "header" ? (
+              <Button asChild variant="primary" size="sm" className="font-bold">
+                <Link
+                  href={newInvoiceHref}
+                  aria-label={say("shell.newInvoice")}
+                  data-testid="primary-action"
+                  data-primary
+                >
+                  <PlusIcon size={16} strokeWidth={2.5} aria-hidden />
+                  <span className="hidden sm:inline">{say("shell.newInvoice")}</span>
+                </Link>
+              </Button>
+            ) : undefined
+          }
+        >
+          <main id="content" className="flex-1 p-4 md:p-6">
+            {children}
+          </main>
+        </AppFrame>
       </FrameSlot>
-      {searchable ? <ShopSearch locale={locale} shopId={shop.current.id} actions={actions} open={searchOpen} onOpenChange={setSearchOpen} /> : null}
+      {searchable ? (
+        <ShopSearch
+          locale={locale}
+          shopId={shop.current.id}
+          actions={actions}
+          open={searchOpen}
+          onOpenChange={setSearchOpen}
+        />
+      ) : null}
     </>
   );
 }

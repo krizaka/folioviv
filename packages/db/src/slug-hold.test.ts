@@ -53,7 +53,13 @@ describe("a shop address wearing a protected term is held (ADR-005 slice 4, #537
     expect(await publicShop(t.db, "paypal-toilettage")).not.toBeNull();
     expect((await heldShops(t.db)).map((s) => s.shopId)).not.toContain(shopId);
     // Saving the page again with the same slug does not hold it a second time.
-    const again = await saveShopPage(t.db, owner.id, { ...page("paypal-toilettage"), name: "Toilettage" }, {}, { terms });
+    const again = await saveShopPage(
+      t.db,
+      owner.id,
+      { ...page("paypal-toilettage"), name: "Toilettage" },
+      {},
+      { terms },
+    );
     expect(again.held).toBe(false);
     await publish(shopId); // a save without `published` unpublishes; the point here is the hold flag
     expect(await publicShop(t.db, "paypal-toilettage")).not.toBeNull();
@@ -69,14 +75,18 @@ describe("a shop address wearing a protected term is held (ADR-005 slice 4, #537
   });
 
   it("keeps a held shop out of the Explorer read model, and puts it back once cleared (0047)", async () => {
-    const inIndex = async (id: string) => (await t.db.execute(sql`SELECT 1 FROM shop_search WHERE shop_id = ${id}`)).rows.length === 1;
+    const inIndex = async (id: string) =>
+      (await t.db.execute(sql`SELECT 1 FROM shop_search WHERE shop_id = ${id}`)).rows.length === 1;
     const owner = await account(t.db, "held6@example.test");
     const { shopId } = await saveShopPage(t.db, owner.id, page("paypal-explorer"), {}, { terms });
     await publish(shopId);
     expect(await inIndex(shopId)).toBe(false);
     await clearSlugHold(t.db, shopId);
     expect(await inIndex(shopId)).toBe(true);
-    await t.db.update(shops).set({ slugHeld: true, slugHeldTerm: "paypal", slugHeldAt: new Date() }).where(eq(shops.id, shopId));
+    await t.db
+      .update(shops)
+      .set({ slugHeld: true, slugHeldTerm: "paypal", slugHeldAt: new Date() })
+      .where(eq(shops.id, shopId));
     expect(await inIndex(shopId)).toBe(false);
   });
 
@@ -88,7 +98,10 @@ describe("a shop address wearing a protected term is held (ADR-005 slice 4, #537
 
 describe("the pace of address changes (ADR-005 slice 4, #537; real PostgreSQL 16)", () => {
   const pace = { slugChanges: { max: 2, days: 7 } };
-  const changes = (id: string) => t.pool.query("SELECT count(*)::int AS n FROM shop_slug_changes WHERE shop_id = $1", [id]).then((r) => r.rows[0].n as number);
+  const changes = (id: string) =>
+    t.pool
+      .query("SELECT count(*)::int AS n FROM shop_slug_changes WHERE shop_id = $1", [id])
+      .then((r) => r.rows[0].n as number);
 
   it("lets a shop change its address up to the bound in the window, then refuses with AK_SLUG_RATE_LIMIT and leaves the shop as it was", async () => {
     const owner = await account(t.db, "pace1@example.test");
@@ -96,7 +109,9 @@ describe("the pace of address changes (ADR-005 slice 4, #537; real PostgreSQL 16
     expect(await changes(shopId)).toBe(0); // the first address is not a change
     await saveShopPage(t.db, owner.id, page("pace-deux"), {}, pace);
     await saveShopPage(t.db, owner.id, page("pace-trois"), {}, pace);
-    await expect(saveShopPage(t.db, owner.id, page("pace-quatre"), {}, pace)).rejects.toMatchObject({ code: "AK_SLUG_RATE_LIMIT" });
+    await expect(saveShopPage(t.db, owner.id, page("pace-quatre"), {}, pace)).rejects.toMatchObject({
+      code: "AK_SLUG_RATE_LIMIT",
+    });
     expect((await row(shopId)).slug).toBe("pace-trois");
     expect(await changes(shopId)).toBe(2);
   });
@@ -133,7 +148,8 @@ describe("the pace of address changes (ADR-005 slice 4, #537; real PostgreSQL 16
   it("sets no pace when none is given (seeds and other tests)", async () => {
     const owner = await account(t.db, "pace5@example.test");
     let shopId = "";
-    for (const slug of ["free-a", "free-b", "free-c", "free-d", "free-e"]) shopId = (await saveShopPage(t.db, owner.id, page(slug))).shopId;
+    for (const slug of ["free-a", "free-b", "free-c", "free-d", "free-e"])
+      shopId = (await saveShopPage(t.db, owner.id, page(slug))).shopId;
     expect((await row(shopId)).slug).toBe("free-e");
   });
 });
@@ -141,10 +157,20 @@ describe("the pace of address changes (ADR-005 slice 4, #537; real PostgreSQL 16
 describe("the administrator's review of held addresses (ADR-005 slice 4, #537)", () => {
   it("keeps a hold with a reason, shown in the queue with the owner and the matched term", async () => {
     const owner = await account(t.db, "review1@example.test");
-    const { shopId } = await saveShopPage(t.db, owner.id, page("verify-toilettage"), {}, { terms: parseProtectedTerms("verify").terms });
+    const { shopId } = await saveShopPage(
+      t.db,
+      owner.id,
+      page("verify-toilettage"),
+      {},
+      { terms: parseProtectedTerms("verify").terms },
+    );
     expect(await keepSlugHold(t.db, shopId, "  Looks like a phishing page  ")).toBe(true);
     const queued = (await heldShops(t.db)).find((s) => s.shopId === shopId);
-    expect(queued).toMatchObject({ term: "verify", ownerEmail: "review1@example.test", note: "Looks like a phishing page" });
+    expect(queued).toMatchObject({
+      term: "verify",
+      ownerEmail: "review1@example.test",
+      note: "Looks like a phishing page",
+    });
     expect(queued?.reviewedAt).toBeInstanceOf(Date);
     expect(await keepSlugHold(t.db, "00000000-0000-4000-8000-000000000000", "x")).toBe(false);
   });
@@ -158,7 +184,10 @@ describe("the administrator's review of held addresses (ADR-005 slice 4, #537)",
     await saveShopPage(t.db, fine.id, page("pattes-rosemont"), {});
     const wallet = parseProtectedTerms("wallet").terms;
     // The administrator already looked at b: hold it by hand, then clear it.
-    await t.db.update(shops).set({ slugHeld: true, slugHeldTerm: "wallet", slugHeldAt: new Date() }).where(eq(shops.id, b.shopId));
+    await t.db
+      .update(shops)
+      .set({ slugHeld: true, slugHeldTerm: "wallet", slugHeldAt: new Date() })
+      .where(eq(shops.id, b.shopId));
     expect(await clearSlugHold(t.db, b.shopId)).toBe(true);
 
     const dry = await rejudgeShops(t.db, wallet, { apply: false });

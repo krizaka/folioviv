@@ -11,15 +11,30 @@ import { GET } from "./route";
 vi.mock("@/lib/brand-name", () => ({ productName: async () => "Folioviv" }));
 vi.mock("@/lib/db", () => ({ db: vi.fn(() => ({})) }));
 vi.mock("@/lib/settings", () => ({ appSettings: vi.fn() }));
-vi.mock("@folioviv/db", async (original) => ({ ...(await original<typeof import("@folioviv/db")>()), feedByTokenHash: vi.fn(), feedEntriesAround: vi.fn(), feedTitle: vi.fn(async () => "Folioviv · Salon Laurier") }));
+vi.mock("@folioviv/db", async (original) => ({
+  ...(await original<typeof import("@folioviv/db")>()),
+  feedByTokenHash: vi.fn(),
+  feedEntriesAround: vi.fn(),
+  feedTitle: vi.fn(async () => "Folioviv · Salon Laurier"),
+}));
 
-const call = (segment: string) => GET(new Request(`http://localhost/api/feed/${segment}`), { params: Promise.resolve({ token: segment }) });
+const call = (segment: string) =>
+  GET(new Request(`http://localhost/api/feed/${segment}`), { params: Promise.resolve({ token: segment }) });
 
 describe("the private calendar feed (#282, ADR-004)", () => {
   beforeEach(() => {
     resetRateLimits();
     vi.mocked(appSettings).mockReturnValue({ get: vi.fn(async () => true) } as never);
-    vi.mocked(feedEntriesAround).mockResolvedValue([{ appointmentId: "a1", startsAt: new Date("2026-10-27T14:00:00Z"), endsAt: new Date("2026-10-27T14:45:00Z"), status: "booked", service: { fr: "Coupe", en: "Haircut" }, firstNames: ["Camille"] }]);
+    vi.mocked(feedEntriesAround).mockResolvedValue([
+      {
+        appointmentId: "a1",
+        startsAt: new Date("2026-10-27T14:00:00Z"),
+        endsAt: new Date("2026-10-27T14:45:00Z"),
+        status: "booked",
+        service: { fr: "Coupe", en: "Haircut" },
+        firstNames: ["Camille"],
+      },
+    ]);
   });
   afterEach(() => vi.clearAllMocks());
 

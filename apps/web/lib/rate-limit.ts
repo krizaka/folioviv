@@ -17,7 +17,12 @@ function prune(now: number) {
   for (const [k, w] of windows) if (w.resetAt <= now) windows.delete(k);
 }
 
-export function hit(key: string, limit: number, windowSeconds: number, now = systemClock.now().getTime()): { allowed: boolean; retryAfter: number } {
+export function hit(
+  key: string,
+  limit: number,
+  windowSeconds: number,
+  now = systemClock.now().getTime(),
+): { allowed: boolean; retryAfter: number } {
   let entry = windows.get(key);
   if (!entry || entry.resetAt <= now) {
     if (windows.size >= MAX_KEYS) prune(now);
@@ -39,11 +44,23 @@ export function resetRateLimits() {
 }
 
 /** Limits an action per IP and per subject (an address, an account): a refusal is 429 with Retry-After. */
-export function limit(action: string, req: { headers: Headers }, subject: string | null, perIp: [number, number], perSubject?: [number, number]) {
+export function limit(
+  action: string,
+  req: { headers: Headers },
+  subject: string | null,
+  perIp: [number, number],
+  perSubject?: [number, number],
+) {
   const checks: [string, [number, number]][] = [[`${action}:ip:${clientIp(req.headers) ?? "unknown"}`, perIp]];
   if (perSubject && subject) checks.push([`${action}:s:${subject.toLowerCase()}`, perSubject]);
   for (const [key, [max, seconds]] of checks) {
     const result = hit(key, max, seconds);
-    if (!result.allowed) throw new HttpError(429, "Too many requests", { code: "RATE_LIMITED", retryAfterSeconds: result.retryAfter }, { "Retry-After": String(result.retryAfter) });
+    if (!result.allowed)
+      throw new HttpError(
+        429,
+        "Too many requests",
+        { code: "RATE_LIMITED", retryAfterSeconds: result.retryAfter },
+        { "Retry-After": String(result.retryAfter) },
+      );
   }
 }

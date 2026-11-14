@@ -4,19 +4,31 @@ import { renderIn } from "@/lib/test-i18n";
 
 import { BoutiqueHub, type BoutiqueHubProps } from "./BoutiqueHub";
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: () => undefined, replace: () => undefined, push: () => undefined }), usePathname: () => "/en/app/s1/settings/page", useSearchParams: () => new URLSearchParams() }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: () => undefined, replace: () => undefined, push: () => undefined }),
+  usePathname: () => "/en/app/s1/settings/page",
+  useSearchParams: () => new URLSearchParams(),
+}));
 
 const props = (over: Partial<BoutiqueHubProps> = {}): BoutiqueHubProps => ({
   locale: "en",
   shopId: "s1",
   allowed: ["page", "languages", "team", "invoices", "shops"],
   current: { section: "page", tab: "identity" },
-  shop: { name: "Pattes de Saint-Henri", published: true, publicUrl: "https://www.folioviv.com/en/s/pattes-de-saint-henri" },
+  shop: {
+    name: "Pattes de Saint-Henri",
+    published: true,
+    publicUrl: "https://www.folioviv.com/en/s/pattes-de-saint-henri",
+  },
   children: <p>the section</p>,
   ...over,
 });
 const render = (p: BoutiqueHubProps, locale: "en" | "fr" = "en") => renderIn(locale, "pets", <BoutiqueHub {...p} />);
-const text = (h: string) => h.replace(/<[^>]*>/g, " ").replace(/&[a-z#0-9]+;/gi, " ").replace(/\s+/g, " ");
+const text = (h: string) =>
+  h
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&[a-z#0-9]+;/gi, " ")
+    .replace(/\s+/g, " ");
 
 describe("Boutique, the shop's hub on SettingsLayout (K4)", () => {
   it("names the screen « Boutique » in its one h1, with the shop, its status and its public address (D6)", () => {

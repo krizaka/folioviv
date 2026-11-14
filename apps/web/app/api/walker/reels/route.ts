@@ -24,9 +24,23 @@ export function POST(req: Request) {
   return handle(async () => {
     const { session, shop } = await requireShop(req, "catalogue");
     await assertShopFeature("features.shopReels");
-    const { url, titleFr, titleEn } = await readJson(req, z.object({ url: z.string().max(300), titleFr: z.string().max(60).default(""), titleEn: z.string().max(60).default("") }));
+    const { url, titleFr, titleEn } = await readJson(
+      req,
+      z.object({
+        url: z.string().max(300),
+        titleFr: z.string().max(60).default(""),
+        titleEn: z.string().max(60).default(""),
+      }),
+    );
     const id = await addExternalReel(db(), shop.id, url, { titleFr, titleEn });
-    await audit({ action: "shop.reel_linked", actorId: session.account.id, actorLabel: session.account.email, targetId: shop.id, detail: { reel: id }, headers: req.headers });
+    await audit({
+      action: "shop.reel_linked",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: shop.id,
+      detail: { reel: id },
+      headers: req.headers,
+    });
     await announcePage(shop.id);
     return Response.json({ id }, { status: 201 });
   });

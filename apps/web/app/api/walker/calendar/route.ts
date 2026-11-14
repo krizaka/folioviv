@@ -12,6 +12,9 @@ export function GET(req: Request) {
   return handle(async () => {
     const { shop, role, session } = await requireShop(req, "agenda");
     const { from, to } = calendarQuery.parse(queryOf(req));
-    return Response.json({ days: await visitDays(db(), shop.id, from, to, agendaScope(role, session.account.id)) }, { headers: { "Cache-Control": "private, no-store" } });
+    return Response.json(
+      { days: await visitDays(db(), shop.id, from, to, agendaScope(role, session.account.id)) },
+      { headers: { "Cache-Control": "private, no-store" } },
+    );
   });
 }

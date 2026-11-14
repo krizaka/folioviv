@@ -40,8 +40,14 @@ export function pricing({ snapshot, rules }: BriefContext) {
     const raiseCents = suggestedCents - service.priceCents;
     if (raiseCents < 100) return [];
     // The look-back's volume brought to a month: weeks × 12 / 52.
-    const monthlyGainCents = applyRate(raiseCents * visits.length, { numerator: 52, denominator: rules.lookBackWeeks * 12 });
-    const action: PriceAction = { kind: SHOP_ACTION.price, payload: { serviceId: service.id, currentCents: service.priceCents, suggestedCents } };
+    const monthlyGainCents = applyRate(raiseCents * visits.length, {
+      numerator: 52,
+      denominator: rules.lookBackWeeks * 12,
+    });
+    const action: PriceAction = {
+      kind: SHOP_ACTION.price,
+      payload: { serviceId: service.id, currentCents: service.priceCents, suggestedCents },
+    };
     return [
       recommendation({
         week,

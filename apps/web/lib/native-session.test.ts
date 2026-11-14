@@ -1,10 +1,18 @@
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined }), headers: async () => new Headers() }));
+vi.mock("next/headers", () => ({
+  cookies: async () => ({ get: () => undefined }),
+  headers: async () => new Headers(),
+}));
 // Two sessions the store knows: an app's bearer and a different account's browser cookie.
 vi.mock("./session", async (orig) => ({
   ...(await orig<typeof import("./session")>()),
-  resolveSession: async (token?: string) => (token === "bearer-token" ? { account: { id: "app-account" } } : token === "cookie-token" ? { account: { id: "web-account" } } : null),
+  resolveSession: async (token?: string) =>
+    token === "bearer-token"
+      ? { account: { id: "app-account" } }
+      : token === "cookie-token"
+        ? { account: { id: "web-account" } }
+        : null,
 }));
 
 import { agendaScope, optionalSession, requireSession } from "./access";
@@ -22,7 +30,9 @@ describe("a native app's session", () => {
     const both = request({ authorization: "Bearer bearer-token", cookie: "folioviv_session=cookie-token" });
     expect((await optionalSession(both))?.account.id).toBe("app-account");
     expect((await requireSession(both)).account.id).toBe("app-account");
-    expect((await optionalSession(request({ cookie: "folioviv_session=cookie-token" })))?.account.id).toBe("web-account");
+    expect((await optionalSession(request({ cookie: "folioviv_session=cookie-token" })))?.account.id).toBe(
+      "web-account",
+    );
     expect(await optionalSession(request({}))).toBeNull();
   });
 });

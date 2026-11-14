@@ -12,7 +12,9 @@ import { createDb, exploreSearch, exploreStatement, migrate, pg, settleAvailabil
 import { PgDialect } from "drizzle-orm/pg-core";
 
 const server = process.env.PLAN_PG;
-if (!server) {throw new Error("PLAN_PG (a PostgreSQL connection string for a throw-away server) is required");}
+if (!server) {
+  throw new Error("PLAN_PG (a PostgreSQL connection string for a throw-away server) is required");
+}
 const SHOPS = Number(process.env.SHOPS ?? 20_000);
 const RUNS = Number(process.env.RUNS ?? 40);
 const NOW = new Date("2026-10-19T14:00:00Z"); // Monday 10:00 in Montréal
@@ -29,7 +31,8 @@ pool.on("error", (e) => console.log("pool:", e.message));
 try {
   await migrate(pool, folder);
   const t0 = Date.now();
-  const triggers = (state) => ["shops", "shop_zones", "services"].map((t) => pool.query(`ALTER TABLE ${t} ${state} TRIGGER USER`));
+  const triggers = (state) =>
+    ["shops", "shop_zones", "services"].map((t) => pool.query(`ALTER TABLE ${t} ${state} TRIGGER USER`));
   await Promise.all(triggers("DISABLE"));
   const areas = "(ARRAY['Rosemont','Verdun','Outremont','Saint-Henri','Plateau','Griffintown'])[1 + i % 6]";
   await pool.query(`INSERT INTO shops (id, registrant, name, legal_name, kind, address, slug, published, area, tagline_fr, tagline_en, timezone)
@@ -39,9 +42,15 @@ try {
     FROM generate_series(1, ${SHOPS}) i`);
   await pool.query("INSERT INTO shop_rules (shop_id) SELECT id FROM shops");
   await pool.query("INSERT INTO staff (shop_id, name) SELECT id, 'Owner' FROM shops");
-  await pool.query("INSERT INTO schedules (staff_id, weekday, starts_at, ends_at) SELECT st.id, d, '09:00', (CASE WHEN random() < 0.5 THEN '12:00' ELSE '17:00' END)::time FROM staff st, generate_series(1, 5) d");
-  await pool.query("INSERT INTO shop_zones (shop_id, name, position, lat, lng) SELECT id, 'Zone ' || n, n, 45.40 + random() * 0.20, -73.80 + random() * 0.35 FROM shops, generate_series(1, 2) n");
-  await pool.query("INSERT INTO services (shop_id, name_fr, name_en, duration_minutes, price_cents) SELECT id, (ARRAY['Coupe','Promenade','Consultation','Tatouage'])[1 + n % 4] || ' ' || n, (ARRAY['Cut','Walk','Consulting','Tattoo'])[1 + n % 4] || ' ' || n, 30 + 30 * n, 2000 FROM shops, generate_series(1, 3) n");
+  await pool.query(
+    "INSERT INTO schedules (staff_id, weekday, starts_at, ends_at) SELECT st.id, d, '09:00', (CASE WHEN random() < 0.5 THEN '12:00' ELSE '17:00' END)::time FROM staff st, generate_series(1, 5) d",
+  );
+  await pool.query(
+    "INSERT INTO shop_zones (shop_id, name, position, lat, lng) SELECT id, 'Zone ' || n, n, 45.40 + random() * 0.20, -73.80 + random() * 0.35 FROM shops, generate_series(1, 2) n",
+  );
+  await pool.query(
+    "INSERT INTO services (shop_id, name_fr, name_en, duration_minutes, price_cents) SELECT id, (ARRAY['Coupe','Promenade','Consultation','Tatouage'])[1 + n % 4] || ' ' || n, (ARRAY['Cut','Walk','Consulting','Tattoo'])[1 + n % 4] || ' ' || n, 30 + 30 * n, 2000 FROM shops, generate_series(1, 3) n",
+  );
   await Promise.all(triggers("ENABLE"));
   await pool.query("SELECT refresh_shop_search(id) FROM shops");
   await pool.query("ANALYZE");
@@ -67,7 +76,11 @@ try {
     }
     return out;
   };
-  const time = async (fn) => { const s = performance.now(); const out = await fn(); return [performance.now() - s, out]; };
+  const time = async (fn) => {
+    const s = performance.now();
+    const out = await fn();
+    return [performance.now() - s, out];
+  };
   // The sweep fills the stored availability (what the server's tick does): the whole set once, then a day change.
   const sweep = async (at) => {
     let n = 0;
@@ -85,16 +98,26 @@ try {
   console.log("\nshape | SQL only p50/p95 ms | page p50/p95 ms (first run is cold: plan and pages not cached) | rows");
   for (const [label, raw] of Object.entries(shapes)) {
     const query = exploreSearchQuery(raw);
-    const sqlOnly = await repeat(RUNS, async () => (await time(() => db.execute(exploreStatement(query, NOW).statement)))[0]);
+    const sqlOnly = await repeat(
+      RUNS,
+      async () => (await time(() => db.execute(exploreStatement(query, NOW).statement)))[0],
+    );
     const timed = await repeat(RUNS, () => time(() => exploreSearch(db, query, NOW)));
     const page = timed.map(([ms]) => ms);
     const rows = timed.at(-1)?.[1].shops.length ?? 0;
-    console.log(`${label} | ${pct(sqlOnly, 0.5)} / ${pct(sqlOnly, 0.95)} | ${pct(page, 0.5)} / ${pct(page, 0.95)} | ${rows}`);
+    console.log(
+      `${label} | ${pct(sqlOnly, 0.5)} / ${pct(sqlOnly, 0.95)} | ${pct(page, 0.5)} / ${pct(page, 0.95)} | ${rows}`,
+    );
   }
-  const { statement } = exploreStatement(exploreSearchQuery(shapes[process.env.PLAN_SHAPE ?? "combined: text + open now + near 10 km"]), NOW);
+  const { statement } = exploreStatement(
+    exploreSearchQuery(shapes[process.env.PLAN_SHAPE ?? "combined: text + open now + near 10 km"]),
+    NOW,
+  );
   const { sql: text, params } = new PgDialect().sqlToQuery(statement);
   const plan = await pool.query(`EXPLAIN (ANALYZE, BUFFERS) ${text}`, params);
-  console.log("\nEXPLAIN (ANALYZE, BUFFERS) of the combined query\n" + plan.rows.map((r) => r["QUERY PLAN"]).join("\n"));
+  console.log(
+    "\nEXPLAIN (ANALYZE, BUFFERS) of the combined query\n" + plan.rows.map((r) => r["QUERY PLAN"]).join("\n"),
+  );
 } finally {
   await pool.end();
   await root.query(`DROP DATABASE IF EXISTS ${name} WITH (FORCE)`);

@@ -20,19 +20,25 @@ describe("storefront realtime settings", () => {
 
 describe("the password reset link's lifetime", () => {
   it("is a setting within @krizaka/auth's bounds, 30 minutes by default, global only", async () => {
-    const { PASSWORD_RESET_MAX_MINUTES, PASSWORD_RESET_MIN_MINUTES, PASSWORD_RESET_TTL_MINUTES } = await import("@krizaka/auth");
+    const { PASSWORD_RESET_MAX_MINUTES, PASSWORD_RESET_MIN_MINUTES, PASSWORD_RESET_TTL_MINUTES } =
+      await import("@krizaka/auth");
     const def = SETTINGS["auth.passwordResetTtlMinutes"];
     expect(def.default).toBe(PASSWORD_RESET_TTL_MINUTES);
     expect(def.scopes).toEqual(["global"]);
     expect(def.schema.safeParse(PASSWORD_RESET_MIN_MINUTES).success).toBe(true);
     expect(def.schema.safeParse(PASSWORD_RESET_MAX_MINUTES).success).toBe(true);
-    for (const value of [PASSWORD_RESET_MIN_MINUTES - 1, PASSWORD_RESET_MAX_MINUTES + 1, 7.5]) expect(def.schema.safeParse(value).success).toBe(false);
+    for (const value of [PASSWORD_RESET_MIN_MINUTES - 1, PASSWORD_RESET_MAX_MINUTES + 1, 7.5])
+      expect(def.schema.safeParse(value).success).toBe(false);
   });
 });
 
 /** The service answers like the real one: a person's own value first, else the global one. */
 const withFlag = (own: Record<string, boolean>, global = false) => {
-  (globalThis as unknown as { __foliovivSettings: unknown }).__foliovivSettings = { get: vi.fn(async (_key: string, ctx: { userId: string | null }) => (ctx.userId && ctx.userId in own ? own[ctx.userId] : global)) };
+  (globalThis as unknown as { __foliovivSettings: unknown }).__foliovivSettings = {
+    get: vi.fn(async (_key: string, ctx: { userId: string | null }) =>
+      ctx.userId && ctx.userId in own ? own[ctx.userId] : global,
+    ),
+  };
 };
 
 describe("the notebook storefront is the owner's setting (folioviv#316, #261: on for the demo shops' owners only)", () => {
@@ -69,7 +75,27 @@ describe("the protected shop-address terms (ADR-005 slice 4, #537)", () => {
     const { terms, invalid } = parseProtectedTerms(def.default);
     expect(invalid).toEqual([]);
     expect(terms.length).toBeGreaterThan(5);
-    for (const word of ["krizaka", "folioviv", "verikora", "sovkora", "admin", "api", "www", "app", "login", "auth", "support", "help", "billing", "mail", "status", "security", "account", "dashboard"]) expect(holdSlug(`x-${word}-x`, terms).held, word).toBe(true);
+    for (const word of [
+      "krizaka",
+      "folioviv",
+      "verikora",
+      "sovkora",
+      "admin",
+      "api",
+      "www",
+      "app",
+      "login",
+      "auth",
+      "support",
+      "help",
+      "billing",
+      "mail",
+      "status",
+      "security",
+      "account",
+      "dashboard",
+    ])
+      expect(holdSlug(`x-${word}-x`, terms).held, word).toBe(true);
     expect(holdSlug("paypal-aide", terms).held).toBe(false); // third-party brands are the console's, added when there is a reason
     expect(holdSlug("mon-l0gin", terms).held).toBe(true);
     expect(holdSlug("pattes-saint-henri", terms).held).toBe(false);
@@ -88,4 +114,3 @@ describe("the console saves only safe protected terms (#537)", () => {
     expect(schema.safeParse("pay pal").success).toBe(false);
   });
 });
-

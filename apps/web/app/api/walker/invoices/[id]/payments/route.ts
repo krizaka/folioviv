@@ -16,8 +16,24 @@ export function POST(req: Request, { params }: { params: Promise<{ id: string }>
     const invoiceId = idParam((await params).id);
     const input = await readJson(req, paymentInputSchema);
     const result = await recordPayment(db(), shop.id, invoiceId, input, systemClock.now());
-    await audit({ action: "invoice.payment_recorded", actorId: session.account.id, actorLabel: session.account.email, targetId: invoiceId, detail: { method: input.method, amountCents: input.amountCents, paid: result.paid }, headers: req.headers });
-    if (result.becamePaid) await emitWebhook(session.account.id, { id: `invoice-paid:${invoiceId}`, type: "invoice.paid", payload: { invoiceId, shopId: shop.id, totalCents: result.totalCents } }, systemClock.now());
+    await audit({
+      action: "invoice.payment_recorded",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: invoiceId,
+      detail: { method: input.method, amountCents: input.amountCents, paid: result.paid },
+      headers: req.headers,
+    });
+    if (result.becamePaid)
+      await emitWebhook(
+        session.account.id,
+        {
+          id: `invoice-paid:${invoiceId}`,
+          type: "invoice.paid",
+          payload: { invoiceId, shopId: shop.id, totalCents: result.totalCents },
+        },
+        systemClock.now(),
+      );
     return Response.json(result, { status: 201 });
   });
 }

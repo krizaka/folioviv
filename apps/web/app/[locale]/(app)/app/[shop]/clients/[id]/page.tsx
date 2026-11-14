@@ -24,7 +24,13 @@ export const dynamic = "force-dynamic";
 export const generateMetadata = titleOf("clients");
 
 /** One client's file, with the clients beside it on a computer (one at a time on a phone, the way back above). The address names the client. */
-export default async function ClientPage({ params, searchParams }: Readonly<{ params: Promise<{ locale: string; shop: string; id: string }>; searchParams: Promise<{ tab?: string }> }>) {
+export default async function ClientPage({
+  params,
+  searchParams,
+}: Readonly<{
+  params: Promise<{ locale: string; shop: string; id: string }>;
+  searchParams: Promise<{ tab?: string }>;
+}>) {
   const { locale: rawLocale, shop: shopId, id } = await params;
   const locale = asLocale(rawLocale);
   const t = getDictionary(locale).console.clients;
@@ -34,7 +40,11 @@ export default async function ClientPage({ params, searchParams }: Readonly<{ pa
   const [file, overview] = await Promise.all([clientFile(db(), shop.id, id), clientOverview(db(), shop.id, now)]);
   if (!file) notFound();
   // The client is this shop's (clientFile above): what they keep here, for the visit (folioviv#210).
-  const [requests, notes, organized] = await Promise.all([clientRequestsOf(db(), id), clientNotes(db(), shop.id, id), organizeData(shop.id, "client", session.account, role, {})]);
+  const [requests, notes, organized] = await Promise.all([
+    clientRequestsOf(db(), id),
+    clientNotes(db(), shop.id, id),
+    organizeData(shop.id, "client", session.account, role, {}),
+  ]);
   const worn = (await tagsOfRows(shop.id, "client", [id]))[id] ?? [];
   return (
     <SplitView
@@ -48,9 +58,28 @@ export default async function ClientPage({ params, searchParams }: Readonly<{ pa
       }
       detail={
         <div className="flex flex-col gap-5">
-          <ClientFilePanel file={file} notes={notes} tab={readClientFileTab((await searchParams).tab)} today={localDay(now, shop.timezone)} timeZone={shop.timezone} nowIso={now.toISOString()} mayInvoice={may(role, "invoices")} organize={organized.data} tags={worn} />
+          <ClientFilePanel
+            file={file}
+            notes={notes}
+            tab={readClientFileTab((await searchParams).tab)}
+            today={localDay(now, shop.timezone)}
+            timeZone={shop.timezone}
+            nowIso={now.toISOString()}
+            mayInvoice={may(role, "invoices")}
+            organize={organized.data}
+            tags={worn}
+          />
           {may(role, "privacy") ? <ClientPrivacyPanel clientId={id} /> : null}
-          <ClientRequestsPanel requests={requests.map((r) => ({ id: r.id, title: r.title, note: r.note, service: { fr: r.serviceNameFr, en: r.serviceNameEn }, staffName: r.staffName, files: r.files }))} />
+          <ClientRequestsPanel
+            requests={requests.map((r) => ({
+              id: r.id,
+              title: r.title,
+              note: r.note,
+              service: { fr: r.serviceNameFr, en: r.serviceNameEn },
+              staffName: r.staffName,
+              files: r.files,
+            }))}
+          />
         </div>
       }
     />

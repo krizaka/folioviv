@@ -9,10 +9,12 @@ import { hashPassword, verifyPassword } from "./password";
 import { limit } from "./rate-limit";
 import { type Session, tokenHash } from "./session";
 
-const escapeHtml = (text: string) => text.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
+const escapeHtml = (text: string) =>
+  text.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 
 /** The outbox's name of a mail of the account block: the reset link goes to `/reset-password`, the address change to `/confirm-email`. */
-export const accountMailTemplate = (text: string): "password-reset" | "email-change" => (/\/reset-password\?token=/.test(text) ? "password-reset" : "email-change");
+export const accountMailTemplate = (text: string): "password-reset" | "email-change" =>
+  /\/reset-password\?token=/.test(text) ? "password-reset" : "email-change";
 
 /**
  * The account of an Folioviv member (`@krizaka/auth`, the shared block Verikora's contract came from): over this app's own
@@ -25,7 +27,14 @@ export const accountsAt = (baseUrl: string, options: { passwordResetTtlMinutes?:
     query: async (sql, params) => query(sql, params) as never,
     transaction: (work) => transaction((run) => work(run as never)),
     mail: async (mail) => {
-      await enqueueMail(db(), { to: mail.to, locale: mail.locale, template: accountMailTemplate(mail.text), subject: mail.subject, text: mail.text, html: `<p>${escapeHtml(mail.text).replace(/\n\n/g, "</p><p>").replace(/\n/g, "<br>")}</p>` });
+      await enqueueMail(db(), {
+        to: mail.to,
+        locale: mail.locale,
+        template: accountMailTemplate(mail.text),
+        subject: mail.subject,
+        text: mail.text,
+        html: `<p>${escapeHtml(mail.text).replaceAll("\n\n", "</p><p>").replaceAll("\n", "<br>")}</p>`,
+      });
     },
     baseUrl,
     product: options.product ?? PRODUCT_NAME,
@@ -36,7 +45,11 @@ export const accountsAt = (baseUrl: string, options: { passwordResetTtlMinutes?:
   });
 
 /** One account action: signed in, rate-limited (reads far looser than changes), run, answered as JSON (never cached). A refusal of the module is its stable `{ code }` answer. */
-export function accountAct(req: Request, scope: string, run: (session: Session) => Promise<Response | Record<string, unknown> | undefined>) {
+export function accountAct(
+  req: Request,
+  scope: string,
+  run: (session: Session) => Promise<Response | Record<string, unknown> | undefined>,
+) {
   return handle(async () => {
     const session = await requireSession(req);
     const reading = req.method === "GET";
@@ -54,7 +67,12 @@ export function accountAct(req: Request, scope: string, run: (session: Session) 
 
 /** What Folioviv keeps about a member besides the account: the shops they run and, for each client file of theirs, everything its shop holds (Loi 25, access). */
 export async function accountDataWith(accountId: string, key: Buffer): Promise<Record<string, unknown>> {
-  const shops = await query<{ id: string; name: string; slug: string | null; published: boolean }>("SELECT id, name, slug, published FROM shops WHERE owner_id = $1 ORDER BY created_at", [accountId]);
-  const files = await query<{ id: string }>("SELECT id FROM clients WHERE account_id = $1 AND erased_at IS NULL", [accountId]);
+  const shops = await query<{ id: string; name: string; slug: string | null; published: boolean }>(
+    "SELECT id, name, slug, published FROM shops WHERE owner_id = $1 ORDER BY created_at",
+    [accountId],
+  );
+  const files = await query<{ id: string }>("SELECT id FROM clients WHERE account_id = $1 AND erased_at IS NULL", [
+    accountId,
+  ]);
   return { shops, clientFiles: await Promise.all(files.map((f) => exportClient(db(), key, f.id))) };
 }

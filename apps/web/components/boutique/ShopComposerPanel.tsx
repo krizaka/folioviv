@@ -3,13 +3,16 @@
 import { isKrizakaApiError, krizakaFetch, useMutation, useQuery, useQueryClient } from "@krizaka/query";
 import { Button } from "@krizaka/ui/button";
 import { postToPreview, type ShopPage as DocumentPage } from "@krizaka/ui/shop";
-import { ShopComposer,type ShopComposerMessages, type ShopComposerPreset } from "@krizaka/ui/shop-composer";
+import { ShopComposer, type ShopComposerMessages, type ShopComposerPreset } from "@krizaka/ui/shop-composer";
 import { useCallback, useRef, useState } from "react";
 
 import { useShopRoutes } from "@/components/app/ShopSession";
 import { useI18n, useSay } from "@/lib/i18n-client";
 
-const VERSION_WORDS: Record<string, string> = { draft: "composerPanel.versionDraft", published: "composerPanel.versionPublished" };
+const VERSION_WORDS: Record<string, string> = {
+  draft: "composerPanel.versionDraft",
+  published: "composerPanel.versionPublished",
+};
 
 export interface ComposerVersion {
   version: number;
@@ -47,7 +50,16 @@ const accentLabel = (name: string) => name.split(":").join(" · ");
  * and the accent. Every call is a mutation or a query of @krizaka/query (no effect fetches): the draft is `PUT` whole, the server refuses a document
  * that is not valid with the path of each issue.
  */
-export function ShopComposerPanel({ draft, published, accent, accents, presets, previewUrl, versions, canWrite }: Readonly<ShopComposerPanelProps>) {
+export function ShopComposerPanel({
+  draft,
+  published,
+  accent,
+  accents,
+  presets,
+  previewUrl,
+  versions,
+  canWrite,
+}: Readonly<ShopComposerPanelProps>) {
   const { say } = useSay();
   const { messages, locale } = useI18n();
   const routes = useShopRoutes();
@@ -69,21 +81,35 @@ export function ShopComposerPanel({ draft, published, accent, accents, presets, 
 
   const history = useQuery({
     queryKey: keys.versions,
-    queryFn: async () => ((await krizakaFetch(routes.api("/api/walker/page/versions"))) as { versions: ComposerVersion[] }).versions,
+    queryFn: async () =>
+      ((await krizakaFetch(routes.api("/api/walker/page/versions"))) as { versions: ComposerVersion[] }).versions,
     initialData: versions,
   });
 
   const save = useMutation({
-    mutationFn: (page: DocumentPage) => krizakaFetch(routes.api("/api/walker/page/draft"), { method: "PUT", json: page }),
-    onSuccess: () => { setNote(null); void client.invalidateQueries({ queryKey: keys.versions }); },
-    onError: (error) => setNote(say("composerPanel.problems", { issues: issuesOf(error) ?? say(`errors.${isKrizakaApiError(error) ? error.code : "server"}`) })),
+    mutationFn: (page: DocumentPage) =>
+      krizakaFetch(routes.api("/api/walker/page/draft"), { method: "PUT", json: page }),
+    onSuccess: () => {
+      setNote(null);
+      void client.invalidateQueries({ queryKey: keys.versions });
+    },
+    onError: (error) =>
+      setNote(
+        say("composerPanel.problems", {
+          issues: issuesOf(error) ?? say(`errors.${isKrizakaApiError(error) ? error.code : "server"}`),
+        }),
+      ),
   });
   const publish = useMutation({
     mutationFn: async (page: DocumentPage) => {
       await krizakaFetch(routes.api("/api/walker/page/draft"), { method: "PUT", json: page });
       return krizakaFetch(routes.api("/api/walker/page/publish"), { method: "POST" });
     },
-    onSuccess: () => { setNote(say("composerPanel.published")); void client.invalidateQueries({ queryKey: keys.versions }); refreshPreview(); },
+    onSuccess: () => {
+      setNote(say("composerPanel.published"));
+      void client.invalidateQueries({ queryKey: keys.versions });
+      refreshPreview();
+    },
     onError: (error) => setNote(`${say("composerPanel.publishFailed")} ${issuesOf(error) ?? ""}`.trim()),
   });
   const reload = useCallback(async () => {
@@ -92,7 +118,11 @@ export function ShopComposerPanel({ draft, published, accent, accents, presets, 
     setLoaded((l) => ({ page, revision: l.revision + 1 }));
   }, [routes]);
   const restore = useMutation({
-    mutationFn: (version: number) => krizakaFetch(routes.api("/api/walker/page/rollback"), { method: "POST", json: { version, keepDraft } }) as Promise<{ draftReset: boolean }>,
+    mutationFn: (version: number) =>
+      krizakaFetch(routes.api("/api/walker/page/rollback"), {
+        method: "POST",
+        json: { version, keepDraft },
+      }) as Promise<{ draftReset: boolean }>,
     onSuccess: async (done, from) => {
       if (done.draftReset) await reload();
       setNote(say(done.draftReset ? "composerPanel.restored" : "composerPanel.restoredKept", { n: from }));
@@ -103,16 +133,32 @@ export function ShopComposerPanel({ draft, published, accent, accents, presets, 
   });
   const discard = useMutation({
     mutationFn: () => krizakaFetch(routes.api("/api/walker/page/discard"), { method: "POST" }),
-    onSuccess: async () => { setConfirming(false); await reload(); setNote(say("composerPanel.discarded")); void client.invalidateQueries({ queryKey: keys.versions }); refreshPreview(); },
+    onSuccess: async () => {
+      setConfirming(false);
+      await reload();
+      setNote(say("composerPanel.discarded"));
+      void client.invalidateQueries({ queryKey: keys.versions });
+      refreshPreview();
+    },
     onError: (error) => setNote(say(`errors.${isKrizakaApiError(error) ? error.code : "server"}`)),
   });
   const pickAccent = useMutation({
-    mutationFn: (value: string | null) => krizakaFetch(routes.api("/api/walker/page/accent"), { method: "PUT", json: { accent: value } }),
-    onSuccess: (_done, value) => { setChosen(value); setNote(say("composerPanel.accentSaved")); refreshPreview(); },
+    mutationFn: (value: string | null) =>
+      krizakaFetch(routes.api("/api/walker/page/accent"), { method: "PUT", json: { accent: value } }),
+    onSuccess: (_done, value) => {
+      setChosen(value);
+      setNote(say("composerPanel.accentSaved"));
+      refreshPreview();
+    },
     onError: (error) => setNote(say(`errors.${isKrizakaApiError(error) ? error.code : "server"}`)),
   });
 
-  if (!canWrite) return <p className="m-0 rounded-lg border border-border-default p-4 text-sm text-fg-secondary">{say("composerPanel.readOnly")}</p>;
+  if (!canWrite)
+    return (
+      <p className="m-0 rounded-lg border border-border-default p-4 text-sm text-fg-secondary">
+        {say("composerPanel.readOnly")}
+      </p>
+    );
 
   const offered = accents[current.preset.id] ?? [];
   const named = (version: ComposerVersion) => say(VERSION_WORDS[version.status] ?? "composerPanel.versionArchived");
@@ -121,19 +167,47 @@ export function ShopComposerPanel({ draft, published, accent, accents, presets, 
       <section aria-label={say("composerPanel.accent")} className="flex flex-col gap-2">
         <h2 className="m-0 font-display text-base font-bold text-fg">{say("composerPanel.accent")}</h2>
         <div role="group" aria-label={say("composerPanel.accent")} className="flex flex-wrap gap-2">
-          <Button variant={chosen === null ? "primary" : "secondary"} size="sm" aria-pressed={chosen === null} disabled={pickAccent.isPending} onClick={() => pickAccent.mutate(null)}>{say("composerPanel.accentOwn")}</Button>
+          <Button
+            variant={chosen === null ? "primary" : "secondary"}
+            size="sm"
+            aria-pressed={chosen === null}
+            disabled={pickAccent.isPending}
+            onClick={() => pickAccent.mutate(null)}
+          >
+            {say("composerPanel.accentOwn")}
+          </Button>
           {offered.map((name) => (
-            <Button key={name} variant={chosen === name ? "primary" : "secondary"} size="sm" aria-pressed={chosen === name} disabled={pickAccent.isPending} onClick={() => pickAccent.mutate(name)}>{accentLabel(name)}</Button>
+            <Button
+              key={name}
+              variant={chosen === name ? "primary" : "secondary"}
+              size="sm"
+              aria-pressed={chosen === name}
+              disabled={pickAccent.isPending}
+              onClick={() => pickAccent.mutate(name)}
+            >
+              {accentLabel(name)}
+            </Button>
           ))}
         </div>
         <p className="m-0 text-xs text-fg-muted">{say("composerPanel.accentNote")}</p>
       </section>
-      <p role="status" aria-live="polite" className="m-0 min-h-5 text-sm text-fg-secondary">{note}</p>
+      <p role="status" aria-live="polite" className="m-0 min-h-5 text-sm text-fg-secondary">
+        {note}
+      </p>
       {confirming ? (
-        <div role="alertdialog" aria-label={say("composerPanel.discardAsk")} className="flex flex-wrap items-center gap-2" data-testid="composer-discard">
+        <div
+          role="alertdialog"
+          aria-label={say("composerPanel.discardAsk")}
+          className="flex flex-wrap items-center gap-2"
+          data-testid="composer-discard"
+        >
           <span className="text-sm text-fg-secondary">{say("composerPanel.discardAsk")}</span>
-          <Button variant="secondary" size="sm" disabled={discard.isPending} onClick={() => discard.mutate()}>{say("composerPanel.discardYes")}</Button>
-          <Button variant="ghost" size="sm" onClick={() => setConfirming(false)}>{say("composerPanel.discardNo")}</Button>
+          <Button variant="secondary" size="sm" disabled={discard.isPending} onClick={() => discard.mutate()}>
+            {say("composerPanel.discardYes")}
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => setConfirming(false)}>
+            {say("composerPanel.discardNo")}
+          </Button>
         </div>
       ) : null}
       <ShopComposer
@@ -144,20 +218,47 @@ export function ShopComposerPanel({ draft, published, accent, accents, presets, 
         previewUrl={previewUrl}
         presets={presets}
         messages={messages.console.composer as unknown as ShopComposerMessages}
-        onChange={async (page) => { setCurrent(page); await save.mutateAsync(page); }}
+        onChange={async (page) => {
+          setCurrent(page);
+          await save.mutateAsync(page);
+        }}
         onDiscard={() => setConfirming(true)}
-        onPublish={async (page) => { setCurrent(page); await publish.mutateAsync(page).catch(() => undefined); }}
+        onPublish={async (page) => {
+          setCurrent(page);
+          await publish.mutateAsync(page).catch(() => undefined);
+        }}
       />
       <details className="rounded-lg border border-border-default p-3">
-        <summary className="cursor-pointer font-display text-base font-bold text-fg">{say("composerPanel.versions")}</summary>
+        <summary className="cursor-pointer font-display text-base font-bold text-fg">
+          {say("composerPanel.versions")}
+        </summary>
         <p className="mb-2 mt-2 text-sm text-fg-secondary">{say("composerPanel.versionsLead")}</p>
-        <label className="mb-2 flex items-center gap-2 text-sm text-fg-secondary"><input type="checkbox" checked={keepDraft} onChange={(e) => setKeepDraft(e.target.checked)} />{say("composerPanel.keepDraft")}</label>
-        {history.data.length === 0 ? <p className="m-0 text-sm text-fg-secondary">{say("composerPanel.noVersions")}</p> : (
+        <label className="mb-2 flex items-center gap-2 text-sm text-fg-secondary">
+          <input type="checkbox" checked={keepDraft} onChange={(e) => setKeepDraft(e.target.checked)} />
+          {say("composerPanel.keepDraft")}
+        </label>
+        {history.data.length === 0 ? (
+          <p className="m-0 text-sm text-fg-secondary">{say("composerPanel.noVersions")}</p>
+        ) : (
           <ul className="m-0 flex list-none flex-col divide-y divide-border-default p-0">
             {history.data.map((v) => (
               <li key={v.version} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
-                <span className="text-fg"><strong>{say("composerPanel.versionN", { n: v.version })}</strong> · {named(v)} · <time dateTime={v.createdAt}>{new Date(v.createdAt).toLocaleString(locale === "fr" ? "fr-CA" : "en-CA")}</time></span>
-                {v.status === "archived" ? <Button variant="ghost" size="sm" disabled={restore.isPending} onClick={() => restore.mutate(v.version)}>{say("composerPanel.restore")}</Button> : null}
+                <span className="text-fg">
+                  <strong>{say("composerPanel.versionN", { n: v.version })}</strong> · {named(v)} ·{" "}
+                  <time dateTime={v.createdAt}>
+                    {new Date(v.createdAt).toLocaleString(locale === "fr" ? "fr-CA" : "en-CA")}
+                  </time>
+                </span>
+                {v.status === "archived" ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={restore.isPending}
+                    onClick={() => restore.mutate(v.version)}
+                  >
+                    {say("composerPanel.restore")}
+                  </Button>
+                ) : null}
               </li>
             ))}
           </ul>

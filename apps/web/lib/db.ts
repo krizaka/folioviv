@@ -1,6 +1,14 @@
 import path from "node:path";
 
-import { createDb, type Db, migrate as migrateSchema, pg, poolConfig as dbPoolConfig, transactionOn, type TransactionPool } from "@folioviv/db";
+import {
+  createDb,
+  type Db,
+  migrate as migrateSchema,
+  pg,
+  poolConfig as dbPoolConfig,
+  transactionOn,
+  type TransactionPool,
+} from "@folioviv/db";
 
 import { readEnv } from "./env";
 
@@ -26,13 +34,17 @@ export function db(): Db {
   return holder.__foliovivDb;
 }
 
-export async function query<T extends pg.QueryResultRow = pg.QueryResultRow>(text: string, values: unknown[] = []): Promise<T[]> {
+export async function query<T extends pg.QueryResultRow = pg.QueryResultRow>(
+  text: string,
+  values: unknown[] = [],
+): Promise<T[]> {
   const result = await pool().query<T>(text, values);
   return result.rows;
 }
 
 /** A transaction on this process's pool. */
-export const transaction = <T>(work: Parameters<typeof transactionOn<T>>[1]) => transactionOn(pool() as unknown as TransactionPool, work);
+export const transaction = <T>(work: Parameters<typeof transactionOn<T>>[1]) =>
+  transactionOn(pool() as unknown as TransactionPool, work);
 
 export { transactionOn, type TransactionPool };
 

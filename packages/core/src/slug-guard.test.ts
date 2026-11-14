@@ -2,7 +2,20 @@ import { describe, expect, it } from "vitest";
 
 import { foldLookalikes, holdSlug, parseProtectedTerms, protectedTermsIssues } from "./slug-guard";
 
-const TERMS = parseProtectedTerms(["# brands", "desjardins", "paypal", "", "# lure terms", "login", "verify", "secure", "/^bank(ing)?$/", "/pass-?wo?rd/"].join("\n")).terms;
+const TERMS = parseProtectedTerms(
+  [
+    "# brands",
+    "desjardins",
+    "paypal",
+    "",
+    "# lure terms",
+    "login",
+    "verify",
+    "secure",
+    "/^bank(ing)?$/",
+    "/pass-?wo?rd/",
+  ].join("\n"),
+).terms;
 
 describe("foldLookalikes (ADR-005 slice 4, #537)", () => {
   it.each([
@@ -72,7 +85,11 @@ describe("protectedTermsIssues (the console's save check, #537)", () => {
     expect(protectedTermsIssues("login\n/(unclosed/")).toEqual([{ line: 2, text: "/(unclosed/", reason: "invalid" }]);
   });
   it("refuses a pattern that can backtrack catastrophically (ReDoS), and never runs it", () => {
-    const [nested, star, alternation] = [pattern("(a", "+)", "+$"), pattern("(x", "*)", "*y"), pattern("(a|", "aa)", "+$")];
+    const [nested, star, alternation] = [
+      pattern("(a", "+)", "+$"),
+      pattern("(x", "*)", "*y"),
+      pattern("(a|", "aa)", "+$"),
+    ];
     expect(protectedTermsIssues([nested, star, alternation].join("\n"))).toEqual([
       { line: 1, text: nested, reason: "unsafe" },
       { line: 2, text: star, reason: "unsafe" },
@@ -80,7 +97,9 @@ describe("protectedTermsIssues (the console's save check, #537)", () => {
     ]);
   });
   it("refuses a pattern longer than 100 characters", () => {
-    expect(protectedTermsIssues(`/${"a".repeat(101)}/`)).toEqual([{ line: 1, text: `/${"a".repeat(101)}/`, reason: "too-long" }]);
+    expect(protectedTermsIssues(`/${"a".repeat(101)}/`)).toEqual([
+      { line: 1, text: `/${"a".repeat(101)}/`, reason: "too-long" },
+    ]);
   });
   it("refuses a word the slug could never contain", () => {
     expect(protectedTermsIssues("pay pal\nok-word\nUPPER")).toEqual([{ line: 1, text: "pay pal", reason: "word" }]);

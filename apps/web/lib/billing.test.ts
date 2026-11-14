@@ -15,12 +15,16 @@ function fake(failNext = { value: false }) {
     const query = (async (text: string, values: unknown[] = []) => {
       if (text.includes("INSERT INTO") && text.includes("payment_events")) {
         const id = String(values[0]);
-        if (staged.events.has(id)) {return [];}
+        if (staged.events.has(id)) {
+          return [];
+        }
         staged.events.add(id);
         return [{ id }];
       }
       if (text.startsWith("UPDATE accounts SET payment_subscription_id")) {
-        if (failNext.value) {throw new Error("database went away");}
+        if (failNext.value) {
+          throw new Error("database went away");
+        }
         staged.accounts += 1;
       }
       return [{ id: "a1" }] as Row[];
@@ -33,8 +37,23 @@ function fake(failNext = { value: false }) {
   return { transaction, committed };
 }
 
-const paid = { checkoutRef: null, paymentRef: null, invoiceRef: null, amountTotal: null, amountDiscount: 0, currency: null, metadata: {} };
-const started: PaymentEvent = { id: "evt_1", type: "subscription_started", accountId: "a1", customerId: "cus_1", subscriptionId: "sub_1", ...paid };
+const paid = {
+  checkoutRef: null,
+  paymentRef: null,
+  invoiceRef: null,
+  amountTotal: null,
+  amountDiscount: 0,
+  currency: null,
+  metadata: {},
+};
+const started: PaymentEvent = {
+  id: "evt_1",
+  type: "subscription_started",
+  accountId: "a1",
+  customerId: "cus_1",
+  subscriptionId: "sub_1",
+  ...paid,
+};
 
 describe("payment events are applied once", () => {
   it("a replayed event changes nothing", async () => {
@@ -74,7 +93,12 @@ describe("the subscription state", () => {
   it("creates the customer once and reuses it", async () => {
     let creates = 0;
     const existing = (async () => [{ customer: "cus_old" }]) as never;
-    expect(await customerOf(existing, "a1", async () => { creates++; return { id: "cus_new" }; })).toBe("cus_old");
+    expect(
+      await customerOf(existing, "a1", async () => {
+        creates++;
+        return { id: "cus_new" };
+      }),
+    ).toBe("cus_old");
     expect(creates).toBe(0);
   });
 });
@@ -91,12 +115,19 @@ describe("the free trial lives on the subscription (trialing), once per account"
 
   it("once the trial ends the processor says active: no longer trialing, the period end is the renewal", async () => {
     const end = new Date("2027-02-28T12:00:00Z");
-    expect(await subscriptionOf(rows({ status: "active", end, customer: "cus_1" }), "a1", now)).toMatchObject({ active: true, trialing: false, trialEndsAt: null });
+    expect(await subscriptionOf(rows({ status: "active", end, customer: "cus_1" }), "a1", now)).toMatchObject({
+      active: true,
+      trialing: false,
+      trialEndsAt: null,
+    });
   });
 
   it("a trial that lapsed unpaid (period passed, no renewal) is not live", async () => {
     const past = new Date("2026-10-01T12:00:00Z");
-    expect(await subscriptionOf(rows({ status: "trialing", end: past, customer: "cus_1" }), "a1", now)).toMatchObject({ active: false, trialing: true });
+    expect(await subscriptionOf(rows({ status: "trialing", end: past, customer: "cus_1" }), "a1", now)).toMatchObject({
+      active: false,
+      trialing: true,
+    });
   });
 
   it("an account never subscribed may start one; an account that had a subscription may not (once per account)", async () => {

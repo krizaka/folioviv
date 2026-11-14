@@ -19,7 +19,14 @@ export interface BriefSnapshot {
   /** Invoices issued and expenses paid during the previous week (Monday to Sunday). */
   lastWeek: {
     invoices: { id: string; number: string; issuedOn: string; totalCents: Cents; gstCents: Cents; qstCents: Cents }[];
-    expenses: { id: string; supplier: string; paidOn: string; gstCents: Cents; qstCents: Cents; businessSharePct: number }[];
+    expenses: {
+      id: string;
+      supplier: string;
+      paidOn: string;
+      gstCents: Cents;
+      qstCents: Cents;
+      businessSharePct: number;
+    }[];
   };
 }
 

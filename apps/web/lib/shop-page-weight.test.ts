@@ -3,6 +3,8 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
+import { compact } from "./test-source";
+
 /**
  * What keeps a shop's public page light and still (ADR-004, folioviv#459, #460): the budgets themselves are measured in CI (`scripts/check-perf-budgets.mjs`);
  * these hold the causes that were found, so a change that brings one back fails here, before the measure.
@@ -20,7 +22,11 @@ describe("a shop's public page paints its first screen at once", () => {
 
   it("preloads the cover with a high priority, from the server render", () => {
     const view = read("components/shop/ShopPageView.tsx");
-    expect(view).toMatch(/preload\(plan\.cover\.src, \{ as: "image", fetchPriority: "high", imageSrcSet: phone, imageSizes: "100vw", media: PHONE_MEDIA \}\)/);
+    expect(compact(view)).toContain(
+      compact(
+        'preload(plan.cover.src, { as: "image", fetchPriority: "high", imageSrcSet: phone, imageSizes: "100vw", media: PHONE_MEDIA })',
+      ),
+    );
     expect(view.startsWith('"use client"')).toBe(false);
   });
 });
@@ -37,7 +43,7 @@ describe("the bar ships no catalogue and no session code to a visitor with no se
     expect(page).toContain("SESSION_COOKIE");
     expect(page).toContain("anonymous={anonymous}");
     const header = read("components/SiteHeader.tsx");
-    expect(header).toMatch(/anonymous \? <SignedOutActions/);
+    expect(compact(header)).toContain(compact("anonymous ? <SignedOutActions"));
   });
 
   it("the account island (query client, `/api/me` schema, account menu) is a chunk of its own, asked for once the page has loaded", () => {

@@ -17,7 +17,13 @@ export function POST(req: Request) {
     const input = await readJson(req, body);
     const { session, client } = await requireOwnClient(req, input.clientId);
     await setAccessNotes(db(), dataKey(), client.id, input.notes);
-    await audit({ action: "client.access_notes_set", actorId: session.account.id, actorLabel: session.account.email, targetId: client.id, headers: req.headers });
+    await audit({
+      action: "client.access_notes_set",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: client.id,
+      headers: req.headers,
+    });
     return Response.json({ ok: true });
   });
 }

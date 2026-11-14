@@ -14,7 +14,7 @@ describe("the home's demo data (folioviv#470)", () => {
     const i = demoInvoice("fr");
     expect(i.language).toBe("fr");
     expect(i.totalCents).toBe(i.subtotalCents + i.gstCents + i.qstCents);
-    expect(i.lines[0]!.amountCents).toBe(i.lines[0]!.quantityHundredths * i.lines[0]!.unitPriceCents / 100);
+    expect(i.lines[0]!.amountCents).toBe((i.lines[0]!.quantityHundredths * i.lines[0]!.unitPriceCents) / 100);
   });
 
   it("nets each tax in the return as collected minus credits", () => {

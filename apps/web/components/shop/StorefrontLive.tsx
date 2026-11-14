@@ -14,13 +14,18 @@ export function StorefrontLive({ slug, enabled }: { slug: string; enabled: boole
     };
     const live = eventSourceLive(`/api/shops/${encodeURIComponent(slug)}/events`, {
       // Catch up after the initial render, a hidden tab or a dropped connection.
-      onStatus: (status) => { if (status === "open") refresh(); },
+      onStatus: (status) => {
+        if (status === "open") refresh();
+      },
     });
     let unsubscribe: (() => void) | undefined;
     const visibility = () => {
       if (document.visibilityState === "visible") {
         // The slots (a booking) and the page itself (the owner pinned something): both ask the server to render again.
-        unsubscribe ??= ((offSlots, offPage) => () => { offSlots(); offPage(); })(live.subscribe("slots.changed", refresh), live.subscribe("shop.page.updated", refresh));
+        unsubscribe ??= ((offSlots, offPage) => () => {
+          offSlots();
+          offPage();
+        })(live.subscribe("slots.changed", refresh), live.subscribe("shop.page.updated", refresh));
       } else {
         unsubscribe?.();
         unsubscribe = undefined;

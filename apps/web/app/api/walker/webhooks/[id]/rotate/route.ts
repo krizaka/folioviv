@@ -13,8 +13,17 @@ export const POST = (req: Request, { params }: { params: Promise<{ id: string }>
     const id = idParam((await params).id);
     try {
       const { secret } = await hooks().rotateSecret(session.account.id, id);
-      await audit({ action: "webhook.secret_rotated", actorId: session.account.id, actorLabel: session.account.email, targetId: id, headers: req.headers });
-      return new Response(JSON.stringify({ secret }), { status: 201, headers: { "Content-Type": "application/json", "Cache-Control": "private, no-store" } });
+      await audit({
+        action: "webhook.secret_rotated",
+        actorId: session.account.id,
+        actorLabel: session.account.email,
+        targetId: id,
+        headers: req.headers,
+      });
+      return new Response(JSON.stringify({ secret }), {
+        status: 201,
+        headers: { "Content-Type": "application/json", "Cache-Control": "private, no-store" },
+      });
     } catch (error) {
       throw webhookRefusal(error) ?? error;
     }

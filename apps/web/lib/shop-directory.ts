@@ -5,7 +5,15 @@
  * labels costs misses, never memory). A lookup that fails is never cached and never refuses: the page layer answers 404 for an unknown shop all the same.
  */
 export const Verdict = { Shop: "shop", Moved: "moved", None: "none", Unknown: "unknown" } as const;
-export type ShopVerdict = { kind: typeof Verdict.Shop; /** The shop's verified custom domain, when it has one: every other address leads there (308). */ domain?: string; /** For a custom host: the shop it serves. */ slug?: string } | { kind: typeof Verdict.Moved; slug: string } | { kind: typeof Verdict.None } | { kind: typeof Verdict.Unknown };
+export type ShopVerdict =
+  | {
+      kind: typeof Verdict.Shop;
+      /** The shop's verified custom domain, when it has one: every other address leads there (308). */ domain?: string;
+      /** For a custom host: the shop it serves. */ slug?: string;
+    }
+  | { kind: typeof Verdict.Moved; slug: string }
+  | { kind: typeof Verdict.None }
+  | { kind: typeof Verdict.Unknown };
 
 export type ShopLookup = (slug: string) => Promise<ShopVerdict>;
 
@@ -39,12 +47,18 @@ export function forgetShops(): void {
 export function createShopDirectory(lookup: ShopLookup, now: () => number = Date.now, seen: Seen = sharedMemory()) {
   return async function verdictOf(slug: string): Promise<ShopVerdict> {
     const cached = seen.get(slug);
-    if (cached && cached.until > now()) {return cached.verdict;}
+    if (cached && cached.until > now()) {
+      return cached.verdict;
+    }
     seen.delete(slug);
     const verdict = await lookup(slug).catch((): ShopVerdict => ({ kind: Verdict.Unknown }));
-    if (verdict.kind === Verdict.Unknown) {return verdict;}
+    if (verdict.kind === Verdict.Unknown) {
+      return verdict;
+    }
     seen.set(slug, { verdict, until: now() + (verdict.kind === Verdict.None ? MISS_MS : HIT_MS) });
-    if (seen.size > MAX) {seen.delete(seen.keys().next().value as string);}
+    if (seen.size > MAX) {
+      seen.delete(seen.keys().next().value as string);
+    }
     return verdict;
   };
 }
@@ -54,7 +68,9 @@ type Answer = { slug?: string | null; moved?: string | null; domain?: string | n
 /** The internal route answers `{ slug }` (a published shop), `{ moved }` (a former address) or `{}`. */
 export function verdictFromAnswer(answer: Answer | null): ShopVerdict {
   if (!answer) return { kind: Verdict.Unknown };
-  if (answer.slug) {return answer.domain ? { kind: Verdict.Shop, domain: answer.domain } : { kind: Verdict.Shop };}
+  if (answer.slug) {
+    return answer.domain ? { kind: Verdict.Shop, domain: answer.domain } : { kind: Verdict.Shop };
+  }
   return answer.moved ? { kind: Verdict.Moved, slug: answer.moved } : { kind: Verdict.None };
 }
 
@@ -67,7 +83,11 @@ export const fetchShopVerdict: ShopLookup = async (slug) => {
 export const shopVerdict = createShopDirectory(fetchShopVerdict);
 
 /** The loopback call to the internal route (shared by both lookups). */
-const internalLookup = (query: string) => fetch(`http://127.0.0.1:${loopbackPort()}${SHOP_LOOKUP_PATH}?${query}`, { cache: "no-store", signal: AbortSignal.timeout(2000) });
+const internalLookup = (query: string) =>
+  fetch(`http://127.0.0.1:${loopbackPort()}${SHOP_LOOKUP_PATH}?${query}`, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(2000),
+  });
 
 /**
  * A host that is none of ours (ADR-005 §3, folioviv#539): the internal route says which shop an `active` custom domain serves. The same short memory as a

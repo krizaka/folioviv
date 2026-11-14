@@ -14,7 +14,14 @@ export function POST(req: Request) {
   return handle(async () => {
     const { session, shop } = await requireShop(req, "catalogue");
     const { version } = await publishShopPageDraft(db(), shop.id, session.account.id);
-    await audit({ action: "shop.page_published", actorId: session.account.id, actorLabel: session.account.email, targetId: shop.id, detail: { version }, headers: req.headers });
+    await audit({
+      action: "shop.page_published",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: shop.id,
+      detail: { version },
+      headers: req.headers,
+    });
     forgetShops();
     await announcePage(shop.id);
     return Response.json({ version });

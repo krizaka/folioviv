@@ -18,11 +18,16 @@ export const isTurnstileTestKey = (key: string | undefined): boolean => /^[123]x
 
 export const captchaConfigured = (env: Env = process.env): boolean => {
   const key = env.ABUSE_CAPTCHA_SECRET_KEY?.trim();
-  return env.ABUSE_CAPTCHA_PROVIDER?.trim().toLowerCase() === "turnstile" && Boolean(key) && !(isProduction(env) && isTurnstileTestKey(key));
+  return (
+    env.ABUSE_CAPTCHA_PROVIDER?.trim().toLowerCase() === "turnstile" &&
+    Boolean(key) &&
+    !(isProduction(env) && isTurnstileTestKey(key))
+  );
 };
 
 /** Production without the check configured (or with a test key): the form refuses (503) rather than let every bot through. */
-export const captchaMissing = (env: Env = process.env): boolean => (env.NODE_ENV === "production" || isProduction(env)) && !captchaConfigured(env);
+export const captchaMissing = (env: Env = process.env): boolean =>
+  (env.NODE_ENV === "production" || isProduction(env)) && !captchaConfigured(env);
 
 // One verifier per key and process: it remembers the tokens it saw, so a replayed token is refused.
 const verifiers = new Map<string, ReturnType<typeof createTurnstileVerifier>>();
@@ -31,14 +36,22 @@ const verifiers = new Map<string, ReturnType<typeof createTurnstileVerifier>>();
 const hostnamesOf = (env: Env): string[] => {
   try {
     // A test key's answers name example.com whatever the page: no hostname to check (production refuses such a key above).
-    return env.NODE_ENV === "production" && env.APP_PUBLIC_URL && !isTurnstileTestKey(env.ABUSE_CAPTCHA_SECRET_KEY) ? [new URL(env.APP_PUBLIC_URL).hostname] : [];
+    return env.NODE_ENV === "production" && env.APP_PUBLIC_URL && !isTurnstileTestKey(env.ABUSE_CAPTCHA_SECRET_KEY)
+      ? [new URL(env.APP_PUBLIC_URL).hostname]
+      : [];
   } catch {
     return [];
   }
 };
 
 /** True when the check is off (not production, not configured) or the token is valid. `ip` is the visitor's address ("unknown" is not sent). */
-export async function verifyCaptcha(token: unknown, ip: string, env: Env, now: () => Date, fetchImpl?: TurnstileFetch): Promise<boolean> {
+export async function verifyCaptcha(
+  token: unknown,
+  ip: string,
+  env: Env,
+  now: () => Date,
+  fetchImpl?: TurnstileFetch,
+): Promise<boolean> {
   if (!captchaConfigured(env)) {
     return !captchaMissing(env);
   }

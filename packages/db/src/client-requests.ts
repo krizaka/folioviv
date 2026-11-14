@@ -45,15 +45,46 @@ export async function saveClientRequest(db: Db, clientId: string, raw: ClientReq
   const input = clientRequestInputSchema.parse(raw);
   const [client] = await db.select({ shopId: clients.shopId }).from(clients).where(eq(clients.id, clientId));
   if (!client) return refuse("AK_CLIENT_UNKNOWN");
-  const [service] = await db.select({ id: services.id }).from(services).where(and(eq(services.id, input.serviceId), eq(services.shopId, client.shopId)));
+  const [service] = await db
+    .select({ id: services.id })
+    .from(services)
+    .where(and(eq(services.id, input.serviceId), eq(services.shopId, client.shopId)));
   if (!service) return refuse("AK_SERVICE_UNKNOWN");
-  if (input.staffId && !(await db.select({ id: staff.id }).from(staff).where(and(eq(staff.id, input.staffId), eq(staff.shopId, client.shopId)))).length) refuse("AK_STAFF_UNKNOWN");
-  if (input.zoneId && !(await db.select({ id: shopZones.id }).from(shopZones).where(and(eq(shopZones.id, input.zoneId), eq(shopZones.shopId, client.shopId)))).length) refuse("AK_ZONE_REQUIRED");
-  const [{ count }] = (await db.select({ count: sql<number>`count(*)::int` }).from(clientRequests).where(eq(clientRequests.clientId, clientId))) as [{ count: number }];
+  if (
+    input.staffId &&
+    !(
+      await db
+        .select({ id: staff.id })
+        .from(staff)
+        .where(and(eq(staff.id, input.staffId), eq(staff.shopId, client.shopId)))
+    ).length
+  )
+    refuse("AK_STAFF_UNKNOWN");
+  if (
+    input.zoneId &&
+    !(
+      await db
+        .select({ id: shopZones.id })
+        .from(shopZones)
+        .where(and(eq(shopZones.id, input.zoneId), eq(shopZones.shopId, client.shopId)))
+    ).length
+  )
+    refuse("AK_ZONE_REQUIRED");
+  const [{ count }] = (await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(clientRequests)
+    .where(eq(clientRequests.clientId, clientId))) as [{ count: number }];
   if (count >= CLIENT_REQUEST_RULES.maxRequests) refuse("AK_REQUESTS_FULL");
   const [row] = await db
     .insert(clientRequests)
-    .values({ clientId, serviceId: input.serviceId, staffId: input.staffId ?? null, zoneId: input.zoneId ?? null, title: input.title, note: input.note || null })
+    .values({
+      clientId,
+      serviceId: input.serviceId,
+      staffId: input.staffId ?? null,
+      zoneId: input.zoneId ?? null,
+      title: input.title,
+      note: input.note || null,
+    })
     .returning({ id: clientRequests.id });
   return row!.id;
 }
@@ -61,13 +92,29 @@ export async function saveClientRequest(db: Db, clientId: string, raw: ClientReq
 /** The client's requests at the shop, newest first, with their files. */
 export async function clientRequestsOf(db: Db, clientId: string): Promise<ClientRequestView[]> {
   const rows = await db
-    .select({ r: clientRequests, serviceNameFr: services.nameFr, serviceNameEn: services.nameEn, staffName: staff.name })
+    .select({
+      r: clientRequests,
+      serviceNameFr: services.nameFr,
+      serviceNameEn: services.nameEn,
+      staffName: staff.name,
+    })
     .from(clientRequests)
     .innerJoin(services, eq(services.id, clientRequests.serviceId))
     .leftJoin(staff, eq(staff.id, clientRequests.staffId))
     .where(eq(clientRequests.clientId, clientId))
     .orderBy(desc(clientRequests.createdAt));
-  const files = rows.length ? await db.select().from(clientRequestFiles).where(inArray(clientRequestFiles.requestId, rows.map((x) => x.r.id))).orderBy(asc(clientRequestFiles.createdAt)) : [];
+  const files = rows.length
+    ? await db
+        .select()
+        .from(clientRequestFiles)
+        .where(
+          inArray(
+            clientRequestFiles.requestId,
+            rows.map((x) => x.r.id),
+          ),
+        )
+        .orderBy(asc(clientRequestFiles.createdAt))
+    : [];
   return rows.map(({ r, serviceNameFr, serviceNameEn, staffName }) => ({
     id: r.id,
     title: r.title,
@@ -84,7 +131,11 @@ export async function clientRequestsOf(db: Db, clientId: string): Promise<Client
 }
 
 /** The request, when it is this client's; else refused as unknown (one cannot tell another's from none). */
-export async function ownClientRequest(db: Db, clientId: string, requestId: string): Promise<{ id: string; shopId: string }> {
+export async function ownClientRequest(
+  db: Db,
+  clientId: string,
+  requestId: string,
+): Promise<{ id: string; shopId: string }> {
   const [row] = await db
     .select({ id: clientRequests.id, shopId: clients.shopId })
     .from(clientRequests)
@@ -94,25 +145,47 @@ export async function ownClientRequest(db: Db, clientId: string, requestId: stri
 }
 
 /** Records a file stored for a request (its address, kind and size), within the per-request limit. */
-export async function addClientRequestFile(db: Db, clientId: string, requestId: string, file: { url: string; kind: "image" | "pdf"; bytes: number }): Promise<string> {
+export async function addClientRequestFile(
+  db: Db,
+  clientId: string,
+  requestId: string,
+  file: { url: string; kind: "image" | "pdf"; bytes: number },
+): Promise<string> {
   await ownClientRequest(db, clientId, requestId);
-  const [{ count }] = (await db.select({ count: sql<number>`count(*)::int` }).from(clientRequestFiles).where(eq(clientRequestFiles.requestId, requestId))) as [{ count: number }];
+  const [{ count }] = (await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(clientRequestFiles)
+    .where(eq(clientRequestFiles.requestId, requestId))) as [{ count: number }];
   if (count >= CLIENT_REQUEST_RULES.maxFiles) refuse("AK_REQUEST_FILES_FULL");
-  const [row] = await db.insert(clientRequestFiles).values({ requestId, url: file.url, kind: file.kind, bytes: file.bytes }).returning({ id: clientRequestFiles.id });
+  const [row] = await db
+    .insert(clientRequestFiles)
+    .values({ requestId, url: file.url, kind: file.kind, bytes: file.bytes })
+    .returning({ id: clientRequestFiles.id });
   return row!.id;
 }
 
 /** Removes one file of a request; answers its address, for the storage. */
-export async function removeClientRequestFile(db: Db, clientId: string, requestId: string, fileId: string): Promise<string | null> {
+export async function removeClientRequestFile(
+  db: Db,
+  clientId: string,
+  requestId: string,
+  fileId: string,
+): Promise<string | null> {
   await ownClientRequest(db, clientId, requestId);
-  const [row] = await db.delete(clientRequestFiles).where(and(eq(clientRequestFiles.id, fileId), eq(clientRequestFiles.requestId, requestId))).returning({ url: clientRequestFiles.url });
+  const [row] = await db
+    .delete(clientRequestFiles)
+    .where(and(eq(clientRequestFiles.id, fileId), eq(clientRequestFiles.requestId, requestId)))
+    .returning({ url: clientRequestFiles.url });
   return row?.url ?? null;
 }
 
 /** Deletes a request and its files' rows; answers the files' addresses, for the storage. */
 export async function deleteClientRequest(db: Db, clientId: string, requestId: string): Promise<string[]> {
   await ownClientRequest(db, clientId, requestId);
-  const files = await db.select({ url: clientRequestFiles.url }).from(clientRequestFiles).where(eq(clientRequestFiles.requestId, requestId));
+  const files = await db
+    .select({ url: clientRequestFiles.url })
+    .from(clientRequestFiles)
+    .where(eq(clientRequestFiles.requestId, requestId));
   await db.delete(clientRequests).where(eq(clientRequests.id, requestId));
   return files.map((f) => f.url);
 }

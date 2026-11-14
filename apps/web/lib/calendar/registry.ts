@@ -26,14 +26,21 @@ export const sealedCaldav = (secret: CaldavSecret): string => JSON.stringify(sec
 function caldavOf(secret: string): CaldavSecret | null {
   try {
     const v = JSON.parse(secret) as Partial<CaldavSecret>;
-    return typeof v.url === "string" && typeof v.username === "string" && typeof v.password === "string" ? { url: v.url, username: v.username, password: v.password } : null;
+    return typeof v.url === "string" && typeof v.username === "string" && typeof v.password === "string"
+      ? { url: v.url, username: v.username, password: v.password }
+      : null;
   } catch {
     return null;
   }
 }
 
 /** The consent side of a provider, with or without a grant yet; `null` when its OAuth client is not configured. */
-export function connectable(kind: OAuthKind, apps: OAuthApps, refreshToken?: string, fetchImpl?: typeof fetch): ConnectableSource | null {
+export function connectable(
+  kind: OAuthKind,
+  apps: OAuthApps,
+  refreshToken?: string,
+  fetchImpl?: typeof fetch,
+): ConnectableSource | null {
   const app = apps[kind];
   if (!app) return null;
   const options = { ...app, ...(refreshToken ? { refreshToken } : {}), ...(fetchImpl ? { fetch: fetchImpl } : {}) };
@@ -49,7 +56,11 @@ export function sourceFor(kind: CalendarKind, secret: string, timezone: string):
  * The sync's source maker: a provider is read only while the administrator's flag for it is on and, for OAuth ones, its client exists
  * (a switched-off kind makes its connections fail with a word, and they are read again the day it is switched on).
  */
-export function sourceFactory(apps: OAuthApps, enabled: Partial<Record<CalendarKind, boolean>>, fetchImpl?: typeof fetch): SourceMaker {
+export function sourceFactory(
+  apps: OAuthApps,
+  enabled: Partial<Record<CalendarKind, boolean>>,
+  fetchImpl?: typeof fetch,
+): SourceMaker {
   return (kind, secret, timezone) => {
     if (kind === "ics") return sourceFor(kind, secret, timezone);
     if (!enabled[kind]) return null;

@@ -13,31 +13,102 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { toolPath } from "./lib/tool-path.mjs";
+
 /** The views captured: where they are (the shop's id and slug fill the address) and what must be visible before the shot. */
 export const SCENES = {
-  look: { path: (locale, shop) => `/${locale}/app/${shop.id}/shop?tab=look`, expect: { fr: "Modèle de page", en: "Page template" }, signedIn: true },
-  new: { path: (locale, shop) => `/${locale}/app/${shop.id}/shop/new`, expect: { fr: "Votre métier", en: "Your trade" }, signedIn: true },
+  look: {
+    path: (locale, shop) => `/${locale}/app/${shop.id}/shop?tab=look`,
+    expect: { fr: "Modèle de page", en: "Page template" },
+    signedIn: true,
+  },
+  new: {
+    path: (locale, shop) => `/${locale}/app/${shop.id}/shop/new`,
+    expect: { fr: "Votre métier", en: "Your trade" },
+    signedIn: true,
+  },
   // The public pages wait for the shop's name (its heading, there on every device); a button's words move with the layout.
-  storefront: { path: (locale, shop) => `/${locale}/s/${shop.slug}`, expect: { fr: "Pattes de Saint-Henri", en: "Pattes de Saint-Henri" }, signedIn: false },
+  storefront: {
+    path: (locale, shop) => `/${locale}/s/${shop.slug}`,
+    expect: { fr: "Pattes de Saint-Henri", en: "Pattes de Saint-Henri" },
+    signedIn: false,
+  },
   // The home's neighbourhood feed (folioviv#318): the flyers the demo shops pinned, shot as the section alone.
-  home: { path: (locale) => `/${locale}`, expect: { fr: "Affiché dans votre quartier", en: "Posted in your neighbourhood" }, signedIn: false, element: "section:has([data-testid=neighbourhood-feed])" },
+  home: {
+    path: (locale) => `/${locale}`,
+    expect: { fr: "Affiché dans votre quartier", en: "Posted in your neighbourhood" },
+    signedIn: false,
+    element: "section:has([data-testid=neighbourhood-feed])",
+  },
   // The demo shops (packages/db/src/demo-shops.ts), each on a template of its trade (#261, step 6).
-  salon: { path: (locale) => `/${locale}/s/cedre-ciseaux`, expect: { fr: "Salon Cèdre & Ciseaux", en: "Salon Cèdre & Ciseaux" }, signedIn: false },
-  workshop: { path: (locale) => `/${locale}/s/encre-vive`, expect: { fr: "Encre Vive Studio", en: "Encre Vive Studio" }, signedIn: false },
-  consulting: { path: (locale) => `/${locale}/s/ferland-conseil`, expect: { fr: "Ferland Conseil", en: "Ferland Conseil" }, signedIn: false },
+  salon: {
+    path: (locale) => `/${locale}/s/cedre-ciseaux`,
+    expect: { fr: "Salon Cèdre & Ciseaux", en: "Salon Cèdre & Ciseaux" },
+    signedIn: false,
+  },
+  workshop: {
+    path: (locale) => `/${locale}/s/encre-vive`,
+    expect: { fr: "Encre Vive Studio", en: "Encre Vive Studio" },
+    signedIn: false,
+  },
+  consulting: {
+    path: (locale) => `/${locale}/s/ferland-conseil`,
+    expect: { fr: "Ferland Conseil", en: "Ferland Conseil" },
+    signedIn: false,
+  },
   // The owner's guide (folioviv#382, `pnpm run shots:docs`): its figures are captured from the demo shop, never drawn.
-  "docs-shop": { path: (locale, shop) => `/${locale}/app/${shop.id}/settings/page`, expect: { fr: "Votre page boutique", en: "Your shop page" }, signedIn: true },
-  "docs-bookings": { path: (locale, shop) => `/${locale}/s/${shop.slug}`, expect: { fr: "Pattes de Saint-Henri", en: "Pattes de Saint-Henri" }, signedIn: false },
-  "docs-invoices": { path: (locale, shop) => `/${locale}/app/${shop.id}/invoices/new`, expect: { fr: "Nouvelle facture", en: "New invoice" }, signedIn: true },
-  "docs-books": { path: (locale, shop) => `/${locale}/app/${shop.id}/books`, expect: { fr: "Vos livres", en: "Your books" }, signedIn: true },
+  "docs-shop": {
+    path: (locale, shop) => `/${locale}/app/${shop.id}/settings/page`,
+    expect: { fr: "Votre page boutique", en: "Your shop page" },
+    signedIn: true,
+  },
+  "docs-bookings": {
+    path: (locale, shop) => `/${locale}/s/${shop.slug}`,
+    expect: { fr: "Pattes de Saint-Henri", en: "Pattes de Saint-Henri" },
+    signedIn: false,
+  },
+  "docs-invoices": {
+    path: (locale, shop) => `/${locale}/app/${shop.id}/invoices/new`,
+    expect: { fr: "Nouvelle facture", en: "New invoice" },
+    signedIn: true,
+  },
+  "docs-books": {
+    path: (locale, shop) => `/${locale}/app/${shop.id}/books`,
+    expect: { fr: "Vos livres", en: "Your books" },
+    signedIn: true,
+  },
   // The owner's figures (#260): what to do now on Today, the figures with their formulas on the books, and the thresholds the owner tunes.
-  "figures-today": { path: (locale, shop) => `/${locale}/app/${shop.id}/today`, expect: { fr: "Que faire maintenant", en: "What to do now" }, signedIn: true },
-  "figures-books": { path: (locale, shop) => `/${locale}/app/${shop.id}/books`, expect: { fr: "Vos chiffres", en: "Your figures" }, signedIn: true },
-  "figures-thresholds": { path: (locale, shop) => `/${locale}/app/${shop.id}/settings/figures`, expect: { fr: "Quand un chiffre demande votre attention", en: "When a figure needs your attention" }, signedIn: true },
+  "figures-today": {
+    path: (locale, shop) => `/${locale}/app/${shop.id}/today`,
+    expect: { fr: "Que faire maintenant", en: "What to do now" },
+    signedIn: true,
+  },
+  "figures-books": {
+    path: (locale, shop) => `/${locale}/app/${shop.id}/books`,
+    expect: { fr: "Vos chiffres", en: "Your figures" },
+    signedIn: true,
+  },
+  "figures-thresholds": {
+    path: (locale, shop) => `/${locale}/app/${shop.id}/settings/figures`,
+    expect: { fr: "Quand un chiffre demande votre attention", en: "When a figure needs your attention" },
+    signedIn: true,
+  },
   // The private calendar links (#282, ADR-004).
-  "agenda-sources": { path: (locale, shop) => `/${locale}/app/${shop.id}/settings/agenda`, expect: { fr: "Vos autres agendas", en: "Your other calendars" }, signedIn: true },
-  "agenda-feed": { path: (locale, shop) => `/${locale}/app/${shop.id}/settings/agenda`, expect: { fr: "Votre agenda sur votre téléphone", en: "Your calendar on your phone" }, signedIn: true },
-  "docs-data": { path: (locale) => `/${locale}/app/profile/data`, expect: { fr: "Vos données", en: "Your data" }, signedIn: true },
+  "agenda-sources": {
+    path: (locale, shop) => `/${locale}/app/${shop.id}/settings/agenda`,
+    expect: { fr: "Vos autres agendas", en: "Your other calendars" },
+    signedIn: true,
+  },
+  "agenda-feed": {
+    path: (locale, shop) => `/${locale}/app/${shop.id}/settings/agenda`,
+    expect: { fr: "Votre agenda sur votre téléphone", en: "Your calendar on your phone" },
+    signedIn: true,
+  },
+  "docs-data": {
+    path: (locale) => `/${locale}/app/profile/data`,
+    expect: { fr: "Vos données", en: "Your data" },
+    signedIn: true,
+  },
 };
 /** The scenes of the owner's guide, one per page of it (`docs.pages.<id>`). */
 export const DOCS_SCENES = Object.keys(SCENES).filter((s) => s.startsWith("docs-"));
@@ -45,7 +116,11 @@ export const THEMES = ["dark", "light"];
 export const DEVICES = { desktop: { width: 1440, height: 900 }, phone: { width: 390, height: 844 } };
 
 /** The extra features switched on for the run only (`SHOTS_FLAGS=features.cahierStorefront,…`): the throw-away database, never a shared one. */
-export const flagsOf = (value) => (value ?? "").split(",").map((s) => s.trim()).filter((s) => /^features\.[A-Za-z]+$/.test(s));
+export const flagsOf = (value) =>
+  (value ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => /^features\.[A-Za-z]+$/.test(s));
 
 /** The slugs of the demo shops (packages/db/src/demo-shops.ts): the owners a person's flag is set for (`SHOTS_DEMO_FLAGS`), never anyone else. */
 export const DEMO_SLUGS = ["cedre-ciseaux", "encre-vive", "ferland-conseil"];
@@ -56,8 +131,15 @@ export const shotName = (scene, device, theme) => `${scene}-${device}-${theme}.p
 /** Every capture of a run, in a stable order (scenes, then devices, then themes). */
 export function plan(scenes = Object.keys(SCENES), devices = Object.keys(DEVICES)) {
   const unknown = [...scenes.filter((s) => !SCENES[s]), ...devices.filter((d) => !DEVICES[d])];
-  if (unknown.length) throw new Error(`unknown scene(s) or device(s): ${unknown.join(", ")} (known: ${Object.keys(SCENES).join(", ")}; ${Object.keys(DEVICES).join(", ")})`);
-  return scenes.flatMap((scene) => devices.flatMap((device) => THEMES.map((theme) => ({ scene, device, theme, file: shotName(scene, device, theme) }))));
+  if (unknown.length)
+    throw new Error(
+      `unknown scene(s) or device(s): ${unknown.join(", ")} (known: ${Object.keys(SCENES).join(", ")}; ${Object.keys(DEVICES).join(", ")})`,
+    );
+  return scenes.flatMap((scene) =>
+    devices.flatMap((device) =>
+      THEMES.map((theme) => ({ scene, device, theme, file: shotName(scene, device, theme) })),
+    ),
+  );
 }
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -131,13 +213,22 @@ async function shoot(p, { base, locale, shop, shot, outDir }) {
   });
   await p.waitForTimeout(800); // fonts and the reveal
   const file = path.join(outDir, shot.file);
-  await (scene.element ? p.locator(scene.element).screenshot({ path: file }) : p.screenshot({ path: file, fullPage: true }));
+  await (scene.element
+    ? p.locator(scene.element).screenshot({ path: file })
+    : p.screenshot({ path: file, fullPage: true }));
 }
 
 /** Every planned capture of one device in one theme, in one context. */
 async function captureTheme(browser, { device, viewport, theme, scenes, storageState, ctx, out }) {
   // Reduced motion: what the page reveals on scroll is there at once, as for a person who asked for it; the shot shows the whole page.
-  const context = await browser.newContext({ viewport, colorScheme: theme, reducedMotion: "reduce", storageState, locale: ctx.locale === "fr" ? "fr-CA" : "en-CA", deviceScaleFactor: device === "phone" ? 2 : 1 });
+  const context = await browser.newContext({
+    viewport,
+    colorScheme: theme,
+    reducedMotion: "reduce",
+    storageState,
+    locale: ctx.locale === "fr" ? "fr-CA" : "en-CA",
+    deviceScaleFactor: device === "phone" ? 2 : 1,
+  });
   await context.addInitScript((t) => {
     try {
       localStorage.setItem("kz-theme", t);
@@ -164,7 +255,13 @@ async function main() {
   const LOCALE = process.env.SHOTS_LOCALE === "en" ? "en" : "fr";
   const PORT = Number(process.env.SHOTS_PORT ?? 3214);
   const DB_PORT = Number(process.env.SHOTS_DB_PORT ?? 5436);
-  const list = (name) => (process.env[name] ? process.env[name].split(",").map((s) => s.trim()).filter(Boolean) : undefined);
+  const list = (name) =>
+    process.env[name]
+      ? process.env[name]
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : undefined;
   const scenes = plan(list("SHOTS_SCENES"), list("SHOTS_DEVICES"));
   const BASE = `http://localhost:${PORT}`;
   const container = `folioviv-shots-${process.pid}`;
@@ -186,7 +283,26 @@ async function main() {
   const clientsPassword = crypto.randomBytes(18).toString("base64url");
   mkdirSync(OUT, { recursive: true });
 
-  const started = spawnSync("docker", ["run", "-d", "--rm", "--name", container, "-e", "POSTGRES_USER=folioviv", `-e`, `POSTGRES_PASSWORD=${dbPassword}`, "-e", "POSTGRES_DB=folioviv_shots", "-p", `${DB_PORT}:5432`, "postgres:16"], { encoding: "utf8" });
+  const started = spawnSync(
+    toolPath("docker"),
+    [
+      "run",
+      "-d",
+      "--rm",
+      "--name",
+      container,
+      "-e",
+      "POSTGRES_USER=folioviv",
+      `-e`,
+      `POSTGRES_PASSWORD=${dbPassword}`,
+      "-e",
+      "POSTGRES_DB=folioviv_shots",
+      "-p",
+      `${DB_PORT}:5432`,
+      "postgres:16",
+    ],
+    { encoding: "utf8" },
+  );
   if (started.status !== 0) throw new Error(`docker run failed: ${started.stderr}`);
   let app = null;
   const out = (line) => process.stdout.write(`${line}\n`);
@@ -194,22 +310,70 @@ async function main() {
     const db = await connectWhenUp(pg, DATABASE_URL);
     out("shots: database up");
 
-    app = spawn("pnpm", ["--filter", "@folioviv/web", "exec", "next", "dev", "-p", String(PORT)], { cwd: root, env, stdio: "ignore" });
+    app = spawn(toolPath("pnpm"), ["--filter", "@folioviv/web", "exec", "next", "dev", "-p", String(PORT)], {
+      cwd: root,
+      env,
+      stdio: "ignore",
+    });
     await waitForApp(db, BASE, LOCALE);
     out("shots: app up, schema there");
 
     const run = (args, extra = {}) => {
-      const r = spawnSync("pnpm", args, { cwd: root, env: { ...env, ...extra }, encoding: "utf8" });
+      const r = spawnSync(toolPath("pnpm"), args, { cwd: root, env: { ...env, ...extra }, encoding: "utf8" });
       if (r.status !== 0) throw new Error(`${args.join(" ")} failed:\n${r.stdout}\n${r.stderr}`);
     };
-    run(["--filter", "@folioviv/web", "exec", "tsx", "scripts/seed-saint-henri.mjs"], { QA_WALKER_PASSWORD: walkerPassword, QA_CLIENTS_PASSWORD: clientsPassword });
+    run(["--filter", "@folioviv/web", "exec", "tsx", "scripts/seed-saint-henri.mjs"], {
+      QA_WALKER_PASSWORD: walkerPassword,
+      QA_CLIENTS_PASSWORD: clientsPassword,
+    });
     run(["--filter", "@folioviv/db", "seed:demos"]);
-    run(["--filter", "@folioviv/web", "exec", "tsx", "scripts/set-setting.mjs", "features.storefrontTemplates", "true", "--actor", "shots-storefront"]);
-    for (const flag of flagsOf(process.env.SHOTS_FLAGS)) run(["--filter", "@folioviv/web", "exec", "tsx", "scripts/set-setting.mjs", flag, "true", "--actor", "shots-storefront"]);
+    run([
+      "--filter",
+      "@folioviv/web",
+      "exec",
+      "tsx",
+      "scripts/set-setting.mjs",
+      "features.storefrontTemplates",
+      "true",
+      "--actor",
+      "shots-storefront",
+    ]);
+    for (const flag of flagsOf(process.env.SHOTS_FLAGS))
+      run([
+        "--filter",
+        "@folioviv/web",
+        "exec",
+        "tsx",
+        "scripts/set-setting.mjs",
+        flag,
+        "true",
+        "--actor",
+        "shots-storefront",
+      ]);
     // The demo shops' owners only (a person's value of the administration, as in production): `SHOTS_DEMO_FLAGS=features.cahierStorefront`.
-    const demoOwners = (await db.query("SELECT a.email FROM shops s JOIN accounts a ON a.id = s.owner_id WHERE s.slug = ANY($1)", [DEMO_SLUGS])).rows;
-    for (const flag of flagsOf(process.env.SHOTS_DEMO_FLAGS)) for (const { email } of demoOwners) run(["--filter", "@folioviv/web", "exec", "tsx", "scripts/set-setting.mjs", flag, "true", "--user", email, "--actor", "shots-storefront"]);
-    const { rows } = await db.query("SELECT s.id, s.slug, a.email FROM shops s JOIN accounts a ON a.id = s.owner_id WHERE s.slug = 'pattes-saint-henri'");
+    const demoOwners = (
+      await db.query("SELECT a.email FROM shops s JOIN accounts a ON a.id = s.owner_id WHERE s.slug = ANY($1)", [
+        DEMO_SLUGS,
+      ])
+    ).rows;
+    for (const flag of flagsOf(process.env.SHOTS_DEMO_FLAGS))
+      for (const { email } of demoOwners)
+        run([
+          "--filter",
+          "@folioviv/web",
+          "exec",
+          "tsx",
+          "scripts/set-setting.mjs",
+          flag,
+          "true",
+          "--user",
+          email,
+          "--actor",
+          "shots-storefront",
+        ]);
+    const { rows } = await db.query(
+      "SELECT s.id, s.slug, a.email FROM shops s JOIN accounts a ON a.id = s.owner_id WHERE s.slug = 'pattes-saint-henri'",
+    );
     if (!rows[0]) throw new Error("the Saint-Henri shop was not seeded");
     const shop = { id: rows[0].id, slug: rows[0].slug };
     const owner = { email: rows[0].email, password: walkerPassword };
@@ -224,14 +388,18 @@ async function main() {
     const ctx = { base: BASE, locale: LOCALE, shop, outDir: OUT };
     for (const [device, viewport] of Object.entries(DEVICES)) {
       if (!scenes.some((s) => s.device === device)) continue;
-      for (const theme of THEMES) taken.push(...(await captureTheme(browser, { device, viewport, theme, scenes, storageState, ctx, out })));
+      for (const theme of THEMES)
+        taken.push(...(await captureTheme(browser, { device, viewport, theme, scenes, storageState, ctx, out })));
     }
     await browser.close();
-    writeFileSync(path.join(OUT, "scenes.json"), `${JSON.stringify({ locale: LOCALE, shop: shop.slug, shots: taken }, null, 2)}\n`);
+    writeFileSync(
+      path.join(OUT, "scenes.json"),
+      `${JSON.stringify({ locale: LOCALE, shop: shop.slug, shots: taken }, null, 2)}\n`,
+    );
     out(`shots: ${taken.length} capture(s) in ${OUT}`);
   } finally {
     if (app) app.kill("SIGTERM");
-    spawnSync("docker", ["rm", "-f", container], { stdio: "ignore" });
+    spawnSync(toolPath("docker"), ["rm", "-f", container], { stdio: "ignore" });
   }
 }
 

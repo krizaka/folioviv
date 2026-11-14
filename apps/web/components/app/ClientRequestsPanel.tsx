@@ -31,7 +31,12 @@ export function ClientRequestsPanel({ requests }: Readonly<{ requests: ShopReque
               <ul className="mt-2 flex flex-wrap gap-2">
                 {r.files.map((f, n) => (
                   <li key={f.id}>
-                    <a href={f.url} target="_blank" rel="noreferrer" className="inline-flex rounded-sm border border-border-default bg-surface-2 px-2 py-1 text-sm text-fg underline-offset-2 hover:underline">
+                    <a
+                      href={f.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex rounded-sm border border-border-default bg-surface-2 px-2 py-1 text-sm text-fg underline-offset-2 hover:underline"
+                    >
                       {say(f.kind === "pdf" ? "clients.requests.pdf" : "clients.requests.photo", { n: n + 1 })}
                     </a>
                   </li>

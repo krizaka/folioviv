@@ -26,10 +26,20 @@ export interface LanguagesData {
   setupHref: string;
 }
 
-const TONE: Record<TranslationState, "neutral" | "success" | "warning" | "accent"> = { own: "neutral", missing: "neutral", auto: "accent", edited: "success", stale: "warning" };
+const TONE: Record<TranslationState, "neutral" | "success" | "warning" | "accent"> = {
+  own: "neutral",
+  missing: "neutral",
+  auto: "accent",
+  edited: "success",
+  stale: "warning",
+};
 
 /** One text in one language: what the page will say, its state, the owner's own wording, and « refaire la traduction ». */
-function TextRow({ field, locale, translationOn }: Readonly<{ field: FieldView; locale: PageLocale; translationOn: boolean }>) {
+function TextRow({
+  field,
+  locale,
+  translationOn,
+}: Readonly<{ field: FieldView; locale: PageLocale; translationOn: boolean }>) {
   const { say } = useSay();
   const call = useCall();
   const current = field.languages[locale] ?? { state: "missing" as const, text: "" };
@@ -42,21 +52,44 @@ function TextRow({ field, locale, translationOn }: Readonly<{ field: FieldView; 
     <li className="flex flex-col gap-2 border-t border-border-subtle pt-4 first:border-t-0 first:pt-0">
       <div className="flex flex-wrap items-center gap-2">
         <span className="font-semibold text-fg">{label}</span>
-        <Badge tone={TONE[current.state]} size="sm">{t(`state.${current.state}`)}</Badge>
+        <Badge tone={TONE[current.state]} size="sm">
+          {t(`state.${current.state}`)}
+        </Badge>
       </div>
       <p className="m-0 whitespace-pre-line text-sm text-fg-muted">{field.source}</p>
       <Field.Root>
-        <Field.Label htmlFor={`${field.key}-${locale}`} className="sr-only">{label}</Field.Label>
-        <Textarea id={`${field.key}-${locale}`} rows={field.field === "bio" ? 4 : 2} maxLength={2000} value={text} readOnly={!writable} onChange={(e) => setText(e.target.value)} />
+        <Field.Label htmlFor={`${field.key}-${locale}`} className="sr-only">
+          {label}
+        </Field.Label>
+        <Textarea
+          id={`${field.key}-${locale}`}
+          rows={field.field === "bio" ? 4 : 2}
+          maxLength={2000}
+          value={text}
+          readOnly={!writable}
+          onChange={(e) => setText(e.target.value)}
+        />
         {current.state === "stale" ? <Field.Hint>{t("staleHint")}</Field.Hint> : null}
       </Field.Root>
       {writable ? (
         <div className="flex flex-wrap gap-2">
-          <Button size="sm" variant="secondary" disabled={call.pending || !text.trim() || text === current.text} onClick={() => void call.run("/api/walker/translations/text", { method: "PUT", json: { locale, key: field.key, text } })}>
+          <Button
+            size="sm"
+            variant="secondary"
+            disabled={call.pending || !text.trim() || text === current.text}
+            onClick={() =>
+              void call.run("/api/walker/translations/text", { method: "PUT", json: { locale, key: field.key, text } })
+            }
+          >
             {t("save")}
           </Button>
           {translationOn ? (
-            <Button size="sm" variant="ghost" disabled={call.pending} onClick={() => void call.run("/api/walker/translations/run", { json: { locale, redo: [field.key] } })}>
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={call.pending}
+              onClick={() => void call.run("/api/walker/translations/run", { json: { locale, redo: [field.key] } })}
+            >
               {t(current.text ? "redo" : "translateOne")}
             </Button>
           ) : null}
@@ -75,19 +108,34 @@ export function ShopLanguages({ data }: Readonly<{ data: LanguagesData }>) {
   const [source, setSource] = useState<"fr" | "en">(data.source);
   const [enabled, setEnabled] = useState<PageLocale[]>(data.enabled);
   const name = (l: PageLocale) => new Intl.DisplayNames([uiLocale], { type: "language" }).of(l) ?? l;
-  const offered = (["fr", "en", "es"] as const).filter((l) => l === source || data.allowed.includes(l) || enabled.includes(l));
-  const toggle = (l: PageLocale, on: boolean) => setEnabled((current) => (on ? [...new Set([...current, l])] : current.filter((x) => x !== l)));
+  const offered = (["fr", "en", "es"] as const).filter(
+    (l) => l === source || data.allowed.includes(l) || enabled.includes(l),
+  );
+  const toggle = (l: PageLocale, on: boolean) =>
+    setEnabled((current) => (on ? [...new Set([...current, l])] : current.filter((x) => x !== l)));
   const targets = data.enabled.filter((l) => l !== data.source);
   return (
     <div className="flex flex-col gap-6">
       <PageHeader as="h2" title={t("title")} description={t("intro")} />
-      <p className="text-sm"><Link className="font-semibold text-fg-accent underline" href={data.setupHref}>{t("back")}</Link></p>
+      <p className="text-sm">
+        <Link className="font-semibold text-fg-accent underline" href={data.setupHref}>
+          {t("back")}
+        </Link>
+      </p>
 
       <Card.Root className="flex flex-col gap-4 p-4">
         <h2 className="font-display text-lg font-bold text-fg">{t("languages")}</h2>
         <Field.Root>
           <Field.Label htmlFor="source-locale">{t("source")}</Field.Label>
-          <Select id="source-locale" value={source} onChange={(e) => { const next = e.target.value as "fr" | "en"; setSource(next); setEnabled((current) => [...new Set([...current, next])]); }}>
+          <Select
+            id="source-locale"
+            value={source}
+            onChange={(e) => {
+              const next = e.target.value as "fr" | "en";
+              setSource(next);
+              setEnabled((current) => [...new Set([...current, next])]);
+            }}
+          >
             <option value="fr">{name("fr")}</option>
             <option value="en">{name("en")}</option>
           </Select>
@@ -97,14 +145,30 @@ export function ShopLanguages({ data }: Readonly<{ data: LanguagesData }>) {
           {offered.map((l) => (
             <li key={l} className="flex items-center justify-between gap-3">
               <span className="text-fg">{name(l)}</span>
-              {l === source ? <Badge tone="neutral" size="sm">{t("sourceBadge")}</Badge> : <Switch checked={enabled.includes(l)} onCheckedChange={(on) => toggle(l, on)} label={t("offer", { language: name(l) })} />}
+              {l === source ? (
+                <Badge tone="neutral" size="sm">
+                  {t("sourceBadge")}
+                </Badge>
+              ) : (
+                <Switch
+                  checked={enabled.includes(l)}
+                  onCheckedChange={(on) => toggle(l, on)}
+                  label={t("offer", { language: name(l) })}
+                />
+              )}
             </li>
           ))}
         </ul>
         <p className="m-0 text-sm text-fg-muted">{t("allowedHint")}</p>
         {call.problem ? <Alert tone="danger">{call.problem}</Alert> : null}
         <div>
-          <Button size="md" disabled={call.pending} onClick={() => void call.run("/api/walker/translations", { method: "PUT", json: { source, enabled } })}>{t("saveLanguages")}</Button>
+          <Button
+            size="md"
+            disabled={call.pending}
+            onClick={() => void call.run("/api/walker/translations", { method: "PUT", json: { source, enabled } })}
+          >
+            {t("saveLanguages")}
+          </Button>
         </div>
       </Card.Root>
 
@@ -117,11 +181,17 @@ export function ShopLanguages({ data }: Readonly<{ data: LanguagesData }>) {
             {data.translationOn ? <TranslateButton locale={l} label={t("translate")} /> : null}
           </div>
           <p className="m-0 text-sm text-fg-muted">{t("autoMark")}</p>
-          {data.fields.some((f) => f.languages[l]?.state === "own") ? <p className="m-0 text-sm text-fg-muted">{t("ownHint")}</p> : null}
-          {data.translationOn ? <p className="m-0 text-xs text-fg-muted">{t("runs", { used: data.usedToday, limit: data.dailyLimit })}</p> : null}
+          {data.fields.some((f) => f.languages[l]?.state === "own") ? (
+            <p className="m-0 text-sm text-fg-muted">{t("ownHint")}</p>
+          ) : null}
+          {data.translationOn ? (
+            <p className="m-0 text-xs text-fg-muted">{t("runs", { used: data.usedToday, limit: data.dailyLimit })}</p>
+          ) : null}
           {data.fields.length ? (
             <ul className="m-0 flex list-none flex-col gap-4 p-0">
-              {data.fields.map((f) => <TextRow key={`${f.key}-${l}`} field={f} locale={l} translationOn={data.translationOn} />)}
+              {data.fields.map((f) => (
+                <TextRow key={`${f.key}-${l}`} field={f} locale={l} translationOn={data.translationOn} />
+              ))}
             </ul>
           ) : (
             <p className="m-0 text-fg-secondary">{t("nothing")}</p>
@@ -136,7 +206,14 @@ function TranslateButton({ locale, label }: Readonly<{ locale: PageLocale; label
   const call = useCall();
   return (
     <div className="flex flex-col items-end gap-1">
-      <Button size="md" disabled={call.pending} loading={call.pending} onClick={() => void call.run("/api/walker/translations/run", { json: { locale } })}>{label}</Button>
+      <Button
+        size="md"
+        disabled={call.pending}
+        loading={call.pending}
+        onClick={() => void call.run("/api/walker/translations/run", { json: { locale } })}
+      >
+        {label}
+      </Button>
       {call.problem ? <Alert tone="danger">{call.problem}</Alert> : null}
     </div>
   );

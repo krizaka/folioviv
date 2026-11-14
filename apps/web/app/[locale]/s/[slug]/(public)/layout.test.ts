@@ -3,7 +3,8 @@ import { describe, expect, it, vi } from "vitest";
 const shops = vi.hoisted(() => ({ published: new Set<string>(), former: new Map<string, string>() }));
 vi.mock("@/lib/shop-page", () => ({
   loadPublicShop: async (slug: string) => (shops.published.has(slug) ? { shop: { name: slug } } : null),
-  movedShopPath: async (locale: string, slug: string) => (shops.former.has(slug) ? `/${locale}/s/${shops.former.get(slug)}` : null),
+  movedShopPath: async (locale: string, slug: string) =>
+    shops.former.has(slug) ? `/${locale}/s/${shops.former.get(slug)}` : null,
 }));
 vi.mock("next/navigation", () => ({
   notFound: () => {

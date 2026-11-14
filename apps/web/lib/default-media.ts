@@ -43,12 +43,19 @@ export function defaultImage(item: DefaultMedia): DefaultImage | null {
   const spec = DEFAULT_SLOTS[item.slot];
   const widest = Math.max(...spec.widths);
   const [rw, rh] = RATIO[spec.ratio];
-  const srcSet = (format: "avif" | "webp") => urls.filter((u) => u.format === format).map((u) => `${u.url} ${u.width}w`).join(", ");
+  const srcSet = (format: "avif" | "webp") =>
+    urls
+      .filter((u) => u.format === format)
+      .map((u) => `${u.url} ${u.width}w`)
+      .join(", ");
   return {
     id: item.id,
     altKey: item.altKey,
     src: urls.find((u) => u.format === "webp" && u.width === widest)!.url!,
-    sources: [{ type: "image/avif", srcSet: srcSet("avif") }, { type: "image/webp", srcSet: srcSet("webp") }],
+    sources: [
+      { type: "image/avif", srcSet: srcSet("avif") },
+      { type: "image/webp", srcSet: srcSet("webp") },
+    ],
     width: widest,
     height: Math.round((widest * rh) / rw),
   };
@@ -69,7 +76,13 @@ export interface ResolvedDefaults {
 
 /** The defaults of a shop type, ready for the page: what the manifest names, in order. */
 export function resolveDefaults(type: ShopType): ResolvedDefaults {
-  const images = (slot: DefaultSlot) => defaultsFor(type, slot).map(defaultImage).filter((x): x is DefaultImage => x !== null);
-  const cover = defaultsFor(type, "cover").map(defaultVideo).find((x): x is DefaultVideo => x !== null) ?? null;
+  const images = (slot: DefaultSlot) =>
+    defaultsFor(type, slot)
+      .map(defaultImage)
+      .filter((x): x is DefaultImage => x !== null);
+  const cover =
+    defaultsFor(type, "cover")
+      .map(defaultVideo)
+      .find((x): x is DefaultVideo => x !== null) ?? null;
   return { cover, gallery: images("gallery"), service: images("service") };
 }

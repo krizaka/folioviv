@@ -51,7 +51,8 @@ function useTeamCall() {
   const routes = useShopRoutes();
   const [problem, setProblem] = useState<string | null>(null);
   const request = useMutation({
-    mutationFn: ({ path, method, json }: { path: string; method: "POST" | "PATCH" | "DELETE"; json?: unknown }) => krizakaFetch(routes.api(path), { method, ...(json === undefined ? {} : { json }) }),
+    mutationFn: ({ path, method, json }: { path: string; method: "POST" | "PATCH" | "DELETE"; json?: unknown }) =>
+      krizakaFetch(routes.api(path), { method, ...(json === undefined ? {} : { json }) }),
     onSuccess: () => router.refresh(),
     onError: (error) => setProblem(say(`errors.${errorKey(error)}`)),
     onMutate: () => setProblem(null),
@@ -59,7 +60,10 @@ function useTeamCall() {
   return { run: request.mutateAsync, pending: request.isPending, problem };
 }
 
-const invite = createKrizakaForm({ schema: z.object({ email: z.string().trim().min(1).email().max(320), role: z.string().min(1) }), defaultValues: { email: "", role: "staff" } });
+const invite = createKrizakaForm({
+  schema: z.object({ email: z.string().trim().min(1).email().max(320), role: z.string().min(1) }),
+  defaultValues: { email: "", role: "staff" },
+});
 
 function InviteForm({ assignable }: Readonly<{ assignable: ShopRole[] }>) {
   const { say, locale } = useSay();
@@ -69,7 +73,9 @@ function InviteForm({ assignable }: Readonly<{ assignable: ShopRole[] }>) {
     i18n: { t: (key, vars) => say(key, vars as Record<string, string | number> | undefined), locale },
     onSubmit: async (values) => {
       setLink(null);
-      const answer = (await call.run({ path: "/api/walker/team/invitations", method: "POST", json: values }).catch(() => null)) as { link: string } | null;
+      const answer = (await call
+        .run({ path: "/api/walker/team/invitations", method: "POST", json: values })
+        .catch(() => null)) as { link: string } | null;
       if (answer) {
         setLink(answer.link);
         form.reset();
@@ -79,7 +85,16 @@ function InviteForm({ assignable }: Readonly<{ assignable: ShopRole[] }>) {
   return (
     <form.Form aria-label={say("team.invite.title")} className="flex flex-col gap-4">
       <form.TextField name="email" label={say("team.invite.email")} type="email" autoComplete="off" />
-      <form.RadioGroup name="role" label={say("team.invite.role")} variant="cards" options={assignable.map((role) => ({ value: role, label: say(`team.roles.${role}`), description: say(`team.roleHints.${role}`) }))} />
+      <form.RadioGroup
+        name="role"
+        label={say("team.invite.role")}
+        variant="cards"
+        options={assignable.map((role) => ({
+          value: role,
+          label: say(`team.roles.${role}`),
+          description: say(`team.roleHints.${role}`),
+        }))}
+      />
       {call.problem ? <Alert tone="danger">{call.problem}</Alert> : null}
       {link ? (
         <Alert tone="success">
@@ -96,7 +111,13 @@ type TeamCall = ReturnType<typeof useTeamCall>;
 type TeamColumnsContext = { say: Say; locale: SayLocale; timeZone: string; assignable: ShopRole[]; call: TeamCall };
 
 /** Built outside the component: the cells are render functions, not components of the table's parent. */
-const teamColumns = ({ say, locale, timeZone, assignable, call }: TeamColumnsContext): DataTableColumn<TeamMemberView>[] => [
+const teamColumns = ({
+  say,
+  locale,
+  timeZone,
+  assignable,
+  call,
+}: TeamColumnsContext): DataTableColumn<TeamMemberView>[] => [
   {
     id: "member",
     header: say("team.columns.member"),
@@ -120,7 +141,20 @@ const teamColumns = ({ say, locale, timeZone, assignable, call }: TeamColumnsCon
     value: (m) => m.role,
     cell: (m) =>
       m.manageable && !m.isYou ? (
-        <Select aria-label={say("team.changeRole", { name: m.name ?? m.email })} value={m.role} disabled={call.pending} onChange={(event) => void call.run({ path: `/api/walker/team/members/${m.accountId}`, method: "PATCH", json: { role: event.target.value } }).catch(() => undefined)}>
+        <Select
+          aria-label={say("team.changeRole", { name: m.name ?? m.email })}
+          value={m.role}
+          disabled={call.pending}
+          onChange={(event) =>
+            void call
+              .run({
+                path: `/api/walker/team/members/${m.accountId}`,
+                method: "PATCH",
+                json: { role: event.target.value },
+              })
+              .catch(() => undefined)
+          }
+        >
           {assignable.map((role) => (
             <option key={role} value={role}>
               {say(`team.roles.${role}`)}
@@ -131,7 +165,13 @@ const teamColumns = ({ say, locale, timeZone, assignable, call }: TeamColumnsCon
         <Badge tone="accent">{say(`team.roles.${m.role}`)}</Badge>
       ),
   },
-  { id: "since", header: say("team.columns.since"), priority: 2, value: (m) => m.since, cell: (m) => formatDate(m.since, locale, timeZone) },
+  {
+    id: "since",
+    header: say("team.columns.since"),
+    priority: 2,
+    value: (m) => m.since,
+    cell: (m) => formatDate(m.since, locale, timeZone),
+  },
   {
     id: "actions",
     header: say("team.columns.actions"),
@@ -141,16 +181,27 @@ const teamColumns = ({ say, locale, timeZone, assignable, call }: TeamColumnsCon
     value: () => "",
     cell: (m) =>
       m.manageable && !m.isYou ? (
-        <ConfirmButton size="sm" variant="ghost" confirmLabel={say("team.removeConfirm")} onConfirm={() => void call.run({ path: `/api/walker/team/members/${m.accountId}`, method: "DELETE" }).catch(() => undefined)}>
+        <ConfirmButton
+          size="sm"
+          variant="ghost"
+          confirmLabel={say("team.removeConfirm")}
+          onConfirm={() =>
+            void call.run({ path: `/api/walker/team/members/${m.accountId}`, method: "DELETE" }).catch(() => undefined)
+          }
+        >
           {say("team.remove")}
         </ConfirmButton>
       ) : null,
-  },];
+  },
+];
 
 export function TeamPanel({ members, invitations, assignable, timeZone }: Readonly<TeamPanelProps>) {
   const { say, locale } = useSay();
   const call = useTeamCall();
-  const columns = useMemo(() => teamColumns({ say, locale, timeZone, assignable, call }), [say, locale, timeZone, assignable, call]);
+  const columns = useMemo(
+    () => teamColumns({ say, locale, timeZone, assignable, call }),
+    [say, locale, timeZone, assignable, call],
+  );
   return (
     <div className="flex flex-col gap-8">
       {call.problem ? <Alert tone="danger">{call.problem}</Alert> : null}
@@ -158,7 +209,13 @@ export function TeamPanel({ members, invitations, assignable, timeZone }: Readon
         <h2 id="team-members" className="sr-only">
           {say("team.members")}
         </h2>
-        <DataTable caption={say("team.members")} rows={members} columns={columns} getRowId={(m) => m.accountId} rowLabel={(m) => m.name ?? m.email} />
+        <DataTable
+          caption={say("team.members")}
+          rows={members}
+          columns={columns}
+          getRowId={(m) => m.accountId}
+          rowLabel={(m) => m.name ?? m.email}
+        />
       </section>
 
       <section aria-labelledby="team-invitations" className="flex flex-col gap-3">
@@ -173,11 +230,22 @@ export function TeamPanel({ members, invitations, assignable, timeZone }: Readon
               <li key={i.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
                 <span className="flex min-w-0 flex-col">
                   <span className="truncate font-semibold text-fg">{i.email}</span>
-                  <span className="text-xs text-fg-secondary">{say("team.expires", { date: formatDate(i.expiresAt, locale, timeZone) })}</span>
+                  <span className="text-xs text-fg-secondary">
+                    {say("team.expires", { date: formatDate(i.expiresAt, locale, timeZone) })}
+                  </span>
                 </span>
                 <span className="flex items-center gap-2">
                   <Badge tone="neutral">{say(`team.roles.${i.role}`)}</Badge>
-                  <ConfirmButton size="sm" variant="ghost" confirmLabel={say("team.revokeConfirm")} onConfirm={() => void call.run({ path: `/api/walker/team/invitations/${i.id}`, method: "DELETE" }).catch(() => undefined)}>
+                  <ConfirmButton
+                    size="sm"
+                    variant="ghost"
+                    confirmLabel={say("team.revokeConfirm")}
+                    onConfirm={() =>
+                      void call
+                        .run({ path: `/api/walker/team/invitations/${i.id}`, method: "DELETE" })
+                        .catch(() => undefined)
+                    }
+                  >
                     {say("team.revoke")}
                   </ConfirmButton>
                 </span>

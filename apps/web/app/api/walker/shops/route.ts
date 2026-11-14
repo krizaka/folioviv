@@ -15,7 +15,11 @@ export function GET(req: Request) {
   return handle(async () => {
     const session = await requireSession(req);
     const shops = await shopsOfOwner(db(), session.account.id);
-    const tags = await organize().tags.of(session.account.id, "shop", shops.map((s) => s.id));
+    const tags = await organize().tags.of(
+      session.account.id,
+      "shop",
+      shops.map((s) => s.id),
+    );
     return Response.json({ shops: shops.map((s) => ({ ...s, tags: tags.get(s.id) ?? [] })) });
   });
 }
@@ -26,6 +30,15 @@ export function POST(req: Request) {
     const session = await requireSession(req);
     limit("shops", req, session.account.id, [20, 3600]);
     const input = await readJson(req, shopPageSchema);
-    return Response.json(await saveShopPage(db(), session.account.id, input, { additional: true, maxShops: await appSettings().get("limits.shopsPerOwner") }, await slugPolicy()), { status: 201 });
+    return Response.json(
+      await saveShopPage(
+        db(),
+        session.account.id,
+        input,
+        { additional: true, maxShops: await appSettings().get("limits.shopsPerOwner") },
+        await slugPolicy(),
+      ),
+      { status: 201 },
+    );
   });
 }

@@ -8,7 +8,19 @@ describe("record-krizaka-first-client (the studio's walkthroughs)", () => {
   it("has the four clips, each beat said in English and in French", () => {
     for (const clip of ["onboarding", "invoice", "books", "return"]) expect(source).toContain(`await clip("${clip}"`);
     const beats = [...source.matchAll(/take\.beat\("(\w+)"\)/g)].map((m) => m[1]);
-    for (const beat of ["open", "services", "today", "clients", "form", "issued", "document", "list", "sources", "top", "notFiled"]) {
+    for (const beat of [
+      "open",
+      "services",
+      "today",
+      "clients",
+      "form",
+      "issued",
+      "document",
+      "list",
+      "sources",
+      "top",
+      "notFiled",
+    ]) {
       expect(beats).toContain(beat);
       expect(source).toMatch(new RegExp(`${beat}: \\{\\n      en: "[^"]{10,}",\\n      fr: "[^"]{10,}"`));
     }

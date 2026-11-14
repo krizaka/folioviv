@@ -18,7 +18,12 @@ const read = (path: string) => readFileSync(join(ROOT, path), "utf8");
 const SHOP = "0b1c2d3e-4f50-4a6b-8c7d-9e0f1a2b3c4d";
 const SERVICE = "11111111-2222-4333-8444-555555555555";
 
-interface Rule { source: string; destination: string; permanent: boolean; has?: { type: string; key: string; value: string }[] }
+interface Rule {
+  source: string;
+  destination: string;
+  permanent: boolean;
+  has?: { type: string; key: string; value: string }[];
+}
 const RULES = retiredAddresses as Rule[];
 
 /** The page file an address opens, by Next's own rules: static segments first, `[param]` after, `(group)` folders transparent. */
@@ -33,9 +38,18 @@ function pageFile(segments: string[], dir = APP): string | null {
   }
   const [head, ...rest] = segments;
   const entries = readdirSync(dir, { withFileTypes: true }).filter((e) => e.isDirectory());
-  for (const e of entries.filter((x) => x.name === head)) { const f = pageFile(rest, join(dir, e.name)); if (f) return f; }
-  for (const e of entries.filter((x) => /^\[[^.\]]+\]$/.test(x.name))) { const f = pageFile(rest, join(dir, e.name)); if (f) return f; }
-  for (const e of entries.filter((x) => /^\(.+\)$/.test(x.name))) { const f = pageFile(segments, join(dir, e.name)); if (f) return f; }
+  for (const e of entries.filter((x) => x.name === head)) {
+    const f = pageFile(rest, join(dir, e.name));
+    if (f) return f;
+  }
+  for (const e of entries.filter((x) => /^\[[^.\]]+\]$/.test(x.name))) {
+    const f = pageFile(rest, join(dir, e.name));
+    if (f) return f;
+  }
+  for (const e of entries.filter((x) => /^\(.+\)$/.test(x.name))) {
+    const f = pageFile(segments, join(dir, e.name));
+    if (f) return f;
+  }
   return null;
 }
 const opens = (path: string) => pageFile(path.split("/").filter(Boolean));
@@ -62,7 +76,11 @@ describe("every retired address answers 308 to a page that exists (folioviv#381)
     [`/fr/app/${SHOP}/shop`, {}, `/fr/app/${SHOP}/settings/page`],
     [`/en/app/${SHOP}/shop/languages`, {}, `/en/app/${SHOP}/settings/languages`],
     [`/fr/app/${SHOP}/team`, {}, `/fr/app/${SHOP}/settings/team`],
-    ["/fr/s/cedre-ciseaux/book", { service: SERVICE, start: "2026-10-20T13:00:00.000Z" }, `/fr/s/cedre-ciseaux/service/${SERVICE}/confirm`],
+    [
+      "/fr/s/cedre-ciseaux/book",
+      { service: SERVICE, start: "2026-10-20T13:00:00.000Z" },
+      `/fr/s/cedre-ciseaux/service/${SERVICE}/confirm`,
+    ],
     ["/en/s/cedre-ciseaux/book", {}, "/en/s/cedre-ciseaux"],
     ["/en/s/cedre-ciseaux/book", { service: "not-an-id" }, "/en/s/cedre-ciseaux"],
     [`/fr/s/cedre-ciseaux/service/${SERVICE}/creneau`, {}, `/fr/s/cedre-ciseaux/service/${SERVICE}/slots`],
@@ -82,7 +100,9 @@ describe("every retired address answers 308 to a page that exists (folioviv#381)
 });
 
 describe("the eight pages that only redirected are gone", () => {
-  const GONE = ["books", "clients", "invoices", "shop", "team"].map((s) => `app/[locale]/(app)/app/(legacy)/${s}/page.tsx`).concat(["shop", "shop/languages", "team"].map((s) => `app/[locale]/(app)/app/[shop]/${s}/page.tsx`));
+  const GONE = ["books", "clients", "invoices", "shop", "team"]
+    .map((s) => `app/[locale]/(app)/app/(legacy)/${s}/page.tsx`)
+    .concat(["shop", "shop/languages", "team"].map((s) => `app/[locale]/(app)/app/[shop]/${s}/page.tsx`));
   it.each(GONE)("%s", (file) => expect(existsSync(join(ROOT, file))).toBe(false));
 
   it("the five that need the shop last worked in are route handlers with a 307, justified in a comment", () => {
@@ -106,14 +126,18 @@ describe("one booking path (folioviv#381)", () => {
   });
 
   it("no link leads to /book any more", () => {
-    for (const file of ["lib/journey.ts", "lib/journey-paths.ts", "components/app/ClientHome.tsx"]) expect(read(file), file).not.toMatch(/\/book[`"?]/);
+    for (const file of ["lib/journey.ts", "lib/journey-paths.ts", "components/app/ClientHome.tsx"])
+      expect(read(file), file).not.toMatch(/\/book[`"?]/);
   });
 });
 
 describe("a link that leads nowhere answers 404, not a page that looks alive (folioviv#381)", () => {
-  it.each(["invoice", "report", "brief/stop"])("/%s/[token] calls notFound for an unknown or expired token", (route) => {
-    const page = read(`app/[locale]/${route}/[token]/page.tsx`);
-    expect(page).toContain("notFound()");
-    expect(page).toContain('robots: { index: false, follow: false }');
-  });
+  it.each(["invoice", "report", "brief/stop"])(
+    "/%s/[token] calls notFound for an unknown or expired token",
+    (route) => {
+      const page = read(`app/[locale]/${route}/[token]/page.tsx`);
+      expect(page).toContain("notFound()");
+      expect(page).toContain("robots: { index: false, follow: false }");
+    },
+  );
 });

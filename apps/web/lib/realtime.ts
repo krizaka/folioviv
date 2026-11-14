@@ -18,7 +18,11 @@ export function realtimeBus(): RealtimeBus {
   holder.__foliovivBus =
     env.REALTIME_BUS === "memory"
       ? createBus({ kind: "memory" })
-      : createBus({ kind: "postgres", channel: REALTIME_CHANNEL, postgres: pgChannel({ listen: env.DATABASE_DIRECT_URL ?? env.DATABASE_URL ?? "", notify: pool() }) });
+      : createBus({
+          kind: "postgres",
+          channel: REALTIME_CHANNEL,
+          postgres: pgChannel({ listen: env.DATABASE_DIRECT_URL ?? env.DATABASE_URL ?? "", notify: pool() }),
+        });
   return holder.__foliovivBus;
 }
 

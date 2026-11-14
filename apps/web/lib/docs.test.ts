@@ -7,7 +7,7 @@ import en from "../messages/en.json";
 import fr from "../messages/fr.json";
 import { DOC_IDS, docHref, HELP_AREAS, helpHref, isDocId, neighbours } from "./docs";
 import { llmsText } from "./seo";
-import { pagePath,PAGES } from "./site";
+import { pagePath, PAGES } from "./site";
 
 const ROOT = join(__dirname, "..");
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
@@ -18,10 +18,14 @@ describe("the owner's guide (folioviv#382)", () => {
     expect(DOC_IDS.length).toBeLessThanOrEqual(5);
     for (const id of DOC_IDS) {
       const [e, f] = [en.docs.pages[id], fr.docs.pages[id]];
-      expect(f.sections.map((s) => s.id), id).toEqual(e.sections.map((s) => s.id));
+      expect(
+        f.sections.map((s) => s.id),
+        id,
+      ).toEqual(e.sections.map((s) => s.id));
       for (const page of [e, f]) {
         expect(page.title.length).toBeGreaterThan(3);
-        for (const s of page.sections) expect(s.p.join("").length + s.items.length, `${id}/${s.id}`).toBeGreaterThan(20);
+        for (const s of page.sections)
+          expect(s.p.join("").length + s.items.length, `${id}/${s.id}`).toBeGreaterThan(20);
       }
     }
   });
@@ -50,7 +54,8 @@ describe("the owner's guide (folioviv#382)", () => {
   it("every in-app « Help » link lands on its page", () => {
     for (const [area, id] of Object.entries(HELP_AREAS)) {
       expect(DOC_IDS, area).toContain(id);
-      for (const locale of ["en", "fr"] as const) expect(helpHref(locale, area as keyof typeof HELP_AREAS)).toBe(`/${locale}/docs/${id}`);
+      for (const locale of ["en", "fr"] as const)
+        expect(helpHref(locale, area as keyof typeof HELP_AREAS)).toBe(`/${locale}/docs/${id}`);
     }
   });
 
@@ -66,7 +71,9 @@ describe("the owner's guide (folioviv#382)", () => {
       expect(text).not.toMatch(/\d+ ?\$|\$ ?\d/);
     }
     expect(en.docs.pages.books.sections.find((s) => s.id === "file")!.p.join(" ")).toMatch(/never files a return/);
-    expect(fr.docs.pages.books.sections.find((s) => s.id === "file")!.p.join(" ")).toMatch(/ne produit jamais de déclaration/);
+    expect(fr.docs.pages.books.sections.find((s) => s.id === "file")!.p.join(" ")).toMatch(
+      /ne produit jamais de déclaration/,
+    );
   });
 
   it("the guide's words about its own app match the app's words (the sections it names exist)", () => {

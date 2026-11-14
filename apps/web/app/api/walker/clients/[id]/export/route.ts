@@ -12,6 +12,18 @@ export const dynamic = "force-dynamic";
 export const GET = clientPrivacyRoute(async ({ req, session, client }) => {
   limit("client-export", req, session.account.id, [20, 3600]);
   const document = await exportClient(db(), dataKey(), client.id);
-  await audit({ action: "client.exported_by_shop", actorId: session.account.id, actorLabel: session.account.email, targetId: client.id, headers: req.headers });
-  return new Response(JSON.stringify(document, null, 2), { headers: { "Content-Type": "application/json", "Content-Disposition": 'attachment; filename="folioviv-client-data.json"', "Cache-Control": "no-store" } });
+  await audit({
+    action: "client.exported_by_shop",
+    actorId: session.account.id,
+    actorLabel: session.account.email,
+    targetId: client.id,
+    headers: req.headers,
+  });
+  return new Response(JSON.stringify(document, null, 2), {
+    headers: {
+      "Content-Type": "application/json",
+      "Content-Disposition": 'attachment; filename="folioviv-client-data.json"',
+      "Cache-Control": "no-store",
+    },
+  });
 });

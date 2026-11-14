@@ -2,9 +2,22 @@ import { readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 
-import { allowsCaptcha, CAPTCHA_HOST, contentSecurityPolicy, isShopPath, jsonLdHtml, newNonce, upgradesInsecure } from "./csp";
+import {
+  allowsCaptcha,
+  CAPTCHA_HOST,
+  contentSecurityPolicy,
+  isShopPath,
+  jsonLdHtml,
+  newNonce,
+  upgradesInsecure,
+} from "./csp";
 
-const directive = (csp: string, name: string) => csp.split("; ").find((d) => d.startsWith(`${name} `))?.split(" ").slice(1) ?? [];
+const directive = (csp: string, name: string) =>
+  csp
+    .split("; ")
+    .find((d) => d.startsWith(`${name} `))
+    ?.split(" ")
+    .slice(1) ?? [];
 const opts = { production: true, upgradeInsecure: true };
 
 /** Loi 25: a page frames a third party only for the three video platforms, and a script, a font or a connection never goes to one (B45, #312). */
@@ -14,11 +27,16 @@ describe.each([
 ])("%s", (_name, nonce) => {
   const csp = contentSecurityPolicy({ ...opts, nonce });
   it("frames this origin (the studio's preview) and the three embed hosts, nothing else", () => {
-    expect(directive(csp, "frame-src").sort()).toEqual(["'self'", "https://www.instagram.com", "https://www.tiktok.com", "https://www.youtube-nocookie.com"].sort());
+    expect(directive(csp, "frame-src").sort()).toEqual(
+      ["'self'", "https://www.instagram.com", "https://www.tiktok.com", "https://www.youtube-nocookie.com"].sort(),
+    );
   });
   it("lets no third party run a script, load a font or answer a request", () => {
     for (const name of ["script-src", "font-src", "connect-src", "default-src", "object-src"]) {
-      expect(directive(csp, name).filter((source) => source.startsWith("https://") && !source.includes("krizaka-assets")), name).toEqual([]);
+      expect(
+        directive(csp, name).filter((source) => source.startsWith("https://") && !source.includes("krizaka-assets")),
+        name,
+      ).toEqual([]);
     }
   });
   it("still refuses to be framed by anyone but itself, and closes <base> and forms to this origin", () => {
@@ -46,7 +64,9 @@ describe("the strict policy of the shop pages", () => {
     expect(directive(csp, "manifest-src")).toEqual(["'self'"]);
   });
   it("lets the dev server eval, never production", () => {
-    expect(directive(contentSecurityPolicy({ production: false, upgradeInsecure: false, nonce: "n" }), "script-src")).toContain("'unsafe-eval'");
+    expect(
+      directive(contentSecurityPolicy({ production: false, upgradeInsecure: false, nonce: "n" }), "script-src"),
+    ).toContain("'unsafe-eval'");
   });
   it("is the only one with a nonce: the static policy keeps its inline bootstrap", () => {
     expect(directive(contentSecurityPolicy(opts), "script-src")).toEqual(["'self'", "'unsafe-inline'"]);
@@ -69,7 +89,9 @@ describe("upgrade-insecure-requests", () => {
     expect(upgradesInsecure(true, undefined)).toBe(true);
     expect(upgradesInsecure(true, "http://localhost:3000")).toBe(false);
     expect(upgradesInsecure(false, undefined)).toBe(false);
-    expect(contentSecurityPolicy({ production: true, upgradeInsecure: false })).not.toContain("upgrade-insecure-requests");
+    expect(contentSecurityPolicy({ production: true, upgradeInsecure: false })).not.toContain(
+      "upgrade-insecure-requests",
+    );
     expect(contentSecurityPolicy(opts)).toContain("upgrade-insecure-requests");
   });
 });
@@ -89,7 +111,7 @@ describe("the one inline script of a shop page", () => {
   it("is the theme script, and the layout hands it the response's nonce", () => {
     const layout = readFileSync(new URL("../app/[locale]/layout.tsx", import.meta.url), "utf8");
     expect(layout).toContain('get("x-nonce")');
-    expect(layout).toContain("<ThemeScript defaultMode=\"dark\" nonce={nonce} />");
+    expect(layout).toContain('<ThemeScript defaultMode="dark" nonce={nonce} />');
   });
 });
 
@@ -100,7 +122,9 @@ describe("JSON-LD", () => {
     expect(JSON.parse(html)).toEqual({ name: "</script><script>alert(1)</script>" });
   });
   it("is what every page uses: no raw JSON.stringify into dangerouslySetInnerHTML", () => {
-    const pages = ["docs/[page]", "docs", "download", "explore", "", "pricing", "privacy", "terms"].map((p) => `../app/[locale]/${p ? `${p}/` : ""}page.tsx`);
+    const pages = ["docs/[page]", "docs", "download", "explore", "", "pricing", "privacy", "terms"].map(
+      (p) => `../app/[locale]/${p ? `${p}/` : ""}page.tsx`,
+    );
     for (const page of pages) {
       expect(readFileSync(new URL(page, import.meta.url), "utf8"), page).not.toContain("__html: JSON.stringify");
     }

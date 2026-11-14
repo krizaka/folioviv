@@ -16,7 +16,10 @@ export function accountSectionsFor(role: ShopRole | null): AccountSection[] {
 type RoleWords = { roleAdmin: string; roleIn: string; shopRoles: Record<ShopRole, string> };
 
 /** What the account is, read only on the profile: an administrator, « Propriétaire chez <shop> » / « Employé chez <shop> »; nothing for a client, who holds no role anywhere (folioviv#440). */
-export function accountRoleLine(words: RoleWords, who: { admin: boolean; member: { role: ShopRole; shop: { name: string } } | null }): string | null {
+export function accountRoleLine(
+  words: RoleWords,
+  who: { admin: boolean; member: { role: ShopRole; shop: { name: string } } | null },
+): string | null {
   if (who.admin) return words.roleAdmin;
   if (!who.member) return null;
   return format(words.roleIn, { role: words.shopRoles[who.member.role], shop: who.member.shop.name });

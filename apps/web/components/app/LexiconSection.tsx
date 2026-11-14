@@ -13,7 +13,9 @@ export function LexiconSection({ locale }: Readonly<{ locale: Locale }>) {
         terms={LEXICON.map(({ id, accountant }) => ({
           id,
           term: t.lexicon.terms[id].term,
-          definition: accountant ? `${t.lexicon.terms[id].definition} ${t.lexicon.accountant}` : t.lexicon.terms[id].definition,
+          definition: accountant
+            ? `${t.lexicon.terms[id].definition} ${t.lexicon.accountant}`
+            : t.lexicon.terms[id].definition,
         }))}
       />
     </div>

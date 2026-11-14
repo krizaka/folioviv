@@ -17,7 +17,9 @@ export interface TermRow {
 }
 
 function kindOf(line: string): TermKind {
-  if (line.startsWith("#")) {return "comment";}
+  if (line.startsWith("#")) {
+    return "comment";
+  }
   return line.length > 2 && line.startsWith("/") && line.endsWith("/") ? "pattern" : "word";
 }
 
@@ -32,7 +34,9 @@ export function termRows(stored: string): TermRow[] {
   const issues = new Map(protectedTermsIssues(stored).map((i) => [i.line - 1, i.reason]));
   return stored.split("\n").flatMap((raw, index) => {
     const text = raw.trim();
-    if (!text) {return [];}
+    if (!text) {
+      return [];
+    }
     const issue = issues.get(index);
     return [{ index, text, kind: kindOf(text), ...(issue ? { issue } : {}) }];
   });
@@ -41,7 +45,9 @@ export function termRows(stored: string): TermRow[] {
 /** What the field under the form says while the administrator types: the first reason this single line cannot be saved, or nothing. */
 export function lineIssue(line: string): TermIssueReason | undefined {
   const text = line.trim();
-  if (!text || text.startsWith("#")) {return undefined;}
+  if (!text || text.startsWith("#")) {
+    return undefined;
+  }
   return protectedTermsIssues(text)[0]?.reason;
 }
 
@@ -49,7 +55,9 @@ export function lineIssue(line: string): TermIssueReason | undefined {
 export function addTerm(stored: string, line: string): string {
   const text = line.trim();
   const rows = termRows(stored);
-  if (rows.some((r) => r.text.toLowerCase() === text.toLowerCase())) {return stored;}
+  if (rows.some((r) => r.text.toLowerCase() === text.toLowerCase())) {
+    return stored;
+  }
   const base = stored.trimEnd();
   return base ? `${base}\n${text}` : text;
 }
@@ -63,5 +71,8 @@ export function replaceTerm(stored: string, index: number, line: string): string
 
 /** Removes the line at `index`. */
 export function removeTerm(stored: string, index: number): string {
-  return stored.split("\n").filter((_, i) => i !== index).join("\n");
+  return stored
+    .split("\n")
+    .filter((_, i) => i !== index)
+    .join("\n");
 }

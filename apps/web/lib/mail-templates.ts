@@ -22,19 +22,53 @@ export const MAIL_TEMPLATES = {
   "appointment-reminder": { shop: "text", service: "text", staff: "text", date: "text", time: "text", address: "text" },
   /** An invoice issued, with its GST and QST — the amounts formatted in the client's language. */
   /** The report on a visit (a walk): the note, the time spent, a link to the private page with the photo. Part of the service, not a reminder. */
-  "walk-report": { shop: "text", dog: "text", client: "text", service: "text", date: "text", time: "text", duration: "text", note: "text", url: "text", photo: "flag" },
-  "invoice-issued": { shop: "text", logo: "text", hasLogo: "flag", number: "text", total: "text", gst: "text", qst: "text", dueDate: "text", message: "text", hasMessage: "flag", url: "text" },
+  "walk-report": {
+    shop: "text",
+    dog: "text",
+    client: "text",
+    service: "text",
+    date: "text",
+    time: "text",
+    duration: "text",
+    note: "text",
+    url: "text",
+    photo: "flag",
+  },
+  "invoice-issued": {
+    shop: "text",
+    logo: "text",
+    hasLogo: "flag",
+    number: "text",
+    total: "text",
+    gst: "text",
+    qst: "text",
+    dueDate: "text",
+    message: "text",
+    hasMessage: "flag",
+    url: "text",
+  },
   /** The Monday brief's invitation to a regular who has not booked for a while — only with a granted marketing consent (Loi 25, CASL), re-read at send time. */
   "brief-invite": { shop: "text", client: "text", days: "text", url: "text" },
   /** The Monday brief to the shop's owner: up to three lines, a link to the app, a one-click way to stop it. */
-  "brief-weekly": { shop: "text", line1: "text", line2: "text", has2: "flag", line3: "text", has3: "flag", url: "text", stop: "text" },
+  "brief-weekly": {
+    shop: "text",
+    line1: "text",
+    line2: "text",
+    has2: "flag",
+    line3: "text",
+    has3: "flag",
+    url: "text",
+    stop: "text",
+  },
   /** The owner of a shop whose address was held when the shops were re-judged against the protected terms (ADR-005, #537): the page is private until reviewed; a link to choose another address. */
   "slug-held": { shop: "text", address: "text", url: "text" },
 } as const satisfies Record<string, Record<string, VarKind>>;
 
 export type MailTemplateId = keyof typeof MAIL_TEMPLATES;
 type VarValue<K> = K extends "flag" ? boolean : string | number;
-export type MailVars<Id extends MailTemplateId> = { [K in keyof (typeof MAIL_TEMPLATES)[Id]]: VarValue<(typeof MAIL_TEMPLATES)[Id][K]> };
+export type MailVars<Id extends MailTemplateId> = {
+  [K in keyof (typeof MAIL_TEMPLATES)[Id]]: VarValue<(typeof MAIL_TEMPLATES)[Id][K]>;
+};
 
 export const MAIL_LOCALES = ["en", "fr"] as const;
 export type MailLocale = (typeof MAIL_LOCALES)[number];
@@ -50,7 +84,12 @@ export class MailTemplateError extends Error {
 }
 
 export function escapeHtml(value: string): string {
-  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
 
 const SECTION = /\{([#^])([A-Za-z]\w*)\}([\s\S]*?)\{\/\2\}/g;
@@ -67,7 +106,11 @@ type Values = Record<string, string | number | boolean>;
 const isSet = (v: string | number | boolean | undefined) => v !== undefined && v !== false && v !== "" && v !== 0;
 
 /** Fills one template text; every placeholder must be an allowed variable with a value. */
-export function fill(source: string, values: Values, options: { html: boolean; allowed: Iterable<string>; raw?: string[]; name: string }): string {
+export function fill(
+  source: string,
+  values: Values,
+  options: { html: boolean; allowed: Iterable<string>; raw?: string[]; name: string },
+): string {
   const allowed = new Set(options.allowed);
   for (const name of placeholdersOf(source)) {
     if (!allowed.has(name)) throw new MailTemplateError(`${options.name}: unknown variable {${name}}`);
@@ -75,13 +118,17 @@ export function fill(source: string, values: Values, options: { html: boolean; a
   let out = source;
   for (let guard = 0; guard < 20 && SECTION.test(out); guard++) {
     SECTION.lastIndex = 0;
-    out = out.replace(SECTION, (_, mode: string, name: string, body: string) => (isSet(values[name]) === (mode === "#") ? body : ""));
+    out = out.replace(SECTION, (_, mode: string, name: string, body: string) =>
+      isSet(values[name]) === (mode === "#") ? body : "",
+    );
   }
   SECTION.lastIndex = 0;
   return out.replace(PLACEHOLDER, (_, name: string) => {
     const value = values[name];
-    if (value === undefined || value === null) throw new MailTemplateError(`${options.name}: missing variable {${name}}`);
-    if (typeof value === "boolean") throw new MailTemplateError(`${options.name}: {${name}} is a flag, use it as {#${name}}…{/${name}}`);
+    if (value === undefined || value === null)
+      throw new MailTemplateError(`${options.name}: missing variable {${name}}`);
+    if (typeof value === "boolean")
+      throw new MailTemplateError(`${options.name}: {${name}} is a flag, use it as {#${name}}…{/${name}}`);
     const text = String(value);
     return options.html && !options.raw?.includes(name) ? escapeHtml(text) : text;
   });
@@ -91,8 +138,13 @@ export function fill(source: string, values: Values, options: { html: boolean; a
 export function templatesDir(env: NodeJS.ProcessEnv = process.env): string {
   if (env.MAIL_TEMPLATES_DIR) return path.resolve(env.MAIL_TEMPLATES_DIR);
   const cwd = process.cwd();
-  const candidates = [path.join(/* turbopackIgnore: true */ cwd, "mail-templates"), path.join(/* turbopackIgnore: true */ cwd, "apps", "web", "mail-templates")];
-  return candidates.find((dir) => fs.existsSync(path.join(/* turbopackIgnore: true */ dir, "_layout"))) ?? candidates[0];
+  const candidates = [
+    path.join(/* turbopackIgnore: true */ cwd, "mail-templates"),
+    path.join(/* turbopackIgnore: true */ cwd, "apps", "web", "mail-templates"),
+  ];
+  return (
+    candidates.find((dir) => fs.existsSync(path.join(/* turbopackIgnore: true */ dir, "_layout"))) ?? candidates[0]
+  );
 }
 
 function readFile(dir: string, relative: string): string | null {
@@ -113,15 +165,22 @@ export interface RenderedMail {
 }
 
 /** Renders a template in a locale (English when the locale has no files), inside the layout. */
-export function renderMailTemplate<Id extends MailTemplateId>(id: Id, vars: MailVars<Id>, options: { locale?: string; appUrl: string; dir?: string; now?: Date; product?: string }): RenderedMail {
+export function renderMailTemplate<Id extends MailTemplateId>(
+  id: Id,
+  vars: MailVars<Id>,
+  options: { locale?: string; appUrl: string; dir?: string; now?: Date; product?: string },
+): RenderedMail {
   const dir = options.dir ?? templatesDir();
-  const wanted = (MAIL_LOCALES as readonly string[]).includes(options.locale ?? "") ? (options.locale as MailLocale) : DEFAULT_MAIL_LOCALE;
+  const wanted = (MAIL_LOCALES as readonly string[]).includes(options.locale ?? "")
+    ? (options.locale as MailLocale)
+    : DEFAULT_MAIL_LOCALE;
   // The name of the product is a layout variable every template may use: `{product}`, never a typed name.
   const product = options.product ?? PRODUCT_NAME;
   const values: Values = { ...(vars as unknown as Values), product };
   const allowed = [...Object.keys(MAIL_TEMPLATES[id]), "product"];
   for (const name of allowed.filter((n) => n !== "product")) {
-    if (values[name] === undefined || values[name] === null) throw new MailTemplateError(`${id}: missing variable {${name}}`);
+    if (values[name] === undefined || values[name] === null)
+      throw new MailTemplateError(`${id}: missing variable {${name}}`);
   }
   for (const locale of wanted === DEFAULT_MAIL_LOCALE ? [wanted] : [wanted, DEFAULT_MAIL_LOCALE]) {
     const files = {
@@ -135,16 +194,37 @@ export function renderMailTemplate<Id extends MailTemplateId>(id: Id, vars: Mail
     if (Object.values(files).some((v) => v === null)) continue;
     const f = files as Record<keyof typeof files, string>;
     const name = `${id}/${locale}`;
-    const subject = fill(f.subject, values, { html: false, allowed, name: `${name}/subject.txt` }).replace(/\s+/g, " ").trim();
+    const subject = fill(f.subject, values, { html: false, allowed, name: `${name}/subject.txt` })
+      .replace(/\s+/g, " ")
+      .trim();
     if (!subject) throw new MailTemplateError(`${name}/subject.txt: empty subject`);
-    const layout: Values = { subject, lang: locale, appUrl: options.appUrl, product, year: (options.now ?? systemClock.now()).getUTCFullYear() };
-    const footer = fill(f.footer, layout, { html: false, allowed: ["appUrl", "year", "product"], name: `_layout/${locale}/footer.txt` }).trim();
+    const layout: Values = {
+      subject,
+      lang: locale,
+      appUrl: options.appUrl,
+      product,
+      year: (options.now ?? systemClock.now()).getUTCFullYear(),
+    };
+    const footer = fill(f.footer, layout, {
+      html: false,
+      allowed: ["appUrl", "year", "product"],
+      name: `_layout/${locale}/footer.txt`,
+    }).trim();
     const htmlBody = fill(f.html, values, { html: true, allowed, name: `${name}/body.html` });
     const textBody = fill(f.text, values, { html: false, allowed, name: `${name}/body.txt` }).trim();
     return {
       subject,
-      html: fill(f.layoutHtml, { ...layout, footer, content: htmlBody }, { html: true, allowed: LAYOUT_VARS, raw: ["content"], name: "_layout/layout.html" }),
-      text: fill(f.layoutText, { ...layout, footer, content: textBody }, { html: false, allowed: LAYOUT_VARS, name: "_layout/layout.txt" }).trim() + "\n",
+      html: fill(
+        f.layoutHtml,
+        { ...layout, footer, content: htmlBody },
+        { html: true, allowed: LAYOUT_VARS, raw: ["content"], name: "_layout/layout.html" },
+      ),
+      text:
+        fill(
+          f.layoutText,
+          { ...layout, footer, content: textBody },
+          { html: false, allowed: LAYOUT_VARS, name: "_layout/layout.txt" },
+        ).trim() + "\n",
       locale,
     };
   }

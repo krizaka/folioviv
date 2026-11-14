@@ -4,7 +4,10 @@ import { expect, test } from "@playwright/test";
 
 const SLUG = "pattes-saint-henri";
 
-test("book inside the window: the time is labelled in the list, the summary says the window has passed", async ({ page, baseURL }) => {
+test("book inside the window: the time is labelled in the list, the summary says the window has passed", async ({
+  page,
+  baseURL,
+}) => {
   await page.goto(`${baseURL}/en/s/${SLUG}`);
   await page.locator('a[href*="/service/"]').first().click();
   await page.waitForURL(/\/service\/[^/?]+(\?.*)?$/);
@@ -15,7 +18,9 @@ test("book inside the window: the time is labelled in the list, the summary says
   await inside.click();
   await page.waitForURL(/\/confirm\?/);
   const rule = page.locator("[data-booking-cancel-rule]");
-  await expect(rule, "the exact wording of a time inside the window").toHaveText("The free cancellation window has passed. Call the shop to change it.");
+  await expect(rule, "the exact wording of a time inside the window").toHaveText(
+    "The free cancellation window has passed. Call the shop to change it.",
+  );
   const ruleY = (await rule.boundingBox()).y;
   const sendY = (await page.getByRole("button", { name: "Send me the code" }).boundingBox()).y;
   expect(ruleY, "the rule is above the button that books").toBeLessThan(sendY);

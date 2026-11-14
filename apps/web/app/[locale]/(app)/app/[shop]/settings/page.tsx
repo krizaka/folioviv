@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { pageSession } from "@/lib/access";
 import { boutiqueSectionsAllowed, firstBoutiqueSection } from "@/lib/boutique";
 import { asLocale } from "@/lib/i18n";
-import { may,memberOf } from "@/lib/member-shop";
+import { may, memberOf } from "@/lib/member-shop";
 import { shopRoutes } from "@/lib/routes";
 
 export const dynamic = "force-dynamic";
@@ -14,8 +14,12 @@ export default async function BoutiqueIndex({ params }: { params: Promise<{ loca
   const locale = asLocale(rawLocale);
   const { account } = (await pageSession())!;
   const member = await memberOf(account.id, shopId);
-  if (!member) {notFound();}
+  if (!member) {
+    notFound();
+  }
   const first = firstBoutiqueSection(boutiqueSectionsAllowed((permission) => may(member.role, permission)));
-  if (!first) {notFound();}
+  if (!first) {
+    notFound();
+  }
   redirect(shopRoutes(locale, shopId).boutique(first));
 }

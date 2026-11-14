@@ -20,7 +20,12 @@ export interface OrganizeData {
 export type TagLite = OrganizeData["tags"][number];
 
 /** The address of a list for some filters (the URL is the state): the organize parameters in their canonical order, then the list's own. */
-export function listHref(path: string, filters: ViewFilters, view: string | null, own: Record<string, string | undefined> = {}): string {
+export function listHref(
+  path: string,
+  filters: ViewFilters,
+  view: string | null,
+  own: Record<string, string | undefined> = {},
+): string {
   const params = new URLSearchParams(viewSearch(filters, view));
   for (const [key, value] of Object.entries(own)) if (value) params.set(key, value);
   const text = params.toString();
@@ -28,4 +33,11 @@ export function listHref(path: string, filters: ViewFilters, view: string | null
 }
 
 /** The marker of a tag as a hue of the binder's dividers (`Tabs.NavLink hue`): only the five the divider knows, the others read as neutral. */
-export const MARKER_HUE = { blue: "accent", green: "success", amber: "warning", red: "danger", violet: "accent", gray: "neutral" } as const;
+export const MARKER_HUE = {
+  blue: "accent",
+  green: "success",
+  amber: "warning",
+  red: "danger",
+  violet: "accent",
+  gray: "neutral",
+} as const;

@@ -3,7 +3,13 @@ import { describe, expect, it } from "vitest";
 import { refusesCrossSiteWrite } from "./csrf";
 
 const ORIGIN = "https://www.folioviv.com";
-const ask = (method: string, headers: Record<string, string>) => refusesCrossSiteWrite({ method, headers: new Headers(headers), origin: ORIGIN, sessionCookie: "__Host-folioviv_session" });
+const ask = (method: string, headers: Record<string, string>) =>
+  refusesCrossSiteWrite({
+    method,
+    headers: new Headers(headers),
+    origin: ORIGIN,
+    sessionCookie: "__Host-folioviv_session",
+  });
 
 /** ADR-005 slice 1 (folioviv#534): a write that carries the session must come from the app itself. */
 describe("the same-origin check on writes", () => {
@@ -26,7 +32,9 @@ describe("the same-origin check on writes", () => {
   });
   it("leaves the non-browser clients alone: a bearer, a webhook, a script with no cookie", () => {
     expect(ask("POST", { authorization: "Bearer abc" })).toBe(false);
-    expect(ask("POST", { authorization: "Bearer abc", cookie: "__Host-folioviv_session=x", "sec-fetch-site": "cross-site" })).toBe(false);
+    expect(
+      ask("POST", { authorization: "Bearer abc", cookie: "__Host-folioviv_session=x", "sec-fetch-site": "cross-site" }),
+    ).toBe(false);
     expect(ask("POST", {})).toBe(false);
     expect(ask("POST", { cookie: "__Host-NEXT_LOCALE=fr" })).toBe(false);
   });

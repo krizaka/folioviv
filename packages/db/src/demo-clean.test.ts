@@ -27,11 +27,31 @@ describe("demo-clean (real PostgreSQL 16)", () => {
 
     // What a journey adds: a second dog booked on a walk, and a visitor's own client file with a dog and a walk.
     const miso = await addDependant(t.db, s.camille.clientId, { kind: "dog", name: "Miso", profile: {} });
-    const visit = await bookVisit(t.db, { clientId: s.camille.clientId, serviceId: s.group, zoneId: s.zones.stHenri, dependantIds: [miso], startsAt: new Date("2026-10-20T13:00:00Z"), now: NOW });
+    const visit = await bookVisit(t.db, {
+      clientId: s.camille.clientId,
+      serviceId: s.group,
+      zoneId: s.zones.stHenri,
+      dependantIds: [miso],
+      startsAt: new Date("2026-10-20T13:00:00Z"),
+      now: NOW,
+    });
     const stranger = await account(t.db, "someone-real@example.test");
-    const joined = await joinShop(t.db, stranger.id, stranger.email, s.shopId, { fullName: "Someone Real", phone: "514-555-0199", language: "fr", consentService: true, consentReminders: false });
+    const joined = await joinShop(t.db, stranger.id, stranger.email, s.shopId, {
+      fullName: "Someone Real",
+      phone: "514-555-0199",
+      language: "fr",
+      consentService: true,
+      consentReminders: false,
+    });
     const rex = await addDependant(t.db, joined.clientId, { kind: "dog", name: "Rex", profile: {} });
-    await bookVisit(t.db, { clientId: joined.clientId, serviceId: s.solo, zoneId: s.zones.stHenri, dependantIds: [rex], startsAt: new Date("2026-10-21T13:00:00Z"), now: NOW });
+    await bookVisit(t.db, {
+      clientId: joined.clientId,
+      serviceId: s.solo,
+      zoneId: s.zones.stHenri,
+      dependantIds: [rex],
+      startsAt: new Date("2026-10-21T13:00:00Z"),
+      now: NOW,
+    });
 
     const found = await demoLeftovers(t.db, cast);
     expect(found.dogs).toEqual([miso]);
@@ -48,7 +68,13 @@ describe("demo-clean (real PostgreSQL 16)", () => {
   });
 
   it("is idempotent: a second run removes nothing", async () => {
-    const done = await cleanDemoLeftovers(t.db, { shopSlug: "pattes-a", clients: [{ email: "camille-a@example.test", dogs: ["Rex"] }, { email: "jordan-a@example.test", dogs: ["Luna"] }] });
+    const done = await cleanDemoLeftovers(t.db, {
+      shopSlug: "pattes-a",
+      clients: [
+        { email: "camille-a@example.test", dogs: ["Rex"] },
+        { email: "jordan-a@example.test", dogs: ["Luna"] },
+      ],
+    });
     expect(done).toEqual({ clients: 0, dogs: 0, bookings: 0, visits: 0, accounts: 0, kept: 0 });
   });
 });

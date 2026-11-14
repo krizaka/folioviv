@@ -3,7 +3,22 @@ import { exportAppointments, exportClients, exportInvoices } from "@folioviv/db"
 import { requestNow } from "@/app/request-now";
 import { requireShop } from "@/lib/access";
 import { audit } from "@/lib/audit";
-import { appointmentsCsv, appointmentsHeader, appointmentsIcs, BOM, clientsCsv, clientsHeader, type ExportFile, formatOf, icsClose, icsOpen, invoicesCsv, invoicesHeader, isExportFile, kindOf } from "@/lib/data-export";
+import {
+  appointmentsCsv,
+  appointmentsHeader,
+  appointmentsIcs,
+  BOM,
+  clientsCsv,
+  clientsHeader,
+  type ExportFile,
+  formatOf,
+  icsClose,
+  icsOpen,
+  invoicesCsv,
+  invoicesHeader,
+  isExportFile,
+  kindOf,
+} from "@/lib/data-export";
 import { db } from "@/lib/db";
 import { handle, refuse } from "@/lib/http";
 import { asLocale, getDictionary } from "@/lib/i18n";
@@ -13,12 +28,18 @@ import { appSettings } from "@/lib/settings";
 export const dynamic = "force-dynamic";
 
 /** Text chunks of one export, one batch of rows at a time: a big shop never sits whole in memory. */
-async function* chunks(file: ExportFile, shop: { id: string; name: string; timezone: string }, locale: "fr" | "en", now: Date): AsyncGenerator<string> {
+async function* chunks(
+  file: ExportFile,
+  shop: { id: string; name: string; timezone: string },
+  locale: "fr" | "en",
+  now: Date,
+): AsyncGenerator<string> {
   const words = getDictionary(locale).console.exports;
   switch (file) {
     case "appointments.csv":
       yield BOM + appointmentsHeader(words);
-      for await (const rows of exportAppointments(db(), shop.id)) yield appointmentsCsv(rows, words, locale, shop.timezone);
+      for await (const rows of exportAppointments(db(), shop.id))
+        yield appointmentsCsv(rows, words, locale, shop.timezone);
       return;
     case "appointments.ics":
       yield icsOpen(shop.name);
@@ -45,10 +66,18 @@ export function GET(req: Request, ctx: { params: Promise<{ file: string }> }) {
     const { shop, session } = await requireShop(req, "privacy");
     const file = (await ctx.params).file;
     if (!isExportFile(file)) throw refuse(404, "NOT_FOUND", "Not found");
-    if (!(await appSettings().get("exports.data.enabled"))) throw refuse(403, "FEATURE_OFF", "This feature is switched off", { feature: "exports.data" });
+    if (!(await appSettings().get("exports.data.enabled")))
+      throw refuse(403, "FEATURE_OFF", "This feature is switched off", { feature: "exports.data" });
     limit("data-export", req, session.account.id, [20, 3600]);
     const locale = asLocale(new URL(req.url).searchParams.get("locale") ?? "fr");
-    await audit({ action: "shop.data_exported", actorId: session.account.id, actorLabel: session.account.email, targetId: shop.id, detail: { kind: kindOf(file), format: formatOf(file) }, headers: req.headers });
+    await audit({
+      action: "shop.data_exported",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: shop.id,
+      detail: { kind: kindOf(file), format: formatOf(file) },
+      headers: req.headers,
+    });
     const encoder = new TextEncoder();
     const source = chunks(file, shop, locale, requestNow());
     const body = new ReadableStream<Uint8Array>({

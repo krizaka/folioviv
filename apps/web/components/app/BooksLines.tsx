@@ -18,7 +18,12 @@ type BooksColumnsContext = { say: Say; locale: SayLocale };
 
 /** Built outside the component: the cells are render functions, not components of the table's parent. */
 const booksColumns = ({ say, locale }: BooksColumnsContext): DataTableColumn<BooksLineView>[] => [
-  { id: "line", header: say("books.table.line"), value: (r) => r.line, cell: (r) => <span className="font-mono">{r.line}</span> },
+  {
+    id: "line",
+    header: say("books.table.line"),
+    value: (r) => r.line,
+    cell: (r) => <span className="font-mono">{r.line}</span>,
+  },
   {
     id: "label",
     header: say("books.table.label"),
@@ -29,12 +34,18 @@ const booksColumns = ({ say, locale }: BooksColumnsContext): DataTableColumn<Boo
         <span className="font-semibold text-fg">{say(`books.lines.${r.line}.label`)}</span>
         {r.sources.length > 0 ? (
           <details className="text-sm">
-            <summary className="cursor-pointer text-fg-accent">{r.sources.length === 1 ? say("books.sourcesOne") : say("books.sources", { count: r.sources.length })}</summary>
+            <summary className="cursor-pointer text-fg-accent">
+              {r.sources.length === 1 ? say("books.sourcesOne") : say("books.sources", { count: r.sources.length })}
+            </summary>
             <ul className="mt-1 flex flex-col gap-1">
               {r.sources.map((s) => (
-                <li key={`${s.kind}-${s.id}-${s.amountCents}`} className="flex flex-wrap items-center justify-between gap-2">
+                <li
+                  key={`${s.kind}-${s.id}-${s.amountCents}`}
+                  className="flex flex-wrap items-center justify-between gap-2"
+                >
                   <span>
-                    <Badge tone={s.kind === "invoice" ? "accent" : "neutral"}>{say(`books.kinds.${s.kind}`)}</Badge> {s.label}
+                    <Badge tone={s.kind === "invoice" ? "accent" : "neutral"}>{say(`books.kinds.${s.kind}`)}</Badge>{" "}
+                    {s.label}
                   </span>
                   <span className="tabular-nums">{formatMoney(s.amountCents, locale)}</span>
                 </li>
@@ -45,7 +56,14 @@ const booksColumns = ({ say, locale }: BooksColumnsContext): DataTableColumn<Boo
       </div>
     ),
   },
-  { id: "amount", header: say("books.table.amount"), align: "end", value: (r) => r.amountCents, cell: (r) => <span className="font-semibold tabular-nums">{formatMoney(r.amountCents, locale)}</span> },];
+  {
+    id: "amount",
+    header: say("books.table.amount"),
+    align: "end",
+    value: (r) => r.amountCents,
+    cell: (r) => <span className="font-semibold tabular-nums">{formatMoney(r.amountCents, locale)}</span>,
+  },
+];
 
 /**
  * The lines of the return (FPZ-500) with the figure of each and where it comes from: the invoice or the expense behind it,
@@ -54,5 +72,14 @@ const booksColumns = ({ say, locale }: BooksColumnsContext): DataTableColumn<Boo
 export function BooksLines({ lines }: Readonly<{ lines: BooksLineView[] }>) {
   const { say, locale } = useSay();
   const columns = useMemo(() => booksColumns({ say, locale }), [say, locale]);
-  return <DataTable caption={say("books.table.caption")} showCaption rows={lines} columns={columns} getRowId={(r) => r.line} rowLabel={(r) => [r.line, say(`books.lines.${r.line}.label`)].join(" ")} />;
+  return (
+    <DataTable
+      caption={say("books.table.caption")}
+      showCaption
+      rows={lines}
+      columns={columns}
+      getRowId={(r) => r.line}
+      rowLabel={(r) => [r.line, say(`books.lines.${r.line}.label`)].join(" ")}
+    />
+  );
 }

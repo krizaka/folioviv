@@ -20,11 +20,21 @@ type Outcome = "connected" | "denied" | "error";
 
 /** Back to Boutique > Agenda with the outcome in the address (a word, never a code or a token), the PKCE cookie spent whatever happened. */
 function back(path: string, outcome: Outcome, secure: boolean): Response {
-  return new Response(null, { status: 303, headers: { Location: `${path}?calendar=${outcome}`, "Cache-Control": "private, no-store", "Set-Cookie": clearPkceCookie(secure) } });
+  return new Response(null, {
+    status: 303,
+    headers: {
+      Location: `${path}?calendar=${outcome}`,
+      "Cache-Control": "private, no-store",
+      "Set-Cookie": clearPkceCookie(secure),
+    },
+  });
 }
 
 /** Whether the signed-in person may connect a calendar for this staff member (or for the whole shop when `staffId` is null). */
-function mayConnect(staffId: string | null, overview: { wholeShop: boolean; people: readonly { id: string }[] }): boolean {
+function mayConnect(
+  staffId: string | null,
+  overview: { wholeShop: boolean; people: readonly { id: string }[] },
+): boolean {
   if (staffId === null) return overview.wholeShop;
   return overview.people.some((p) => p.id === staffId);
 }
@@ -45,29 +55,63 @@ export async function GET(req: Request, { params }: { params: Promise<{ kind: st
   const url = new URL(req.url);
   const now = systemClock.now();
   const state = verifyState(url.searchParams.get("state") ?? "", sessionSecret(), now);
-  if (!isOAuthKind(kind) || state?.kind !== kind) return new Response("Not found", { status: 404, headers: { "Set-Cookie": clearPkceCookie(secure) } });
+  if (!isOAuthKind(kind) || state?.kind !== kind)
+    return new Response("Not found", { status: 404, headers: { "Set-Cookie": clearPkceCookie(secure) } });
   const agenda = `/${state.locale}/app/${state.shopId}/settings/agenda`;
   try {
     const verifier = verifierFor(req.headers.get("cookie"), state.nonce);
-    const { shop, role, session } = await requireShop(new Request(new URL(`/?shopId=${state.shopId}`, req.url), { headers: req.headers }), "agenda");
+    const { shop, role, session } = await requireShop(
+      new Request(new URL(`/?shopId=${state.shopId}`, req.url), { headers: req.headers }),
+      "agenda",
+    );
     if (session.account.id !== state.accountId || !verifier) return back(agenda, "error", secure);
-    if (url.searchParams.get("error")) return back(agenda, url.searchParams.get("error") === "access_denied" ? "denied" : "error", secure);
+    if (url.searchParams.get("error"))
+      return back(agenda, url.searchParams.get("error") === "access_denied" ? "denied" : "error", secure);
     const code = url.searchParams.get("code");
     const s = appSettings();
     const source = connectable(kind, oauthApps());
-    if (!code || !source || !(await s.get("features.calendarSync")) || !(await s.get(`calendarSync.${kind}.enabled`))) return back(agenda, "error", secure);
+    if (!code || !source || !(await s.get("features.calendarSync")) || !(await s.get(`calendarSync.${kind}.enabled`)))
+      return back(agenda, "error", secure);
     const overview = await calendarOverview(shop.id, agendaScope(role, session.account.id));
     if (!mayConnect(state.staffId, overview)) return back(agenda, "error", secure);
-    const grant = await source.exchange({ code, redirectUri: `${env().APP_PUBLIC_URL.replace(/\/$/, "")}/api/calendars/callback/${kind}`, codeVerifier: verifier });
+    const grant = await source.exchange({
+      code,
+      redirectUri: `${env().APP_PUBLIC_URL.replace(/\/$/, "")}/api/calendars/callback/${kind}`,
+      codeVerifier: verifier,
+    });
     const id = crypto.randomUUID();
-    await addConnection(db(), { id, shopId: shop.id, staffId: state.staffId, kind, label: state.label, secretEnc: sealField(grant.secret, dataKey(), id), consentTextVersion: CALENDAR_CONSENT_VERSION, now, max: await s.get("calendarSync.maxCalendarsPerShop") });
-    await audit({ action: "shop.calendar_connected", actorId: session.account.id, actorLabel: session.account.email, targetId: shop.id, detail: { connectionId: id, kind, staffId: state.staffId, consent: CALENDAR_CONSENT_VERSION }, headers: req.headers });
+    await addConnection(db(), {
+      id,
+      shopId: shop.id,
+      staffId: state.staffId,
+      kind,
+      label: state.label,
+      secretEnc: sealField(grant.secret, dataKey(), id),
+      consentTextVersion: CALENDAR_CONSENT_VERSION,
+      now,
+      max: await s.get("calendarSync.maxCalendarsPerShop"),
+    });
+    await audit({
+      action: "shop.calendar_connected",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: shop.id,
+      detail: { connectionId: id, kind, staffId: state.staffId, consent: CALENDAR_CONSENT_VERSION },
+      headers: req.headers,
+    });
     // A first read right away, so the slots are blocked at once; if it fails the tick tries again with its backoff.
     const settings = await syncSettings();
     const read = await connectable(kind, oauthApps(), grant.secret)!
       .busy(windowOf(now, settings.windowDays, shop.timezone), { etag: null, lastModified: null })
       .catch((error: unknown) => (error instanceof CalendarSourceError ? null : Promise.reject(error)));
-    if (read?.changed) await recordSyncOk(db(), { id, shopId: shop.id, staffId: state.staffId }, { busy: read.busy, validators: read.validators }, now, settings.intervalMinutes);
+    if (read?.changed)
+      await recordSyncOk(
+        db(),
+        { id, shopId: shop.id, staffId: state.staffId },
+        { busy: read.busy, validators: read.validators },
+        now,
+        settings.intervalMinutes,
+      );
     return back(agenda, "connected", secure);
   } catch (error) {
     logUnexpected(error);

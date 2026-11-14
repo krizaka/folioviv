@@ -15,8 +15,32 @@ const INPUT = {
   computedAt: "2026-10-23T12:00:00.000Z",
   period: { start: "2026-10-01", end: "2026-12-31" },
   invoices: [
-    { id: "inv-a", number: "F-0001", issuedOn: "2026-10-03", dueOn: "2026-10-10", subtotalCents: 10_000, gstCents: 500, qstCents: 998, totalCents: 11_498, paidCents: 5_000, isCredit: false, superseded: false },
-    { id: "inv-b", number: "F-0002", issuedOn: "2026-10-05", dueOn: "2026-10-12", subtotalCents: 2_000, gstCents: 100, qstCents: 200, totalCents: 2_300, paidCents: 0, isCredit: false, superseded: false },
+    {
+      id: "inv-a",
+      number: "F-0001",
+      issuedOn: "2026-10-03",
+      dueOn: "2026-10-10",
+      subtotalCents: 10_000,
+      gstCents: 500,
+      qstCents: 998,
+      totalCents: 11_498,
+      paidCents: 5_000,
+      isCredit: false,
+      superseded: false,
+    },
+    {
+      id: "inv-b",
+      number: "F-0002",
+      issuedOn: "2026-10-05",
+      dueOn: "2026-10-12",
+      subtotalCents: 2_000,
+      gstCents: 100,
+      qstCents: 200,
+      totalCents: 2_300,
+      paidCents: 0,
+      isCredit: false,
+      superseded: false,
+    },
   ],
   payments: [{ id: "pay-a", invoiceId: "inv-a", amountCents: 5_000, receivedOn: "2026-10-05" }],
   expenses: [],
@@ -25,7 +49,16 @@ const INPUT = {
 const figures = computeFigures(INPUT, DEFAULT_FIGURE_THRESHOLDS);
 
 describe("the figures panel (#260)", () => {
-  const html = renderToStaticMarkup(<FiguresPanel ids={["invoiced", "toCollect", "gstToRemit"]} figures={figures} locale="en" routes={routes} timeZone="America/Toronto" now="2026-10-23T13:00:00.000Z" />);
+  const html = renderToStaticMarkup(
+    <FiguresPanel
+      ids={["invoiced", "toCollect", "gstToRemit"]}
+      figures={figures}
+      locale="en"
+      routes={routes}
+      timeZone="America/Toronto"
+      now="2026-10-23T13:00:00.000Z"
+    />,
+  );
 
   it("renders one explained article per figure: meaning, formula, source, freshness and state", () => {
     expect(html.match(/<article/g)).toHaveLength(3);
@@ -44,14 +77,27 @@ describe("the figures panel (#260)", () => {
   });
 
   it("is stale after a day", () => {
-    const stale = renderToStaticMarkup(<FiguresPanel ids={["invoiced"]} figures={figures} locale="en" routes={routes} timeZone="UTC" now="2026-10-25T00:00:00.000Z" />);
+    const stale = renderToStaticMarkup(
+      <FiguresPanel
+        ids={["invoiced"]}
+        figures={figures}
+        locale="en"
+        routes={routes}
+        timeZone="UTC"
+        now="2026-10-25T00:00:00.000Z"
+      />,
+    );
     expect(stale).toContain("May be out of date");
     expect(html).not.toContain("May be out of date");
   });
 });
 
 describe("what to do now (#260)", () => {
-  const actions = nextActions({ figures: INPUT, returnPrepared: false, slots: [{ weekday: 2, startsAt: "09:00", offered: 8, booked: 1 }] }, DEFAULT_FIGURE_THRESHOLDS, ["chase", "slot"]);
+  const actions = nextActions(
+    { figures: INPUT, returnPrepared: false, slots: [{ weekday: 2, startsAt: "09:00", offered: 8, booked: 1 }] },
+    DEFAULT_FIGURE_THRESHOLDS,
+    ["chase", "slot"],
+  );
 
   it("lists two actions with their reason and the way in", () => {
     const html = renderToStaticMarkup(<WhatToDoNow actions={actions} locale="fr" routes={routes} />);
@@ -61,7 +107,9 @@ describe("what to do now (#260)", () => {
   });
 
   it("shows one action as a card and none as nothing", () => {
-    expect(renderToStaticMarkup(<WhatToDoNow actions={actions.slice(0, 1)} locale="en" routes={routes} />)).toContain("Chase invoice F-0001");
+    expect(renderToStaticMarkup(<WhatToDoNow actions={actions.slice(0, 1)} locale="en" routes={routes} />)).toContain(
+      "Chase invoice F-0001",
+    );
     expect(renderToStaticMarkup(<WhatToDoNow actions={[]} locale="en" routes={routes} />)).toBe("");
   });
 });
@@ -82,10 +130,26 @@ describe("the lexique (#260)", () => {
 describe("the figures on Today (#260)", () => {
   it("shows what is owed, the appointments and the no-shows, each explained, under a heading in the owner's language", () => {
     expect(TODAY_FIGURES).toEqual(["toCollect", "appointments", "noShows"]);
-    const en = renderToStaticMarkup(<TodayFigures figures={figures} locale="en" routes={routes} timeZone="America/Toronto" now="2026-10-23T13:00:00.000Z" />);
+    const en = renderToStaticMarkup(
+      <TodayFigures
+        figures={figures}
+        locale="en"
+        routes={routes}
+        timeZone="America/Toronto"
+        now="2026-10-23T13:00:00.000Z"
+      />,
+    );
     expect(en.match(/<article/g)).toHaveLength(3);
     expect(en).toContain("Your figures");
-    const fr = renderToStaticMarkup(<TodayFigures figures={figures} locale="fr" routes={routes} timeZone="America/Toronto" now="2026-10-23T13:00:00.000Z" />);
+    const fr = renderToStaticMarkup(
+      <TodayFigures
+        figures={figures}
+        locale="fr"
+        routes={routes}
+        timeZone="America/Toronto"
+        now="2026-10-23T13:00:00.000Z"
+      />,
+    );
     expect(fr).toContain("Vos chiffres");
     expect(fr).toContain("Comment c&#x27;est calculé");
   });

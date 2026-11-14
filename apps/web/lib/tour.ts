@@ -26,7 +26,8 @@ const HERO: Record<TourLocale, { mp4: string; webm: string; poster: string }> = 
 
 const TOUR_DIR = `${MEDIA_CDN}/sites/folioviv/tour`;
 
-export const screenStill = (id: ScreenId, locale: TourLocale) => `${TOUR_DIR}/phone-${id}-${locale}.${SCREEN_STILLS[id][locale]}.jpg`;
+export const screenStill = (id: ScreenId, locale: TourLocale) =>
+  `${TOUR_DIR}/phone-${id}-${locale}.${SCREEN_STILLS[id][locale]}.jpg`;
 
 /**
  * The hero's phone: the continuous take of the product — the notebook storefront, Today, an invoice, « Vos livres » — a muted loop whose poster (the storefront's first second) is the page's LCP.

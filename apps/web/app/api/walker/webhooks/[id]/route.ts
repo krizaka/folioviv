@@ -13,9 +13,14 @@ type Ctx = { params: Promise<{ id: string }> };
 export const PATCH = (req: Request, { params }: Ctx) =>
   handle(async () => {
     const { session } = await requireOwner(req);
-    const input = await readJson(req, z.object({ events: z.array(z.string()).max(10).optional(), active: z.boolean().optional() }));
+    const input = await readJson(
+      req,
+      z.object({ events: z.array(z.string()).max(10).optional(), active: z.boolean().optional() }),
+    );
     try {
-      return Response.json({ endpoint: await hooks().updateEndpoint(session.account.id, idParam((await params).id), input) });
+      return Response.json({
+        endpoint: await hooks().updateEndpoint(session.account.id, idParam((await params).id), input),
+      });
     } catch (error) {
       throw webhookRefusal(error) ?? error;
     }
@@ -30,6 +35,12 @@ export const DELETE = (req: Request, { params }: Ctx) =>
     } catch (error) {
       throw webhookRefusal(error) ?? error;
     }
-    await audit({ action: "webhook.deleted", actorId: session.account.id, actorLabel: session.account.email, targetId: id, headers: req.headers });
+    await audit({
+      action: "webhook.deleted",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: id,
+      headers: req.headers,
+    });
     return Response.json({ ok: true });
   });

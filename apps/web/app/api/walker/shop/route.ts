@@ -21,13 +21,33 @@ export function POST(req: Request) {
     const params = new URL(req.url).searchParams;
     const shopId = params.get("shopId");
     if (params.get("additional") === "1") {
-      if (shopId) {throw refuse(400, "BAD_REQUEST", "Either a shop or a new one");}
+      if (shopId) {
+        throw refuse(400, "BAD_REQUEST", "Either a shop or a new one");
+      }
       // The bound is the service's (saveShopPage counts and inserts under one lock): the route only says what it is.
-      const created = await saveShopPage(db(), session.account.id, { ...input, published: false }, { additional: true, maxShops: await appSettings().get("limits.shopsPerOwner") }, await slugPolicy());
-      await audit({ action: "shop.added", actorId: session.account.id, actorLabel: session.account.email, targetId: created.shopId, headers: req.headers });
+      const created = await saveShopPage(
+        db(),
+        session.account.id,
+        { ...input, published: false },
+        { additional: true, maxShops: await appSettings().get("limits.shopsPerOwner") },
+        await slugPolicy(),
+      );
+      await audit({
+        action: "shop.added",
+        actorId: session.account.id,
+        actorLabel: session.account.email,
+        targetId: created.shopId,
+        headers: req.headers,
+      });
       return Response.json(created, { status: 201 });
     }
-    const saved = await saveShopPage(db(), session.account.id, input, shopId ? { shopId: idParam(shopId) } : {}, await slugPolicy());
+    const saved = await saveShopPage(
+      db(),
+      session.account.id,
+      input,
+      shopId ? { shopId: idParam(shopId) } : {},
+      await slugPolicy(),
+    );
     forgetShops(); // published, unpublished or renamed: the shop host answers from the database again (folioviv#549)
     return Response.json(saved);
   });
@@ -39,7 +59,16 @@ export function GET(req: Request) {
     const { shop } = await requireShop(req, "invoices");
     const setup = await loadShop(db(), shop);
     const { name, registrant, timezone, paymentTermsDays } = setup.shop;
-    const services = setup.services.map((s) => ({ id: s.id, nameFr: s.nameFr, nameEn: s.nameEn, priceCents: s.priceCents, taxCategory: s.taxCategory }));
-    return Response.json({ shop: { id: shop.id, name, registrant, timezone, paymentTermsDays }, services }, { headers: { "Cache-Control": "private, no-store" } });
+    const services = setup.services.map((s) => ({
+      id: s.id,
+      nameFr: s.nameFr,
+      nameEn: s.nameEn,
+      priceCents: s.priceCents,
+      taxCategory: s.taxCategory,
+    }));
+    return Response.json(
+      { shop: { id: shop.id, name, registrant, timezone, paymentTermsDays }, services },
+      { headers: { "Cache-Control": "private, no-store" } },
+    );
   });
 }

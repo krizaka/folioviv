@@ -10,7 +10,16 @@ import { CalendarSourceError } from "@folioviv/core";
  * that cannot pin the address, and the redirect limit and the size limit bound what it could read.
  */
 const PRIVATE_V4: [number, number][] = [
-  [0x00000000, 8], [0x0a000000, 8], [0x64400000, 10], [0x7f000000, 8], [0xa9fe0000, 16], [0xac100000, 12], [0xc0000000, 24], [0xc0a80000, 16], [0xc6120000, 15], [0xe0000000, 3],
+  [0x00000000, 8],
+  [0x0a000000, 8],
+  [0x64400000, 10],
+  [0x7f000000, 8],
+  [0xa9fe0000, 16],
+  [0xac100000, 12],
+  [0xc0000000, 24],
+  [0xc0a80000, 16],
+  [0xc6120000, 15],
+  [0xe0000000, 3],
 ];
 
 function v4ToInt(ip: string): number {
@@ -46,10 +55,13 @@ export function parseCalendarUrl(raw: string): URL {
   } catch {
     throw new CalendarSourceError("AK_CAL_INVALID", false, "not an address");
   }
-  if (url.protocol !== "https:" || url.username || url.password || (url.port && url.port !== "443")) throw new CalendarSourceError("AK_CAL_INVALID", false, "only plain https addresses");
+  if (url.protocol !== "https:" || url.username || url.password || (url.port && url.port !== "443"))
+    throw new CalendarSourceError("AK_CAL_INVALID", false, "only plain https addresses");
   const host = url.hostname.replace(/^\[|\]$/g, "");
-  if (LOCAL_NAME.test(host) || (!host.includes(".") && net.isIP(host) === 0)) throw new CalendarSourceError("AK_CAL_INVALID", false, "not a public address");
-  if (net.isIP(host) !== 0 && isPrivateAddress(host)) throw new CalendarSourceError("AK_CAL_INVALID", false, "not a public address");
+  if (LOCAL_NAME.test(host) || (!host.includes(".") && net.isIP(host) === 0))
+    throw new CalendarSourceError("AK_CAL_INVALID", false, "not a public address");
+  if (net.isIP(host) !== 0 && isPrivateAddress(host))
+    throw new CalendarSourceError("AK_CAL_INVALID", false, "not a public address");
   return url;
 }
 
@@ -67,5 +79,6 @@ export async function assertPublicHost(url: URL, resolve: Resolver = resolveAll)
   } catch {
     throw new CalendarSourceError("AK_CAL_UNREACHABLE", true, "the name does not resolve");
   }
-  if (addresses.length === 0 || addresses.some(isPrivateAddress)) throw new CalendarSourceError("AK_CAL_INVALID", false, "not a public address");
+  if (addresses.length === 0 || addresses.some(isPrivateAddress))
+    throw new CalendarSourceError("AK_CAL_INVALID", false, "not a public address");
 }

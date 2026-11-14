@@ -19,5 +19,11 @@ export default async function NewShopPage({ params }: Readonly<{ params: Promise
   const { locale: raw, shop: shopId } = await params;
   const locale = asLocale(raw);
   const { session } = await memberShop(shopId, "settings");
-  return <NewShop locale={locale} backHref={shopRoutes(locale, shopId).setup} offers={templateChoicesByTrade(await templateRules(), SHOP_TYPES, await templateCatalogue(session.account.id))} />;
+  return (
+    <NewShop
+      locale={locale}
+      backHref={shopRoutes(locale, shopId).setup}
+      offers={templateChoicesByTrade(await templateRules(), SHOP_TYPES, await templateCatalogue(session.account.id))}
+    />
+  );
 }

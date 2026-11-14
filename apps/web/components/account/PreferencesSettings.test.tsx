@@ -27,7 +27,8 @@ const render = (locale: "en" | "fr") =>
 describe("Appearance in the settings (krizaka-ui#657, ADR-006 §4)", () => {
   it("offers System, Light and Dark plus the optional Blueprint and Carbon surfaces, in the page's language", () => {
     const html = render("fr");
-    for (const word of ["Comme mon appareil", "Clair", "Sombre", "Plan marine", "Carbone", "Densité", "Compacte"]) expect(html, word).toContain(word);
+    for (const word of ["Comme mon appareil", "Clair", "Sombre", "Plan marine", "Carbone", "Densité", "Compacte"])
+      expect(html, word).toContain(word);
   });
 
   it("never offers the Cahier papers of the public shop pages, an accent row or a sound", () => {

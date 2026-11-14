@@ -1,7 +1,15 @@
 import { randomBytes } from "node:crypto";
 
-import { dnsInstructions,type DomainState } from "@folioviv/core";
-import { addShopDomain, checkShopDomainNow, domainsOverview, listShopDomains, removeShopDomain, retryShopDomain, setCustomDomainOption } from "@folioviv/db";
+import { dnsInstructions, type DomainState } from "@folioviv/core";
+import {
+  addShopDomain,
+  checkShopDomainNow,
+  domainsOverview,
+  listShopDomains,
+  removeShopDomain,
+  retryShopDomain,
+  setCustomDomainOption,
+} from "@folioviv/db";
 
 import { systemClock } from "@/app/system-clock";
 import { audit } from "@/lib/audit";
@@ -21,7 +29,9 @@ const CHECK_NOW_MS = 30_000;
 const vars = (): Record<string, string | undefined> => process.env;
 
 /** The paid add-on as the catalogue has it today: the version to record on the shop and its per-shop limit. Null while no price is in force (nothing is enabled free by accident). */
-export async function customDomainAddon(now = systemClock.now()): Promise<{ priceVersion: string; maxDomains: number; amountCents: number } | null> {
+export async function customDomainAddon(
+  now = systemClock.now(),
+): Promise<{ priceVersion: string; maxDomains: number; amountCents: number } | null> {
   const entry = (await appPrices().catalogue(now)).find((e) => e.key === CUSTOM_DOMAIN);
   if (!entry || entry.amountCents === null) return null;
   return { priceVersion: entry.versionId, maxDomains: entry.limits.maxDomains ?? 1, amountCents: entry.amountCents };
@@ -49,13 +59,23 @@ export async function ownerDomains(shopId: string, enabled: boolean): Promise<Ow
     enabled,
     available: edgeHostnames(vars()) !== null,
     max: addon?.maxDomains ?? 0,
-    domains: rows.map((d) => ({ id: d.id, hostname: d.hostname, state: d.state, error: d.lastError, records: dnsInstructions(d.hostname, d.token, edgeTarget(vars())) })),
+    domains: rows.map((d) => ({
+      id: d.id,
+      hostname: d.hostname,
+      state: d.state,
+      error: d.lastError,
+      records: dnsInstructions(d.hostname, d.token, edgeTarget(vars())),
+    })),
   };
 }
 
 export async function addOwnerDomain(shopId: string, hostname: string, who: Actor) {
   const addon = await customDomainAddon();
-  const row = await addShopDomain(db(), shopId, hostname, { max: addon?.maxDomains ?? 0, random: (n) => randomBytes(n), shopDomain: shopDomain(process.env) });
+  const row = await addShopDomain(db(), shopId, hostname, {
+    max: addon?.maxDomains ?? 0,
+    random: (n) => randomBytes(n),
+    shopDomain: shopDomain(process.env),
+  });
   await audit({ ...who, action: "domain.add", targetId: row.id, detail: { shopId, hostname: row.hostname } });
   return row;
 }
@@ -66,7 +86,8 @@ export async function checkOwnerDomain(shopId: string, domainId: string) {
   return checkShopDomainNow(db(), shopId, domainId, ports, CHECK_NOW_MS);
 }
 
-export const retryOwnerDomain = (shopId: string, domainId: string) => retryShopDomain(db(), shopId, domainId, systemClock.now());
+export const retryOwnerDomain = (shopId: string, domainId: string) =>
+  retryShopDomain(db(), shopId, domainId, systemClock.now());
 
 async function releaseAtEdge(ids: string[]) {
   const edge = edgeHostnames(vars());
@@ -74,19 +95,42 @@ async function releaseAtEdge(ids: string[]) {
 }
 
 /** Removes a domain (the owner's, or an administrator's revoke): it stops being served at once, then it is released at the edge. */
-export async function removeDomain(shopId: string, domainId: string, who: Actor & { action: "domain.remove" | "domain.revoke" }) {
+export async function removeDomain(
+  shopId: string,
+  domainId: string,
+  who: Actor & { action: "domain.remove" | "domain.revoke" },
+) {
   const removed = await removeShopDomain(db(), shopId, domainId, systemClock.now());
   await releaseAtEdge(removed.release ? [removed.release] : []);
-  await audit({ actorId: who.actorId, actorLabel: who.actorLabel, headers: who.headers, action: who.action, targetId: domainId, detail: { shopId, hostname: removed.hostname } });
+  await audit({
+    actorId: who.actorId,
+    actorLabel: who.actorLabel,
+    headers: who.headers,
+    action: who.action,
+    targetId: domainId,
+    detail: { shopId, hostname: removed.hostname },
+  });
 }
 
 /** An administrator switches the paid option for a shop. Enabling needs a price in force (its version is recorded on the shop); both ways are audited. */
 export async function setOption(shopId: string, enabled: boolean, who: Actor) {
   const addon = enabled ? await customDomainAddon() : null;
-  if (enabled && !addon) throw refuse(409, "PRICE_NOT_SET", "Schedule the price of the custom domain option in the catalogue first");
-  const { release } = await setCustomDomainOption(db(), shopId, enabled, addon?.priceVersion ?? null, systemClock.now());
+  if (enabled && !addon)
+    throw refuse(409, "PRICE_NOT_SET", "Schedule the price of the custom domain option in the catalogue first");
+  const { release } = await setCustomDomainOption(
+    db(),
+    shopId,
+    enabled,
+    addon?.priceVersion ?? null,
+    systemClock.now(),
+  );
   await releaseAtEdge(release);
-  await audit({ ...who, action: enabled ? "domain.option.enable" : "domain.option.disable", targetId: shopId, detail: { priceVersion: addon?.priceVersion ?? null } });
+  await audit({
+    ...who,
+    action: enabled ? "domain.option.enable" : "domain.option.disable",
+    targetId: shopId,
+    detail: { priceVersion: addon?.priceVersion ?? null },
+  });
 }
 
 export const adminDomains = () => domainsOverview(db());

@@ -18,7 +18,10 @@ describe("the owner's figure thresholds (#260)", () => {
 
   it("keeps what was changed, replaces it on the next save and returns to the defaults when emptied", async () => {
     const shop = await walkerShop(t.db, "rules-saved");
-    expect(await saveShopFigureOverrides(t.db, shop.shopId, { overdueWatchPct: 5, taxPeriodSoonDays: 30 })).toEqual({ overdueWatchPct: 5, taxPeriodSoonDays: 30 });
+    expect(await saveShopFigureOverrides(t.db, shop.shopId, { overdueWatchPct: 5, taxPeriodSoonDays: 30 })).toEqual({
+      overdueWatchPct: 5,
+      taxPeriodSoonDays: 30,
+    });
     expect(await shopFigureOverrides(t.db, shop.shopId)).toEqual({ overdueWatchPct: 5, taxPeriodSoonDays: 30 });
     await saveShopFigureOverrides(t.db, shop.shopId, { marginWatchPct: 40 });
     expect(await shopFigureOverrides(t.db, shop.shopId)).toEqual({ marginWatchPct: 40 });
@@ -28,7 +31,14 @@ describe("the owner's figure thresholds (#260)", () => {
 
   it("refuses what is out of bounds or not tunable, without touching the amounts", async () => {
     const shop = await walkerShop(t.db, "rules-bounds");
-    expect(await saveShopFigureOverrides(t.db, shop.shopId, { overdueWatchPct: 0, noShowWatchPct: 100, maxActions: 9, gst: 1 })).toEqual({});
+    expect(
+      await saveShopFigureOverrides(t.db, shop.shopId, {
+        overdueWatchPct: 0,
+        noShowWatchPct: 100,
+        maxActions: 9,
+        gst: 1,
+      }),
+    ).toEqual({});
     expect(await shopFigureOverrides(t.db, shop.shopId)).toEqual({});
   });
 

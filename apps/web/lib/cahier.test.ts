@@ -16,8 +16,20 @@ function files(dir: string): string[] {
     return /\.(tsx|css)$/.test(name) && !/\.(test|stories)\./.test(name) ? [path] : [];
   });
 }
-const code = (s: string) => s.replace(/\{\/\*[\s\S]*?\*\/\}/g, "").replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
-const sources = ["app", "components"].flatMap((d) => { try { return files(join(ROOT, d)); } catch { return []; } }).map((f) => [f.slice(ROOT.length + 1), code(readFileSync(f, "utf8"))] as const);
+const code = (s: string) =>
+  s
+    .replace(/\{\/\*[\s\S]*?\*\/\}/g, "")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/^\s*\/\/.*$/gm, "");
+const sources = ["app", "components"]
+  .flatMap((d) => {
+    try {
+      return files(join(ROOT, d));
+    } catch {
+      return [];
+    }
+  })
+  .map((f) => [f.slice(ROOT.length + 1), code(readFileSync(f, "utf8"))] as const);
 const offenders = (re: RegExp) => sources.filter(([, s]) => re.test(s)).map(([f]) => f);
 const ROUND = /\b(?:h-([\d.]+) w-\1|size-[\w.[\]-]+|w-([\d.]+) h-\2|h-1\.5 w-1\.5)\b/;
 
@@ -30,9 +42,17 @@ describe("Cahier: no template tell in this app's own sources", () => {
     expect(offenders(/backdrop-blur|backdrop-filter|backdropFilter/)).toEqual([]);
   });
   it("no pill on a control or a label, no round card in the stylesheets", () => {
-    const pills = sources.flatMap(([f, s]) => (s.match(/"[^"\n]*rounded-full[^"\n]*"/g) ?? []).filter((c) => !ROUND.test(c)).map((c) => `${f}: ${c}`));
+    const pills = sources.flatMap(([f, s]) =>
+      (s.match(/"[^"\n]*rounded-full[^"\n]*"/g) ?? []).filter((c) => !ROUND.test(c)).map((c) => `${f}: ${c}`),
+    );
     expect(pills).toEqual([]);
-    const corners = sources.filter(([f]) => f.endsWith(".css")).flatMap(([f, s]) => [...s.matchAll(/border-radius:\s*(\d+)px/g)].filter((m) => Number(m[1]) >= 10 && Number(m[1]) < 999).map((m) => `${f}: ${m[1]}px`));
+    const corners = sources
+      .filter(([f]) => f.endsWith(".css"))
+      .flatMap(([f, s]) =>
+        [...s.matchAll(/border-radius:\s*(\d+)px/g)]
+          .filter((m) => Number(m[1]) >= 10 && Number(m[1]) < 999)
+          .map((m) => `${f}: ${m[1]}px`),
+      );
     expect(corners).toEqual([]);
   });
 });

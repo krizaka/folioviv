@@ -20,16 +20,40 @@ vi.mock("next/link", () => ({
 }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }), usePathname: () => "/en" }));
 
-const wordsOf = (c: typeof en): BarWords => ({ signIn: c.chrome.signIn, tryIt: c.chrome.tryIt, openApp: c.chrome.openApp, account: c.chrome.account, settings: c.chrome.settings, subscription: c.chrome.subscription, language: c.chrome.languageLabel, theme: c.chrome.themeToggle, signOut: c.chrome.signOut });
-const render = (me: Parameters<typeof BarActionsView>[0]["me"], locale: "en" | "fr" = "en", placement: "bar" | "panel" = "bar") =>
-  renderToStaticMarkup(<BarActionsView me={me} locale={locale} words={wordsOf(locale === "en" ? en : (fr as typeof en))} placement={placement} onSignOut={() => undefined} />);
+const wordsOf = (c: typeof en): BarWords => ({
+  signIn: c.chrome.signIn,
+  tryIt: c.chrome.tryIt,
+  openApp: c.chrome.openApp,
+  account: c.chrome.account,
+  settings: c.chrome.settings,
+  subscription: c.chrome.subscription,
+  language: c.chrome.languageLabel,
+  theme: c.chrome.themeToggle,
+  signOut: c.chrome.signOut,
+});
+const render = (
+  me: Parameters<typeof BarActionsView>[0]["me"],
+  locale: "en" | "fr" = "en",
+  placement: "bar" | "panel" = "bar",
+) =>
+  renderToStaticMarkup(
+    <BarActionsView
+      me={me}
+      locale={locale}
+      words={wordsOf(locale === "en" ? en : (fr as typeof en))}
+      placement={placement}
+      onSignOut={() => undefined}
+    />,
+  );
 const text = (html: string) => html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ");
 
 describe("the public bar knows who is there (krizaka/folioviv#255)", () => {
   it("the signed-out actions carry data-signed-out-only, so html[data-session] hides them from the first paint (krizaka-ui#827)", () => {
     for (const placement of ["bar", "panel"] as const) {
       const html = render({ signedIn: false, signupOpen: true }, "en", placement);
-      expect(html).toMatch(/<a[^>]*data-signed-out-only[^>]*href="\/en\/sign-in"|<a[^>]*href="\/en\/sign-in"[^>]*data-signed-out-only/);
+      expect(html).toMatch(
+        /<a[^>]*data-signed-out-only[^>]*href="\/en\/sign-in"|<a[^>]*href="\/en\/sign-in"[^>]*data-signed-out-only/,
+      );
     }
   });
   it("signed out, sign-up closed: « Sign in » is the action, no sales call", () => {
@@ -47,19 +71,31 @@ describe("the public bar knows who is there (krizaka/folioviv#255)", () => {
   });
 
   it("signed in: the avatar menu is the one entry (no second « Open the app »), never « Sign in »", () => {
-    const html = render({ signedIn: true, signupOpen: false, account: { name: "Camille", email: "camille@example.com", avatarSeed: null } });
+    const html = render({
+      signedIn: true,
+      signupOpen: false,
+      account: { name: "Camille", email: "camille@example.com", avatarSeed: null },
+    });
     expect(html).toContain('aria-label="Account"');
     expect(text(html)).not.toContain("Open the app");
     expect(text(html)).not.toContain("Sign in");
   });
 
   it("signed in: the bar never prints an e-mail", () => {
-    const html = render({ signedIn: true, signupOpen: false, account: { name: "Camille", email: "camille@example.com", avatarSeed: null } });
+    const html = render({
+      signedIn: true,
+      signupOpen: false,
+      account: { name: "Camille", email: "camille@example.com", avatarSeed: null },
+    });
     expect(html).not.toContain("camille@example.com");
   });
 
   it("the avatar menu is in the bar at every width (never inside the phone's panel), « Open the app » also in the panel", () => {
-    const me = { signedIn: true, signupOpen: false, account: { name: "Camille", email: "camille@example.com", avatarSeed: null } };
+    const me = {
+      signedIn: true,
+      signupOpen: false,
+      account: { name: "Camille", email: "camille@example.com", avatarSeed: null },
+    };
     const bar = render(me, "en", "bar");
     expect(bar).toContain('aria-label="Account"');
     expect(bar).not.toContain("camille@example.com");
@@ -72,7 +108,11 @@ describe("the public bar knows who is there (krizaka/folioviv#255)", () => {
   });
 
   it("speaks French from the catalogue, in the phone's panel too", () => {
-    const html = render({ signedIn: true, signupOpen: false, account: { name: null, email: "c@example.com", avatarSeed: null } }, "fr", "panel");
+    const html = render(
+      { signedIn: true, signupOpen: false, account: { name: null, email: "c@example.com", avatarSeed: null } },
+      "fr",
+      "panel",
+    );
     expect(text(html)).toContain("Ouvrir l&#x27;app");
     expect(html).toContain('href="/fr/app"');
     expect(text(render({ signedIn: false, signupOpen: false }, "fr"))).toContain("Se connecter");
@@ -85,7 +125,9 @@ describe("the public bar knows who is there (krizaka/folioviv#255)", () => {
 
   it("after a sign-out the bar is the signed-out one AND the page's server components render again, so the hero follows the session (#300 review)", () => {
     const calls: string[] = [];
-    const queryClient = { setQueryData: vi.fn((_key: unknown, value: unknown): void => void calls.push(`data:${JSON.stringify(value)}`)) };
+    const queryClient = {
+      setQueryData: vi.fn((_key: unknown, value: unknown): void => void calls.push(`data:${JSON.stringify(value)}`)),
+    };
     const router = { refresh: vi.fn(() => calls.push("refresh")) };
     settleSignOut(queryClient as unknown as Parameters<typeof settleSignOut>[0], router, true);
     expect(queryClient.setQueryData).toHaveBeenCalledWith(ME_KEY, { signedIn: false, signupOpen: true });
@@ -113,7 +155,13 @@ describe("the bar's first render matches the session (krizaka-ui#800)", () => {
   });
 
   it("the session is known and signed in: the very first render is the avatar menu", () => {
-    const html = island((c) => c.setQueryData(ME_KEY, { signedIn: true, signupOpen: false, account: { name: "Camille", email: "camille@example.com", avatarSeed: null } }));
+    const html = island((c) =>
+      c.setQueryData(ME_KEY, {
+        signedIn: true,
+        signupOpen: false,
+        account: { name: "Camille", email: "camille@example.com", avatarSeed: null },
+      }),
+    );
     expect(html).toContain('aria-label="Account"');
     expect(text(html)).not.toContain("Sign in");
   });

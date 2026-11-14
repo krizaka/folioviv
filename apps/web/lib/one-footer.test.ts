@@ -40,7 +40,8 @@ describe("the pages render exactly one footer", () => {
     for (const f of withFooter) {
       const source = read(f);
       expect(source.match(/<SiteFooter\b/g), f).toHaveLength(1);
-      if (source.includes("</main>")) expect(source.lastIndexOf("</main>"), f).toBeLessThan(source.indexOf("<SiteFooter"));
+      if (source.includes("</main>"))
+        expect(source.lastIndexOf("</main>"), f).toBeLessThan(source.indexOf("<SiteFooter"));
     }
     expect(withFooter.filter((f) => /\/\((app|admin)\)\//.test(f))).toEqual([]);
   });

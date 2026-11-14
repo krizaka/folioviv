@@ -4,10 +4,7 @@
     "from": "app/api/shop-flow.integration.test.ts",
     "to": "../../node_modules/.pnpm/date-fns@4.4.0/node_modules/date-fns/index.cjs",
     "unresolvedTo": "date-fns",
-    "dependencyTypes": [
-      "npm",
-      "import"
-    ],
+    "dependencyTypes": ["npm", "import"],
     "rule": {
       "severity": "error",
       "name": "krizaka-first-dates"
@@ -18,10 +15,7 @@
     "from": "app/api/shops/[slug]/events/route.ts",
     "to": "../../node_modules/.pnpm/date-fns@4.4.0/node_modules/date-fns/index.cjs",
     "unresolvedTo": "date-fns",
-    "dependencyTypes": [
-      "npm",
-      "import"
-    ],
+    "dependencyTypes": ["npm", "import"],
     "rule": {
       "severity": "error",
       "name": "krizaka-first-dates"
@@ -32,10 +26,7 @@
     "from": "components/app/TodayDay.tsx",
     "to": "../../node_modules/.pnpm/date-fns@4.4.0/node_modules/date-fns/index.cjs",
     "unresolvedTo": "date-fns",
-    "dependencyTypes": [
-      "npm",
-      "import"
-    ],
+    "dependencyTypes": ["npm", "import"],
     "rule": {
       "severity": "error",
       "name": "krizaka-first-dates"
@@ -46,10 +37,7 @@
     "from": "lib/brief.integration.test.ts",
     "to": "../../node_modules/.pnpm/date-fns@4.4.0/node_modules/date-fns/index.cjs",
     "unresolvedTo": "date-fns",
-    "dependencyTypes": [
-      "npm",
-      "import"
-    ],
+    "dependencyTypes": ["npm", "import"],
     "rule": {
       "severity": "error",
       "name": "krizaka-first-dates"
@@ -60,10 +48,7 @@
     "from": "lib/mail.ts",
     "to": "../../node_modules/.pnpm/date-fns@4.4.0/node_modules/date-fns/index.cjs",
     "unresolvedTo": "date-fns",
-    "dependencyTypes": [
-      "npm",
-      "import"
-    ],
+    "dependencyTypes": ["npm", "import"],
     "rule": {
       "severity": "error",
       "name": "krizaka-first-dates"
@@ -74,14 +59,7 @@
     "from": "components/app/ShopPageSections.tsx",
     "to": "components/app/ShopSetup.tsx",
     "unresolvedTo": "@/components/app/ShopSetup",
-    "dependencyTypes": [
-      "aliased",
-      "aliased-tsconfig",
-      "aliased-tsconfig-base-url",
-      "local",
-      "type-only",
-      "import"
-    ],
+    "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-base-url", "local", "type-only", "import"],
     "rule": {
       "severity": "error",
       "name": "no-circular"
@@ -89,24 +67,11 @@
     "cycle": [
       {
         "name": "components/app/ShopSetup.tsx",
-        "dependencyTypes": [
-          "aliased",
-          "aliased-tsconfig",
-          "aliased-tsconfig-base-url",
-          "local",
-          "type-only",
-          "import"
-        ]
+        "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-base-url", "local", "type-only", "import"]
       },
       {
         "name": "components/app/ShopPageSections.tsx",
-        "dependencyTypes": [
-          "aliased",
-          "aliased-tsconfig",
-          "aliased-tsconfig-base-url",
-          "local",
-          "import"
-        ]
+        "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-base-url", "local", "import"]
       }
     ]
   }

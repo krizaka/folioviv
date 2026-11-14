@@ -46,12 +46,28 @@ export const PUBLIC_PAGES = [
 ];
 
 /** The owner's space, relative to `/app/<shop>` (`/app` itself leads to the shop's day and says which shop). */
-export const OWNER_PAGES = ["/today", "/clients", "/invoices", "/invoices/new", "/books", "/team", "/shop", "/shop/languages"];
+export const OWNER_PAGES = [
+  "/today",
+  "/clients",
+  "/invoices",
+  "/invoices/new",
+  "/books",
+  "/team",
+  "/shop",
+  "/shop/languages",
+];
 /** The account's own pages. */
 export const ACCOUNT_PAGES = ["/app/profile", "/app/profile/security"];
 
 /** The first record a list links (`<list>/<id>`), never its creation page (`<list>/new`) nor another list: the detail page to crawl. */
-export const firstRecord = (hrefs, listPath) => hrefs.find((href) => typeof href === "string" && href.startsWith(`${listPath}/`) && !/\/new(\?.*)?$/.test(href) && !href.slice(listPath.length + 1).includes("/")) ?? null;
+export const firstRecord = (hrefs, listPath) =>
+  hrefs.find(
+    (href) =>
+      typeof href === "string" &&
+      href.startsWith(`${listPath}/`) &&
+      !/\/new(\?.*)?$/.test(href) &&
+      !href.slice(listPath.length + 1).includes("/"),
+  ) ?? null;
 
 /** The pages a list's first record opens: the record, and for an invoice its correction screen (« Modifier », #207). */
 export const detailPagesFor = (list, href) => (list.endsWith("/invoices") ? [href, `${href}/correct`] : [href]);
@@ -73,18 +89,23 @@ export const primaryProblem = (path, count) => {
  * page's own boxes, so their layout shift (CLS, without input) stays under 0.01.
  */
 const STEADY = /\/app\/[^/]+\/(today|clients|invoices)(\?.*)?$/;
-export const shiftProblem = (path, cls) => (STEADY.test(path) && cls >= 0.01 ? `layout shift ${cls.toFixed(3)} (under 0.01 expected)` : null);
+export const shiftProblem = (path, cls) =>
+  STEADY.test(path) && cls >= 0.01 ? `layout shift ${cls.toFixed(3)} (under 0.01 expected)` : null;
 
 /** What every page owes besides one rendering: exactly one `h1` (the page's, never the frame's), one primary in view at most (a form may draw its submit once per width: the aside, the sticky action), no horizontal overflow. */
-const audit = (page) => page.evaluate(async () => ({
-  cls: await new Promise((resolve) => {
-    let total = 0;
-    new PerformanceObserver((list) => {
-      for (const e of list.getEntries()) if (!e.hadRecentInput) total += e.value;
-    }).observe({ type: "layout-shift", buffered: true });
-    setTimeout(() => resolve(total), 50);
-  }),
-  h1: document.querySelectorAll("h1").length, primary: [...document.querySelectorAll("[data-primary]")].filter((e) => e.checkVisibility()).length, overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth }));
+const audit = (page) =>
+  page.evaluate(async () => ({
+    cls: await new Promise((resolve) => {
+      let total = 0;
+      new PerformanceObserver((list) => {
+        for (const e of list.getEntries()) if (!e.hadRecentInput) total += e.value;
+      }).observe({ type: "layout-shift", buffered: true });
+      setTimeout(() => resolve(total), 50);
+    }),
+    h1: document.querySelectorAll("h1").length,
+    primary: [...document.querySelectorAll("[data-primary]")].filter((e) => e.checkVisibility()).length,
+    overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+  }));
 const judge = (report, { cls, h1, primary, overflow }, path) => {
   if (h1 !== 1) report("h1", `${h1} on the page (one expected)`);
   const shift = shiftProblem(path, cls);
@@ -95,7 +116,10 @@ const judge = (report, { cls, h1, primary, overflow }, path) => {
 };
 
 /** What React says when the server and the browser disagree (the minified codes in production, the sentences in development). */
-export const isHydrationError = (text) => /Minified React error #(418|419|420|421|422|423|424|425)\b|Hydration failed|hydrated but some attributes|did not match|Text content does not match|There was an error while hydrating/i.test(text);
+export const isHydrationError = (text) =>
+  /Minified React error #(418|419|420|421|422|423|424|425)\b|Hydration failed|hydrated but some attributes|did not match|Text content does not match|There was an error while hydrating/i.test(
+    text,
+  );
 
 const arg = (name, fallback) => {
   const i = process.argv.indexOf(`--${name}`);
@@ -129,8 +153,15 @@ async function crawl(browser, { base, paths, theme, account, problems, visited, 
     seen.add(key);
     problems.push(`${current}: ${kind}: ${text.replace(/\s+/g, " ").slice(0, 400)}`);
   };
-  page.on("console", (m) => m.type() === "error" && report(isHydrationError(m.text()) ? "hydration" : "console error", `${m.text()} ${m.location().url ?? ""}`));
-  page.on("pageerror", (e) => report(isHydrationError(String(e.message)) ? "hydration" : "uncaught", String(e.message)));
+  page.on(
+    "console",
+    (m) =>
+      m.type() === "error" &&
+      report(isHydrationError(m.text()) ? "hydration" : "console error", `${m.text()} ${m.location().url ?? ""}`),
+  );
+  page.on("pageerror", (e) =>
+    report(isHydrationError(String(e.message)) ? "hydration" : "uncaught", String(e.message)),
+  );
   const links = {};
   for (const viewport of VIEWPORTS) {
     await page.setViewportSize(viewport);
@@ -147,7 +178,9 @@ async function crawl(browser, { base, paths, theme, account, problems, visited, 
       if (expected404 ? status !== 404 : status >= 400) report("HTTP", String(status));
       // The first record of a list, so the detail pages are crawled too (a client's file, an invoice).
       if (account && /\/(clients|invoices)$/.test(path)) {
-        const hrefs = await page.locator("main a[href]").evaluateAll((anchors) => anchors.map((a) => a.getAttribute("href")));
+        const hrefs = await page
+          .locator("main a[href]")
+          .evaluateAll((anchors) => anchors.map((a) => a.getAttribute("href")));
         const href = firstRecord(hrefs, path);
         if (href) links[path] = href;
       }
@@ -182,10 +215,23 @@ export async function check({ base, owner, client, visitor = BROWSER }) {
         const root = new URL(page.url()).pathname.replace(/\/today.*$/, "");
         await context.close();
         if (!/\/fr\/app\/[^/]+$/.test(root)) throw new Error(`the owner's /app did not lead to a shop's day (${root})`);
-        const paths = [...OWNER_PAGES.map((p) => `${root}${p}`), root.replace("/fr/", "/en/") + "/today", ...ACCOUNT_PAGES.map((p) => `/fr${p}`)];
+        const paths = [
+          ...OWNER_PAGES.map((p) => `${root}${p}`),
+          root.replace("/fr/", "/en/") + "/today",
+          ...ACCOUNT_PAGES.map((p) => `/fr${p}`),
+        ];
         await crawl(browser, { base, paths, theme, account: { ...owner, role: "owner" }, problems, visited, visitor });
       }
-      if (client) await crawl(browser, { base, paths: ["/fr/app", "/fr/app/profile", "/fr/s/pattes-saint-henri"], theme, account: { ...client, role: "client" }, problems, visited, visitor });
+      if (client)
+        await crawl(browser, {
+          base,
+          paths: ["/fr/app", "/fr/app/profile", "/fr/s/pattes-saint-henri"],
+          theme,
+          account: { ...client, role: "client" },
+          problems,
+          visited,
+          visitor,
+        });
     }
   } finally {
     await browser.close();
@@ -193,16 +239,22 @@ export async function check({ base, owner, client, visitor = BROWSER }) {
   return { problems, visited };
 }
 
-const account = (prefix) => (process.env[`${prefix}_EMAIL`] && process.env[`${prefix}_PASSWORD`] ? { email: process.env[`${prefix}_EMAIL`], password: process.env[`${prefix}_PASSWORD`] } : undefined);
+const account = (prefix) =>
+  process.env[`${prefix}_EMAIL`] && process.env[`${prefix}_PASSWORD`]
+    ? { email: process.env[`${prefix}_EMAIL`], password: process.env[`${prefix}_PASSWORD`] }
+    : undefined;
 
 if (process.argv[1] && import.meta.url.endsWith(process.argv[1].replace(/^.*\//, "/"))) {
   const base = arg("base", "http://localhost:3000").replace(/\/$/, "");
   const owner = account("HYDRATION_OWNER");
   const client = account("HYDRATION_CLIENT");
-  if (!owner) process.stdout.write("check-hydration: no HYDRATION_OWNER_* credentials — the signed-in pages are not crawled\n");
+  if (!owner)
+    process.stdout.write("check-hydration: no HYDRATION_OWNER_* credentials — the signed-in pages are not crawled\n");
   const visitor = { timezoneId: arg("timezone", BROWSER.timezoneId), locale: arg("locale", BROWSER.locale) };
   const { problems, visited } = await check({ base, owner, client, visitor });
-  process.stdout.write(`check-hydration: ${visited.length} page loads in ${visitor.timezoneId} (${visitor.locale}), ${THEMES.length} themes, ${VIEWPORTS.length} widths\n`);
+  process.stdout.write(
+    `check-hydration: ${visited.length} page loads in ${visitor.timezoneId} (${visitor.locale}), ${THEMES.length} themes, ${VIEWPORTS.length} widths\n`,
+  );
   const details = [...new Set(visited.filter((v) => v.from).map((v) => v.path.replace(/^.*\/app\/[^/]+/, "")))];
   if (details.length) process.stdout.write(`check-hydration: detail pages found ${details.join(", ")}\n`);
   if (problems.length) {

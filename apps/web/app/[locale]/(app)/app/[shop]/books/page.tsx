@@ -32,7 +32,10 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
  * « Vos livres »: the GST/QST return of a period, prepared from the shop's invoices and expenses, every figure with its
  * sources. It prepares; the merchant reviews and files it themselves with Revenu Québec — nothing is sent from here.
  */
-export default async function Books({ params, searchParams }: Readonly<{ params: Promise<{ locale: string; shop: string }>; searchParams: Promise<{ period?: string }> }>) {
+export default async function Books({
+  params,
+  searchParams,
+}: Readonly<{ params: Promise<{ locale: string; shop: string }>; searchParams: Promise<{ period?: string }> }>) {
   const { locale: rawLocale, shop: shopId } = await params;
   const locale = asLocale(rawLocale);
   const { shop } = await memberShop(shopId, "reports");
@@ -50,7 +53,13 @@ export default async function Books({ params, searchParams }: Readonly<{ params:
   ] as const;
   return (
     <div className="flex flex-col gap-5">
-      <PageHeader title={t.title} description={format(t.period, { from: formatLongDay(period.start, locale), to: formatLongDay(period.end, locale) })} />
+      <PageHeader
+        title={t.title}
+        description={format(t.period, {
+          from: formatLongDay(period.start, locale),
+          to: formatLongDay(period.end, locale),
+        })}
+      />
       <nav aria-label={t.periodNav} data-no-print className="flex flex-wrap gap-2">
         {periodChoices(today).map((p) => (
           <ChipLink key={p.id} asChild selected={p.id === period.id} current={p.id === period.id ? "page" : undefined}>
@@ -66,18 +75,38 @@ export default async function Books({ params, searchParams }: Readonly<{ params:
       </StatGrid>
       <p className="text-sm text-fg-secondary">{t.remitHint}</p>
       <section aria-labelledby="books-figures" className="flex flex-col gap-3">
-        <h2 id="books-figures" className="text-lg font-semibold">{t.figuresTitle}</h2>
+        <h2 id="books-figures" className="text-lg font-semibold">
+          {t.figuresTitle}
+        </h2>
         <p className="text-sm text-fg-muted">{getDictionary(locale).console.figures.never}</p>
-        <FiguresPanel ids={["gstCollected", "qstCollected", "gstToRemit", "qstToRemit"]} figures={figures} locale={locale} routes={routes} timeZone={shop.timezone} now={requestNow().toISOString()} />
+        <FiguresPanel
+          ids={["gstCollected", "qstCollected", "gstToRemit", "qstToRemit"]}
+          figures={figures}
+          locale={locale}
+          routes={routes}
+          timeZone={shop.timezone}
+          now={requestNow().toISOString()}
+        />
       </section>
       {booksIsEmpty(view) ? (
-        <EmptyState icon={<Mascot bird="beaver" mood="empty" size={120} />} title={t.empty.title} description={t.empty.body} action={<ButtonLink href={shopRoutes(locale, shop.id).invoices} variant="secondary" size="sm">{t.empty.action}</ButtonLink>} />
+        <EmptyState
+          icon={<Mascot bird="beaver" mood="empty" size={120} />}
+          title={t.empty.title}
+          description={t.empty.body}
+          action={
+            <ButtonLink href={shopRoutes(locale, shop.id).invoices} variant="secondary" size="sm">
+              {t.empty.action}
+            </ButtonLink>
+          }
+        />
       ) : (
         <BooksLines lines={view.lines} />
       )}
       <p className="text-sm text-fg-muted">{t.footnote}</p>
       <div data-no-print className="flex flex-col gap-1">
-        <div><PrintInvoiceButton label={getDictionary(locale).console.figures.print} /></div>
+        <div>
+          <PrintInvoiceButton label={getDictionary(locale).console.figures.print} />
+        </div>
         <p className="text-sm text-fg-muted">{getDictionary(locale).console.figures.printHint}</p>
       </div>
       <LexiconSection locale={locale} />

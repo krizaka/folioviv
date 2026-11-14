@@ -27,21 +27,37 @@ const locale = flag("locale", "fr");
 const slug = flag("slug", "cedre-ciseaux");
 const persona = process.env.E2E_EMAIL;
 const secret = process.env.E2E_PASSWORD;
-if (!persona || !secret) throw new Error("E2E_EMAIL and E2E_PASSWORD are required (the seeded persona, never a real account)");
+if (!persona || !secret)
+  throw new Error("E2E_EMAIL and E2E_PASSWORD are required (the seeded persona, never a real account)");
 mkdirSync(outDir, { recursive: true });
 
 const VIEWPORT = { width: 1280, height: 800 };
 const W =
   locale === "fr"
-    ? { email: "Courriel", field: "Mot de passe", signIn: "Se connecter", sections: "Sections", style: "Allure", looks: "Voir autrement" }
-    : { email: "E-mail", field: "Password", signIn: "Sign in", sections: "Sections", style: "Style", looks: "See it another way" };
+    ? {
+        email: "Courriel",
+        field: "Mot de passe",
+        signIn: "Se connecter",
+        sections: "Sections",
+        style: "Allure",
+        looks: "Voir autrement",
+      }
+    : {
+        email: "E-mail",
+        field: "Password",
+        signIn: "Sign in",
+        sections: "Sections",
+        style: "Style",
+        looks: "See it another way",
+      };
 const browser = await chromium.launch();
 
 /** Hides any element that shows an e-mail address: nothing personal on screen. */
 const hideEmail = () => {
   const hide = () => {
     for (const el of document.querySelectorAll("body *")) {
-      if (el.childElementCount === 0 && /@[a-z0-9.-]+\.[a-z]{2,}/i.test(el.textContent ?? "")) el.style.visibility = "hidden";
+      if (el.childElementCount === 0 && /@[a-z0-9.-]+\.[a-z]{2,}/i.test(el.textContent ?? ""))
+        el.style.visibility = "hidden";
     }
   };
   document.addEventListener("DOMContentLoaded", () => {
@@ -67,7 +83,13 @@ async function session() {
 
 /** One journey = one context = one video; the file is renamed <id>.webm in the out directory. */
 async function record(id, act, storageState) {
-  const ctx = await browser.newContext({ viewport: VIEWPORT, colorScheme: "dark", locale, storageState, recordVideo: { dir: outDir, size: VIEWPORT } });
+  const ctx = await browser.newContext({
+    viewport: VIEWPORT,
+    colorScheme: "dark",
+    locale,
+    storageState,
+    recordVideo: { dir: outDir, size: VIEWPORT },
+  });
   await ctx.addInitScript(hideEmail);
   const page = await ctx.newPage();
   await act(page);
@@ -111,7 +133,9 @@ await record(
     await page.keyboard.press("Alt+ArrowDown");
     await page.waitForTimeout(1800);
     const picker = page.getByLabel(W.style);
-    const other = await picker.evaluate((el) => [...el.options].map((o) => o.value).find((v) => v !== el.value)).catch(() => undefined);
+    const other = await picker
+      .evaluate((el) => [...el.options].map((o) => o.value).find((v) => v !== el.value))
+      .catch(() => undefined);
     if (other) await picker.selectOption(other);
     await page.waitForTimeout(2600);
   },

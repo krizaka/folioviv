@@ -11,13 +11,23 @@ vi.mock("@/lib/access", () => ({ requireAdmin: vi.fn() }));
 vi.mock("@/lib/audit", () => ({ audit: vi.fn() }));
 vi.mock("@/lib/price-catalogue", () => ({ appPrices: vi.fn() }));
 
-const post = (key: string, body: unknown) => POST(new Request(`http://localhost/api/admin/prices/${key}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }), { params: Promise.resolve({ key }) });
+const post = (key: string, body: unknown) =>
+  POST(
+    new Request(`http://localhost/api/admin/prices/${key}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+    { params: Promise.resolve({ key }) },
+  );
 
 describe("POST /api/admin/prices/[key]: the administrator schedules a change from a date (folioviv#371)", () => {
   let prices: ReturnType<typeof priceCatalogue>;
   beforeEach(() => {
     prices = priceCatalogue(PRICES, memoryPriceStore());
-    vi.mocked(requireAdmin).mockResolvedValue({ account: { id: "00000000-0000-0000-0000-000000000001", email: "admin@example.com" } } as never);
+    vi.mocked(requireAdmin).mockResolvedValue({
+      account: { id: "00000000-0000-0000-0000-000000000001", email: "admin@example.com" },
+    } as never);
     vi.mocked(appPrices).mockReturnValue(prices);
   });
   afterEach(() => vi.clearAllMocks());
@@ -28,7 +38,11 @@ describe("POST /api/admin/prices/[key]: the administrator schedules a change fro
     expect((await prices.entry(STARTER, new Date())).amountCents).toBe(4500);
     expect((await prices.entry(STARTER, new Date("2099-02-01"))).amountCents).toBe(5000);
     const [line] = await prices.history(STARTER);
-    expect(line).toMatchObject({ actorLabel: "admin@example.com", before: { amountCents: 4500 }, after: { amountCents: 5000 } });
+    expect(line).toMatchObject({
+      actorLabel: "admin@example.com",
+      before: { amountCents: 4500 },
+      after: { amountCents: 5000 },
+    });
   });
 
   it("refuses a date in the past, an unknown entry and an on-sale entry without a figure", async () => {

@@ -18,7 +18,11 @@ const MAX_ATTEMPTS = 6;
 const SEND_TIMEOUT_MS = 10_000;
 
 export const webhooks = (sealer?: { seal: (plain: string) => string; open: (sealed: string) => string }) =>
-  createWebhooks({ query: async (sql, params) => query(sql, params as unknown[]) as never, rules: { events: WEBHOOK_EVENTS, maxAttempts: MAX_ATTEMPTS, backoffSeconds: BACKOFF_SECONDS }, secrets: sealer });
+  createWebhooks({
+    query: async (sql, params) => query(sql, params as unknown[]) as never,
+    rules: { events: WEBHOOK_EVENTS, maxAttempts: MAX_ATTEMPTS, backoffSeconds: BACKOFF_SECONDS },
+    secrets: sealer,
+  });
 
 /** The HTTP call of a delivery: no redirect followed, a short timeout, and the address the name resolves to must be public too (no DNS trick to reach the inside). */
 export const sendWebhook: Send = async ({ url, body, headers }) => {
@@ -27,26 +31,38 @@ export const sendWebhook: Send = async ({ url, body, headers }) => {
     const authority = address.includes(":") ? `[${address}]` : address;
     if (endpointUrlProblem(`https://${authority}/`)) throw new Error("the address resolves to a private network");
   }
-  const res = await fetch(url, { method: "POST", body, headers, redirect: "manual", signal: AbortSignal.timeout(SEND_TIMEOUT_MS) });
+  const res = await fetch(url, {
+    method: "POST",
+    body,
+    headers,
+    redirect: "manual",
+    signal: AbortSignal.timeout(SEND_TIMEOUT_MS),
+  });
   return { status: res.status };
 };
 
 /** Quota and switch for an owner: the global switch is on, and the endpoints they hold are below the limit. */
 export async function webhookQuota(ownerId: string): Promise<number> {
   const s = appSettings();
-  if (!(await s.get("features.webhooks", { userId: ownerId }))) throw refuse(403, "FEATURE_OFF", "This feature is switched off", { feature: "webhooks" });
+  if (!(await s.get("features.webhooks", { userId: ownerId })))
+    throw refuse(403, "FEATURE_OFF", "This feature is switched off", { feature: "webhooks" });
   return s.get("limits.webhookEndpoints", { userId: ownerId });
 }
 
 /** What the API answers for a refusal of the package. */
 export const webhookRefusal = (error: unknown) => {
   if (!(error instanceof WebhookError)) return null;
-  const status = ({ [WEBHOOK_CODE.notFound]: 404, [WEBHOOK_CODE.limit]: 409 } as Record<string, number>)[error.code] ?? 400;
+  const status =
+    ({ [WEBHOOK_CODE.notFound]: 404, [WEBHOOK_CODE.limit]: 409 } as Record<string, number>)[error.code] ?? 400;
   return refuse(status, error.code, error.message);
 };
 
 /** Tells the owner's systems an event happened — never lets a failure here undo what already happened. */
-export async function emitWebhook(ownerId: string | null, event: { id: string; type: (typeof WEBHOOK_EVENTS)[number]; payload: unknown }, now: Date): Promise<void> {
+export async function emitWebhook(
+  ownerId: string | null,
+  event: { id: string; type: (typeof WEBHOOK_EVENTS)[number]; payload: unknown },
+  now: Date,
+): Promise<void> {
   if (!ownerId) return;
   try {
     if (!(await appSettings().get("features.webhooks", { userId: ownerId }))) return;

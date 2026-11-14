@@ -16,7 +16,12 @@ type Values = Record<OwnerTunable, number>;
 const bounded = (key: OwnerTunable) => z.coerce.number().int().min(OWNER_BOUNDS[key].min).max(OWNER_BOUNDS[key].max);
 
 const rulesForm = createKrizakaForm({
-  schema: z.object(Object.fromEntries(OWNER_TUNABLE.map((key) => [key, bounded(key)])) as Record<OwnerTunable, ReturnType<typeof bounded>>),
+  schema: z.object(
+    Object.fromEntries(OWNER_TUNABLE.map((key) => [key, bounded(key)])) as Record<
+      OwnerTunable,
+      ReturnType<typeof bounded>
+    >,
+  ),
   defaultValues: Object.fromEntries(OWNER_TUNABLE.map((key) => [key, OWNER_BOUNDS[key].min])) as Values,
 });
 
@@ -24,13 +29,19 @@ const rulesForm = createKrizakaForm({
 const shown = (usual: Values, overrides: OwnerOverrides): Values => ({ ...usual, ...overrides });
 
 /** Only what differs from the usual values is kept: « back to the usual » is an empty set, and a later change of the usual values still reaches the shop. */
-const changed = (usual: Values, values: Values): OwnerOverrides => Object.fromEntries(OWNER_TUNABLE.filter((key) => values[key] !== usual[key]).map((key) => [key, values[key]]));
+const changed = (usual: Values, values: Values): OwnerOverrides =>
+  Object.fromEntries(OWNER_TUNABLE.filter((key) => values[key] !== usual[key]).map((key) => [key, values[key]]));
 
 /**
  * The thresholds a figure is judged against, for this shop (#260): the usual values are the administrator's, the owner moves them inside the bounds.
  * Only the moment a figure asks for a look or for action changes; the amounts and the formulas never do.
  */
-export function FigureRules({ tunable, usual, overrides, bounds }: Readonly<{ tunable: boolean; usual: Values; overrides: OwnerOverrides; bounds: typeof OWNER_BOUNDS }>) {
+export function FigureRules({
+  tunable,
+  usual,
+  overrides,
+  bounds,
+}: Readonly<{ tunable: boolean; usual: Values; overrides: OwnerOverrides; bounds: typeof OWNER_BOUNDS }>) {
   const { say, locale } = useSay();
   const call = useCall();
   const [saved, setSaved] = useState(false);
@@ -38,7 +49,10 @@ export function FigureRules({ tunable, usual, overrides, bounds }: Readonly<{ tu
   const form = rulesForm.useForm({
     i18n: { t: (key, vars) => say(key, vars as Record<string, string | number> | undefined), locale },
     onSubmit: async (values) => {
-      const result = await call.run("/api/walker/figures/rules", { method: "PUT", json: { overrides: changed(usual, values as Values) } });
+      const result = await call.run("/api/walker/figures/rules", {
+        method: "PUT",
+        json: { overrides: changed(usual, values as Values) },
+      });
       setSaved(result !== null);
     },
   });
@@ -68,14 +82,22 @@ export function FigureRules({ tunable, usual, overrides, bounds }: Readonly<{ tu
         {OWNER_TUNABLE.map((key) => (
           <div key={key} className="flex flex-col gap-1">
             <form.TextField name={key} label={t(`fields.${key}`)} inputMode="numeric" />
-            <p className="m-0 text-sm text-fg-muted">{t(key === "taxPeriodSoonDays" ? "hintDays" : "hint", { usual: usual[key], min: bounds[key].min, max: bounds[key].max })}</p>
+            <p className="m-0 text-sm text-fg-muted">
+              {t(key === "taxPeriodSoonDays" ? "hintDays" : "hint", {
+                usual: usual[key],
+                min: bounds[key].min,
+                max: bounds[key].max,
+              })}
+            </p>
           </div>
         ))}
         <p className="m-0 text-sm text-fg-muted">{t("evenness")}</p>
         {call.problem ? <Alert tone="danger">{call.problem}</Alert> : null}
         {saved ? <Alert tone="success">{t("saved")}</Alert> : null}
         <div className="flex flex-wrap gap-2">
-          <form.Submit size="md" disabled={call.pending}>{t("save")}</form.Submit>
+          <form.Submit size="md" disabled={call.pending}>
+            {t("save")}
+          </form.Submit>
           <Button
             type="button"
             variant="ghost"

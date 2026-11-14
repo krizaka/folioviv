@@ -16,7 +16,9 @@ const overdueOnHome = async (page, home) => {
   return { link, count: Number(OVERDUE_LINK.exec((await link.first().innerText()).replace(/\s+/g, " "))[1]) };
 };
 
-test("an invoice past its terms is overdue on the home and in the list, and leaves both once paid", async ({ page }) => {
+test("an invoice past its terms is overdue on the home and in the list, and leaves both once paid", async ({
+  page,
+}) => {
   await page.goto("/en/sign-in");
   await page.locator("input[type=email]").first().fill(EMAIL);
   await page.locator("input[type=password]").first().fill(CAST_WORD);
@@ -25,7 +27,10 @@ test("an invoice past its terms is overdue on the home and in the list, and leav
   const home = page.url();
 
   const before = await overdueOnHome(page, home);
-  expect(before.count, "the home counts the invoices past their terms (no more « On track » for July's)").toBeGreaterThan(0);
+  expect(
+    before.count,
+    "the home counts the invoices past their terms (no more « On track » for July's)",
+  ).toBeGreaterThan(0);
 
   await before.link.first().click();
   await page.waitForURL(/\/invoices/);
@@ -42,7 +47,10 @@ test("an invoice past its terms is overdue on the home and in the list, and leav
   await expect(pay).toBeVisible();
   await pay.click();
 
-  await expect(page.getByRole("row").filter({ hasText: number }).filter({ hasText: "Overdue" }), "the paid invoice leaves « Overdue »").toHaveCount(0, { timeout: 30_000 });
+  await expect(
+    page.getByRole("row").filter({ hasText: number }).filter({ hasText: "Overdue" }),
+    "the paid invoice leaves « Overdue »",
+  ).toHaveCount(0, { timeout: 30_000 });
   const after = await overdueOnHome(page, home);
   expect(after.count, "and the home counts one less").toBe(before.count - 1);
 });

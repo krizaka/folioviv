@@ -17,7 +17,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { z } from "zod";
 
-import { RequestsCard,type RequestsData } from "@/components/app/RequestsCard";
+import { RequestsCard, type RequestsData } from "@/components/app/RequestsCard";
 import { useCall } from "@/components/app/useCall";
 import { formatDate as formatDay, formatMoney, INTL_LOCALE } from "@/lib/format";
 import { useSay, useVocabulary, VocabularyProvider } from "@/lib/i18n-client";
@@ -38,7 +38,16 @@ export interface ClientFileView {
     report: { id: string; note: string; hasPhoto: boolean; durationMinutes: number } | null;
   }[];
   /** The invoices at this shop, each with what the ledger says of it (its state is derived: `invoiceState`). */
-  invoices: { id: string; number: string; issuedOn: string; dueOn: string | null; totalCents: number; paidCents: number; creditOf: string | null; superseded: boolean }[];
+  invoices: {
+    id: string;
+    number: string;
+    issuedOn: string;
+    dueOn: string | null;
+    totalCents: number;
+    paidCents: number;
+    creditOf: string | null;
+    superseded: boolean;
+  }[];
   /** The requests kept at this shop, and what to choose from (folioviv#210). */
   requests: RequestsData;
   /** `now` as an ISO string, taken by the server: which bookings are still ahead. */
@@ -67,7 +76,13 @@ export function ClientHome({ files }: Readonly<{ files: ClientFileView[] }>) {
           </Button>
         }
       />
-      {files.length === 0 ? <EmptyState icon={<Mascot bird="beaver" mood="empty" size={120} />} title={say("client.emptyTitle")} description={say("client.emptyLead")} /> : null}
+      {files.length === 0 ? (
+        <EmptyState
+          icon={<Mascot bird="beaver" mood="empty" size={120} />}
+          title={say("client.emptyTitle")}
+          description={say("client.emptyLead")}
+        />
+      ) : null}
       {files.map((f, at) => (
         <VocabularyProvider key={f.client.id} type={f.client.businessType}>
           <FileSection file={f} primary={at === primaryAt} />
@@ -78,21 +93,36 @@ export function ClientHome({ files }: Readonly<{ files: ClientFileView[] }>) {
   );
 }
 
-function FileSection({ file, primary }: Readonly<{ file: ClientFileView; /** Whether « Réserver chez … » is the screen's primary action (one per screen). */ primary: boolean }>) {
+function FileSection({
+  file,
+  primary,
+}: Readonly<{
+  file: ClientFileView;
+  /** Whether « Réserver chez … » is the screen's primary action (one per screen). */ primary: boolean;
+}>) {
   const { say, locale } = useSay();
   const { dependants } = useVocabulary();
-  const when = (iso: string) => formatDate(iso, { locale: INTL_LOCALE[locale], style: "long", timeStyle: "short", timeZone: file.timeZone });
-  const upcoming = file.bookings.filter((b) => b.status === "booked" && b.visitStatus === "booked" && b.startsAt >= file.now).sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+  const when = (iso: string) =>
+    formatDate(iso, { locale: INTL_LOCALE[locale], style: "long", timeStyle: "short", timeZone: file.timeZone });
+  const upcoming = file.bookings
+    .filter((b) => b.status === "booked" && b.visitStatus === "booked" && b.startsAt >= file.now)
+    .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
   // Three groups, never mixed: what is coming, what was cancelled, what happened.
-  const cancelled = file.bookings.filter((b) => b.status === "cancelled" || b.visitStatus === "cancelled").sort((a, b) => b.startsAt.localeCompare(a.startsAt));
-  const past = file.bookings.filter((b) => !upcoming.includes(b) && !cancelled.includes(b)).sort((a, b) => b.startsAt.localeCompare(a.startsAt));
+  const cancelled = file.bookings
+    .filter((b) => b.status === "cancelled" || b.visitStatus === "cancelled")
+    .sort((a, b) => b.startsAt.localeCompare(a.startsAt));
+  const past = file.bookings
+    .filter((b) => !upcoming.includes(b) && !cancelled.includes(b))
+    .sort((a, b) => b.startsAt.localeCompare(a.startsAt));
   return (
     <section className="flex flex-col gap-4" aria-label={file.client.shopName}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="min-w-0 break-words font-display text-xl font-bold text-fg">{file.client.shopName}</h2>
         {file.client.shopSlug ? (
           <Button asChild size="md" variant={primary ? "primary" : "secondary"} className="w-full sm:w-auto">
-            <Link href={`/${locale}/s/${file.client.shopSlug}`}>{say("client.bookAgain", { shop: file.client.shopName })}</Link>
+            <Link href={`/${locale}/s/${file.client.shopSlug}`}>
+              {say("client.bookAgain", { shop: file.client.shopName })}
+            </Link>
           </Button>
         ) : null}
       </div>
@@ -102,7 +132,8 @@ function FileSection({ file, primary }: Readonly<{ file: ClientFileView; /** Whe
       {file.invoices.length ? <InvoiceRows file={file} /> : null}
       {dependants && file.dogs.length ? (
         <p className="text-sm text-fg-secondary">
-          <strong className="text-fg">{say("client.dogsTitle")}</strong> · {file.dogs.map((d) => [d.name, d.breed].filter(Boolean).join(" · ")).join(" · ")}
+          <strong className="text-fg">{say("client.dogsTitle")}</strong> ·{" "}
+          {file.dogs.map((d) => [d.name, d.breed].filter(Boolean).join(" · ")).join(" · ")}
         </p>
       ) : null}
       <RequestsCard data={file.requests} />
@@ -110,7 +141,13 @@ function FileSection({ file, primary }: Readonly<{ file: ClientFileView; /** Whe
   );
 }
 
-const standing = (i: ClientFileView["invoices"][number]) => ({ totalCents: i.totalCents, paidCents: i.paidCents, dueOn: i.dueOn, isCredit: i.creditOf !== null, superseded: i.superseded });
+const standing = (i: ClientFileView["invoices"][number]) => ({
+  totalCents: i.totalCents,
+  paidCents: i.paidCents,
+  dueOn: i.dueOn,
+  isCredit: i.creditOf !== null,
+  superseded: i.superseded,
+});
 
 /** A shop's invoices as rows (D7): the number, the day it was issued, its state in the list's words and tone, its amount. */
 function InvoiceRows({ file }: Readonly<{ file: ClientFileView }>) {
@@ -168,7 +205,11 @@ function DataSection({ files }: Readonly<{ files: ClientFileView[] }>) {
           title: f.client.shopName,
           actions: (
             <Button asChild size="sm" variant="secondary">
-              <a href={`/api/me/export?clientId=${f.client.id}`} download aria-label={say("client.exportFor", { shop: f.client.shopName })}>
+              <a
+                href={`/api/me/export?clientId=${f.client.id}`}
+                download
+                aria-label={say("client.exportFor", { shop: f.client.shopName })}
+              >
                 {say("client.exportShort")}
               </a>
             </Button>
@@ -190,7 +231,19 @@ function DataSection({ files }: Readonly<{ files: ClientFileView[] }>) {
   );
 }
 
-function BookingList({ title, items, file, when, cancellable = false }: Readonly<{ title: string; items: ClientFileView["bookings"]; file: ClientFileView; when: (iso: string) => string; cancellable?: boolean }>) {
+function BookingList({
+  title,
+  items,
+  file,
+  when,
+  cancellable = false,
+}: Readonly<{
+  title: string;
+  items: ClientFileView["bookings"];
+  file: ClientFileView;
+  when: (iso: string) => string;
+  cancellable?: boolean;
+}>) {
   const { say, locale } = useSay();
   const call = useCall();
   if (items.length === 0) return null;
@@ -207,7 +260,9 @@ function BookingList({ title, items, file, when, cancellable = false }: Readonly
                   <p className="font-semibold text-fg">
                     {b.dependantName} · {when(b.startsAt)}
                   </p>
-                  <p className="text-sm text-fg-secondary">{b.zone ? say("client.line", { service: b.service[locale], zone: b.zone }) : b.service[locale]}</p>
+                  <p className="text-sm text-fg-secondary">
+                    {b.zone ? say("client.line", { service: b.service[locale], zone: b.zone }) : b.service[locale]}
+                  </p>
                 </div>
                 {b.status === "cancelled" ? <Badge tone="neutral">{say("client.cancelled")}</Badge> : null}
                 {cancellable ? (
@@ -222,17 +277,28 @@ function BookingList({ title, items, file, when, cancellable = false }: Readonly
                     confirmLabel={say("client.cancelYes")}
                     cancelLabel={say("client.keep")}
                     tone="danger"
-                    onConfirm={() => call.run(`/api/me/bookings/${b.bookingId}/cancel`, { json: { clientId: file.client.id } })}
+                    onConfirm={() =>
+                      call.run(`/api/me/bookings/${b.bookingId}/cancel`, { json: { clientId: file.client.id } })
+                    }
                   />
                 ) : null}
               </div>
               {b.report ? (
                 <div className="mt-3 flex flex-col gap-3 border-t border-border-default pt-3 sm:flex-row">
                   {b.report.hasPhoto ? (
-                    <Image className="h-40 w-full rounded-lg object-cover sm:w-56" src={`/api/me/reports/${b.report.id}/photo?clientId=${file.client.id}`} alt={say("report.photoAlt", { dog: b.dependantName })} width={448} height={320} unoptimized />
+                    <Image
+                      className="h-40 w-full rounded-lg object-cover sm:w-56"
+                      src={`/api/me/reports/${b.report.id}/photo?clientId=${file.client.id}`}
+                      alt={say("report.photoAlt", { dog: b.dependantName })}
+                      width={448}
+                      height={320}
+                      unoptimized
+                    />
                   ) : null}
                   <div>
-                    <p className="text-sm font-semibold text-fg">{say("client.report")} · {b.report.durationMinutes} min</p>
+                    <p className="text-sm font-semibold text-fg">
+                      {say("client.report")} · {b.report.durationMinutes} min
+                    </p>
                     <p className="text-fg">{b.report.note}</p>
                   </div>
                 </div>
@@ -245,7 +311,10 @@ function BookingList({ title, items, file, when, cancellable = false }: Readonly
   );
 }
 
-const eraseForm = createKrizakaForm({ schema: z.object({ confirmEmail: z.string().trim().min(1).email() }), defaultValues: { confirmEmail: "" } });
+const eraseForm = createKrizakaForm({
+  schema: z.object({ confirmEmail: z.string().trim().min(1).email() }),
+  defaultValues: { confirmEmail: "" },
+});
 
 function EraseFile({ file }: Readonly<{ file: ClientFileView }>) {
   const { say, locale } = useSay();
@@ -255,13 +324,22 @@ function EraseFile({ file }: Readonly<{ file: ClientFileView }>) {
   const form = eraseForm.useForm({
     i18n: { t: (key, vars) => say(key, vars as Record<string, string | number> | undefined), locale },
     onSubmit: async (v) => {
-      if ((await call.run("/api/me/erase", { json: { clientId: file.client.id, confirmEmail: v.confirmEmail } })) !== null) setErased(true);
+      if (
+        (await call.run("/api/me/erase", { json: { clientId: file.client.id, confirmEmail: v.confirmEmail } })) !== null
+      )
+        setErased(true);
     },
   });
   if (erased) return <Alert tone="success">{say("client.erased")}</Alert>;
   return (
     <div className="flex flex-col gap-3">
-      <Button size="md" variant="danger" className="h-auto min-h-11 w-full whitespace-normal sm:w-auto sm:self-start" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+      <Button
+        size="md"
+        variant="danger"
+        className="h-auto min-h-11 w-full whitespace-normal sm:w-auto sm:self-start"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+      >
         {say("client.erase", { shop: file.client.shopName })}
       </Button>
       {open ? (

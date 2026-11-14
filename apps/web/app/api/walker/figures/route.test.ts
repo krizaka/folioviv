@@ -9,12 +9,42 @@ import { GET } from "./route";
 
 vi.mock("@/lib/access", () => ({ requireShop: vi.fn() }));
 vi.mock("@/lib/db", () => ({ db: vi.fn(() => ({})) }));
-vi.mock("@/lib/figures", () => ({ loadFigures: vi.fn(async () => ({ figures: { invoiced: { id: "invoiced", value: 30_000, unit: "cents", rate: null, formula: [], lexicon: [], sources: [], period: null, computedAt: "2026-10-23T12:00:00.000Z", cadence: "onChange", staleAfterHours: 24, state: "info" } }, actions: [{ kind: "chase", urgency: "now", impactCents: 100, why: {}, target: { route: "invoices" }, evidence: [] }], period: { start: "2026-10-01", end: "2026-12-31" } })) }));
-vi.mock("@folioviv/db", async (original) => ({ ...(await original<typeof import("@folioviv/db")>()), shopDay: vi.fn() }));
+vi.mock("@/lib/figures", () => ({
+  loadFigures: vi.fn(async () => ({
+    figures: {
+      invoiced: {
+        id: "invoiced",
+        value: 30_000,
+        unit: "cents",
+        rate: null,
+        formula: [],
+        lexicon: [],
+        sources: [],
+        period: null,
+        computedAt: "2026-10-23T12:00:00.000Z",
+        cadence: "onChange",
+        staleAfterHours: 24,
+        state: "info",
+      },
+    },
+    actions: [
+      { kind: "chase", urgency: "now", impactCents: 100, why: {}, target: { route: "invoices" }, evidence: [] },
+    ],
+    period: { start: "2026-10-01", end: "2026-12-31" },
+  })),
+}));
+vi.mock("@folioviv/db", async (original) => ({
+  ...(await original<typeof import("@folioviv/db")>()),
+  shopDay: vi.fn(),
+}));
 
 describe("the figures for the apps (#260)", () => {
   beforeEach(() => {
-    vi.mocked(requireShop).mockResolvedValue({ shop: { id: "s1" }, role: "owner", session: { account: { id: "a1" } } } as never);
+    vi.mocked(requireShop).mockResolvedValue({
+      shop: { id: "s1" },
+      role: "owner",
+      session: { account: { id: "a1" } },
+    } as never);
     vi.mocked(shopDay).mockResolvedValue("2026-10-23");
   });
   afterEach(() => vi.clearAllMocks());
@@ -23,7 +53,11 @@ describe("the figures for the apps (#260)", () => {
     const res = await GET(new Request("http://localhost/api/walker/figures"));
     expect(res.status).toBe(200);
     expect(vi.mocked(requireShop).mock.calls[0]![1]).toBe("reports");
-    expect(await res.json()).toMatchObject({ period: { start: "2026-10-01" }, figures: [{ id: "invoiced", value: 30_000 }], actions: [{ kind: "chase" }] });
+    expect(await res.json()).toMatchObject({
+      period: { start: "2026-10-01" },
+      figures: [{ id: "invoiced", value: 30_000 }],
+      actions: [{ kind: "chase" }],
+    });
     expect(res.headers.get("cache-control")).toContain("no-store");
   });
 

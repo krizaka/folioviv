@@ -21,14 +21,30 @@ export interface SlotUse {
  * What the owner's figures read (#260), in the shop's own calendar: every invoice with what was paid on it, the payments, the expenses, the
  * appointments of the period, and how often the working blocks were booked. Read only; the figures themselves are computed in `@folioviv/core`.
  */
-export async function figuresSnapshot(db: Db, shopId: string, at: { today: string; computedAt: string; period: { start: string; end: string } }): Promise<{ input: FiguresInput; slots: SlotUse[] }> {
+export async function figuresSnapshot(
+  db: Db,
+  shopId: string,
+  at: { today: string; computedAt: string; period: { start: string; end: string } },
+): Promise<{ input: FiguresInput; slots: SlotUse[] }> {
   const [shop] = await rows<{ timezone: string }>(db, sql`SELECT timezone FROM shops WHERE id = ${shopId}`);
   if (!shop) throw new Error(`AK_SHOP_UNKNOWN: ${shopId}`);
   const tz = shop.timezone;
   const localDay = sql`(lower(a.during) AT TIME ZONE ${tz})::date`;
 
   const [invoices, payments, expenses, appointments, slots] = await Promise.all([
-    rows<{ id: string; number: string; issued_on: string; due_on: string | null; subtotal_cents: number; gst_cents: number; qst_cents: number; total_cents: number; paid_cents: number; is_credit: boolean; superseded: boolean }>(
+    rows<{
+      id: string;
+      number: string;
+      issued_on: string;
+      due_on: string | null;
+      subtotal_cents: number;
+      gst_cents: number;
+      qst_cents: number;
+      total_cents: number;
+      paid_cents: number;
+      is_credit: boolean;
+      superseded: boolean;
+    }>(
       db,
       sql`SELECT i.id, i.number, to_char(i.issued_on, 'YYYY-MM-DD') AS issued_on, to_char(i.due_on, 'YYYY-MM-DD') AS due_on,
                  i.subtotal_cents, i.gst_cents, i.qst_cents, i.total_cents,
@@ -42,7 +58,15 @@ export async function figuresSnapshot(db: Db, shopId: string, at: { today: strin
       sql`SELECT p.id, p.invoice_id, p.amount_cents, to_char((p.received_at AT TIME ZONE ${tz})::date, 'YYYY-MM-DD') AS received_on
             FROM payments p JOIN invoices i ON i.id = p.invoice_id WHERE i.shop_id = ${shopId} ORDER BY p.received_at, p.id`,
     ),
-    rows<{ id: string; supplier: string; paid_on: string; subtotal_cents: number; gst_cents: number; qst_cents: number; business_share_pct: number }>(
+    rows<{
+      id: string;
+      supplier: string;
+      paid_on: string;
+      subtotal_cents: number;
+      gst_cents: number;
+      qst_cents: number;
+      business_share_pct: number;
+    }>(
       db,
       sql`SELECT id, supplier, to_char(paid_on, 'YYYY-MM-DD') AS paid_on, subtotal_cents, gst_cents, qst_cents, business_share_pct
             FROM expenses WHERE shop_id = ${shopId} ORDER BY paid_on, id`,
@@ -73,9 +97,34 @@ export async function figuresSnapshot(db: Db, shopId: string, at: { today: strin
       today: at.today,
       computedAt: at.computedAt,
       period: at.period,
-      invoices: invoices.map((i) => ({ id: i.id, number: i.number, issuedOn: i.issued_on, dueOn: i.due_on, subtotalCents: i.subtotal_cents, gstCents: i.gst_cents, qstCents: i.qst_cents, totalCents: i.total_cents, paidCents: i.paid_cents, isCredit: i.is_credit, superseded: i.superseded })),
-      payments: payments.map((p) => ({ id: p.id, invoiceId: p.invoice_id, amountCents: p.amount_cents, receivedOn: p.received_on })),
-      expenses: expenses.map((e) => ({ id: e.id, supplier: e.supplier, paidOn: e.paid_on, subtotalCents: e.subtotal_cents, gstCents: e.gst_cents, qstCents: e.qst_cents, businessSharePct: e.business_share_pct })),
+      invoices: invoices.map((i) => ({
+        id: i.id,
+        number: i.number,
+        issuedOn: i.issued_on,
+        dueOn: i.due_on,
+        subtotalCents: i.subtotal_cents,
+        gstCents: i.gst_cents,
+        qstCents: i.qst_cents,
+        totalCents: i.total_cents,
+        paidCents: i.paid_cents,
+        isCredit: i.is_credit,
+        superseded: i.superseded,
+      })),
+      payments: payments.map((p) => ({
+        id: p.id,
+        invoiceId: p.invoice_id,
+        amountCents: p.amount_cents,
+        receivedOn: p.received_on,
+      })),
+      expenses: expenses.map((e) => ({
+        id: e.id,
+        supplier: e.supplier,
+        paidOn: e.paid_on,
+        subtotalCents: e.subtotal_cents,
+        gstCents: e.gst_cents,
+        qstCents: e.qst_cents,
+        businessSharePct: e.business_share_pct,
+      })),
       appointments: appointments.map((a) => ({ id: a.id, day: a.day, status: a.status })),
     },
     slots: slots.map((s) => ({ weekday: s.weekday, startsAt: s.starts_at, offered: s.offered, booked: s.booked })),

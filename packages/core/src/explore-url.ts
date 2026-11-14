@@ -55,7 +55,9 @@ export interface ExploreChip {
 export function exploreChips(s: ExploreUrlState): ExploreChip[] {
   const chips: ExploreChip[] = [];
   if (textCounts(s.q)) chips.push({ group: "q", value: text(s.q) });
-  chips.push(...EXPLORE_KINDS.filter((k) => s.kinds.includes(k)).map((k): ExploreChip => ({ group: "kind", value: k })));
+  chips.push(
+    ...EXPLORE_KINDS.filter((k) => s.kinds.includes(k)).map((k): ExploreChip => ({ group: "kind", value: k })),
+  );
   if (s.open) chips.push({ group: "open", value: s.open });
   if (s.near) chips.push({ group: "near", value: "here" });
   if (s.near && s.within) chips.push({ group: "within", value: String(s.within) });

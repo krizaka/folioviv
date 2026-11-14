@@ -22,8 +22,16 @@ export default function Invoices() {
   const invoices = useQuery(queries.invoices(shop));
   return (
     <Screen header={<AppHeader title={t("invoices.title")} />}>
-      <Button variant="primary" label={t("invoices.new")} onPress={() => router.navigate(routes.newInvoice(locale, shop) as never)} />
-      <QueryStates query={invoices} isEmpty={(all) => all.length === 0} empty={{ title: t("invoices.empty"), description: t("invoices.emptyLead") }}>
+      <Button
+        variant="primary"
+        label={t("invoices.new")}
+        onPress={() => router.navigate(routes.newInvoice(locale, shop) as never)}
+      />
+      <QueryStates
+        query={invoices}
+        isEmpty={(all) => all.length === 0}
+        empty={{ title: t("invoices.empty"), description: t("invoices.emptyLead") }}
+      >
         {(all) =>
           all.map((invoice) => (
             <Card.Root key={invoice.id}>

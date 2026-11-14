@@ -31,17 +31,29 @@ export function TimeOffCard({ data }: Readonly<{ data: TimeOffData }>) {
   const { say, locale } = useSay();
   const call = useCall();
   const [reversed, setReversed] = useState(false);
-  const i18n = { t: (key: string, vars?: Readonly<Record<string, string | number | boolean | Date | null | undefined>>) => say(key, vars as Record<string, string | number> | undefined), locale };
+  const i18n = {
+    t: (key: string, vars?: Readonly<Record<string, string | number | boolean | Date | null | undefined>>) =>
+      say(key, vars as Record<string, string | number> | undefined),
+    locale,
+  };
   const form = timeOffForm.useForm({
     i18n,
     defaultValues: { staffId: data.staff[0]?.id ?? "", from: "", to: "", reason: "" },
     onSubmit: async (values) => {
       setReversed(!timeOffOrderOk(values.from, values.to));
       if (!timeOffOrderOk(values.from, values.to)) return;
-      if ((await call.run("/api/walker/time-off", { json: { staffId: values.staffId, from: values.from, to: values.to, reason: values.reason || undefined } })) !== null) form.reset();
+      if (
+        (await call.run("/api/walker/time-off", {
+          json: { staffId: values.staffId, from: values.from, to: values.to, reason: values.reason || undefined },
+        })) !== null
+      )
+        form.reset();
     },
   });
-  const when = (from: string, to: string) => (from === to ? formatLongDay(from, locale) : say("team.timeOff.range", { from: formatLongDay(from, locale), to: formatLongDay(to, locale) }));
+  const when = (from: string, to: string) =>
+    from === to
+      ? formatLongDay(from, locale)
+      : say("team.timeOff.range", { from: formatLongDay(from, locale), to: formatLongDay(to, locale) });
   return (
     <Card.Root className="p-4">
       <h2 className="mb-1 font-display text-base font-bold text-fg">{say("team.timeOff.title")}</h2>
@@ -54,7 +66,17 @@ export function TimeOffCard({ data }: Readonly<{ data: TimeOffData }>) {
                 <span className="font-semibold">{t.name}</span> · {when(t.from, t.to)}
                 {t.reason ? <span className="text-fg-secondary"> · {t.reason}</span> : null}
               </span>
-              <Button size="sm" variant="ghost" aria-label={say("team.timeOff.remove", { name: t.name, when: when(t.from, t.to) })} onClick={() => call.run("/api/walker/time-off", { method: "DELETE", json: { staffId: t.staffId, from: t.from, to: t.to } })}>
+              <Button
+                size="sm"
+                variant="ghost"
+                aria-label={say("team.timeOff.remove", { name: t.name, when: when(t.from, t.to) })}
+                onClick={() =>
+                  void call.run("/api/walker/time-off", {
+                    method: "DELETE",
+                    json: { staffId: t.staffId, from: t.from, to: t.to },
+                  })
+                }
+              >
                 ×
               </Button>
             </li>
@@ -65,7 +87,11 @@ export function TimeOffCard({ data }: Readonly<{ data: TimeOffData }>) {
       )}
       <form.Form aria-label={say("team.timeOff.title")} className="grid grid-cols-2 gap-3">
         <div className="col-span-2">
-          <form.Select name="staffId" label={say("team.timeOff.who")} options={data.staff.map((s) => ({ value: s.id, label: s.name }))} />
+          <form.Select
+            name="staffId"
+            label={say("team.timeOff.who")}
+            options={data.staff.map((s) => ({ value: s.id, label: s.name }))}
+          />
         </div>
         <form.TextField name="from" label={say("team.timeOff.from")} placeholder="2026-12-20" inputMode="numeric" />
         <form.TextField name="to" label={say("team.timeOff.to")} placeholder="2026-12-27" inputMode="numeric" />

@@ -9,11 +9,14 @@ import { pathToFileURL } from "node:url";
 function ask(base, host, path, headers = {}) {
   const url = new URL(path, base);
   return new Promise((resolve, reject) => {
-    const req = request({ hostname: url.hostname, port: url.port, path: url.pathname + url.search, headers: { host, ...headers } }, (res) => {
-      let body = "";
-      res.on("data", (c) => (body += c));
-      res.on("end", () => resolve({ status: res.statusCode ?? 0, headers: res.headers, body }));
-    });
+    const req = request(
+      { hostname: url.hostname, port: url.port, path: url.pathname + url.search, headers: { host, ...headers } },
+      (res) => {
+        let body = "";
+        res.on("data", (c) => (body += c));
+        res.on("end", () => resolve({ status: res.statusCode ?? 0, headers: res.headers, body }));
+      },
+    );
     req.on("error", reject);
     req.end();
   });
@@ -21,7 +24,9 @@ function ask(base, host, path, headers = {}) {
 
 /** A line of the report as one printable line: what a server answered (a header, a body) never forges a log line (Sonar S5145, log injection). */
 export function printable(text) {
-  return String(text).replace(/[\r\n]/g, "_").replace(/[^\x20-\x7e]/g, "?");
+  return String(text)
+    .replace(/[\r\n]/g, "_")
+    .replace(/[^\x20-\x7e]/g, "?");
 }
 
 /** The problems of a shop's page on its own host: pure, so each rule is tested without a server. */
@@ -30,7 +35,8 @@ export function shopPageProblems(answer, { origin, appOrigin }) {
   const csp = String(answer.headers["content-security-policy"] ?? "");
   const scripts = csp.split("; ").find((d) => d.startsWith("script-src ")) ?? "";
   if (answer.status !== 200) problems.push(`the page answered ${answer.status}`);
-  if (!/'nonce-[^']+'/.test(scripts) || scripts.includes("'unsafe-inline'")) problems.push(`script-src is not the strict one: ${scripts}`);
+  if (!/'nonce-[^']+'/.test(scripts) || scripts.includes("'unsafe-inline'"))
+    problems.push(`script-src is not the strict one: ${scripts}`);
   if (!csp.includes(`frame-ancestors ${appOrigin}`)) problems.push("frame-ancestors is not the app");
   if (!csp.includes(`form-action 'self' ${appOrigin}`)) problems.push("form-action does not name the app");
   const set = [].concat(answer.headers["set-cookie"] ?? []);
@@ -40,7 +46,8 @@ export function shopPageProblems(answer, { origin, appOrigin }) {
   }
   if (!String(answer.headers["x-robots-tag"] ?? "").includes("noindex")) problems.push("the page is not noindex");
   if (!/no-store/.test(String(answer.headers["cache-control"] ?? ""))) problems.push("the page can be cached");
-  if (!answer.body.includes(`<link rel="canonical" href="${origin}/`)) problems.push(`the canonical is not on ${origin}`);
+  if (!answer.body.includes(`<link rel="canonical" href="${origin}/`))
+    problems.push(`the canonical is not on ${origin}`);
   return problems;
 }
 
@@ -67,30 +74,50 @@ async function main() {
   const appOrigin = `http://localhost:${port}`;
   const shopHost = `${slug}.${domain}:${port}`;
   const problems = [];
-  const expect = (ok, what) => ok || problems.push(what);
+  const holds = (ok, what) => ok || problems.push(what);
 
   const page = await ask(base, shopHost, "/fr", { cookie: "folioviv_session=forged; theme=dark" });
   problems.push(...shopPageProblems(page, { origin, appOrigin }).map((p) => `GET ${shopHost}/fr: ${p}`));
-  expect(!page.body.includes("forged"), "the session cookie reached the page");
+  holds(!page.body.includes("forged"), "the session cookie reached the page");
 
   const hop = await ask(base, shopHost, `/fr/s/${slug}/service/1/confirm?slot=9`);
-  expect(leadsTo(hop, `${appOrigin}/fr/s/${slug}/service/1/confirm?slot=9`, { listenOrigin: appOrigin }), `the booking hop is ${hop.status} ${hop.headers.location}`);
+  holds(
+    leadsTo(hop, `${appOrigin}/fr/s/${slug}/service/1/confirm?slot=9`, { listenOrigin: appOrigin }),
+    `the booking hop is ${hop.status} ${hop.headers.location}`,
+  );
 
   const ghost = await ask(base, `no-such-shop.${domain}:${port}`, "/fr");
-  expect(ghost.status === 404 && String(ghost.headers["x-robots-tag"]).includes("noindex") && !ghost.body.includes("no-such-shop"), `an unknown shop answered ${ghost.status}`);
+  holds(
+    ghost.status === 404 &&
+      String(ghost.headers["x-robots-tag"]).includes("noindex") &&
+      !ghost.body.includes("no-such-shop"),
+    `an unknown shop answered ${ghost.status}`,
+  );
 
   const robots = await ask(base, shopHost, "/robots.txt");
-  expect(robots.body.includes("Disallow: /") && robots.body.includes(`Sitemap: ${origin}/sitemap.xml`), "robots.txt is not closed with its Sitemap line");
+  holds(
+    robots.body.includes("Disallow: /") && robots.body.includes(`Sitemap: ${origin}/sitemap.xml`),
+    "robots.txt is not closed with its Sitemap line",
+  );
   const sitemap = await ask(base, shopHost, "/sitemap.xml");
-  expect(sitemap.status === 200 && sitemap.body.includes(`<loc>${origin}/fr</loc>`), `the shop sitemap answered ${sitemap.status} without ${origin}/fr`);
+  holds(
+    sitemap.status === 200 && sitemap.body.includes(`<loc>${origin}/fr</loc>`),
+    `the shop sitemap answered ${sitemap.status} without ${origin}/fr`,
+  );
 
   const old = await ask(base, `localhost:${port}`, `/fr/s/${slug}?look=b`);
-  expect(old.status === 308 && old.headers.location === `${origin}/fr?look=b`, `the old path address is ${old.status} ${old.headers.location}`);
+  holds(
+    old.status === 308 && old.headers.location === `${origin}/fr?look=b`,
+    `the old path address is ${old.status} ${old.headers.location}`,
+  );
   const legacy = await ask(base, `${slug}.localhost:${port}`, "/fr");
-  expect(legacy.status === 308 && legacy.headers.location === `${origin}/fr`, `the legacy host is ${legacy.status} ${legacy.headers.location}`);
+  holds(
+    legacy.status === 308 && legacy.headers.location === `${origin}/fr`,
+    `the legacy host is ${legacy.status} ${legacy.headers.location}`,
+  );
 
   const stranger = await ask(base, `${slug}.${domain}.evil.example`, "/fr");
-  expect(stranger.status === 421, `a look-alike host answered ${stranger.status}`);
+  holds(stranger.status === 421, `a look-alike host answered ${stranger.status}`);
 
   console.log(`check-shop-host: ${printable(slug)} on ${printable(shopHost)}, 9 requests`);
   if (problems.length) {

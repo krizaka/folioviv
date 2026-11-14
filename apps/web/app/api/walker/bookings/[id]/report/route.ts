@@ -7,6 +7,9 @@ import { limit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
+/** A form field read as text: a file or an absent field is empty. */
+const textField = (value: FormDataEntryValue | null): string => (typeof value === "string" ? value : "");
+
 // @fixed: the photo column's bound (1.5 MB) — the phone shrinks the picture before sending; this refuses a body that did not.
 const MAX_PHOTO_BYTES = 1_572_864;
 
@@ -24,7 +27,12 @@ export function POST(req: Request, { params }: { params: Promise<{ id: string }>
       if (file.size > MAX_PHOTO_BYTES) throw refuse(413, "PHOTO_TOO_LARGE", "The photo is too large");
       photo = { bytes: Buffer.from(await file.arrayBuffer()) };
     }
-    const result = await saveReport(db(), { shopId: shop.id, bookingId: idParam((await params).id), note: String(form.get("note") ?? ""), photo });
+    const result = await saveReport(db(), {
+      shopId: shop.id,
+      bookingId: idParam((await params).id),
+      note: textField(form.get("note")),
+      photo,
+    });
     return Response.json(result, { status: result.created ? 201 : 200 });
   });
 }

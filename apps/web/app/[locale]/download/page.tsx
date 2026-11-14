@@ -32,30 +32,46 @@ export default async function Download({ params }: Readonly<{ params: Promise<{ 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdHtml(siteJsonLd(locale)) }} />
       <SiteHeader locale={locale} current="download" />
       <main id="content">
-        <PageHero back={{ href: pagePath(locale, "home"), label: t.meta.siteName }} linkAs={Link} title={t.download.title} backdrop="plain" lead={t.download.lead} />
+        <PageHero
+          back={{ href: pagePath(locale, "home"), label: t.meta.siteName }}
+          linkAs={Link}
+          title={t.download.title}
+          backdrop="plain"
+          lead={t.download.lead}
+        />
         <Page>
-          {(
+          {
             <Section>
               <SectionHeading title={t.download.videos.title} lead={t.download.videos.lead} />
               <ul className="grid gap-6 sm:grid-cols-2">
                 {APP_VIDEOS.map((video) => {
                   const words = t.download.videos.items[videoId(video) as keyof typeof t.download.videos.items];
                   const shape = SHAPE[video.platform as keyof typeof SHAPE] ?? PHONE;
-                  const date = new Intl.DateTimeFormat(locale, { dateStyle: "long" }).format(new Date(video.capturedAt));
+                  const date = new Intl.DateTimeFormat(locale, { dateStyle: "long" }).format(
+                    new Date(video.capturedAt),
+                  );
                   return (
                     <li key={videoId(video)} className="flex flex-col gap-3" data-video={videoId(video)}>
-                      <AppVideoPlayer poster={videoUrl(video.files.poster)} webm={videoUrl(video.files.webm)} mp4={videoUrl(video.files.mp4)} {...shape} play={t.download.videos.play} label={words.name} />
+                      <AppVideoPlayer
+                        poster={videoUrl(video.files.poster)}
+                        webm={videoUrl(video.files.webm)}
+                        mp4={videoUrl(video.files.mp4)}
+                        {...shape}
+                        play={t.download.videos.play}
+                        label={words.name}
+                      />
                       <h3 className="text-base font-semibold">{words.name}</h3>
                       <p className="text-sm text-fg-secondary">{words.body}</p>
                       <p className="text-xs text-fg-muted">
-                        {format(t.download.videos.recorded, { date })} · {format(t.download.videos.seconds, { seconds: String(Math.round(video.seconds)) })}
+                        {format(t.download.videos.recorded, { date })} ·{" "}
+                        {format(t.download.videos.seconds, { seconds: String(Math.round(video.seconds)) })}
                       </p>
                     </li>
                   );
                 })}
               </ul>
             </Section>
-          )}
+          }
         </Page>
       </main>
       <SiteFooter locale={locale} />

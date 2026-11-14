@@ -22,12 +22,37 @@ const invoice = {
   totalCents: 11_498,
   paidCents: 5_000,
   client: { fullName: "Camille Tremblay", email: "camille@example.com", phone: null },
-  shop: { name: "Salon Laurier", legalName: "Salon Laurier inc.", address: "Montréal", timezone: "America/Toronto", registrant: true, gstNumber: "123456789RT0001", qstNumber: "1234567890TQ0001", publicEmail: "bonjour@example.com" },
-  lines: [{ id: "40000000-0000-4000-8000-000000000001", invoiceId: "10000000-0000-4000-8000-000000000001", position: 1, description: "Coupe / Haircut", quantityHundredths: 100, unitPriceCents: 10_000, discountCents: 0, taxCategory: "standard" as const, amountCents: 10_000 }],
+  shop: {
+    name: "Salon Laurier",
+    legalName: "Salon Laurier inc.",
+    address: "Montréal",
+    timezone: "America/Toronto",
+    registrant: true,
+    gstNumber: "123456789RT0001",
+    qstNumber: "1234567890TQ0001",
+    publicEmail: "bonjour@example.com",
+  },
+  lines: [
+    {
+      id: "40000000-0000-4000-8000-000000000001",
+      invoiceId: "10000000-0000-4000-8000-000000000001",
+      position: 1,
+      description: "Coupe / Haircut",
+      quantityHundredths: 100,
+      unitPriceCents: 10_000,
+      discountCents: 0,
+      taxCategory: "standard" as const,
+      amountCents: 10_000,
+    },
+  ],
 } satisfies InvoiceView & { paidCents: number };
 
 const text = (locale: "fr" | "en", replacedBy: InvoiceView["replacedBy"] = invoice.replacedBy) =>
-  renderToStaticMarkup(<InvoicePublicDocument invoice={{ ...invoice, replacedBy }} locale={locale} today="2026-10-23" />).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
+  renderToStaticMarkup(
+    <InvoicePublicDocument invoice={{ ...invoice, replacedBy }} locale={locale} today="2026-10-23" />,
+  )
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ");
 
 describe("public invoice document", () => {
   it("renders the invoice, balance, payment contact, and replacement link in French", () => {

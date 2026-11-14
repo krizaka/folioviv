@@ -8,6 +8,12 @@ export const dynamic = "force-dynamic";
 export const POST = (req: Request) =>
   accountAct(req, "sessions", async (s) => {
     const signedOut = await accounts().signOutOthers(s.account.id, s.id);
-    await audit({ action: "account.sessions_signed_out", actorId: s.account.id, actorLabel: s.account.email, detail: { count: signedOut }, headers: req.headers });
+    await audit({
+      action: "account.sessions_signed_out",
+      actorId: s.account.id,
+      actorLabel: s.account.email,
+      detail: { count: signedOut },
+      headers: req.headers,
+    });
     return { signedOut };
   });

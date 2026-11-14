@@ -11,5 +11,7 @@ import { useLocale } from "@/use-locale";
 export function LegacyRedirect({ from }: Readonly<{ from: Legacy }>) {
   const { locale } = useLocale();
   const day = useQuery(queries.day());
-  return <QueryStates query={day}>{(d) => <Redirect href={legacyRoute(locale, from, d.shopId) as never} />}</QueryStates>;
+  return (
+    <QueryStates query={day}>{(d) => <Redirect href={legacyRoute(locale, from, d.shopId) as never} />}</QueryStates>
+  );
 }

@@ -41,7 +41,9 @@ describe("a shop's former addresses (real PostgreSQL 16, #77)", () => {
     const { shopId } = await saveShopPage(t.db, owner.id, page("studio-boreal"));
     await saveShopPage(t.db, owner.id, page("boreal-studio"));
     await saveShopPage(t.db, owner.id, page("studio-boreal"));
-    expect((await t.db.select().from(shopFormerSlugs).where(eq(shopFormerSlugs.shopId, shopId))).map((r) => r.slug)).toEqual(["boreal-studio"]);
+    expect(
+      (await t.db.select().from(shopFormerSlugs).where(eq(shopFormerSlugs.shopId, shopId))).map((r) => r.slug),
+    ).toEqual(["boreal-studio"]);
   });
 
   it("leads nowhere for an unpublished shop, and forgets everything when the shop is deleted", async () => {

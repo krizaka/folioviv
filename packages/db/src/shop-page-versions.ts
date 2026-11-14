@@ -38,16 +38,30 @@ export interface ShopPageVersionRow {
   createdAt: Date;
   publishedAt: Date | null;
 }
-const listColumns = { id: shopPageVersions.id, version: shopPageVersions.version, status: shopPageVersions.status, authorId: shopPageVersions.authorId, createdAt: shopPageVersions.createdAt, publishedAt: shopPageVersions.publishedAt };
+const listColumns = {
+  id: shopPageVersions.id,
+  version: shopPageVersions.version,
+  status: shopPageVersions.status,
+  authorId: shopPageVersions.authorId,
+  createdAt: shopPageVersions.createdAt,
+  publishedAt: shopPageVersions.publishedAt,
+};
 
 async function tradeOf(db: Db, shopId: string): Promise<ReturnType<typeof shopTypeOf>> {
-  const [row] = await db.select({ businessType: shops.businessType, shopType: shopPage.shopType }).from(shops).leftJoin(shopPage, eq(shopPage.shopId, shops.id)).where(eq(shops.id, shopId));
+  const [row] = await db
+    .select({ businessType: shops.businessType, shopType: shopPage.shopType })
+    .from(shops)
+    .leftJoin(shopPage, eq(shopPage.shopId, shops.id))
+    .where(eq(shops.id, shopId));
   if (!row) throw new ShopError("AK_NOT_FOUND");
   return shopTypeOf(row.businessType, row.shopType);
 }
 
 async function documentOf(db: Db, shopId: string, status: "draft" | "published") {
-  const [row] = await db.select().from(shopPageVersions).where(and(eq(shopPageVersions.shopId, shopId), eq(shopPageVersions.status, status)));
+  const [row] = await db
+    .select()
+    .from(shopPageVersions)
+    .where(and(eq(shopPageVersions.shopId, shopId), eq(shopPageVersions.status, status)));
   return row;
 }
 
@@ -59,61 +73,120 @@ export async function publishedShopPage(db: Db, shopId: string): Promise<{ page:
 }
 
 /** The composer's document: the draft, else what is published. `draft` says whether it differs from the page. */
-export async function draftShopPage(db: Db, shopId: string): Promise<{ page: ShopPage; version: number | null; draft: boolean }> {
+export async function draftShopPage(
+  db: Db,
+  shopId: string,
+): Promise<{ page: ShopPage; version: number | null; draft: boolean }> {
   const draft = await documentOf(db, shopId, "draft");
   if (draft) return { page: readShopPage(draft.doc), version: draft.version, draft: true };
   return { ...(await publishedShopPage(db, shopId)), draft: false };
 }
 
 async function maxVersion(db: Db, shopId: string): Promise<number> {
-  const [row] = await db.select({ v: sql<number>`COALESCE(max(${shopPageVersions.version}), 0)::int` }).from(shopPageVersions).where(eq(shopPageVersions.shopId, shopId));
+  const [row] = await db
+    .select({ v: sql<number>`COALESCE(max(${shopPageVersions.version}), 0)::int` })
+    .from(shopPageVersions)
+    .where(eq(shopPageVersions.shopId, shopId));
   return row?.v ?? 0;
 }
 
 /** Saves the draft (one per shop: a second save replaces it). The document is validated first. */
-export async function saveShopPageDraft(db: Db, shopId: string, input: unknown, authorId: string | null): Promise<{ version: number }> {
+export async function saveShopPageDraft(
+  db: Db,
+  shopId: string,
+  input: unknown,
+  authorId: string | null,
+): Promise<{ version: number }> {
   const page = readShopPage(input);
   return db.transaction(async (tx) => {
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${pageLockKey(shopId)}, 0))`);
     const existing = await documentOf(tx as unknown as Db, shopId, "draft");
     if (existing) {
-      await tx.update(shopPageVersions).set({ doc: page, schema: page.schema, authorId, createdAt: sql`now()` }).where(eq(shopPageVersions.id, existing.id));
+      await tx
+        .update(shopPageVersions)
+        .set({ doc: page, schema: page.schema, authorId, createdAt: sql`now()` })
+        .where(eq(shopPageVersions.id, existing.id));
       return { version: existing.version };
     }
     const version = (await maxVersion(tx as unknown as Db, shopId)) + 1;
-    await tx.insert(shopPageVersions).values({ shopId, version, status: "draft", schema: page.schema, doc: page, authorId });
+    await tx
+      .insert(shopPageVersions)
+      .values({ shopId, version, status: "draft", schema: page.schema, doc: page, authorId });
     return { version };
   });
 }
 
 /** Makes the draft the page: the published one is archived, the draft becomes the published one (a fresh number), the archive is bounded. 409 without a draft. */
-export async function publishShopPageDraft(db: Db, shopId: string, authorId: string | null): Promise<{ version: number }> {
+export async function publishShopPageDraft(
+  db: Db,
+  shopId: string,
+  authorId: string | null,
+): Promise<{ version: number }> {
   return db.transaction(async (tx) => {
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${pageLockKey(shopId)}, 0))`);
     const draft = await documentOf(tx as unknown as Db, shopId, "draft");
     if (!draft) throw new ShopError("AK_SHOP_PAGE_NO_DRAFT");
     readShopPage(draft.doc);
-    await tx.update(shopPageVersions).set({ status: "archived" }).where(and(eq(shopPageVersions.shopId, shopId), eq(shopPageVersions.status, "published")));
+    await tx
+      .update(shopPageVersions)
+      .set({ status: "archived" })
+      .where(and(eq(shopPageVersions.shopId, shopId), eq(shopPageVersions.status, "published")));
     const version = (await maxVersion(tx as unknown as Db, shopId)) + 1;
-    await tx.update(shopPageVersions).set({ status: "published", version, authorId, publishedAt: sql`now()` }).where(eq(shopPageVersions.id, draft.id));
+    await tx
+      .update(shopPageVersions)
+      .set({ status: "published", version, authorId, publishedAt: sql`now()` })
+      .where(eq(shopPageVersions.id, draft.id));
     await pruneArchive(tx as unknown as Db, shopId);
     return { version };
   });
 }
 
 /** Puts an archived version back as a NEW published version (history is never rewritten). 404 for a version that is not this shop's archive. */
-export async function rollbackShopPage(db: Db, shopId: string, version: number, authorId: string | null, options: { keepDraft?: boolean } = {}): Promise<{ version: number; draftReset: boolean }> {
+export async function rollbackShopPage(
+  db: Db,
+  shopId: string,
+  version: number,
+  authorId: string | null,
+  options: { keepDraft?: boolean } = {},
+): Promise<{ version: number; draftReset: boolean }> {
   return db.transaction(async (tx) => {
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${pageLockKey(shopId)}, 0))`);
-    const [target] = await tx.select().from(shopPageVersions).where(and(eq(shopPageVersions.shopId, shopId), eq(shopPageVersions.version, version), eq(shopPageVersions.status, "archived")));
+    const [target] = await tx
+      .select()
+      .from(shopPageVersions)
+      .where(
+        and(
+          eq(shopPageVersions.shopId, shopId),
+          eq(shopPageVersions.version, version),
+          eq(shopPageVersions.status, "archived"),
+        ),
+      );
     if (!target) throw new ShopError("AK_NOT_FOUND");
     const page = readShopPage(target.doc);
     const next = (await maxVersion(tx as unknown as Db, shopId)) + 1;
-    await tx.update(shopPageVersions).set({ status: "archived" }).where(and(eq(shopPageVersions.shopId, shopId), eq(shopPageVersions.status, "published")));
-    await tx.insert(shopPageVersions).values({ shopId, version: next, status: "published", schema: page.schema, doc: page, authorId, publishedAt: sql`now()` });
+    await tx
+      .update(shopPageVersions)
+      .set({ status: "archived" })
+      .where(and(eq(shopPageVersions.shopId, shopId), eq(shopPageVersions.status, "published")));
+    await tx.insert(shopPageVersions).values({
+      shopId,
+      version: next,
+      status: "published",
+      schema: page.schema,
+      doc: page,
+      authorId,
+      publishedAt: sql`now()`,
+    });
     await pruneArchive(tx as unknown as Db, shopId);
     // The draft is what the owner was editing BEFORE the restore: unless asked to keep it, it goes, so the composer shows the restored page.
-    const draftReset = options.keepDraft ? false : (await tx.delete(shopPageVersions).where(and(eq(shopPageVersions.shopId, shopId), eq(shopPageVersions.status, "draft"))).returning({ id: shopPageVersions.id })).length > 0;
+    const draftReset = options.keepDraft
+      ? false
+      : (
+          await tx
+            .delete(shopPageVersions)
+            .where(and(eq(shopPageVersions.shopId, shopId), eq(shopPageVersions.status, "draft")))
+            .returning({ id: shopPageVersions.id })
+        ).length > 0;
     return { version: next, draftReset };
   });
 }
@@ -122,19 +195,37 @@ export async function rollbackShopPage(db: Db, shopId: string, version: number, 
 export async function discardShopPageDraft(db: Db, shopId: string): Promise<{ discarded: boolean }> {
   return db.transaction(async (tx) => {
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${pageLockKey(shopId)}, 0))`);
-    const gone = await tx.delete(shopPageVersions).where(and(eq(shopPageVersions.shopId, shopId), eq(shopPageVersions.status, "draft"))).returning({ id: shopPageVersions.id });
+    const gone = await tx
+      .delete(shopPageVersions)
+      .where(and(eq(shopPageVersions.shopId, shopId), eq(shopPageVersions.status, "draft")))
+      .returning({ id: shopPageVersions.id });
     return { discarded: gone.length > 0 };
   });
 }
 
 async function pruneArchive(db: Db, shopId: string): Promise<void> {
-  const old = await db.select({ id: shopPageVersions.id }).from(shopPageVersions).where(and(eq(shopPageVersions.shopId, shopId), eq(shopPageVersions.status, "archived"))).orderBy(desc(shopPageVersions.version)).offset(SHOP_PAGE_ARCHIVE_KEEP);
-  if (old.length) await db.delete(shopPageVersions).where(inArray(shopPageVersions.id, old.map((r) => r.id)));
+  const old = await db
+    .select({ id: shopPageVersions.id })
+    .from(shopPageVersions)
+    .where(and(eq(shopPageVersions.shopId, shopId), eq(shopPageVersions.status, "archived")))
+    .orderBy(desc(shopPageVersions.version))
+    .offset(SHOP_PAGE_ARCHIVE_KEEP);
+  if (old.length)
+    await db.delete(shopPageVersions).where(
+      inArray(
+        shopPageVersions.id,
+        old.map((r) => r.id),
+      ),
+    );
 }
 
 /** The shop's versions, newest first (the history the composer lists). */
 export async function shopPageVersionsOf(db: Db, shopId: string): Promise<ShopPageVersionRow[]> {
-  return db.select(listColumns).from(shopPageVersions).where(eq(shopPageVersions.shopId, shopId)).orderBy(desc(shopPageVersions.version));
+  return db
+    .select(listColumns)
+    .from(shopPageVersions)
+    .where(eq(shopPageVersions.shopId, shopId))
+    .orderBy(desc(shopPageVersions.version));
 }
 
 /** The paper under the page, set by the template the owner applied (folioviv#305), or null (the look's own). */
@@ -151,7 +242,10 @@ export async function shopAccentOf(db: Db, shopId: string): Promise<string | nul
 
 /** Stores the accent (the caller checked it against the look's tested accents); creates the shop's page row when it has none. */
 export async function setShopAccent(db: Db, shopId: string, accent: string | null): Promise<void> {
-  await db.insert(shopPage).values({ shopId, accent }).onConflictDoUpdate({ target: shopPage.shopId, set: { accent, updatedAt: sql`now()` } });
+  await db
+    .insert(shopPage)
+    .values({ shopId, accent })
+    .onConflictDoUpdate({ target: shopPage.shopId, set: { accent, updatedAt: sql`now()` } });
 }
 
 /** The advisory lock key of a shop's page: its versions are written one at a time. */

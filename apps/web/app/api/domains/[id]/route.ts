@@ -21,7 +21,12 @@ export function POST(req: Request, { params }: { params: Promise<{ id: string }>
 export function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   return handle(async () => {
     const { session, shop } = await requireOwner(req);
-    await removeDomain(shop.id, idParam((await params).id), { action: "domain.remove", actorId: session.account.id, actorLabel: session.account.email, headers: req.headers });
+    await removeDomain(shop.id, idParam((await params).id), {
+      action: "domain.remove",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      headers: req.headers,
+    });
     return new Response(null, { status: 204 });
   });
 }

@@ -1,0 +1,4 @@
+# Commits that only reformat code (git blame --ignore-revs-file; GitHub reads this file by itself).
+# chore(format): prettier (folioviv#2826)
+c9977ecd9dc81b1eece7f859be7659d739c6c24d
+40e4519cb53862cfa2723fb4c19afb59b92689e8

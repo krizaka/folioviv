@@ -7,7 +7,8 @@ const METRE_STEP = 10;
 
 /** « 350 m », « 1,2 km »: said in the visitor's language. */
 export function distanceLabel(meters: number, locale: string): string {
-  if (meters < METRES_BELOW) return `${new Intl.NumberFormat(locale).format(Math.max(METRE_STEP, Math.round(meters / METRE_STEP) * METRE_STEP))} m`;
+  if (meters < METRES_BELOW)
+    return `${new Intl.NumberFormat(locale).format(Math.max(METRE_STEP, Math.round(meters / METRE_STEP) * METRE_STEP))} m`;
   return `${new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(meters / 1000)} km`;
 }
 

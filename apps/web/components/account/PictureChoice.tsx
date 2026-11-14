@@ -11,7 +11,9 @@ import { useEffect, useRef } from "react";
 export function nameMirrors(root: ParentNode): number {
   let named = 0;
   for (const mirror of root.querySelectorAll<HTMLInputElement>('input[type="radio"][aria-hidden="true"]')) {
-    const tile = [...root.querySelectorAll('button[role="radio"]')].find((b) => b.getAttribute("value") === mirror.value);
+    const tile = [...root.querySelectorAll('button[role="radio"]')].find(
+      (b) => b.getAttribute("value") === mirror.value,
+    );
     const name = tile?.getAttribute("aria-label");
     if (name && mirror.getAttribute("aria-label") !== name) {
       mirror.setAttribute("aria-label", name);

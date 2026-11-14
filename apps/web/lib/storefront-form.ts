@@ -31,13 +31,23 @@ export function parseGallery(text: string, max = 12): GalleryLine[] {
 }
 
 export function galleryText(items: readonly GalleryLine[]): string {
-  return items.map((i) => [i.url, i.altFr, i.altEn, i.captionFr ?? "", i.captionEn ?? ""].join(" | ").replace(/( \| )+$/, "")).join("\n");
+  return items
+    .map((i) => [i.url, i.altFr, i.altEn, i.captionFr ?? "", i.captionEn ?? ""].join(" | ").replace(/( \| )+$/, ""))
+    .join("\n");
 }
 
 /** The lines the owner submitted, each given back the loop files and the shape its address already had (the form edits neither). */
-export function keepExtras<T extends { url: string }>(lines: readonly T[], before: readonly GalleryLine[]): (T & Pick<GalleryLine, "webmUrl" | "mp4Url" | "wide">)[] {
+export function keepExtras<T extends { url: string }>(
+  lines: readonly T[],
+  before: readonly GalleryLine[],
+): (T & Pick<GalleryLine, "webmUrl" | "mp4Url" | "wide">)[] {
   return lines.map((line) => {
     const old = before.find((b) => b.url === line.url);
-    return { ...line, ...(old?.webmUrl ? { webmUrl: old.webmUrl } : {}), ...(old?.mp4Url ? { mp4Url: old.mp4Url } : {}), ...(old?.wide ? { wide: true } : {}) };
+    return {
+      ...line,
+      ...(old?.webmUrl ? { webmUrl: old.webmUrl } : {}),
+      ...(old?.mp4Url ? { mp4Url: old.mp4Url } : {}),
+      ...(old?.wide ? { wide: true } : {}),
+    };
   });
 }

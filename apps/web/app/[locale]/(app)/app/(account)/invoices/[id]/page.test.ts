@@ -5,9 +5,15 @@ import { pageSession } from "@/lib/access";
 
 import ClientInvoicePage from "./page";
 
-vi.mock("@folioviv/db", async (importOriginal) => ({ ...(await importOriginal<typeof import("@folioviv/db")>()), invoiceForClientAccount: vi.fn() }));
+vi.mock("@folioviv/db", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@folioviv/db")>()),
+  invoiceForClientAccount: vi.fn(),
+}));
 vi.mock("@/lib/db", () => ({ db: vi.fn(() => ({})) }));
-vi.mock("@/lib/access", async (importOriginal) => ({ ...(await importOriginal<typeof import("@/lib/access")>()), pageSession: vi.fn() }));
+vi.mock("@/lib/access", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/access")>()),
+  pageSession: vi.fn(),
+}));
 
 afterEach(() => vi.clearAllMocks());
 

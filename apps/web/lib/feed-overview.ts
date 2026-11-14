@@ -22,7 +22,13 @@ export async function feedOverview(shopId: string, scope: { staffAccountId?: str
   const [people, live] = await Promise.all([feedPeople(db(), shopId, scope), liveFeeds(db(), shopId)]);
   const state = (staffId: string | null): FeedState => {
     const feed = live.find((f) => f.staffId === staffId);
-    return feed ? { live: true, createdAt: feed.createdAt.toISOString(), rotatedAt: feed.rotatedAt?.toISOString() ?? null } : { live: false, createdAt: null, rotatedAt: null };
+    return feed
+      ? { live: true, createdAt: feed.createdAt.toISOString(), rotatedAt: feed.rotatedAt?.toISOString() ?? null }
+      : { live: false, createdAt: null, rotatedAt: null };
   };
-  return { enabled: true, shop: scope.staffAccountId ? null : state(null), people: people.map((p) => ({ id: p.id, name: p.name, ...state(p.id) })) };
+  return {
+    enabled: true,
+    shop: scope.staffAccountId ? null : state(null),
+    people: people.map((p) => ({ id: p.id, name: p.name, ...state(p.id) })),
+  };
 }

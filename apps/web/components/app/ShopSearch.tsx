@@ -18,7 +18,19 @@ const GROUPS = ["clients", "invoices", "actions"] as const;
  * files and invoices (`/api/walker/search`, the shop's guard) and lists the actions. Enter opens the option; Escape closes and
  * the focus returns to where it was (the dialog's).
  */
-export function ShopSearch({ locale, shopId, actions, open, onOpenChange }: Readonly<{ locale: "en" | "fr"; shopId: string; actions: readonly PaletteItem[]; open: boolean; onOpenChange: (open: boolean) => void }>) {
+export function ShopSearch({
+  locale,
+  shopId,
+  actions,
+  open,
+  onOpenChange,
+}: Readonly<{
+  locale: "en" | "fr";
+  shopId: string;
+  actions: readonly PaletteItem[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}>) {
   const { say } = useSay();
   const router = useRouter();
   const routes = shopRoutes(locale, shopId);
@@ -26,7 +38,8 @@ export function ShopSearch({ locale, shopId, actions, open, onOpenChange }: Read
   const q = query.trim();
   const found = useQuery({
     queryKey: ["shop-search", shopId, q],
-    queryFn: ({ signal }) => krizakaFetch(routes.api(`/api/walker/search?q=${encodeURIComponent(q)}`), { signal }) as Promise<PaletteFound>,
+    queryFn: ({ signal }) =>
+      krizakaFetch(routes.api(`/api/walker/search?q=${encodeURIComponent(q)}`), { signal }) as Promise<PaletteFound>,
     enabled: open && q.length >= MIN_QUERY,
     staleTime: 30_000,
   });
@@ -56,7 +69,12 @@ export function ShopSearch({ locale, shopId, actions, open, onOpenChange }: Read
         shouldFilter={false}
       >
         <Command.Input placeholder={say("shell.search.placeholder")} value={query} onValueChange={setQuery} />
-        <Command.List label={say("shell.search.results")} emptyLabel={q.length >= MIN_QUERY && !found.isFetching && items.length === 0 ? say("shell.search.none") : undefined}>
+        <Command.List
+          label={say("shell.search.results")}
+          emptyLabel={
+            q.length >= MIN_QUERY && !found.isFetching && items.length === 0 ? say("shell.search.none") : undefined
+          }
+        >
           {found.isFetching ? <Command.Loading label={say("shell.search.loading")} /> : null}
           {GROUPS.map((group) => {
             const options = items.filter((i) => i.group === group);
@@ -64,7 +82,9 @@ export function ShopSearch({ locale, shopId, actions, open, onOpenChange }: Read
               <Command.Group key={group} heading={say(`shell.search.groups.${group}`)}>
                 {options.map((item) => (
                   <Command.Item key={item.id} value={item.id} onSelect={() => go(item.href)}>
-                    <span className={item.group === "invoices" ? "font-mono tabular-nums" : undefined}>{item.label}</span>
+                    <span className={item.group === "invoices" ? "font-mono tabular-nums" : undefined}>
+                      {item.label}
+                    </span>
                     {item.hint ? <span className="ml-2 truncate text-fg-muted">{item.hint}</span> : null}
                   </Command.Item>
                 ))}

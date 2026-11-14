@@ -16,7 +16,12 @@ export interface Period {
 const pad = (n: number) => String(n).padStart(2, "0");
 const lastDay = (year: number, month: number) => new Date(Date.UTC(year, month, 0)).getUTCDate();
 
-const quarter = (year: number, q: number): Period => ({ id: `${year}-Q${q}`, start: `${year}-${pad(q * 3 - 2)}-01`, end: `${year}-${pad(q * 3)}-${lastDay(year, q * 3)}`, kind: "quarter" });
+const quarter = (year: number, q: number): Period => ({
+  id: `${year}-Q${q}`,
+  start: `${year}-${pad(q * 3 - 2)}-01`,
+  end: `${year}-${pad(q * 3)}-${lastDay(year, q * 3)}`,
+  kind: "quarter",
+});
 
 /** The last four quarters, the latest completed one first (today's quarter is still open: nothing to file yet). */
 export function periodChoices(today: string): Period[] {
@@ -44,7 +49,13 @@ export function periodFor(param: string | undefined, today: string): Period {
   const q = /^(\d{4})-Q([1-4])$/.exec(param ?? "");
   if (q) return quarter(Number(q[1]), Number(q[2]));
   const m = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(param ?? "");
-  if (m) return { id: param!, start: `${m[1]}-${m[2]}-01`, end: `${m[1]}-${m[2]}-${lastDay(Number(m[1]), Number(m[2]))}`, kind: "month" };
+  if (m)
+    return {
+      id: param!,
+      start: `${m[1]}-${m[2]}-01`,
+      end: `${m[1]}-${m[2]}-${lastDay(Number(m[1]), Number(m[2]))}`,
+      kind: "month",
+    };
   return fallback;
 }
 

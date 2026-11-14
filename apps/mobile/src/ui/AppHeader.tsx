@@ -25,8 +25,17 @@ export function AppHeader({ title }: Readonly<{ title: string }>) {
       title={title}
       size="inline"
       actions={
-        <Pressable role="button" aria-label={name ? t("account.openNamed", { name }) : t("account.open")} hitSlop={8} onPress={() => router.navigate(routes.profile(locale) as never)}>
-          <Avatar size="sm" {...avatarOf({ id: me.data?.email ?? "folioviv", avatarSeed: me.data?.avatarSeed })} fallback={name.charAt(0).toUpperCase() || "A"} />
+        <Pressable
+          role="button"
+          aria-label={name ? t("account.openNamed", { name }) : t("account.open")}
+          hitSlop={8}
+          onPress={() => router.navigate(routes.profile(locale) as never)}
+        >
+          <Avatar
+            size="sm"
+            {...avatarOf({ id: me.data?.email ?? "folioviv", avatarSeed: me.data?.avatarSeed })}
+            fallback={name.charAt(0).toUpperCase() || "A"}
+          />
         </Pressable>
       }
     />

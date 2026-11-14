@@ -5,7 +5,10 @@ import { resolveSession } from "@/lib/session";
 
 import { GET } from "./route";
 
-vi.mock("@/lib/session", async (original) => ({ ...(await original<typeof import("@/lib/session")>()), resolveSession: vi.fn() }));
+vi.mock("@/lib/session", async (original) => ({
+  ...(await original<typeof import("@/lib/session")>()),
+  resolveSession: vi.fn(),
+}));
 vi.mock("@/app/accounts", () => ({ accounts: vi.fn() }));
 
 const TOKEN = `as1.${"A".repeat(43)}`;
@@ -13,7 +16,9 @@ const ask = (cookie?: string) => GET(new Request("http://localhost/api/me", { he
 
 describe("GET /api/me, the public bar's hint", () => {
   beforeEach(() => {
-    vi.mocked(accounts).mockReturnValue({ profile: vi.fn(async () => ({ id: "a-1", name: "Camille", email: "camille@example.com", avatarSeed: "s3" })) } as never);
+    vi.mocked(accounts).mockReturnValue({
+      profile: vi.fn(async () => ({ id: "a-1", name: "Camille", email: "camille@example.com", avatarSeed: "s3" })),
+    } as never);
   });
   afterEach(() => {
     vi.clearAllMocks();
@@ -37,13 +42,23 @@ describe("GET /api/me, the public bar's hint", () => {
   });
 
   it("signed in: the name, e-mail and avatar seed for the bar - and only those", async () => {
-    vi.mocked(resolveSession).mockResolvedValue({ id: "sess", account: { id: "a1", email: "camille@example.com", role: "USER", locale: "fr" } });
+    vi.mocked(resolveSession).mockResolvedValue({
+      id: "sess",
+      account: { id: "a1", email: "camille@example.com", role: "USER", locale: "fr" },
+    });
     const body = await (await ask(`folioviv_session=${TOKEN}`)).json();
-    expect(body).toEqual({ signedIn: true, signupOpen: false, account: { id: "a-1", name: "Camille", email: "camille@example.com", avatarSeed: "s3" } });
+    expect(body).toEqual({
+      signedIn: true,
+      signupOpen: false,
+      account: { id: "a-1", name: "Camille", email: "camille@example.com", avatarSeed: "s3" },
+    });
   });
 
   it("the personalised answer of a signed-in person is private, no-store and varies with the cookie (krizaka-ui#800)", async () => {
-    vi.mocked(resolveSession).mockResolvedValue({ id: "sess", account: { id: "a1", email: "camille@example.com", role: "USER", locale: "fr" } });
+    vi.mocked(resolveSession).mockResolvedValue({
+      id: "sess",
+      account: { id: "a1", email: "camille@example.com", role: "USER", locale: "fr" },
+    });
     const res = await ask(`folioviv_session=${TOKEN}`);
     expect(res.headers.get("cache-control")).toBe("private, no-store");
     expect(res.headers.get("vary")).toBe("Cookie");

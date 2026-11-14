@@ -20,7 +20,11 @@ export default async function AdminOrganize({ params }: Readonly<{ params: Promi
         <h1 className="font-display text-2xl font-bold text-fg">{t("console.admin.organize.title")}</h1>
         <p className="max-w-prose text-fg-secondary">{t("console.admin.organize.lead")}</p>
       </header>
-      {stored.length ? stored.map((s) => <OrganizeConfig key={s.kind} stored={s} />) : <p className="text-fg-secondary">{t("console.admin.organize.none")}</p>}
+      {stored.length ? (
+        stored.map((s) => <OrganizeConfig key={s.kind} stored={s} />)
+      ) : (
+        <p className="text-fg-secondary">{t("console.admin.organize.none")}</p>
+      )}
     </div>
   );
 }

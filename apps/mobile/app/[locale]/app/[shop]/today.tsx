@@ -36,21 +36,60 @@ export default function Today() {
   const marks = useQuery(queries.calendar(strip.start, strip.end, shop));
   const marked = new Set((marks.data ?? []).filter((d) => d.visits > 0).map((d) => d.day));
   const move = useMutation({
-    mutationFn: ({ id, kind }: { id: string; kind: "in" | "out" }) => (kind === "in" ? folioviv.checkIn(id, shop) : folioviv.checkOut(id, shop)),
+    mutationFn: ({ id, kind }: { id: string; kind: "in" | "out" }) =>
+      kind === "in" ? folioviv.checkIn(id, shop) : folioviv.checkOut(id, shop),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queries.day(wanted, shop).queryKey }),
   });
   return (
     <Screen header={<AppHeader title={t("today.title")} />} scroll={false}>
-      <DayStrip label={t("today.strip")} style={{ flexGrow: 0 }} locale={LANGUAGE_TAG[locale]} value={shown} start={strip.start} today={today} isDateMarked={(d) => marked.has(d)} markedLabel={t("today.marked")} onValueChange={(next) => router.setParams({ day: next, visit: undefined })} />
-      <QueryStates query={day} isEmpty={(d) => d.visits.length === 0} empty={{ title: t("today.empty"), description: t("today.emptyLead") }}>
+      <DayStrip
+        label={t("today.strip")}
+        style={{ flexGrow: 0 }}
+        locale={LANGUAGE_TAG[locale]}
+        value={shown}
+        start={strip.start}
+        today={today}
+        isDateMarked={(d) => marked.has(d)}
+        markedLabel={t("today.marked")}
+        onValueChange={(next) => router.setParams({ day: next, visit: undefined })}
+      />
+      <QueryStates
+        query={day}
+        isEmpty={(d) => d.visits.length === 0}
+        empty={{ title: t("today.empty"), description: t("today.emptyLead") }}
+      >
         {(d) => {
           const open = d.visits.find((v) => v.appointmentId === openId);
           return (
             <ListDetail
               listTitle={t("today.detail.list")}
-              list={<List label={t("today.detail.list")} data={d.visits} keyExtractor={(v) => v.appointmentId} renderItem={(v) => <VisitRow visit={v} timeZone={d.timezone} selected={v.appointmentId === openId} onOpen={() => router.setParams({ visit: v.appointmentId })} />} />}
+              list={
+                <List
+                  label={t("today.detail.list")}
+                  data={d.visits}
+                  keyExtractor={(v) => v.appointmentId}
+                  renderItem={(v) => (
+                    <VisitRow
+                      visit={v}
+                      timeZone={d.timezone}
+                      selected={v.appointmentId === openId}
+                      onOpen={() => router.setParams({ visit: v.appointmentId })}
+                    />
+                  )}
+                />
+              }
               detailTitle={open ? open.service[locale] : t("today.detail.detailTitle")}
-              detail={open ? <VisitDetail visit={open} timeZone={d.timezone} busy={move.isPending} onCheckIn={() => move.mutate({ id: open.appointmentId, kind: "in" })} onCheckOut={() => move.mutate({ id: open.appointmentId, kind: "out" })} /> : undefined}
+              detail={
+                open ? (
+                  <VisitDetail
+                    visit={open}
+                    timeZone={d.timezone}
+                    busy={move.isPending}
+                    onCheckIn={() => move.mutate({ id: open.appointmentId, kind: "in" })}
+                    onCheckOut={() => move.mutate({ id: open.appointmentId, kind: "out" })}
+                  />
+                ) : undefined
+              }
               empty={t("today.detail.select")}
               backLabel={t("today.detail.back")}
               onBack={() => router.setParams({ visit: undefined })}

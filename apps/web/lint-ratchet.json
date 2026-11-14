@@ -1,9 +1,5 @@
 {
-  "globs": [
-    "app/**/*.tsx",
-    "components/**/*.tsx",
-    "src/**/*.tsx"
-  ],
+  "globs": ["app/**/*.tsx", "components/**/*.tsx", "src/**/*.tsx"],
   "stackGlobs": [
     "app/**/*.{js,jsx,mjs,ts,tsx,mts}",
     "components/**/*.{js,jsx,mjs,ts,tsx,mts}",
@@ -27,19 +23,15 @@
     "retiredImport": 0,
     "routeStateSelection": 2,
     "cognitiveComplexity": 0,
-    "sonar": 12,
+    "sonar": 5,
     "codeRules": 848,
     "code/curly": 833,
     "code/max-depth": 7,
-    "sonarjs/no-nested-template-literals": 2,
-    "sonarjs/no-nested-conditional": 2,
     "sonarjs/no-nested-assignment": 1,
-    "code/no-console": 8,
-    "sonarjs/use-type-alias": 1,
-    "sonarjs/super-linear-regex": 2,
     "sonarjs/todo-tag": 1,
-    "sonarjs/no-redundant-optional": 2,
+    "code/no-console": 8,
     "sonarjs/no-os-command-from-path": 1,
+    "sonarjs/no-redundant-optional": 2,
     "pageTemplate": 38
   }
 }

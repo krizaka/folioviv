@@ -67,12 +67,15 @@ export async function FounderOffer({ locale }: Readonly<{ locale: Locale }>) {
       <ul className="mt-6 flex list-none flex-col gap-1 p-0 text-sm text-fg-secondary">
         {plans.starter ? (
           <li>
-            <strong className="text-fg">{t.plans.starter}</strong> · {plans.starter.price === null ? t.plans.preparing : format(t.plans.price, { price: plans.starter.price })}
+            <strong className="text-fg">{t.plans.starter}</strong> ·{" "}
+            {plans.starter.price === null ? t.plans.preparing : format(t.plans.price, { price: plans.starter.price })}
           </li>
         ) : null}
         {plans.scale ? (
           <li>
-            <strong className="text-fg">{t.plans.scale}</strong> · {plans.scale.price === null ? t.plans.preparing : format(t.plans.price, { price: plans.scale.price })} — {t.plans.scaleSoon}
+            <strong className="text-fg">{t.plans.scale}</strong> ·{" "}
+            {plans.scale.price === null ? t.plans.preparing : format(t.plans.price, { price: plans.scale.price })} —{" "}
+            {t.plans.scaleSoon}
           </li>
         ) : null}
       </ul>

@@ -24,7 +24,10 @@ interface Prop {
 type Props = Record<string, Prop[]>;
 
 function unfold(text: string): string[] {
-  return text.replace(/\r?\n[ \t]/g, "").split(/\r?\n/).filter((l) => l.length > 0);
+  return text
+    .replace(/\r?\n[ \t]/g, "")
+    .split(/\r?\n/)
+    .filter((l) => l.length > 0);
 }
 
 /** The index of the colon that ends the name and parameters (a colon inside quotes does not), or -1. */
@@ -104,15 +107,23 @@ const dayOf = (y: number, m: number, d: number) => `${pad(y, 4)}-${pad(m)}-${pad
 
 /** Minutes since midnight of an instant on the wall clock of a zone. */
 function minutesOfDay(at: number, tz: string): number {
-  const parts = new Intl.DateTimeFormat("en-GB", { timeZone: tz, hourCycle: "h23", hour: "2-digit", minute: "2-digit" }).formatToParts(new Date(at));
-  return Number(parts.find((p) => p.type === "hour")!.value) * 60 + Number(parts.find((p) => p.type === "minute")!.value);
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: tz,
+    hourCycle: "h23",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).formatToParts(new Date(at));
+  return (
+    Number(parts.find((p) => p.type === "hour")!.value) * 60 + Number(parts.find((p) => p.type === "minute")!.value)
+  );
 }
 
 function parseMoment(prop: Prop, shopZone: string): Moment | null {
   const m = /^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})?(Z)?)?$/.exec(prop.value.trim());
   if (!m) return null;
   const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
-  if (m[4] === undefined || prop.params.VALUE === "DATE") return { at: localInstant(dayOf(y, mo, d), 0, shopZone).getTime(), tz: shopZone, allDay: true };
+  if (m[4] === undefined || prop.params.VALUE === "DATE")
+    return { at: localInstant(dayOf(y, mo, d), 0, shopZone).getTime(), tz: shopZone, allDay: true };
   const [h, mi, s] = [Number(m[4]), Number(m[5]), Number(m[6] ?? 0)];
   if (m[7]) return { at: Date.UTC(y, mo - 1, d, h, mi, s), tz: "UTC", allDay: false };
   // A zoned time is read to the minute: calendar apps write whole minutes.
@@ -125,7 +136,12 @@ function parseDuration(value: string): number | null {
   const date = m ? /^(?:(\d+)W)?(?:(\d+)D)?$/.exec(m[2]!) : null;
   const time = m ? /^(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/.exec(m[3] ?? "") : null;
   if (!m || !date || !time) return null;
-  const seconds = Number(date[1] ?? 0) * 604_800 + Number(date[2] ?? 0) * 86_400 + Number(time[1] ?? 0) * 3_600 + Number(time[2] ?? 0) * 60 + Number(time[3] ?? 0);
+  const seconds =
+    Number(date[1] ?? 0) * 604_800 +
+    Number(date[2] ?? 0) * 86_400 +
+    Number(time[1] ?? 0) * 3_600 +
+    Number(time[2] ?? 0) * 60 +
+    Number(time[3] ?? 0);
   return (m[1] === "-" ? -seconds : seconds) * 1_000;
 }
 
@@ -154,7 +170,10 @@ function parseRule(value: string, zone: string): Rule | null {
     interval: Math.max(1, Number(parts.INTERVAL ?? 1) || 1),
     count: parts.COUNT ? Number(parts.COUNT) : null,
     until: untilMs,
-    byDay: (parts.BYDAY ?? "").split(",").map((d) => WEEKDAYS.indexOf(d.slice(-2))).filter((i) => i >= 0),
+    byDay: (parts.BYDAY ?? "")
+      .split(",")
+      .map((d) => WEEKDAYS.indexOf(d.slice(-2)))
+      .filter((i) => i >= 0),
   };
 }
 
@@ -236,8 +255,15 @@ function skippedStarts(e: Props, overridden: Map<string, Set<number>>, timezone:
 }
 
 /** The busy intervals one event gives inside the window (none for a free, cancelled or unreadable event). */
-function eventBusy(e: Props, overridden: Map<string, Set<number>>, timezone: string, from: number, to: number): BusyInterval[] {
-  if (e.TRANSP?.[0]?.value.toUpperCase() === "TRANSPARENT" || e.STATUS?.[0]?.value.toUpperCase() === "CANCELLED") return [];
+function eventBusy(
+  e: Props,
+  overridden: Map<string, Set<number>>,
+  timezone: string,
+  from: number,
+  to: number,
+): BusyInterval[] {
+  if (e.TRANSP?.[0]?.value.toUpperCase() === "TRANSPARENT" || e.STATUS?.[0]?.value.toUpperCase() === "CANCELLED")
+    return [];
   const first = e.DTSTART?.[0] ? parseMoment(e.DTSTART[0], timezone) : null;
   if (!first) return [];
   const length = lengthOf(e, first, timezone);
@@ -245,7 +271,9 @@ function eventBusy(e: Props, overridden: Map<string, Set<number>>, timezone: str
   const skip = skippedStarts(e, overridden, timezone);
   const rule = e.RRULE?.[0] ? parseRule(e.RRULE[0].value, timezone) : null;
   const starts = rule && !e["RECURRENCE-ID"] ? occurrenceStarts(first, rule, to) : [first.at];
-  return starts.filter((start) => !skip.has(start) && start + length > from && start < to).map((start) => ({ startsAt: new Date(start), endsAt: new Date(start + length) }));
+  return starts
+    .filter((start) => !skip.has(start) && start + length > from && start < to)
+    .map((start) => ({ startsAt: new Date(start), endsAt: new Date(start + length) }));
 }
 
 /** The busy times of an ICS file inside the window, merged. Malformed events are skipped, never fatal. */

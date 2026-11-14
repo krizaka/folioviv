@@ -16,7 +16,12 @@ export function poolConfig(url: string, caCert?: string, max = 5): pg.PoolConfig
   const mode = parsed.searchParams.get("sslmode");
   parsed.searchParams.delete("sslmode");
   const tls = mode === "require" || mode === "verify-ca" || mode === "verify-full";
-  return { connectionString: parsed.toString(), max, idleTimeoutMillis: 30_000, ...(tls ? { ssl: { ca: caCert?.replace(/\\n/g, "\n"), rejectUnauthorized: true } } : {}) };
+  return {
+    connectionString: parsed.toString(),
+    max,
+    idleTimeoutMillis: 30_000,
+    ...(tls ? { ssl: { ca: caCert?.replaceAll(String.raw`\n`, "\n"), rejectUnauthorized: true } } : {}),
+  };
 }
 
 export function createDb(pool: pg.Pool): Db {

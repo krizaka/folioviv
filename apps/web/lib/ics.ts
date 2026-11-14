@@ -10,8 +10,17 @@ export interface IcsEvent {
   now: Date;
 }
 
-export const stamp = (d: Date) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
-export const escape = (text: string) => text.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+export const stamp = (d: Date) =>
+  d
+    .toISOString()
+    .replace(/[-:]/g, "")
+    .replace(/\.\d{3}Z$/, "Z");
+export const escape = (text: string) =>
+  text
+    .replaceAll("\\", String.raw`\\`)
+    .replaceAll(";", String.raw`\;`)
+    .replaceAll(",", String.raw`\,`)
+    .replace(/\r?\n/g, String.raw`\n`);
 
 // @fixed: RFC 5545 §3.1 — a content line is folded before 75 octets
 const FOLD = 75;
@@ -65,7 +74,15 @@ export interface FeedIcsEntry {
  * The private calendar feed (RFC 5545) of a shop or a staff member: one event per appointment, « Service · Camille ». No location, description,
  * phone, e-mail or note is ever written: the feed's address is its only secret and it must carry no client's data beyond a first name.
  */
-export function buildFeedIcs({ name, entries, now }: { name: string; entries: readonly FeedIcsEntry[]; now: Date }): string {
+export function buildFeedIcs({
+  name,
+  entries,
+  now,
+}: {
+  name: string;
+  entries: readonly FeedIcsEntry[];
+  now: Date;
+}): string {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",

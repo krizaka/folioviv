@@ -14,7 +14,10 @@ export function defaultPicture(kind: OrgDefaultKind, seed: string, size = 512): 
 }
 
 /** The kinds a picker of this subject may offer: a shop or a folder is never given a person (the Verikora binder bug). */
-export const PICKER_KINDS = { person: ["person"], shop: ["shop"], banner: ["banner"] } as const satisfies Record<string, readonly OrgDefaultKind[]>;
+export const PICKER_KINDS = { person: ["person"], shop: ["shop"], banner: ["banner"] } as const satisfies Record<
+  string,
+  readonly OrgDefaultKind[]
+>;
 
 export function pickerChoices(subject: keyof typeof PICKER_KINDS): { id: string; kind: OrgDefaultKind }[] {
   return PICKER_KINDS[subject].flatMap((kind) => listDefaults(kind).map((item) => ({ id: item.id, kind })));

@@ -24,7 +24,17 @@ export function PageSkeleton({ kind }: Readonly<{ kind: "day" | "list" | "detail
   if (kind === "day")
     return (
       <div {...busy}>
-        <DashboardLayout eyebrow={<Skeleton className="h-3 w-24" />} title={<Skeleton className="h-8 w-72 max-w-full" />} actions={<Skeleton className="h-8 w-64" />} toolbar={<div className="flex w-full flex-col gap-4"><Skeleton className="h-10 w-48" /><Skeleton className="h-9 w-full max-w-xl" /></div>}>
+        <DashboardLayout
+          eyebrow={<Skeleton className="h-3 w-24" />}
+          title={<Skeleton className="h-8 w-72 max-w-full" />}
+          actions={<Skeleton className="h-8 w-64" />}
+          toolbar={
+            <div className="flex w-full flex-col gap-4">
+              <Skeleton className="h-10 w-48" />
+              <Skeleton className="h-9 w-full max-w-xl" />
+            </div>
+          }
+        >
           <Widget span={3} title={<Skeleton className="h-4 w-40" />}>
             <Rows count={3} height="h-14" />
           </Widget>

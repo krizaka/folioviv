@@ -19,12 +19,20 @@ const compareText = (a: string, b: string) => a.localeCompare(b, "fr-CA");
  * The feed of the neighbourhood: the newest flyers first, at most two of one shop and nine in all, optionally only those of a
  * neighbourhood. Pure: the rows, the language and the filter are parameters, the words come from the catalogues.
  */
-export function buildFeed(input: { rows: readonly FeedFlyerRow[]; locale: Locale; quartier?: string | null }): FeedView {
+export function buildFeed(input: {
+  rows: readonly FeedFlyerRow[];
+  locale: Locale;
+  quartier?: string | null;
+}): FeedView {
   const { rows, locale } = input;
   const quartier = input.quartier?.trim() || null;
   const t = translator(locale);
   const say = (fr: string, en: string) => ({ fr, en })[locale] || fr || en;
-  const quartiers = [...new Map(rows.filter((r) => r.area).map((r) => [quartierOf(r.area!).toLowerCase(), quartierOf(r.area!)])).values()].sort(compareText);
+  const quartiers = [
+    ...new Map(
+      rows.filter((r) => r.area).map((r) => [quartierOf(r.area!).toLowerCase(), quartierOf(r.area!)]),
+    ).values(),
+  ].sort(compareText);
   const perShop = new Map<string, number>();
   const flyers: FlyerView[] = [];
   for (const r of rows) {

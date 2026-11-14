@@ -29,7 +29,14 @@ export default async function AdminOverview({ params }: Readonly<{ params: Promi
         <h2 className="mb-3 font-display text-base font-bold text-fg">{t.health}</h2>
         <DescriptionList
           items={[
-            { term: t.version, details: <code className="font-mono text-xs" data-testid="app-version">{APP_VERSION}</code> },
+            {
+              term: t.version,
+              details: (
+                <code className="font-mono text-xs" data-testid="app-version">
+                  {APP_VERSION}
+                </code>
+              ),
+            },
             { term: t.database, details: up(db) },
             { term: t.realtime, details: up(realtimeBus().connected) },
           ]}

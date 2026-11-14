@@ -20,7 +20,8 @@ describe("the due date of an invoice", () => {
   });
 
   it("refuses terms that are not whole days between 0 and 365", () => {
-    for (const bad of [-1, 366, 1.5, Number.NaN]) expect(termsDaysSchema.safeParse(bad).success, String(bad)).toBe(false);
+    for (const bad of [-1, 366, 1.5, Number.NaN])
+      expect(termsDaysSchema.safeParse(bad).success, String(bad)).toBe(false);
     expect(() => dueOn("2026-10-21", 400)).toThrow();
   });
 
@@ -48,7 +49,8 @@ describe("what is overdue", () => {
   it("follows the shop's day, not the server's: 23:30 in Montréal is already tomorrow in UTC", () => {
     const due = dueOn("2026-10-01", 30); // 2026-10-31
     const at = new Date("2026-11-01T03:30:00Z"); // 23:30 on 31 Oct in Montréal (EDT until the clocks change at 06:00Z)
-    const day = (tz: string) => new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(at);
+    const day = (tz: string) =>
+      new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(at);
     expect(day("America/Toronto")).toBe("2026-10-31");
     expect(day("UTC")).toBe("2026-11-01");
     expect(isPastDue(due, day("America/Toronto"))).toBe(false);

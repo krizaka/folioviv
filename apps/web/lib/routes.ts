@@ -9,7 +9,9 @@ export { isShopId };
 export type RouteLocale = "en" | "fr";
 
 const query = (params: Record<string, string | undefined>) => {
-  const text = new URLSearchParams(Object.entries(params).filter((entry): entry is [string, string] => entry[1] !== undefined)).toString();
+  const text = new URLSearchParams(
+    Object.entries(params).filter((entry): entry is [string, string] => entry[1] !== undefined),
+  ).toString();
   return text ? `?${text}` : "";
 };
 
@@ -29,10 +31,12 @@ export function shopRoutes(locale: RouteLocale, shopId: string) {
     invoiceCorrect: (id: string) => `${root}/invoices/${id}/correct`,
     newInvoice: `${root}/invoices/new`,
     /** « Nouvelle facture » prefilled (D3): « Facturer ce client », a finished appointment's service and quantity. */
-    newInvoiceFor: (prefill: { client?: string; service?: string; quantity?: string; appointment?: string }) => `${root}/invoices/new${query(prefill)}`,
+    newInvoiceFor: (prefill: { client?: string; service?: string; quantity?: string; appointment?: string }) =>
+      `${root}/invoices/new${query(prefill)}`,
     books: (period?: string) => `${root}/books${query({ period })}`,
     /** Boutique (K4): one hub on SettingsLayout, one address per section; `?tab=` names the section of the page. */
-    boutique: (section?: string, tab?: string) => `${[root, "settings", section].filter(Boolean).join("/")}${query({ tab })}`,
+    boutique: (section?: string, tab?: string) =>
+      `${[root, "settings", section].filter(Boolean).join("/")}${query({ tab })}`,
     /** Boutique › Équipe. */
     team: `${root}/settings/team`,
     /** Boutique › Hours and days off: where « Open the hours » leads (krizaka-internal#1911). */

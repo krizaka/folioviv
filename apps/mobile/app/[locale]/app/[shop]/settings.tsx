@@ -47,11 +47,20 @@ export default function Boutique() {
               <React.Fragment key={group.id}>
                 <Txt variant="label">{t(`boutique.groups.${group.id}`)}</Txt>
                 {group.sections.map((section) => (
-                  <Button key={section} variant="secondary" label={t(`boutique.sections.${section}`)} onPress={() => void Linking.openURL(webUrl(routes.boutiqueSection(locale, shop, section)))} />
+                  <Button
+                    key={section}
+                    variant="secondary"
+                    label={t(`boutique.sections.${section}`)}
+                    onPress={() => void Linking.openURL(webUrl(routes.boutiqueSection(locale, shop, section)))}
+                  />
                 ))}
               </React.Fragment>
             ))}
-            <Button variant="secondary" label={t("boutique.edit")} onPress={() => void Linking.openURL(webUrl(routes.boutique(locale, shop)))} />
+            <Button
+              variant="secondary"
+              label={t("boutique.edit")}
+              onPress={() => void Linking.openURL(webUrl(routes.boutique(locale, shop)))}
+            />
           </>
         )}
       </QueryStates>

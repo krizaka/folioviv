@@ -1,13 +1,31 @@
 import { createHash, randomBytes } from "node:crypto";
 
-import { type ConsentPurpose, consentsInForce, type DependantProfile, localDay, sniffImage, visitMinutes } from "@folioviv/core";
+import {
+  type ConsentPurpose,
+  consentsInForce,
+  type DependantProfile,
+  localDay,
+  sniffImage,
+  visitMinutes,
+} from "@folioviv/core";
 import { addDays } from "date-fns";
 import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import type { Db } from "./client";
 import { agendaConflicts } from "./calendar-connections";
 import { openField } from "./crypto";
-import { appointments, bookings, clients, dependants, mailOutbox, services, shops, shopZones, staff, visitReports } from "./schema";
+import {
+  appointments,
+  bookings,
+  clients,
+  dependants,
+  mailOutbox,
+  services,
+  shops,
+  shopZones,
+  staff,
+  visitReports,
+} from "./schema";
 import { ShopError } from "./service-shop";
 
 /**
@@ -50,20 +68,39 @@ export interface AgendaScope {
   staffAccountId?: string;
 }
 
-const assignedTo = (staffAccountId: string) => sql`${appointments.staffId} IN (SELECT ${staff.id} FROM ${staff} WHERE ${staff.accountId} = ${staffAccountId})`;
+const assignedTo = (staffAccountId: string) =>
+  sql`${appointments.staffId} IN (SELECT ${staff.id} FROM ${staff} WHERE ${staff.accountId} = ${staffAccountId})`;
 
 export async function dayVisits(db: Db, shopId: string, day: string, scope: AgendaScope = {}): Promise<DayVisit[]> {
   const [shop] = await db.select({ timezone: shops.timezone }).from(shops).where(eq(shops.id, shopId));
   if (!shop) return refuse("AK_SHOP_UNKNOWN");
   const visits = await db
-    .select({ a: appointments, nameFr: services.nameFr, nameEn: services.nameEn, capacity: services.capacity, zone: shopZones.name, start: sql<string>`lower(${appointments.during})`, end: sql<string>`upper(${appointments.during})` })
+    .select({
+      a: appointments,
+      nameFr: services.nameFr,
+      nameEn: services.nameEn,
+      capacity: services.capacity,
+      zone: shopZones.name,
+      start: sql<string>`lower(${appointments.during})`,
+      end: sql<string>`upper(${appointments.during})`,
+    })
     .from(appointments)
     .innerJoin(services, eq(services.id, appointments.serviceId))
     .leftJoin(shopZones, eq(shopZones.id, appointments.zoneId))
-    .where(and(eq(appointments.shopId, shopId), scope.staffAccountId ? assignedTo(scope.staffAccountId) : undefined, sql`${appointments.status} <> 'cancelled'`, sql`(lower(${appointments.during}) AT TIME ZONE ${shop.timezone})::date = ${day}::date`))
+    .where(
+      and(
+        eq(appointments.shopId, shopId),
+        scope.staffAccountId ? assignedTo(scope.staffAccountId) : undefined,
+        sql`${appointments.status} <> 'cancelled'`,
+        sql`(lower(${appointments.during}) AT TIME ZONE ${shop.timezone})::date = ${day}::date`,
+      ),
+    )
     .orderBy(sql`lower(${appointments.during})`);
   if (visits.length === 0) return [];
-  const conflicts = await agendaConflicts(db, visits.map((v) => v.a.id));
+  const conflicts = await agendaConflicts(
+    db,
+    visits.map((v) => v.a.id),
+  );
   const rows = await db
     .select({
       bookingId: bookings.id,
@@ -85,7 +122,15 @@ export async function dayVisits(db: Db, shopId: string, day: string, scope: Agen
     .innerJoin(clients, eq(clients.id, bookings.clientId))
     .innerJoin(dependants, eq(dependants.id, bookings.dependantId))
     .leftJoin(visitReports, eq(visitReports.bookingId, bookings.id))
-    .where(and(inArray(bookings.appointmentId, visits.map((v) => v.a.id)), eq(bookings.status, "booked")))
+    .where(
+      and(
+        inArray(
+          bookings.appointmentId,
+          visits.map((v) => v.a.id),
+        ),
+        eq(bookings.status, "booked"),
+      ),
+    )
     .orderBy(asc(dependants.name));
   return visits.map((v) => ({
     appointmentId: v.a.id,
@@ -106,7 +151,15 @@ export async function dayVisits(db: Db, shopId: string, day: string, scope: Agen
         clientPhone: r.clientPhone,
         dependant: { name: r.dName, kind: r.dKind, profile: r.dProfile as DependantProfile },
         hasAccessNotes: r.hasNotes,
-        report: r.reportId ? { id: r.reportId, note: r.note!, hasPhoto: r.hasPhoto, durationMinutes: r.minutes!, sentAt: r.sentAt?.toISOString() ?? null } : null,
+        report: r.reportId
+          ? {
+              id: r.reportId,
+              note: r.note!,
+              hasPhoto: r.hasPhoto,
+              durationMinutes: r.minutes!,
+              sentAt: r.sentAt?.toISOString() ?? null,
+            }
+          : null,
       })),
   }));
 }
@@ -122,8 +175,20 @@ export interface CalendarDay {
 }
 
 /** What the walker's calendar shows: per local day of `from`..`to` (both included), how many visits and bookings there are (cancelled ones excluded). */
-export async function visitDays(db: Db, shopId: string, from: string, to: string, scope: AgendaScope = {}): Promise<CalendarDay[]> {
-  if (!DAY.test(from) || !DAY.test(to) || from > to || (Date.parse(to) - Date.parse(from)) / 86_400_000 >= CALENDAR_MAX_DAYS) return refuse("AK_RANGE_INVALID");
+export async function visitDays(
+  db: Db,
+  shopId: string,
+  from: string,
+  to: string,
+  scope: AgendaScope = {},
+): Promise<CalendarDay[]> {
+  if (
+    !DAY.test(from) ||
+    !DAY.test(to) ||
+    from > to ||
+    (Date.parse(to) - Date.parse(from)) / 86_400_000 >= CALENDAR_MAX_DAYS
+  )
+    return refuse("AK_RANGE_INVALID");
   const [shop] = await db.select({ timezone: shops.timezone }).from(shops).where(eq(shops.id, shopId));
   if (!shop) return refuse("AK_SHOP_UNKNOWN");
   const rows = await db.execute(sql`
@@ -147,8 +212,13 @@ export async function shopDay(db: Db, shopId: string, now: Date): Promise<string
 }
 
 async function lockedVisit(tx: Pick<Db, "execute">, shopId: string, appointmentId: string) {
-  const found = await tx.execute(sql`SELECT status, checked_in_at, checked_out_at FROM appointments WHERE id = ${appointmentId} AND shop_id = ${shopId} FOR UPDATE`);
-  return (found.rows[0] as { status: string; checked_in_at: string | null; checked_out_at: string | null } | undefined) ?? refuse("AK_VISIT_UNKNOWN");
+  const found = await tx.execute(
+    sql`SELECT status, checked_in_at, checked_out_at FROM appointments WHERE id = ${appointmentId} AND shop_id = ${shopId} FOR UPDATE`,
+  );
+  return (
+    (found.rows[0] as { status: string; checked_in_at: string | null; checked_out_at: string | null } | undefined) ??
+    refuse("AK_VISIT_UNKNOWN")
+  );
 }
 
 /** The walker starts a visit. Once; a cancelled visit cannot start. */
@@ -205,20 +275,34 @@ export async function saveReport(db: Db, input: ReportInput): Promise<{ reportId
     if (!visit) return refuse("AK_BOOKING_UNKNOWN");
     if (!visit.checked_in_at || !visit.checked_out_at) return refuse("AK_VISIT_NOT_DONE");
     const minutes = visitMinutes(new Date(visit.checked_in_at), new Date(visit.checked_out_at));
-    const [existing] = await tx.select({ id: visitReports.id }).from(visitReports).where(eq(visitReports.bookingId, input.bookingId));
+    const [existing] = await tx
+      .select({ id: visitReports.id })
+      .from(visitReports)
+      .where(eq(visitReports.bookingId, input.bookingId));
     if (existing) {
       const photoColumns: Partial<typeof visitReports.$inferInsert> = {};
       if (photo !== undefined) {
         photoColumns.photo = photo?.bytes ?? null;
         photoColumns.photoType = photo?.type ?? null;
       }
-      await tx.update(visitReports).set({ note, durationMinutes: minutes, ...photoColumns }).where(eq(visitReports.id, existing.id));
+      await tx
+        .update(visitReports)
+        .set({ note, durationMinutes: minutes, ...photoColumns })
+        .where(eq(visitReports.id, existing.id));
       return { reportId: existing.id, created: false };
     }
     // The link is born unusable (a random hash nobody holds); `issueReportLink` makes the real one when the report is sent.
     const [row] = await tx
       .insert(visitReports)
-      .values({ bookingId: input.bookingId, note, durationMinutes: minutes, photo: photo?.bytes ?? null, photoType: photo?.type ?? null, viewTokenHash: reportTokenHash(`unused.${randomBytes(32).toString("base64url")}`), tokenExpiresAt: new Date(0) })
+      .values({
+        bookingId: input.bookingId,
+        note,
+        durationMinutes: minutes,
+        photo: photo?.bytes ?? null,
+        photoType: photo?.type ?? null,
+        viewTokenHash: reportTokenHash(`unused.${randomBytes(32).toString("base64url")}`),
+        tokenExpiresAt: new Date(0),
+      })
       .returning({ id: visitReports.id });
     return { reportId: row!.id, created: true };
   });
@@ -250,7 +334,12 @@ export interface ReportMailContext {
  * and returns what the e-mail says. Refused when the client erased their file, has no e-mail, or withdrew the service
  * consent (Loi 25): nothing is sent to someone who did not agree.
  */
-export async function issueReportLink(db: Db, shopId: string, bookingId: string, now: Date): Promise<ReportMailContext> {
+export async function issueReportLink(
+  db: Db,
+  shopId: string,
+  bookingId: string,
+  now: Date,
+): Promise<ReportMailContext> {
   return db.transaction(async (tx) => {
     const found = await tx.execute(sql`
       SELECT r.id AS report_id, r.note, r.duration_minutes, (r.photo IS NOT NULL) AS has_photo,
@@ -261,16 +350,44 @@ export async function issueReportLink(db: Db, shopId: string, bookingId: string,
         JOIN services sv ON sv.id = a.service_id JOIN shop_rules sr ON sr.shop_id = a.shop_id
        WHERE b.id = ${bookingId} AND a.shop_id = ${shopId} FOR UPDATE OF r`);
     const row = found.rows[0] as
-      | { report_id: string; note: string; duration_minutes: number; has_photo: boolean; client_id: string; full_name: string; email: string | null; language: "fr" | "en"; erased_at: string | null; dependant_name: string; shop_name: string; name_fr: string; name_en: string; starts_at: string; report_link_days: number }
+      | {
+          report_id: string;
+          note: string;
+          duration_minutes: number;
+          has_photo: boolean;
+          client_id: string;
+          full_name: string;
+          email: string | null;
+          language: "fr" | "en";
+          erased_at: string | null;
+          dependant_name: string;
+          shop_name: string;
+          name_fr: string;
+          name_en: string;
+          starts_at: string;
+          report_link_days: number;
+        }
       | undefined;
     if (!row) return refuse("AK_NO_REPORT");
     if (row.erased_at || !row.email) return refuse("AK_CLIENT_UNREACHABLE");
     // The consents live in the privacy module (folioviv#370): the last word on the service purpose is the one in force.
-    const history = await tx.execute(sql`SELECT purpose, granted, version, at FROM privacy.consent WHERE subject_kind = 'client' AND subject_id = ${row.client_id} ORDER BY seq DESC`);
-    if (!consentsInForce((history.rows as Array<{ purpose: ConsentPurpose; granted: boolean; version: string; at: Date | string }>).map((h) => ({ purpose: h.purpose, granted: h.granted, textVersion: h.version, at: new Date(h.at) }))).service) refuse("AK_NO_CONSENT");
+    const history = await tx.execute(
+      sql`SELECT purpose, granted, version, at FROM privacy.consent WHERE subject_kind = 'client' AND subject_id = ${row.client_id} ORDER BY seq DESC`,
+    );
+    if (
+      !consentsInForce(
+        (history.rows as Array<{ purpose: ConsentPurpose; granted: boolean; version: string; at: Date | string }>).map(
+          (h) => ({ purpose: h.purpose, granted: h.granted, textVersion: h.version, at: new Date(h.at) }),
+        ),
+      ).service
+    )
+      refuse("AK_NO_CONSENT");
     const token = `rp1.${randomBytes(32).toString("base64url")}`;
     const expiresAt = addDays(now, row.report_link_days);
-    await tx.update(visitReports).set({ viewTokenHash: reportTokenHash(token), tokenExpiresAt: expiresAt }).where(eq(visitReports.id, row.report_id));
+    await tx
+      .update(visitReports)
+      .set({ viewTokenHash: reportTokenHash(token), tokenExpiresAt: expiresAt })
+      .where(eq(visitReports.id, row.report_id));
     return {
       reportId: row.report_id,
       token,
@@ -306,24 +423,52 @@ export interface ReportView {
 
 const viewColumns = sql`r.id, s.name AS shop_name, d.name AS dependant_name, sv.name_fr, sv.name_en, lower(a.during) AS starts_at, r.duration_minutes, r.note, (r.photo IS NOT NULL) AS has_photo`;
 const viewJoins = sql`FROM visit_reports r JOIN bookings b ON b.id = r.booking_id JOIN appointments a ON a.id = b.appointment_id JOIN dependants d ON d.id = b.dependant_id JOIN shops s ON s.id = a.shop_id JOIN services sv ON sv.id = a.service_id`;
-type ViewRow = { id: string; shop_name: string; dependant_name: string; name_fr: string; name_en: string; starts_at: string; duration_minutes: number; note: string; has_photo: boolean };
-const toView = (r: ViewRow): ReportView => ({ id: r.id, shopName: r.shop_name, dependantName: r.dependant_name, service: { fr: r.name_fr, en: r.name_en }, startsAt: new Date(r.starts_at).toISOString(), durationMinutes: r.duration_minutes, note: r.note, hasPhoto: r.has_photo });
+type ViewRow = {
+  id: string;
+  shop_name: string;
+  dependant_name: string;
+  name_fr: string;
+  name_en: string;
+  starts_at: string;
+  duration_minutes: number;
+  note: string;
+  has_photo: boolean;
+};
+const toView = (r: ViewRow): ReportView => ({
+  id: r.id,
+  shopName: r.shop_name,
+  dependantName: r.dependant_name,
+  service: { fr: r.name_fr, en: r.name_en },
+  startsAt: new Date(r.starts_at).toISOString(),
+  durationMinutes: r.duration_minutes,
+  note: r.note,
+  hasPhoto: r.has_photo,
+});
 
 /** The report behind a private link, while the link lives. */
 export async function reportByToken(db: Db, token: string, now: Date): Promise<ReportView | null> {
   if (!isReportToken(token)) return null;
-  const found = await db.execute(sql`SELECT ${viewColumns} ${viewJoins} WHERE r.view_token_hash = ${reportTokenHash(token)} AND r.token_expires_at > ${now.toISOString()}::timestamptz`);
+  const found = await db.execute(
+    sql`SELECT ${viewColumns} ${viewJoins} WHERE r.view_token_hash = ${reportTokenHash(token)} AND r.token_expires_at > ${now.toISOString()}::timestamptz`,
+  );
   const row = found.rows[0] as ViewRow | undefined;
   return row ? toView(row) : null;
 }
 
 /** The photo of a report: by the private link (while it lives) — or for the client who owns the booking. */
-export async function reportPhoto(db: Db, by: { token: string; now: Date } | { clientId: string; reportId: string }): Promise<{ bytes: Buffer; type: "jpeg" | "png" | "webp" } | null> {
+export async function reportPhoto(
+  db: Db,
+  by: { token: string; now: Date } | { clientId: string; reportId: string },
+): Promise<{ bytes: Buffer; type: "jpeg" | "png" | "webp" } | null> {
   if ("token" in by && !isReportToken(by.token)) return null;
   const found =
     "token" in by
-      ? await db.execute(sql`SELECT photo, photo_type FROM visit_reports WHERE view_token_hash = ${reportTokenHash(by.token)} AND token_expires_at > ${by.now.toISOString()}::timestamptz AND photo IS NOT NULL`)
-      : await db.execute(sql`SELECT r.photo, r.photo_type FROM visit_reports r JOIN bookings b ON b.id = r.booking_id WHERE r.id = ${by.reportId} AND b.client_id = ${by.clientId} AND r.photo IS NOT NULL`);
+      ? await db.execute(
+          sql`SELECT photo, photo_type FROM visit_reports WHERE view_token_hash = ${reportTokenHash(by.token)} AND token_expires_at > ${by.now.toISOString()}::timestamptz AND photo IS NOT NULL`,
+        )
+      : await db.execute(
+          sql`SELECT r.photo, r.photo_type FROM visit_reports r JOIN bookings b ON b.id = r.booking_id WHERE r.id = ${by.reportId} AND b.client_id = ${by.clientId} AND r.photo IS NOT NULL`,
+        );
   const row = found.rows[0] as { photo: Buffer; photo_type: "jpeg" | "png" | "webp" } | undefined;
   return row ? { bytes: row.photo, type: row.photo_type } : null;
 }
@@ -348,7 +493,22 @@ export async function clientBookings(db: Db, clientId: string): Promise<ClientBo
       FROM bookings b JOIN appointments a ON a.id = b.appointment_id JOIN services sv ON sv.id = a.service_id JOIN dependants d ON d.id = b.dependant_id
       JOIN shops s ON s.id = a.shop_id LEFT JOIN shop_zones z ON z.id = a.zone_id LEFT JOIN visit_reports r ON r.booking_id = b.id
      WHERE b.client_id = ${clientId} ORDER BY lower(a.during) DESC`);
-  type Row = { booking_id: string; appointment_id: string; status: "booked" | "cancelled"; visit_status: ClientBooking["visitStatus"]; vstart: string; name_fr: string; name_en: string; zone: string | null; dep: string; rid: string | null; shop_name: string; duration_minutes: number | null; note: string | null; has_photo: boolean | null };
+  type Row = {
+    booking_id: string;
+    appointment_id: string;
+    status: "booked" | "cancelled";
+    visit_status: ClientBooking["visitStatus"];
+    vstart: string;
+    name_fr: string;
+    name_en: string;
+    zone: string | null;
+    dep: string;
+    rid: string | null;
+    shop_name: string;
+    duration_minutes: number | null;
+    note: string | null;
+    has_photo: boolean | null;
+  };
   return (found.rows as Row[]).map((r) => ({
     bookingId: r.booking_id,
     appointmentId: r.appointment_id,
@@ -358,22 +518,64 @@ export async function clientBookings(db: Db, clientId: string): Promise<ClientBo
     service: { fr: r.name_fr, en: r.name_en },
     zone: r.zone,
     dependantName: r.dep,
-    report: r.rid ? { id: r.rid, shopName: r.shop_name, dependantName: r.dep, service: { fr: r.name_fr, en: r.name_en }, startsAt: new Date(r.vstart).toISOString(), durationMinutes: r.duration_minutes!, note: r.note!, hasPhoto: r.has_photo! } : null,
+    report: r.rid
+      ? {
+          id: r.rid,
+          shopName: r.shop_name,
+          dependantName: r.dep,
+          service: { fr: r.name_fr, en: r.name_en },
+          startsAt: new Date(r.vstart).toISOString(),
+          durationMinutes: r.duration_minutes!,
+          note: r.note!,
+          hasPhoto: r.has_photo!,
+        }
+      : null,
   }));
 }
 
 /** The report of one of the client's own bookings (null for anyone else's). */
 export async function reportForClient(db: Db, clientId: string, reportId: string): Promise<ReportView | null> {
-  const found = await db.execute(sql`SELECT ${viewColumns} ${viewJoins} WHERE r.id = ${reportId} AND b.client_id = ${clientId}`);
+  const found = await db.execute(
+    sql`SELECT ${viewColumns} ${viewJoins} WHERE r.id = ${reportId} AND b.client_id = ${clientId}`,
+  );
   const row = found.rows[0] as ViewRow | undefined;
   return row ? toView(row) : null;
 }
 
 /** The walker's list of client files with their dependants (no access notes: those are revealed one at a time). */
 export async function shopClients(db: Db, shopId: string) {
-  const files = await db.select({ id: clients.id, fullName: clients.fullName, phone: clients.phone, email: clients.email, hasNotes: sql<boolean>`${clients.accessNotesEnc} IS NOT NULL` }).from(clients).where(and(eq(clients.shopId, shopId), isNull(clients.erasedAt))).orderBy(asc(clients.fullName));
-  const pets = files.length ? await db.select().from(dependants).where(and(inArray(dependants.clientId, files.map((f) => f.id)), isNull(dependants.erasedAt))).orderBy(asc(dependants.name)) : [];
-  return files.map((f) => ({ ...f, dependants: pets.filter((p) => p.clientId === f.id).map((p) => ({ id: p.id, name: p.name, kind: p.kind, profile: p.profile as DependantProfile })) }));
+  const files = await db
+    .select({
+      id: clients.id,
+      fullName: clients.fullName,
+      phone: clients.phone,
+      email: clients.email,
+      hasNotes: sql<boolean>`${clients.accessNotesEnc} IS NOT NULL`,
+    })
+    .from(clients)
+    .where(and(eq(clients.shopId, shopId), isNull(clients.erasedAt)))
+    .orderBy(asc(clients.fullName));
+  const pets = files.length
+    ? await db
+        .select()
+        .from(dependants)
+        .where(
+          and(
+            inArray(
+              dependants.clientId,
+              files.map((f) => f.id),
+            ),
+            isNull(dependants.erasedAt),
+          ),
+        )
+        .orderBy(asc(dependants.name))
+    : [];
+  return files.map((f) => ({
+    ...f,
+    dependants: pets
+      .filter((p) => p.clientId === f.id)
+      .map((p) => ({ id: p.id, name: p.name, kind: p.kind, profile: p.profile as DependantProfile })),
+  }));
 }
 
 export interface OutgoingMail {
@@ -390,25 +592,47 @@ export interface OutgoingMail {
 export async function enqueueMail(db: Db, mail: OutgoingMail): Promise<string> {
   const [row] = await db
     .insert(mailOutbox)
-    .values({ toEmail: mail.to, locale: mail.locale, template: mail.template, subject: mail.subject, html: mail.html, bodyText: mail.text, relatedKind: mail.relatedKind ?? null, relatedId: mail.relatedId ?? null })
+    .values({
+      toEmail: mail.to,
+      locale: mail.locale,
+      template: mail.template,
+      subject: mail.subject,
+      html: mail.html,
+      bodyText: mail.text,
+      relatedKind: mail.relatedKind ?? null,
+      relatedId: mail.relatedId ?? null,
+    })
     .returning({ id: mailOutbox.id });
   return row!.id;
 }
 
 /** A mail that carried a secret (a sign-in code) keeps no body once its one attempt is made: sent, or failed for good (no retry would reach anyone in time). */
 export async function scrubMail(db: Db, id: string): Promise<void> {
-  await db.update(mailOutbox).set({ html: "", bodyText: "", status: sql`CASE WHEN ${mailOutbox.status} = 'sent' THEN 'sent' ELSE 'failed' END` }).where(eq(mailOutbox.id, id));
+  await db
+    .update(mailOutbox)
+    .set({ html: "", bodyText: "", status: sql`CASE WHEN ${mailOutbox.status} = 'sent' THEN 'sent' ELSE 'failed' END` })
+    .where(eq(mailOutbox.id, id));
 }
 
 /** The oldest pending mails; `scope.ids` keeps only those (a test flushes what it queued, never another file's: folioviv#341). */
 export async function pendingMail(db: Db, limit = 20, scope: { ids?: readonly string[] } = {}) {
   const pending = eq(mailOutbox.status, "pending");
-  return db.select().from(mailOutbox).where(scope.ids ? and(pending, inArray(mailOutbox.id, [...scope.ids])) : pending).orderBy(asc(mailOutbox.createdAt)).limit(limit);
+  return db
+    .select()
+    .from(mailOutbox)
+    .where(scope.ids ? and(pending, inArray(mailOutbox.id, [...scope.ids])) : pending)
+    .orderBy(asc(mailOutbox.createdAt))
+    .limit(limit);
 }
 
 export async function markMailSent(db: Db, id: string, at: Date): Promise<void> {
-  await db.update(mailOutbox).set({ status: "sent", sentAt: at, attempts: sql`${mailOutbox.attempts} + 1`, lastError: null }).where(eq(mailOutbox.id, id));
-  await db.execute(sql`UPDATE visit_reports SET sent_at = ${at.toISOString()}::timestamptz WHERE id = (SELECT related_id FROM mail_outbox WHERE id = ${id} AND related_kind = 'visit_report')`);
+  await db
+    .update(mailOutbox)
+    .set({ status: "sent", sentAt: at, attempts: sql`${mailOutbox.attempts} + 1`, lastError: null })
+    .where(eq(mailOutbox.id, id));
+  await db.execute(
+    sql`UPDATE visit_reports SET sent_at = ${at.toISOString()}::timestamptz WHERE id = (SELECT related_id FROM mail_outbox WHERE id = ${id} AND related_kind = 'visit_report')`,
+  );
 }
 
 export async function mailById(db: Db, id: string) {
@@ -417,8 +641,14 @@ export async function mailById(db: Db, id: string) {
 }
 
 /** A failed or unconfigured attempt: the mail stays `pending` until `maxAttempts`, then `failed`. Returns which. */
-export async function markMailAttempt(db: Db, id: string, error: string, maxAttempts: number): Promise<"pending" | "failed"> {
-  const result = await db.execute(sql`UPDATE mail_outbox SET attempts = attempts + 1, last_error = ${error.slice(0, 300)}, status = CASE WHEN attempts + 1 >= ${maxAttempts} THEN 'failed' ELSE 'pending' END WHERE id = ${id} RETURNING status`);
+export async function markMailAttempt(
+  db: Db,
+  id: string,
+  error: string,
+  maxAttempts: number,
+): Promise<"pending" | "failed"> {
+  const result = await db.execute(
+    sql`UPDATE mail_outbox SET attempts = attempts + 1, last_error = ${error.slice(0, 300)}, status = CASE WHEN attempts + 1 >= ${maxAttempts} THEN 'failed' ELSE 'pending' END WHERE id = ${id} RETURNING status`,
+  );
   return (result.rows[0] as { status: "pending" | "failed" }).status;
 }
-

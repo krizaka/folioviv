@@ -1,4 +1,12 @@
-import { computeFigures, DEFAULT_FIGURE_THRESHOLDS, FIGURE_ID, FIGURE_STATE, type FigureState, LEXICON, nextActions } from "@folioviv/core";
+import {
+  computeFigures,
+  DEFAULT_FIGURE_THRESHOLDS,
+  FIGURE_ID,
+  FIGURE_STATE,
+  type FigureState,
+  LEXICON,
+  nextActions,
+} from "@folioviv/core";
 import { describe, expect, it } from "vitest";
 
 import { bindProduct } from "@/lib/brand";
@@ -18,14 +26,48 @@ const INPUT = {
   period: { start: "2026-10-01", end: "2026-12-31" },
   // F-0001: 100 $ + GST 5 $ + QST 9.98 $ = 114.98 $, half paid, 13 days overdue. F-0002 paid in full.
   invoices: [
-    { id: "inv-a", number: "F-0001", issuedOn: "2026-10-03", dueOn: "2026-10-10", subtotalCents: 10_000, gstCents: 500, qstCents: 998, totalCents: 11_498, paidCents: 5_000, isCredit: false, superseded: false },
-    { id: "inv-b", number: "F-0002", issuedOn: "2026-10-15", dueOn: "2026-11-15", subtotalCents: 20_000, gstCents: 1_000, qstCents: 1_995, totalCents: 22_995, paidCents: 22_995, isCredit: false, superseded: false },
+    {
+      id: "inv-a",
+      number: "F-0001",
+      issuedOn: "2026-10-03",
+      dueOn: "2026-10-10",
+      subtotalCents: 10_000,
+      gstCents: 500,
+      qstCents: 998,
+      totalCents: 11_498,
+      paidCents: 5_000,
+      isCredit: false,
+      superseded: false,
+    },
+    {
+      id: "inv-b",
+      number: "F-0002",
+      issuedOn: "2026-10-15",
+      dueOn: "2026-11-15",
+      subtotalCents: 20_000,
+      gstCents: 1_000,
+      qstCents: 1_995,
+      totalCents: 22_995,
+      paidCents: 22_995,
+      isCredit: false,
+      superseded: false,
+    },
   ],
   payments: [
     { id: "pay-a", invoiceId: "inv-a", amountCents: 5_000, receivedOn: "2026-10-05" },
     { id: "pay-b", invoiceId: "inv-b", amountCents: 22_995, receivedOn: "2026-10-20" },
   ],
-  expenses: [{ id: "exp-1", supplier: "Fournisseur", paidOn: "2026-10-05", subtotalCents: 8_000, gstCents: 400, qstCents: 798, businessSharePct: 100 }],
+  expenses: [
+    {
+      id: "exp-1",
+      supplier: "Fournisseur",
+      paidOn: "2026-10-05",
+      subtotalCents: 8_000,
+      gstCents: 400,
+      qstCents: 798,
+      businessSharePct: 100,
+    },
+  ],
   appointments: [
     ...Array.from({ length: 8 }, (_, i) => ({ id: `ap-${i}`, day: `2026-10-1${i}`, status: "done" as const })),
     { id: "ap-ns", day: "2026-10-14", status: "noShow" as const },
@@ -34,11 +76,17 @@ const INPUT = {
 const figures = computeFigures(INPUT, DEFAULT_FIGURE_THRESHOLDS);
 
 /** What `KpiExplained` derives from a value and thresholds (`stateFor` of @krizaka/ui, direction « above »). */
-const blockState = (value: number, t: { watchAt: number; actAt: number }) => (value >= t.actAt ? "act" : value >= t.watchAt ? "watch" : "ok");
+const blockState = (value: number, t: { watchAt: number; actAt: number }) =>
+  value >= t.actAt ? "act" : value >= t.watchAt ? "watch" : "ok";
 
 describe("a figure explains itself (#260)", () => {
   it("gives the block thresholds that reproduce the domain's verdict, for any value", () => {
-    const expected: Record<FigureState, "ok" | "watch" | "act"> = { good: "ok", watch: "watch", alert: "act", info: "ok" };
+    const expected: Record<FigureState, "ok" | "watch" | "act"> = {
+      good: "ok",
+      watch: "watch",
+      alert: "act",
+      info: "ok",
+    };
     for (const state of Object.values(FIGURE_STATE)) {
       for (const value of [-250, 0, 1, 4_800, 999_999]) {
         expect(blockState(value, kpiThresholds(state, value)), `${state} ${value}`).toBe(expected[state]);
@@ -80,7 +128,10 @@ describe("a figure explains itself (#260)", () => {
   });
 
   it("says « nothing to judge yet » for a figure with no data, never « on track »", () => {
-    const empty = computeFigures({ ...INPUT, invoices: [], payments: [], expenses: [], appointments: [] }, DEFAULT_FIGURE_THRESHOLDS);
+    const empty = computeFigures(
+      { ...INPUT, invoices: [], payments: [], expenses: [], appointments: [] },
+      DEFAULT_FIGURE_THRESHOLDS,
+    );
     const v = kpiView(empty[FIGURE_ID.collected], "en", routes);
     expect(v.state).toBe("ok");
     expect(v.stateWords.ok).toBe(en.console.figures.state.info);
@@ -88,15 +139,19 @@ describe("a figure explains itself (#260)", () => {
 
   it("has every message of every figure, term and lexique word, in French and in English", () => {
     for (const lang of [en, fr]) {
-      for (const id of Object.values(FIGURE_ID)) expect(Object.keys(lang.console.figures[id]).sort(), id).toEqual(["formula", "meaning", "name"]);
+      for (const id of Object.values(FIGURE_ID))
+        expect(Object.keys(lang.console.figures[id]).sort(), id).toEqual(["formula", "meaning", "name"]);
       for (const { id } of LEXICON) expect(lang.console.lexicon.terms[id].definition.length, id).toBeGreaterThan(10);
-      for (const f of figures ? Object.values(figures) : []) for (const t of f.formula) expect(lang.console.figures.terms, t.label).toHaveProperty(t.label);
+      for (const f of figures ? Object.values(figures) : [])
+        for (const t of f.formula) expect(lang.console.figures.terms, t.label).toHaveProperty(t.label);
     }
   });
 
   it("never promises to file: the lead and the actions say the owner files", () => {
     for (const lang of [en, fr]) {
-      expect(JSON.stringify(lang.console.figures)).not.toMatch(/\b(we file|we send|sent to Revenu|nous produisons|nous transmettons|transmise)\b/i);
+      expect(JSON.stringify(lang.console.figures)).not.toMatch(
+        /\b(we file|we send|sent to Revenu|nous produisons|nous transmettons|transmise)\b/i,
+      );
     }
     expect(en.console.figures.never).toMatch(/you file/i);
     expect(fr.console.figures.never).toMatch(/vous produisez/i);
@@ -104,10 +159,18 @@ describe("a figure explains itself (#260)", () => {
 });
 
 describe("« que faire maintenant » is built from data and leads somewhere (#260)", () => {
-  const actions = nextActions({ figures: INPUT, returnPrepared: false, slots: [{ weekday: 2, startsAt: "09:00", offered: 8, booked: 1 }] }, DEFAULT_FIGURE_THRESHOLDS, ["chase", "taxes", "slot"]);
+  const actions = nextActions(
+    { figures: INPUT, returnPrepared: false, slots: [{ weekday: 2, startsAt: "09:00", offered: 8, booked: 1 }] },
+    DEFAULT_FIGURE_THRESHOLDS,
+    ["chase", "taxes", "slot"],
+  );
 
   it("chases the overdue invoice with its number, days and amount, and opens it", () => {
-    const chase = actionView(actions.find((a) => a.kind === "chase")!, "en", routes);
+    const chase = actionView(
+      actions.find((a) => a.kind === "chase")!,
+      "en",
+      routes,
+    );
     expect(chase.title).toBe("Chase invoice F-0001");
     expect(chase.why).toBe("It is 13 days overdue and $64.98 is still owed.");
     expect(chase.href).toBe(routes.invoice("inv-a"));
@@ -115,7 +178,11 @@ describe("« que faire maintenant » is built from data and leads somewhere (#26
   });
 
   it("prepares the return — never files it — and opens the books of the period", () => {
-    const soon = nextActions({ figures: { ...INPUT, today: "2026-12-20" }, returnPrepared: false, slots: [] }, DEFAULT_FIGURE_THRESHOLDS, ["taxes"])[0]!;
+    const soon = nextActions(
+      { figures: { ...INPUT, today: "2026-12-20" }, returnPrepared: false, slots: [] },
+      DEFAULT_FIGURE_THRESHOLDS,
+      ["taxes"],
+    )[0]!;
     const view = actionView(soon, "en", routes);
     expect(view.title).toBe("Prepare your GST/QST return");
     expect(view.why).toContain("you file the return yourself");
@@ -124,13 +191,23 @@ describe("« que faire maintenant » is built from data and leads somewhere (#26
   });
 
   it("names the weekday of an often-empty slot in the owner's language", () => {
-    const slot = actionView(actions.find((a) => a.kind === "slot")!, "fr", routes);
+    const slot = actionView(
+      actions.find((a) => a.kind === "slot")!,
+      "fr",
+      routes,
+    );
     expect(slot.title).toBe("Ouvrir le mardi 09:00 aux réservations");
     expect(slot.why).toBe("Seulement 1 de ces 8 plages ont été réservées récemment.");
     expect(slot.href).toBe(routes.hours);
   });
 
   it("builds nothing for a shop with no rows", () => {
-    expect(nextActions({ figures: { ...INPUT, invoices: [] }, returnPrepared: false, slots: [] }, DEFAULT_FIGURE_THRESHOLDS, ["chase", "slot"])).toEqual([]);
+    expect(
+      nextActions(
+        { figures: { ...INPUT, invoices: [] }, returnPrepared: false, slots: [] },
+        DEFAULT_FIGURE_THRESHOLDS,
+        ["chase", "slot"],
+      ),
+    ).toEqual([]);
   });
 });

@@ -33,7 +33,10 @@ const shots = process.env.E2E_SHOTS;
 if (shots) mkdirSync(shots, { recursive: true });
 
 const api = async (bearer, path, init = {}) => {
-  const res = await fetch(`${BASE}${path}`, { ...init, headers: { authorization: `Bearer ${bearer}`, "content-type": "application/json", ...init.headers } });
+  const res = await fetch(`${BASE}${path}`, {
+    ...init,
+    headers: { authorization: `Bearer ${bearer}`, "content-type": "application/json", ...init.headers },
+  });
   return { status: res.status, body: await res.json().catch(() => ({})) };
 };
 
@@ -45,7 +48,10 @@ try {
 
   // Mathilde: Starter with its free months, paid on the processor's page with the test card.
   const session = await startTrialCheckout(api, owner, "starter");
-  check(session.status === 200 && typeof session.body.url === "string", "Mathilde: the checkout for Starter opens (the free months are carried by the processor)");
+  check(
+    session.status === 200 && typeof session.body.url === "string",
+    "Mathilde: the checkout for Starter opens (the free months are carried by the processor)",
+  );
   if (session.body.url) {
     const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
     await page.goto(session.body.url);
@@ -60,22 +66,40 @@ try {
       await new Promise((r) => setTimeout(r, 1500));
       await page.goto(`${BASE}/en/app/profile/subscription`);
     }
-    check(/Free until|Offert jusqu/.test(await page.content()), "Mathilde: her subscription page says it is a free period and when the first charge happens");
+    check(
+      /Free until|Offert jusqu/.test(await page.content()),
+      "Mathilde: her subscription page says it is a free period and when the first charge happens",
+    );
     if (shots) await page.screenshot({ path: `${shots}/mathilde-trial-phone.png`, fullPage: true });
   }
 
   // The association: refused first, then proof, decision, checkout.
   const early = await api(asso, "/api/billing/checkout?plan=association", { method: "POST" });
-  check(early.status === 403 && early.body.code === "ASSOCIATION_NOT_APPROVED", "Les Amis du parc: the Association plan is refused before approval (they stay on Starter)");
-  const sent = await api(asso, "/api/billing/association", { method: "POST", body: JSON.stringify({ kind: "neq", reference: "1234567890" }) });
-  check(sent.status === 201 && sent.body.status === "pending", "Les Amis du parc: the NEQ is sent and waits for review");
+  check(
+    early.status === 403 && early.body.code === "ASSOCIATION_NOT_APPROVED",
+    "Les Amis du parc: the Association plan is refused before approval (they stay on Starter)",
+  );
+  const sent = await api(asso, "/api/billing/association", {
+    method: "POST",
+    body: JSON.stringify({ kind: "neq", reference: "1234567890" }),
+  });
+  check(
+    sent.status === 201 && sent.body.status === "pending",
+    "Les Amis du parc: the NEQ is sent and waits for review",
+  );
   const queue = await api(admin, "/api/admin/associations");
   const proof = queue.body.pending?.find((p) => p.reference === "1234567890");
   check(Boolean(proof), "The administrator sees the proof in the queue");
-  const decided = await api(admin, `/api/admin/associations/${proof?.id}`, { method: "POST", body: JSON.stringify({ decision: "approved" }) });
+  const decided = await api(admin, `/api/admin/associations/${proof?.id}`, {
+    method: "POST",
+    body: JSON.stringify({ decision: "approved" }),
+  });
   check(decided.status === 200, "The administrator approves it (audited)");
   const late = await startTrialCheckout(api, asso, "association");
-  check(late.status === 200 && typeof late.body.url === "string", "Les Amis du parc: the Association checkout now opens, with its free months");
+  check(
+    late.status === 200 && typeof late.body.url === "string",
+    "Les Amis du parc: the Association checkout now opens, with its free months",
+  );
 } finally {
   await browser.close();
 }

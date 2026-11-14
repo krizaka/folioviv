@@ -3,7 +3,16 @@ import { randomUUID } from "node:crypto";
 import { seedDemoShop } from "@folioviv/db/seed";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { auditLog, deleteAccount, exportAccount, listUsers, revokeUserSessions, setUserRole, setUserStatus, userDetail } from "./admin";
+import {
+  auditLog,
+  deleteAccount,
+  exportAccount,
+  listUsers,
+  revokeUserSessions,
+  setUserRole,
+  setUserStatus,
+  userDetail,
+} from "./admin";
 import { invoicesOverview, ledgerChecks, shopsOverview } from "./admin-content";
 import { db, migrate, pool, query } from "./db";
 import { operations } from "./operations";
@@ -21,7 +30,13 @@ describe.runIf(enabled)("administration", () => {
 
   beforeAll(async () => {
     await migrate();
-    const make = async (email: string, role: string) => (await query<{ id: string }>("INSERT INTO accounts (email, role, password_hash) VALUES ($1, $2, 'x') RETURNING id", [email, role]))[0]!.id;
+    const make = async (email: string, role: string) =>
+      (
+        await query<{ id: string }>(
+          "INSERT INTO accounts (email, role, password_hash) VALUES ($1, $2, 'x') RETURNING id",
+          [email, role],
+        )
+      )[0]!.id;
     admin = { id: await make(`adm-${stamp}@folioviv.test`, "ADMIN"), email: `adm-${stamp}@folioviv.test` };
     merchant = { id: await make(`mer-${stamp}@folioviv.test`, "USER"), email: `mer-${stamp}@folioviv.test` };
     plain = { id: await make(`pla-${stamp}@folioviv.test`, "USER"), email: `pla-${stamp}@folioviv.test` };
@@ -33,7 +48,11 @@ describe.runIf(enabled)("administration", () => {
   });
 
   it("lists the accounts with the shops they own, and one account's detail", async () => {
-    expect((await listUsers()).find((u) => u.id === merchant.id)).toMatchObject({ role: "USER", status: "ACTIVE", shops: 1 });
+    expect((await listUsers()).find((u) => u.id === merchant.id)).toMatchObject({
+      role: "USER",
+      status: "ACTIVE",
+      shops: 1,
+    });
     expect(await userDetail(merchant.id)).toMatchObject({ email: merchant.email, sessions: 0 });
   });
 
@@ -65,22 +84,49 @@ describe.runIf(enabled)("administration", () => {
     expect((await setUserRole(admin, plain.id, "USER")).role).toBe("USER");
     await createSession(plain.id, { ip: "203.0.113.8", userAgent: "vitest" });
     expect((await revokeUserSessions(admin, plain.id)).revoked).toBe(1);
-    expect((await auditLog(20, plain.id)).map((e) => e.action)).toEqual(expect.arrayContaining(["admin.user_suspended", "admin.user_restored", "admin.user_role_changed", "admin.sessions_revoked"]));
+    expect((await auditLog(20, plain.id)).map((e) => e.action)).toEqual(
+      expect.arrayContaining([
+        "admin.user_suspended",
+        "admin.user_restored",
+        "admin.user_role_changed",
+        "admin.sessions_revoked",
+      ]),
+    );
   });
 
   it("exports an account with its shops, never its password hash", async () => {
     const out = await exportAccount(admin, merchant.id);
     expect(JSON.stringify(out)).not.toContain("password");
-    expect(out).toMatchObject({ format: "folioviv-account-export/1", account: { email: merchant.email }, shops: [{ name: "Salon Laurier" }] });
+    expect(out).toMatchObject({
+      format: "folioviv-account-export/1",
+      account: { email: merchant.email },
+      shops: [{ name: "Salon Laurier" }],
+    });
   });
 
   it("erases an account without a shop; refuses one that owns a shop (invoices are kept six years)", async () => {
-    await expect(deleteAccount(admin, merchant.id, merchant.email)).rejects.toMatchObject({ status: 409, body: { code: "RETENTION_REQUIRED" } });
-    await expect(deleteAccount(admin, plain.id, "someone@else.test")).rejects.toMatchObject({ status: 409, body: { code: "CONFIRM_MISMATCH" } });
-    await expect(deleteAccount(admin, admin.id, admin.email)).rejects.toMatchObject({ status: 409, body: { code: "SELF_DELETE" } });
-    await query("INSERT INTO audit_log (actor_id, actor_label, action, ip) VALUES ($1, $2, 'auth.sign_in', '203.0.113.7')", [plain.id, plain.email]);
+    await expect(deleteAccount(admin, merchant.id, merchant.email)).rejects.toMatchObject({
+      status: 409,
+      body: { code: "RETENTION_REQUIRED" },
+    });
+    await expect(deleteAccount(admin, plain.id, "someone@else.test")).rejects.toMatchObject({
+      status: 409,
+      body: { code: "CONFIRM_MISMATCH" },
+    });
+    await expect(deleteAccount(admin, admin.id, admin.email)).rejects.toMatchObject({
+      status: 409,
+      body: { code: "SELF_DELETE" },
+    });
+    await query(
+      "INSERT INTO audit_log (actor_id, actor_label, action, ip) VALUES ($1, $2, 'auth.sign_in', '203.0.113.7')",
+      [plain.id, plain.email],
+    );
     expect(await deleteAccount(admin, plain.id, plain.email.toUpperCase())).toEqual({ deleted: true });
     await expect(userDetail(plain.id)).rejects.toMatchObject({ status: 404 });
-    for (const row of await query<{ actor_label: string; ip: string | null }>("SELECT actor_label, ip FROM audit_log WHERE actor_id = $1", [plain.id])) expect(row).toEqual({ actor_label: "deleted account", ip: null });
+    for (const row of await query<{ actor_label: string; ip: string | null }>(
+      "SELECT actor_label, ip FROM audit_log WHERE actor_id = $1",
+      [plain.id],
+    ))
+      expect(row).toEqual({ actor_label: "deleted account", ip: null });
   });
 });

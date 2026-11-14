@@ -33,7 +33,10 @@ describe("perf budgets", () => {
   });
 
   it("ratchet: fails on an increase, passes on equal or lower, reports new routes", () => {
-    expect(ratchet({ a: 100 }, { a: 101 })).toMatchObject({ ok: false, increased: [{ route: "a", from: 100, to: 101 }] });
+    expect(ratchet({ a: 100 }, { a: 101 })).toMatchObject({
+      ok: false,
+      increased: [{ route: "a", from: 100, to: 101 }],
+    });
     expect(ratchet({ a: 100 }, { a: 100 }).ok).toBe(true);
     expect(ratchet({ a: 100 }, { a: 90 })).toMatchObject({ ok: true, decreased: ["a"] });
     expect(ratchet({}, { b: 5 })).toMatchObject({ ok: true, added: ["b"] });

@@ -11,15 +11,45 @@ import { GET, PUT } from "./route";
 vi.mock("@/lib/access", () => ({ requireOwner: vi.fn() }));
 vi.mock("@/lib/audit", () => ({ audit: vi.fn() }));
 vi.mock("@/lib/db", () => ({ db: vi.fn(() => ({})) }));
-vi.mock("@/lib/figure-rules", () => ({ adminFigureRules: vi.fn(async () => ({ defaults: { overdueWatchPct: 10, overdueAlertPct: 25, collectedWatchPct: 80, collectedAlertPct: 60, marginWatchPct: 30, marginAlertPct: 15, noShowWatchPct: 5, noShowAlertPct: 10, taxPeriodSoonDays: 14, maxActions: 3 }, offered: [] })) }));
+vi.mock("@/lib/figure-rules", () => ({
+  adminFigureRules: vi.fn(async () => ({
+    defaults: {
+      overdueWatchPct: 10,
+      overdueAlertPct: 25,
+      collectedWatchPct: 80,
+      collectedAlertPct: 60,
+      marginWatchPct: 30,
+      marginAlertPct: 15,
+      noShowWatchPct: 5,
+      noShowAlertPct: 10,
+      taxPeriodSoonDays: 14,
+      maxActions: 3,
+    },
+    offered: [],
+  })),
+}));
 vi.mock("@/lib/settings", () => ({ appSettings: vi.fn() }));
-vi.mock("@folioviv/db", async (original) => ({ ...(await original<typeof import("@folioviv/db")>()), saveShopFigureOverrides: vi.fn(), shopFigureOverrides: vi.fn() }));
+vi.mock("@folioviv/db", async (original) => ({
+  ...(await original<typeof import("@folioviv/db")>()),
+  saveShopFigureOverrides: vi.fn(),
+  shopFigureOverrides: vi.fn(),
+}));
 
-const put = (body: unknown) => PUT(new Request("http://localhost/api/walker/figures/rules", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }));
+const put = (body: unknown) =>
+  PUT(
+    new Request("http://localhost/api/walker/figures/rules", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+  );
 
 describe("the owner's figure thresholds (#260)", () => {
   beforeEach(() => {
-    vi.mocked(requireOwner).mockResolvedValue({ session: { account: { id: "a", email: "o@example.com" } }, shop: { id: "s1" } } as never);
+    vi.mocked(requireOwner).mockResolvedValue({
+      session: { account: { id: "a", email: "o@example.com" } },
+      shop: { id: "s1" },
+    } as never);
     vi.mocked(appSettings).mockReturnValue({ get: vi.fn(async () => true) } as never);
     vi.mocked(shopFigureOverrides).mockResolvedValue({ overdueWatchPct: 5 });
     vi.mocked(saveShopFigureOverrides).mockResolvedValue({});
@@ -30,7 +60,11 @@ describe("the owner's figure thresholds (#260)", () => {
     const res = await GET(new Request("http://localhost/api/walker/figures/rules"));
     const json = await res.json();
     expect(res.headers.get("cache-control")).toContain("no-store");
-    expect(json).toMatchObject({ tunable: true, overrides: { overdueWatchPct: 5 }, bounds: { overdueWatchPct: { min: 1, max: 99 } } });
+    expect(json).toMatchObject({
+      tunable: true,
+      overrides: { overdueWatchPct: 5 },
+      bounds: { overdueWatchPct: { min: 1, max: 99 } },
+    });
     expect(json.defaults.overdueWatchPct).toBe(10);
     expect(json.defaults).not.toHaveProperty("maxActions");
   });
@@ -39,11 +73,19 @@ describe("the owner's figure thresholds (#260)", () => {
     const res = await put({ overrides: { overdueWatchPct: 7, taxPeriodSoonDays: 30 } });
     expect(res.status).toBe(200);
     expect(saveShopFigureOverrides).toHaveBeenCalledWith({}, "s1", { overdueWatchPct: 7, taxPeriodSoonDays: 30 });
-    expect(audit).toHaveBeenCalledWith(expect.objectContaining({ action: "shop.figure_rules_changed", targetId: "s1" }));
+    expect(audit).toHaveBeenCalledWith(
+      expect.objectContaining({ action: "shop.figure_rules_changed", targetId: "s1" }),
+    );
   });
 
   it("refuses a value out of bounds or a key that is not tunable, and saves nothing", async () => {
-    for (const overrides of [{ overdueWatchPct: 0 }, { marginWatchPct: 100 }, { maxActions: 9 }, { noShowWatchPct: 2.5 }, { overdueAlertPct: "9" }]) {
+    for (const overrides of [
+      { overdueWatchPct: 0 },
+      { marginWatchPct: 100 },
+      { maxActions: 9 },
+      { noShowWatchPct: 2.5 },
+      { overdueAlertPct: "9" },
+    ]) {
       const res = await put({ overrides });
       expect(res.status, JSON.stringify(overrides)).toBe(400);
     }

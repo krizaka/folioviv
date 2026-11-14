@@ -30,19 +30,28 @@ export function nudge<T extends Placed>(item: T, key: string, shift: boolean): T
   const move = shift ? STEP.moveShift : STEP.move;
   const tilt = shift ? STEP.tiltShift : STEP.tilt;
   switch (key) {
-    case "ArrowLeft": return clampPlace({ ...item, x: item.x - move });
-    case "ArrowRight": return clampPlace({ ...item, x: item.x + move });
-    case "ArrowUp": return clampPlace({ ...item, y: item.y - move });
-    case "ArrowDown": return clampPlace({ ...item, y: item.y + move });
-    case "[": return clampPlace({ ...item, rotation: item.rotation - tilt });
-    case "]": return clampPlace({ ...item, rotation: item.rotation + tilt });
-    case "PageUp": return clampPlace({ ...item, z: item.z + 1 });
-    case "PageDown": return clampPlace({ ...item, z: item.z - 1 });
-    default: return null;
+    case "ArrowLeft":
+      return clampPlace({ ...item, x: item.x - move });
+    case "ArrowRight":
+      return clampPlace({ ...item, x: item.x + move });
+    case "ArrowUp":
+      return clampPlace({ ...item, y: item.y - move });
+    case "ArrowDown":
+      return clampPlace({ ...item, y: item.y + move });
+    case "[":
+      return clampPlace({ ...item, rotation: item.rotation - tilt });
+    case "]":
+      return clampPlace({ ...item, rotation: item.rotation + tilt });
+    case "PageUp":
+      return clampPlace({ ...item, z: item.z + 1 });
+    case "PageDown":
+      return clampPlace({ ...item, z: item.z - 1 });
+    default:
+      return null;
   }
 }
 
 /** Where the next item lands: a staggered diagonal, so a new photo never hides the one before it. */
 export function nextPlace(count: number): Placed {
-  return { x: 6 + ((count * 13) % 60), y: 8 + ((count * 17) % 50), rotation: ((count % 5) - 2), z: count + 1 };
+  return { x: 6 + ((count * 13) % 60), y: 8 + ((count * 17) % 50), rotation: (count % 5) - 2, z: count + 1 };
 }

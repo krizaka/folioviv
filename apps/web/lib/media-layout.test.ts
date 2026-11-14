@@ -21,7 +21,9 @@ function* files(dir: string): Generator<string> {
 
 describe("media paths are Bunny layout v2", () => {
   it("no source file names a legacy zone path (site/…, maps/v1 on the zone)", () => {
-    const hits = ROOTS.flatMap((r) => [...files(join(REPO, r))]).filter((f) => LEGACY.test(readFileSync(f, "utf8"))).map((f) => relative(REPO, f));
+    const hits = ROOTS.flatMap((r) => [...files(join(REPO, r))])
+      .filter((f) => LEGACY.test(readFileSync(f, "utf8")))
+      .map((f) => relative(REPO, f));
     expect(hits).toEqual([]);
   });
 });

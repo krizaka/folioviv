@@ -3,7 +3,12 @@ import { describe, expect, it } from "vitest";
 import { applyRate, formatCents, parseCents } from "./money";
 import { GST, GST_NUMBER, invoiceTotals, lineAmount, QST, QST_NUMBER, quantityHundredths } from "./tax";
 
-const standard = (unitPriceCents: number, quantity = 1) => ({ description: "x", quantity, unitPriceCents, category: "standard" as const });
+const standard = (unitPriceCents: number, quantity = 1) => ({
+  description: "x",
+  quantity,
+  unitPriceCents,
+  category: "standard" as const,
+});
 
 describe("money in whole cents", () => {
   it("rounds half away from zero, exactly, without floats", () => {
@@ -51,13 +56,34 @@ describe("GST 5 % and QST 9.975 % on known invoices", () => {
   });
 
   it("charges nothing on zero-rated bread or an exempt line, and nothing at all for a small supplier", () => {
-    const bakery = invoiceTotals([{ description: "Pain de campagne", quantity: 2, unitPriceCents: 650, category: "zeroRated" }, { description: "Café", quantity: 1, unitPriceCents: 350, category: "standard" }], { registrant: true });
-    expect(bakery).toMatchObject({ taxableCents: 350, zeroRatedCents: 1_300, subtotalCents: 1_650, gstCents: 18, qstCents: 35, totalCents: 1_703 });
-    expect(invoiceTotals([standard(10_000)], { registrant: false })).toMatchObject({ gstCents: 0, qstCents: 0, totalCents: 10_000 });
+    const bakery = invoiceTotals(
+      [
+        { description: "Pain de campagne", quantity: 2, unitPriceCents: 650, category: "zeroRated" },
+        { description: "Café", quantity: 1, unitPriceCents: 350, category: "standard" },
+      ],
+      { registrant: true },
+    );
+    expect(bakery).toMatchObject({
+      taxableCents: 350,
+      zeroRatedCents: 1_300,
+      subtotalCents: 1_650,
+      gstCents: 18,
+      qstCents: 35,
+      totalCents: 1_703,
+    });
+    expect(invoiceTotals([standard(10_000)], { registrant: false })).toMatchObject({
+      gstCents: 0,
+      qstCents: 0,
+      totalCents: 10_000,
+    });
   });
 
   it("applies a discount before the taxes, refuses fractional cents or a quantity finer than a hundredth", () => {
-    expect(invoiceTotals([{ ...standard(5_000), discountCents: 1_000 }], { registrant: true })).toMatchObject({ subtotalCents: 4_000, gstCents: 200, qstCents: 399 });
+    expect(invoiceTotals([{ ...standard(5_000), discountCents: 1_000 }], { registrant: true })).toMatchObject({
+      subtotalCents: 4_000,
+      gstCents: 200,
+      qstCents: 399,
+    });
     expect(() => invoiceTotals([standard(10.5)], { registrant: true })).toThrow();
     expect(() => invoiceTotals([standard(100, 1.005)], { registrant: true })).toThrow(); // a quantity is to the hundredth: 1.5 is billable now (krizaka/folioviv#111), 1.005 is not
     expect(() => invoiceTotals([{ ...standard(5_000), discountCents: -100 }], { registrant: true })).toThrow();
@@ -83,7 +109,8 @@ describe("fractional quantities: hours billed by the quarter, the tenth, the hun
     expect(quantityHundredths(0.25)).toBe(25);
     expect(quantityHundredths(1.1)).toBe(110); // 1.1 × 100 is 110.00000000000001 in floats
     expect(quantityHundredths(-2.5)).toBe(-250); // a credit note mirrors its invoice
-    for (const bad of [0, 0.001, 1.005, Number.NaN, Number.POSITIVE_INFINITY]) expect(() => quantityHundredths(bad), String(bad)).toThrow(RangeError);
+    for (const bad of [0, 0.001, 1.005, Number.NaN, Number.POSITIVE_INFINITY])
+      expect(() => quantityHundredths(bad), String(bad)).toThrow(RangeError);
   });
 
   it("rounds a line's amount half away from zero, in integers, and mirrors it on a credit note", () => {
@@ -106,8 +133,12 @@ describe("fractional quantities: hours billed by the quarter, the tenth, the hun
   });
 
   it("a discount still cannot exceed its line, and a line is still never zero", () => {
-    expect(() => invoiceTotals([{ ...standard(15_000, 0.5), discountCents: 7_501 }], { registrant: true })).toThrow(RangeError);
-    expect(invoiceTotals([{ ...standard(15_000, 0.5), discountCents: 7_500 }], { registrant: true }).subtotalCents).toBe(0);
+    expect(() => invoiceTotals([{ ...standard(15_000, 0.5), discountCents: 7_501 }], { registrant: true })).toThrow(
+      RangeError,
+    );
+    expect(
+      invoiceTotals([{ ...standard(15_000, 0.5), discountCents: 7_500 }], { registrant: true }).subtotalCents,
+    ).toBe(0);
     expect(() => invoiceTotals([standard(15_000, 0)], { registrant: true })).toThrow(RangeError);
   });
 });

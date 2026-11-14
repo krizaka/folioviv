@@ -23,8 +23,27 @@ export function ShopReviews({ variant, count, title, reviews, starText, replyLab
       count={count}
       title={title}
       minCount={reviews.minCount}
-      summary={{ score: reviews.score, count: reviews.count, distribution: reviews.distribution, scoreText: reviews.scoreText, countText: reviews.countText, summaryText: reviews.summaryText, starText: (stars: number, n: number) => starText.replace("{stars}", String(stars)).replace("{count}", String(n)) }}
-      reviews={reviews.cards.map((r) => ({ id: r.id, author: r.author, date: r.date, dateTime: r.dateTime, service: r.service, rating: r.rating, ratingText: r.ratingText, text: r.text, reply: r.reply ? { label: replyLabel, author: ownerName, text: r.reply } : undefined }))}
+      summary={{
+        score: reviews.score,
+        count: reviews.count,
+        distribution: reviews.distribution,
+        scoreText: reviews.scoreText,
+        countText: reviews.countText,
+        summaryText: reviews.summaryText,
+        starText: (stars: number, n: number) =>
+          starText.replace("{stars}", String(stars)).replace("{count}", String(n)),
+      }}
+      reviews={reviews.cards.map((r) => ({
+        id: r.id,
+        author: r.author,
+        date: r.date,
+        dateTime: r.dateTime,
+        service: r.service,
+        rating: r.rating,
+        ratingText: r.ratingText,
+        text: r.text,
+        reply: r.reply ? { label: replyLabel, author: ownerName, text: r.reply } : undefined,
+      }))}
     />
   );
 }

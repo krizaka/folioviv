@@ -8,7 +8,13 @@ export function InvoicePreview({ locale }: Readonly<{ locale: Locale }>) {
   const t = getDictionary(locale).landing;
   const invoice = demoInvoice(locale);
   const money = (cents: number) => formatMoney(cents, locale);
-  const figures = { line: t.preview.invoiceLine, subtotal: money(invoice.subtotalCents), gst: money(invoice.gstCents), qst: money(invoice.qstCents), total: money(invoice.totalCents) };
+  const figures = {
+    line: t.preview.invoiceLine,
+    subtotal: money(invoice.subtotalCents),
+    gst: money(invoice.gstCents),
+    qst: money(invoice.qstCents),
+    total: money(invoice.totalCents),
+  };
   return (
     <PreviewFrame
       alt={format(t.screens.invoice.alt, figures)}

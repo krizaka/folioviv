@@ -31,44 +31,69 @@ export default function Figures() {
   const router = useRouter();
   const figures = useQuery(queries.figures(shop));
   return (
-    <Screen header={<AppHeader title={t("figures.title")} />} onRefresh={() => void figures.refetch()} refreshing={figures.isRefetching}>
+    <Screen
+      header={<AppHeader title={t("figures.title")} />}
+      onRefresh={() => void figures.refetch()}
+      refreshing={figures.isRefetching}
+    >
       <QueryStates query={figures}>
         {(f) => {
           const open = f.figures.find((figure) => figure.id === openId);
-          if (open) return <FigureDetail figure={open} now={new Date().toISOString()} onBack={() => router.setParams({ figure: undefined })} />;
+          if (open)
+            return (
+              <FigureDetail
+                figure={open}
+                now={new Date().toISOString()}
+                onBack={() => router.setParams({ figure: undefined })}
+              />
+            );
           return (
-          <>
-            <Txt tone="secondary">{t("figures.lead")}</Txt>
-            <Txt tone="muted" variant="caption">{t("figures.periodLabel", { start: f.period.start, end: f.period.end })}</Txt>
-            <Txt variant="label">{t("figures.nextTitle")}</Txt>
-            {f.actions.length === 0 ? <Txt tone="muted">{t("figures.nothingToDo")}</Txt> : null}
-            {f.actions.map((action) => {
-              const words = actionText(action, t, locale);
-              return (
-                <Card.Root key={`${action.kind}:${action.evidence[0] ?? ""}`}>
-                  <Card.Body>
-                    <Badge tone={URGENCY_TONE[action.urgency]}>{t(`figures.urgency.${action.urgency}`)}</Badge>
-                    <Txt variant="label">{words.title}</Txt>
-                    <Txt tone="secondary">{words.why}</Txt>
-                  </Card.Body>
-                </Card.Root>
-              );
-            })}
-            <Grid minItemWidth={CARD_MIN_WIDTH} aria-label={t("figures.title")}>
-              {f.figures.map((figure) => (
-                <Card.Root key={figure.id}>
-                  <Card.Body>
-                    <Txt variant="label" testID={`figure-name-${figure.id}`}>{t(`figures.${figure.id}.name`)}</Txt>
-                    <Txt variant="title" testID={`figure-${figure.id}`}>{valueText(figure, locale)}</Txt>
-                    <Badge tone={toneOf(figure.state)}>{t(`figures.state.${figure.state}`)}</Badge>
-                    <Txt>{meaningText(figure, t)}</Txt>
-                    <Button testID={`figure-details-${figure.id}`} variant="ghost" size="sm" label={t("figures.details")} onPress={() => router.setParams({ figure: figure.id })} />
-                  </Card.Body>
-                </Card.Root>
-              ))}
-            </Grid>
-            <Txt tone="muted" variant="caption">{t("figures.never")}</Txt>
-          </>
+            <>
+              <Txt tone="secondary">{t("figures.lead")}</Txt>
+              <Txt tone="muted" variant="caption">
+                {t("figures.periodLabel", { start: f.period.start, end: f.period.end })}
+              </Txt>
+              <Txt variant="label">{t("figures.nextTitle")}</Txt>
+              {f.actions.length === 0 ? <Txt tone="muted">{t("figures.nothingToDo")}</Txt> : null}
+              {f.actions.map((action) => {
+                const words = actionText(action, t, locale);
+                return (
+                  <Card.Root key={`${action.kind}:${action.evidence[0] ?? ""}`}>
+                    <Card.Body>
+                      <Badge tone={URGENCY_TONE[action.urgency]}>{t(`figures.urgency.${action.urgency}`)}</Badge>
+                      <Txt variant="label">{words.title}</Txt>
+                      <Txt tone="secondary">{words.why}</Txt>
+                    </Card.Body>
+                  </Card.Root>
+                );
+              })}
+              <Grid minItemWidth={CARD_MIN_WIDTH} aria-label={t("figures.title")}>
+                {f.figures.map((figure) => (
+                  <Card.Root key={figure.id}>
+                    <Card.Body>
+                      <Txt variant="label" testID={`figure-name-${figure.id}`}>
+                        {t(`figures.${figure.id}.name`)}
+                      </Txt>
+                      <Txt variant="title" testID={`figure-${figure.id}`}>
+                        {valueText(figure, locale)}
+                      </Txt>
+                      <Badge tone={toneOf(figure.state)}>{t(`figures.state.${figure.state}`)}</Badge>
+                      <Txt>{meaningText(figure, t)}</Txt>
+                      <Button
+                        testID={`figure-details-${figure.id}`}
+                        variant="ghost"
+                        size="sm"
+                        label={t("figures.details")}
+                        onPress={() => router.setParams({ figure: figure.id })}
+                      />
+                    </Card.Body>
+                  </Card.Root>
+                ))}
+              </Grid>
+              <Txt tone="muted" variant="caption">
+                {t("figures.never")}
+              </Txt>
+            </>
           );
         }}
       </QueryStates>

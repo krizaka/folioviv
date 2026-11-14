@@ -8,7 +8,9 @@ const flows = readdirSync(new URL(`../${FLOWS}`, import.meta.url)).filter((f) =>
 // The phone's Maestro flows run in CI on every pull request (krizaka/.github#241), signed in as the demo shop's owner.
 describe("the phone's Maestro flows in CI", () => {
   it("has the flows of D8's tabs: Aujourd'hui, Factures and the quick invoice, besides smoke and the five tabs", () => {
-    expect(flows).toEqual(expect.arrayContaining(["smoke.yaml", "tabs.yaml", "aujourdhui.yaml", "factures.yaml", "quick-invoice.yaml"]));
+    expect(flows).toEqual(
+      expect.arrayContaining(["smoke.yaml", "tabs.yaml", "aujourdhui.yaml", "factures.yaml", "quick-invoice.yaml"]),
+    );
   });
 
   it("every flow runs in CI unless it is tagged `manual` (a flow is fixed or tagged, never deleted)", () => {
@@ -29,7 +31,9 @@ describe("the phone's Maestro flows in CI", () => {
     expect(ci).toMatch(/\n {2}mobile-e2e:\n/);
     expect(ci).toMatch(/uses: krizaka\/\.github\/\.github\/workflows\/mobile-e2e\.yml@[0-9a-f]{40}/);
     expect(ci).toMatch(/\n {2}pull_request:\n(?! {4}paths)/); // no path filter: a required check must always report
-    expect(ci).not.toMatch(/continue-on-error|if: false|\n {4}if: (?!\$\{\{ vars\.CI_SLEEP != 'true' \}\}\n {4}runs-on)/); // the only job condition is the CI_SLEEP one of expo-sdk
+    expect(ci).not.toMatch(
+      /continue-on-error|if: false|\n {4}if: (?!\$\{\{ vars\.CI_SLEEP != 'true' \}\}\n {4}runs-on)/,
+    ); // the only job condition is the CI_SLEEP one of expo-sdk
     expect(ci).toContain("setup-command: bash scripts/ci-mobile-backend.sh");
   });
 

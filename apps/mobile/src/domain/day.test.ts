@@ -1,7 +1,14 @@
 import { isDay, shiftDay, stripWindow, timeOf } from "./day";
 
 describe("the owner's day", () => {
-  it.each([["2026-10-20", true], ["2028-02-29", true], ["2026-02-30", false], ["2026-10", false], ["", false], [undefined, false]])("reads %j as a day: %s", (value, ok) => expect(isDay(value as string | undefined)).toBe(ok));
+  it.each([
+    ["2026-10-20", true],
+    ["2028-02-29", true],
+    ["2026-02-30", false],
+    ["2026-10", false],
+    ["", false],
+    [undefined, false],
+  ])("reads %j as a day: %s", (value, ok) => expect(isDay(value as string | undefined)).toBe(ok));
 
   it("steps across month and year ends", () => {
     expect(shiftDay("2026-10-31", 1)).toBe("2026-11-01");
@@ -25,5 +32,11 @@ describe("the day strip of Aujourd'hui (D8)", () => {
 });
 
 describe("shiftDay is calendar arithmetic, never the machine's zone (folioviv#320)", () => {
-  it.each([["2026-03-08", 1, "2026-03-09"], ["2026-11-01", 1, "2026-11-02"], ["2026-12-31", 1, "2027-01-01"], ["2028-03-01", -1, "2028-02-29"], ["2026-10-24", -3, "2026-10-21"]])("%s %i -> %s", (day, by, want) => expect(shiftDay(day, by)).toBe(want));
+  it.each([
+    ["2026-03-08", 1, "2026-03-09"],
+    ["2026-11-01", 1, "2026-11-02"],
+    ["2026-12-31", 1, "2027-01-01"],
+    ["2028-03-01", -1, "2028-02-29"],
+    ["2026-10-24", -3, "2026-10-21"],
+  ])("%s %i -> %s", (day, by, want) => expect(shiftDay(day, by)).toBe(want));
 });

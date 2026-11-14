@@ -34,7 +34,12 @@ describe("the wall editor's keyboard (#311)", () => {
   });
   it("clamps what is typed, and what is not a number becomes zero", () => {
     expect(clampPlace({ x: 140, y: -4, rotation: 30, z: 5000 })).toEqual({ x: 100, y: 0, rotation: 8, z: 1000 });
-    expect(clampPlace({ x: Number.NaN, y: 1.234567, rotation: Number.NaN, z: Number.NaN })).toEqual({ x: 0, y: 1.23, rotation: 0, z: 0 });
+    expect(clampPlace({ x: Number.NaN, y: 1.234567, rotation: Number.NaN, z: Number.NaN })).toEqual({
+      x: 0,
+      y: 1.23,
+      rotation: 0,
+      z: 0,
+    });
   });
   it("lays a new item inside the wall, tilted by a small amount", () => {
     for (let n = 0; n < 40; n++) {

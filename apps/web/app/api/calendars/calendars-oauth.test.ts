@@ -9,7 +9,10 @@ import { appSettings } from "@/lib/settings";
 import { GET as callback } from "./callback/[kind]/route";
 import { POST as connect } from "./connect/[kind]/route";
 
-vi.mock("@/lib/access", async (original) => ({ ...(await original<typeof import("@/lib/access")>()), requireShop: vi.fn() }));
+vi.mock("@/lib/access", async (original) => ({
+  ...(await original<typeof import("@/lib/access")>()),
+  requireShop: vi.fn(),
+}));
 vi.mock("@/lib/audit", () => ({ audit: vi.fn() }));
 vi.mock("@/lib/db", () => ({ db: vi.fn(() => ({})) }));
 vi.mock("@/lib/env", () => ({
@@ -22,15 +25,50 @@ vi.mock("@/lib/settings", () => ({ appSettings: vi.fn() }));
 vi.mock("@/lib/rate-limit", () => ({ limit: vi.fn() }));
 vi.mock("@/lib/calendar/overview", async (original) => ({
   ...(await original<typeof import("@/lib/calendar/overview")>()),
-  calendarOverview: vi.fn(async () => ({ wholeShop: true, people: [{ id: "11111111-1111-4111-8111-111111111111", name: "Julie" }], connections: [], enabled: true, kinds: [] })),
+  calendarOverview: vi.fn(async () => ({
+    wholeShop: true,
+    people: [{ id: "11111111-1111-4111-8111-111111111111", name: "Julie" }],
+    connections: [],
+    enabled: true,
+    kinds: [],
+  })),
 }));
-vi.mock("@folioviv/db", async (original) => ({ ...(await original<typeof import("@folioviv/db")>()), addConnection: vi.fn(), recordSyncOk: vi.fn() }));
+vi.mock("@folioviv/db", async (original) => ({
+  ...(await original<typeof import("@folioviv/db")>()),
+  addConnection: vi.fn(),
+  recordSyncOk: vi.fn(),
+}));
 
 const params = (kind: string) => ({ params: Promise.resolve({ kind }) });
 const flags = (over: Record<string, unknown> = {}) =>
-  vi.mocked(appSettings).mockReturnValue({ get: vi.fn(async (key: string) => (key in over ? over[key] : key === "calendarSync.maxCalendarsPerShop" ? 5 : key.endsWith("intervalMinutes") ? 30 : key.endsWith("windowDays") ? 60 : true)) } as never);
-const asOwner = () => vi.mocked(requireShop).mockResolvedValue({ role: "owner", shop: { id: "s1", timezone: "America/Toronto" }, session: { account: { id: "acc", email: "o@example.com" } } } as never);
-const post = (kind: string, json: unknown) => connect(new Request(`http://localhost/api/calendars/connect/${kind}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(json) }), params(kind));
+  vi.mocked(appSettings).mockReturnValue({
+    get: vi.fn(async (key: string) =>
+      key in over
+        ? over[key]
+        : key === "calendarSync.maxCalendarsPerShop"
+          ? 5
+          : key.endsWith("intervalMinutes")
+            ? 30
+            : key.endsWith("windowDays")
+              ? 60
+              : true,
+    ),
+  } as never);
+const asOwner = () =>
+  vi.mocked(requireShop).mockResolvedValue({
+    role: "owner",
+    shop: { id: "s1", timezone: "America/Toronto" },
+    session: { account: { id: "acc", email: "o@example.com" } },
+  } as never);
+const post = (kind: string, json: unknown) =>
+  connect(
+    new Request(`http://localhost/api/calendars/connect/${kind}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(json),
+    }),
+    params(kind),
+  );
 const ask = { label: "Mine", staffId: null, locale: "fr", consent: true };
 
 describe("connecting Google or Outlook (#282, ADR-004)", () => {
@@ -74,14 +112,36 @@ describe("connecting Google or Outlook (#282, ADR-004)", () => {
 describe("the callback", () => {
   const NOW = new Date();
   const verifier = newPkce().verifier;
-  const stateOf = (over: Partial<Parameters<typeof signState>[0]> = {}) => signState({ kind: "google", shopId: "s1", staffId: null, accountId: "acc", label: "Mine", locale: "fr", ...over }, "session-secret", NOW);
-  const hit = (kind: string, state: string, nonce: string, extra = "code=abc", cookie: string | null = pkceCookie(nonce, verifier, true).split(";")[0]!) =>
-    callback(new Request(`https://www.folioviv.com/api/calendars/callback/${kind}?state=${encodeURIComponent(state)}&${extra}`, { headers: cookie ? { cookie } : {} }), params(kind));
+  const stateOf = (over: Partial<Parameters<typeof signState>[0]> = {}) =>
+    signState(
+      { kind: "google", shopId: "s1", staffId: null, accountId: "acc", label: "Mine", locale: "fr", ...over },
+      "session-secret",
+      NOW,
+    );
+  const hit = (
+    kind: string,
+    state: string,
+    nonce: string,
+    extra = "code=abc",
+    cookie: string | null = pkceCookie(nonce, verifier, true).split(";")[0]!,
+  ) =>
+    callback(
+      new Request(
+        `https://www.folioviv.com/api/calendars/callback/${kind}?state=${encodeURIComponent(state)}&${extra}`,
+        { headers: cookie ? { cookie } : {} },
+      ),
+      params(kind),
+    );
   const answers = () =>
     vi.fn(async (url: RequestInfo | URL, init?: RequestInit) => {
       const u = String(url);
-      if (u.includes("oauth2.googleapis.com/token")) return new URLSearchParams(String(init?.body)).get("grant_type") === "authorization_code" ? Response.json({ access_token: "a", refresh_token: "REFRESH" }) : Response.json({ access_token: "a" });
-      return Response.json({ calendars: { primary: { busy: [{ start: "2099-10-27T14:00:00Z", end: "2099-10-27T15:00:00Z" }] } } });
+      if (u.includes("oauth2.googleapis.com/token"))
+        return new URLSearchParams(String(init?.body)).get("grant_type") === "authorization_code"
+          ? Response.json({ access_token: "a", refresh_token: "REFRESH" })
+          : Response.json({ access_token: "a" });
+      return Response.json({
+        calendars: { primary: { busy: [{ start: "2099-10-27T14:00:00Z", end: "2099-10-27T15:00:00Z" }] } },
+      });
     });
 
   beforeEach(() => {
@@ -103,7 +163,13 @@ describe("the callback", () => {
     const exchange = vi.mocked(fetch).mock.calls.find(([u]) => String(u).includes("token"))!;
     expect(new URLSearchParams(String((exchange[1] as RequestInit).body)).get("code_verifier")).toBe(verifier);
     const added = vi.mocked(addConnection).mock.calls[0]![1];
-    expect(added).toMatchObject({ shopId: "s1", staffId: null, kind: "google", label: "Mine", consentTextVersion: "2026-10-26" });
+    expect(added).toMatchObject({
+      shopId: "s1",
+      staffId: null,
+      kind: "google",
+      label: "Mine",
+      consentTextVersion: "2026-10-26",
+    });
     expect(added.secretEnc).toMatch(/^v1\./);
     expect(added.secretEnc).not.toContain("REFRESH");
     expect(recordSyncOk).toHaveBeenCalled();
@@ -114,7 +180,12 @@ describe("the callback", () => {
   it("keeps the connection even when the first read fails: the tick tries again", async () => {
     const { state, nonce } = stateOf();
     const base = answers();
-    vi.stubGlobal("fetch", vi.fn(async (u: RequestInfo | URL, i?: RequestInit) => (String(u).includes("freeBusy") ? Response.json({}, { status: 503 }) : base(u, i))));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (u: RequestInfo | URL, i?: RequestInit) =>
+        String(u).includes("freeBusy") ? Response.json({}, { status: 503 }) : base(u, i),
+      ),
+    );
     expect((await hit("google", state, nonce)).headers.get("location")).toContain("connected");
     expect(recordSyncOk).not.toHaveBeenCalled();
   });
@@ -132,14 +203,21 @@ describe("the callback", () => {
 
   it("says denied when the owner refused the permission, and error for anything else the provider reports", async () => {
     const { state, nonce } = stateOf();
-    expect((await hit("google", state, nonce, "error=access_denied")).headers.get("location")).toContain("calendar=denied");
-    expect((await hit("google", state, nonce, "error=server_error")).headers.get("location")).toContain("calendar=error");
+    expect((await hit("google", state, nonce, "error=access_denied")).headers.get("location")).toContain(
+      "calendar=denied",
+    );
+    expect((await hit("google", state, nonce, "error=server_error")).headers.get("location")).toContain(
+      "calendar=error",
+    );
     expect(addConnection).not.toHaveBeenCalled();
   });
 
   it("goes back with an error, showing no code, when the provider refuses the exchange", async () => {
     const { state, nonce } = stateOf();
-    vi.stubGlobal("fetch", vi.fn(async () => Response.json({ error: "invalid_grant" }, { status: 400 })));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Response.json({ error: "invalid_grant" }, { status: 400 })),
+    );
     const res = await hit("google", state, nonce);
     expect(res.headers.get("location")).toBe("/fr/app/s1/settings/agenda?calendar=error");
     expect(addConnection).not.toHaveBeenCalled();

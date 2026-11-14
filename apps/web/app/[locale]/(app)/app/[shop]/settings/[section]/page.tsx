@@ -1,5 +1,34 @@
-import { localDay, OWNER_BOUNDS, OWNER_TUNABLE, type OwnerTunable, reviewScore, shopTypeOf, WALL_LIMITS } from "@folioviv/core";
-import { announcementsOf, draftShopPage, invoiceMailSettings, loadShop, publishedShopPage, reelsOf, reelTransitionOf, reviewsOf, SHOP_ROLES, shopAccentOf, shopFigureOverrides, shopMediaOf, shopPageConfigOf, shopPageVersionsOf, shopStaff, socialLinksOf, teamTimeOff, translationRows, translationRunsOn,wallOf } from "@folioviv/db";
+import {
+  localDay,
+  OWNER_BOUNDS,
+  OWNER_TUNABLE,
+  type OwnerTunable,
+  reviewScore,
+  shopTypeOf,
+  WALL_LIMITS,
+} from "@folioviv/core";
+import {
+  announcementsOf,
+  draftShopPage,
+  invoiceMailSettings,
+  loadShop,
+  publishedShopPage,
+  reelsOf,
+  reelTransitionOf,
+  reviewsOf,
+  SHOP_ROLES,
+  shopAccentOf,
+  shopFigureOverrides,
+  shopMediaOf,
+  shopPageConfigOf,
+  shopPageVersionsOf,
+  shopStaff,
+  socialLinksOf,
+  teamTimeOff,
+  translationRows,
+  translationRunsOn,
+  wallOf,
+} from "@folioviv/db";
 import { shopPresets } from "@krizaka/tokens/shop-presets";
 import { Button } from "@krizaka/ui/button";
 import { PageHeader } from "@krizaka/ui/page-header";
@@ -25,7 +54,15 @@ import { WallEditor } from "@/components/app/WallEditor";
 import { BoutiqueHub } from "@/components/boutique/BoutiqueHub";
 import { ShopComposerPanel } from "@/components/boutique/ShopComposerPanel";
 import { agendaScope, pageSession } from "@/lib/access";
-import { BOUTIQUE_NEEDS, type BoutiqueSection, boutiqueSectionsAllowed, isBoutiqueSection, isPageTab, type PageTab, pageTabsAllowed } from "@/lib/boutique";
+import {
+  BOUTIQUE_NEEDS,
+  type BoutiqueSection,
+  boutiqueSectionsAllowed,
+  isBoutiqueSection,
+  isPageTab,
+  type PageTab,
+  pageTabsAllowed,
+} from "@/lib/boutique";
 import { calendarOverview } from "@/lib/calendar/overview";
 import { communityLimits, reviewRules } from "@/lib/community";
 import { db } from "@/lib/db";
@@ -50,7 +87,25 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return { title: getDictionary(asLocale((await params).locale)).console.boutique.title };
 }
 
-const line = (m: { url: string; altFr: string; altEn: string; captionFr: string | null; captionEn: string | null; webmUrl: string | null; mp4Url: string | null; wide: boolean }) => ({ url: m.url, altFr: m.altFr, altEn: m.altEn, ...(m.captionFr ? { captionFr: m.captionFr } : {}), ...(m.captionEn ? { captionEn: m.captionEn } : {}), webmUrl: m.webmUrl, mp4Url: m.mp4Url, wide: m.wide });
+const line = (m: {
+  url: string;
+  altFr: string;
+  altEn: string;
+  captionFr: string | null;
+  captionEn: string | null;
+  webmUrl: string | null;
+  mp4Url: string | null;
+  wide: boolean;
+}) => ({
+  url: m.url,
+  altFr: m.altFr,
+  altEn: m.altEn,
+  ...(m.captionFr ? { captionFr: m.captionFr } : {}),
+  ...(m.captionEn ? { captionEn: m.captionEn } : {}),
+  webmUrl: m.webmUrl,
+  mp4Url: m.mp4Url,
+  wide: m.wide,
+});
 
 /** Boutique › Page: the shop as the walker builds its public page (identity, texts, zones, services, hours, rules, media, look, publish). */
 async function PageSection({ locale, shopId, tab }: Readonly<{ locale: RouteLocale; shopId: string; tab: PageTab }>) {
@@ -58,21 +113,69 @@ async function PageSection({ locale, shopId, tab }: Readonly<{ locale: RouteLoca
   const base = readEnv().APP_PUBLIC_URL;
   const setup = await loadShop(db(), shop);
   const [media, pageConfig] = await Promise.all([shopMediaOf(db(), shop.id), shopPageConfigOf(db(), shop.id)]);
-  const [rules, templates, catalogue] = await Promise.all([defaultMediaSettings(), templateRules(), templateCatalogue(session.account.id)]);
-  const proposed = rules.enabled ? { config: pageConfig, shopType: shopTypeOf(shop.businessType, pageConfig.shopType), proposals: proposalsFor(rules.types), media: { cover: media.cover ? line(media.cover) : null, gallery: media.gallery.map(line) } } : null;
+  const [rules, templates, catalogue] = await Promise.all([
+    defaultMediaSettings(),
+    templateRules(),
+    templateCatalogue(session.account.id),
+  ]);
+  const proposed = rules.enabled
+    ? {
+        config: pageConfig,
+        shopType: shopTypeOf(shop.businessType, pageConfig.shopType),
+        proposals: proposalsFor(rules.types),
+        media: { cover: media.cover ? line(media.cover) : null, gallery: media.gallery.map(line) },
+      }
+    : null;
   const data: SetupData = {
     proposed,
     templates: templateChoices(templates, shopTypeOf(shop.businessType, pageConfig.shopType), pageConfig, catalogue),
     shopId: shop.id,
     pageConfig,
-    page: { name: shop.name, legalName: shop.legalName, address: shop.address, slug: shop.slug ?? "", ownerName: setup.staff.name, taglineFr: shop.taglineFr ?? "", taglineEn: shop.taglineEn ?? "", published: shop.published, area: shop.area ?? "", bioFr: shop.bioFr ?? "", bioEn: shop.bioEn ?? "", publicPhone: shop.publicPhone ?? "", publicEmail: shop.publicEmail ?? "", seatUnitFr: shop.seatUnitFr ?? "", seatUnitEn: shop.seatUnitEn ?? "", businessType: shop.businessType },
+    page: {
+      name: shop.name,
+      legalName: shop.legalName,
+      address: shop.address,
+      slug: shop.slug ?? "",
+      ownerName: setup.staff.name,
+      taglineFr: shop.taglineFr ?? "",
+      taglineEn: shop.taglineEn ?? "",
+      published: shop.published,
+      area: shop.area ?? "",
+      bioFr: shop.bioFr ?? "",
+      bioEn: shop.bioEn ?? "",
+      publicPhone: shop.publicPhone ?? "",
+      publicEmail: shop.publicEmail ?? "",
+      seatUnitFr: shop.seatUnitFr ?? "",
+      seatUnitEn: shop.seatUnitEn ?? "",
+      businessType: shop.businessType,
+    },
     publicUrl: shop.slug ? `${base}/${locale}/s/${shop.slug}` : null,
     zones: setup.zones.map((z) => ({ id: z.id, name: z.name })),
-    services: setup.services.map((s) => ({ id: s.id, nameFr: s.nameFr, nameEn: s.nameEn, durationMinutes: s.durationMinutes, priceCents: s.priceCents, capacity: s.capacity, descriptionFr: s.descriptionFr ?? "", descriptionEn: s.descriptionEn ?? "", includedFr: s.includedFr, includedEn: s.includedEn, priceVaries: s.priceVaries, linkUrl: s.linkUrl ?? "" })),
+    services: setup.services.map((s) => ({
+      id: s.id,
+      nameFr: s.nameFr,
+      nameEn: s.nameEn,
+      durationMinutes: s.durationMinutes,
+      priceCents: s.priceCents,
+      capacity: s.capacity,
+      descriptionFr: s.descriptionFr ?? "",
+      descriptionEn: s.descriptionEn ?? "",
+      includedFr: s.includedFr,
+      includedEn: s.includedEn,
+      priceVaries: s.priceVaries,
+      linkUrl: s.linkUrl ?? "",
+    })),
     media: { cover: media.cover ? line(media.cover) : null, gallery: media.gallery.map(line) },
     windows: setup.windows.map((x) => ({ id: x.id, weekday: x.weekday, startsAt: x.startsAt, endsAt: x.endsAt })),
     daysOff: setup.daysOff,
-    rules: { cancellationHours: setup.rules.cancellationHours, bookingHorizonDays: setup.rules.bookingHorizonDays, slotStepMinutes: setup.rules.slotStepMinutes, minNoticeMinutes: setup.rules.minNoticeMinutes, reportLinkDays: setup.rules.reportLinkDays, paymentTermsDays: shop.paymentTermsDays },
+    rules: {
+      cancellationHours: setup.rules.cancellationHours,
+      bookingHorizonDays: setup.rules.bookingHorizonDays,
+      slotStepMinutes: setup.rules.slotStepMinutes,
+      minNoticeMinutes: setup.rules.minNoticeMinutes,
+      reportLinkDays: setup.rules.reportLinkDays,
+      paymentTermsDays: shop.paymentTermsDays,
+    },
   };
   return <ShopSetupView data={data} tab={tab} />;
 }
@@ -80,7 +183,13 @@ async function PageSection({ locale, shopId, tab }: Readonly<{ locale: RouteLoca
 /** Boutique › Page › Layout (folioviv#402): the composer on the shop's draft, with what is live for the diff, the history and the accent. */
 async function ComposerTab({ locale, shopId }: Readonly<{ locale: RouteLocale; shopId: string }>) {
   const { shop } = await memberShop(shopId, "catalogue");
-  const [draft, live, accent, versions, pageConfig] = await Promise.all([draftShopPage(db(), shop.id), publishedShopPage(db(), shop.id), shopAccentOf(db(), shop.id), shopPageVersionsOf(db(), shop.id), shopPageConfigOf(db(), shop.id)]);
+  const [draft, live, accent, versions, pageConfig] = await Promise.all([
+    draftShopPage(db(), shop.id),
+    publishedShopPage(db(), shop.id),
+    shopAccentOf(db(), shop.id),
+    shopPageVersionsOf(db(), shop.id),
+    shopPageConfigOf(db(), shop.id),
+  ]);
   const trade = shopTypeOf(shop.businessType, pageConfig.shopType);
   const looks = shopPresets.filter((p) => p.trades.includes(trade));
   return (
@@ -90,7 +199,13 @@ async function ComposerTab({ locale, shopId }: Readonly<{ locale: RouteLocale; s
       published={live.page}
       accent={accent}
       accents={accentsByLook()}
-      presets={looks.map((p) => ({ id: p.id, version: p.version, name: p.name, density: p.density, variants: p.variants }))}
+      presets={looks.map((p) => ({
+        id: p.id,
+        version: p.version,
+        name: p.name,
+        density: p.density,
+        variants: p.variants,
+      }))}
       previewUrl={`/${locale}/preview/${shop.id}`}
       versions={versions.map((v) => ({ version: v.version, status: v.status, createdAt: v.createdAt.toISOString() }))}
     />
@@ -101,7 +216,10 @@ async function ComposerTab({ locale, shopId }: Readonly<{ locale: RouteLocale; s
 const COMMUNITY_TABS: ReadonlySet<PageTab> = new Set<PageTab>(["wall", "reels", "board", "reviews"]);
 
 /** Boutique › Page › the shop as a place (B45): the wall, the video and profiles, the bulletin board, the reviews. */
-async function CommunityTab({ shopId, tab }: Readonly<{ shopId: string; tab: "wall" | "reels" | "board" | "reviews" }>) {
+async function CommunityTab({
+  shopId,
+  tab,
+}: Readonly<{ shopId: string; tab: "wall" | "reels" | "board" | "reviews" }>) {
   const { shop } = await memberShop(shopId, "catalogue");
   const limits = await communityLimits();
   if (tab === "wall") {
@@ -109,23 +227,84 @@ async function CommunityTab({ shopId, tab }: Readonly<{ shopId: string; tab: "wa
     return <WallEditor wall={wall} limits={{ wallItems: limits.wallItems, drawn: WALL_LIMITS.drawn }} />;
   }
   if (tab === "reels") {
-    const [reels, links, transition] = await Promise.all([reelsOf(db(), shop.id), socialLinksOf(db(), shop.id), reelTransitionOf(db(), shop.id)]);
-    return <ReelsEditor reels={reels.map((r) => ({ id: r.id, kind: r.kind, platform: r.platform, titleFr: r.titleFr, titleEn: r.titleEn, externalUrl: r.externalUrl, seconds: r.seconds }))} links={links} transition={transition} limits={limits} />;
+    const [reels, links, transition] = await Promise.all([
+      reelsOf(db(), shop.id),
+      socialLinksOf(db(), shop.id),
+      reelTransitionOf(db(), shop.id),
+    ]);
+    return (
+      <ReelsEditor
+        reels={reels.map((r) => ({
+          id: r.id,
+          kind: r.kind,
+          platform: r.platform,
+          titleFr: r.titleFr,
+          titleEn: r.titleEn,
+          externalUrl: r.externalUrl,
+          seconds: r.seconds,
+        }))}
+        links={links}
+        transition={transition}
+        limits={limits}
+      />
+    );
   }
   if (tab === "board") {
     const flyers = await announcementsOf(db(), shop.id);
-    return <BoardEditor today={localDay(requestNow(), shop.timezone)} flyers={flyers.map((f) => ({ id: f.id, textFr: f.textFr, textEn: f.textEn, photoUrl: f.photoUrl, endsOn: f.endsOn, createdAt: f.createdAt.toISOString() }))} />;
+    return (
+      <BoardEditor
+        today={localDay(requestNow(), shop.timezone)}
+        flyers={flyers.map((f) => ({
+          id: f.id,
+          textFr: f.textFr,
+          textEn: f.textEn,
+          photoUrl: f.photoUrl,
+          endsOn: f.endsOn,
+          createdAt: f.createdAt.toISOString(),
+        }))}
+      />
+    );
   }
   const [reviews, rules] = await Promise.all([reviewsOf(db(), shop.id), reviewRules()]);
   const score = reviewScore(reviews, rules);
-  return <ReviewsPanel minCount={rules.minCount} score={{ count: score.count, score: score.score, shown: score.shown }} reviews={reviews.map((r) => ({ id: r.id, firstName: r.firstName, lastInitial: r.lastInitial, rating: r.rating, body: r.body, serviceName: r.serviceName, verified: r.verified, state: r.state, reply: r.reply, createdAt: r.createdAt.toISOString() }))} />;
+  return (
+    <ReviewsPanel
+      minCount={rules.minCount}
+      score={{ count: score.count, score: score.score, shown: score.shown }}
+      reviews={reviews.map((r) => ({
+        id: r.id,
+        firstName: r.firstName,
+        lastInitial: r.lastInitial,
+        rating: r.rating,
+        body: r.body,
+        serviceName: r.serviceName,
+        verified: r.verified,
+        state: r.state,
+        reply: r.reply,
+        createdAt: r.createdAt.toISOString(),
+      }))}
+    />
+  );
 }
 
 /** Boutique › Langues: the languages on, each text in each of them (#258). */
 async function LanguagesSection({ locale, shopId }: Readonly<{ locale: RouteLocale; shopId: string }>) {
   const { shop } = await memberShop(shopId, "settings");
-  const [rows, rules, used] = await Promise.all([translationRows(db(), shop.id), translationRules(), translationRunsOn(db(), shop.id, localDay(requestNow(), shop.timezone))]);
-  const data: LanguagesData = { source: rows.source as "fr" | "en", enabled: rows.enabled, allowed: rules.allowed, translationOn: rules.enabled, dailyLimit: rules.dailyLimit, usedToday: used, fields: rows.fields, setupHref: shopRoutes(locale, shop.id).setup };
+  const [rows, rules, used] = await Promise.all([
+    translationRows(db(), shop.id),
+    translationRules(),
+    translationRunsOn(db(), shop.id, localDay(requestNow(), shop.timezone)),
+  ]);
+  const data: LanguagesData = {
+    source: rows.source as "fr" | "en",
+    enabled: rows.enabled,
+    allowed: rules.allowed,
+    translationOn: rules.enabled,
+    dailyLimit: rules.dailyLimit,
+    usedToday: used,
+    fields: rows.fields,
+    setupHref: shopRoutes(locale, shop.id).setup,
+  };
   return <ShopLanguages data={data} />;
 }
 
@@ -136,7 +315,10 @@ async function HoursSection({ locale, shopId }: Readonly<{ locale: RouteLocale; 
   return (
     <div className="flex flex-col gap-5">
       <PageHeader as="h2" title={getDictionary(locale).console.boutique.sections.hours} />
-      <HoursCard windows={setup.windows.map((x) => ({ id: x.id, weekday: x.weekday, startsAt: x.startsAt, endsAt: x.endsAt }))} daysOff={setup.daysOff} />
+      <HoursCard
+        windows={setup.windows.map((x) => ({ id: x.id, weekday: x.weekday, startsAt: x.startsAt, endsAt: x.endsAt }))}
+        daysOff={setup.daysOff}
+      />
     </div>
   );
 }
@@ -148,7 +330,16 @@ async function RulesSection({ locale, shopId }: Readonly<{ locale: RouteLocale; 
   return (
     <div className="flex flex-col gap-5">
       <PageHeader as="h2" title={getDictionary(locale).console.boutique.sections.rules} />
-      <RulesCard rules={{ cancellationHours: rules.cancellationHours, bookingHorizonDays: rules.bookingHorizonDays, slotStepMinutes: rules.slotStepMinutes, minNoticeMinutes: rules.minNoticeMinutes, reportLinkDays: rules.reportLinkDays, paymentTermsDays: shop.paymentTermsDays }} />
+      <RulesCard
+        rules={{
+          cancellationHours: rules.cancellationHours,
+          bookingHorizonDays: rules.bookingHorizonDays,
+          slotStepMinutes: rules.slotStepMinutes,
+          minNoticeMinutes: rules.minNoticeMinutes,
+          reportLinkDays: rules.reportLinkDays,
+          paymentTermsDays: shop.paymentTermsDays,
+        }}
+      />
     </div>
   );
 }
@@ -158,7 +349,12 @@ async function TeamSection({ locale, shopId }: Readonly<{ locale: RouteLocale; s
   const { session, shop, role } = await memberShop(shopId, "team");
   const roles = team();
   const now = requestNow();
-  const [members, invitations, people, timeOff] = await Promise.all([roles.members(shop.id), roles.pendingInvitations(shop.id, now), shopStaff(db(), shop.id), teamTimeOff(db(), shop.id, localDay(now, shop.timezone))]);
+  const [members, invitations, people, timeOff] = await Promise.all([
+    roles.members(shop.id),
+    roles.pendingInvitations(shop.id, now),
+    shopStaff(db(), shop.id),
+    teamTimeOff(db(), shop.id, localDay(now, shop.timezone)),
+  ]);
   const manages = SHOP_ROLES.manages[role];
   return (
     <div className="flex flex-col gap-5">
@@ -166,8 +362,21 @@ async function TeamSection({ locale, shopId }: Readonly<{ locale: RouteLocale; s
       <TeamPanel
         timeZone={shop.timezone}
         assignable={[...manages]}
-        members={members.map((m) => ({ accountId: m.accountId, email: m.email, name: m.name, role: m.role, since: m.since.toISOString(), manageable: manages.includes(m.role), isYou: m.accountId === session.account.id }))}
-        invitations={invitations.map((i) => ({ id: i.id, email: i.email, role: i.role, expiresAt: i.expiresAt.toISOString() }))}
+        members={members.map((m) => ({
+          accountId: m.accountId,
+          email: m.email,
+          name: m.name,
+          role: m.role,
+          since: m.since.toISOString(),
+          manageable: manages.includes(m.role),
+          isYou: m.accountId === session.account.id,
+        }))}
+        invitations={invitations.map((i) => ({
+          id: i.id,
+          email: i.email,
+          role: i.role,
+          expiresAt: i.expiresAt.toISOString(),
+        }))}
       />
       {may(role, "schedule") ? <TimeOffCard data={{ staff: people, timeOff }} /> : null}
     </div>
@@ -183,7 +392,17 @@ async function InvoicesSection({ locale, shopId }: Readonly<{ locale: RouteLocal
   return (
     <div className="flex flex-col gap-5">
       <PageHeader as="h2" title={t.title} description={t.lead} />
-      <RulesCard part="terms" rules={{ cancellationHours: rules.cancellationHours, bookingHorizonDays: rules.bookingHorizonDays, slotStepMinutes: rules.slotStepMinutes, minNoticeMinutes: rules.minNoticeMinutes, reportLinkDays: rules.reportLinkDays, paymentTermsDays: shop.paymentTermsDays }} />
+      <RulesCard
+        part="terms"
+        rules={{
+          cancellationHours: rules.cancellationHours,
+          bookingHorizonDays: rules.bookingHorizonDays,
+          slotStepMinutes: rules.slotStepMinutes,
+          minNoticeMinutes: rules.minNoticeMinutes,
+          reportLinkDays: rules.reportLinkDays,
+          paymentTermsDays: shop.paymentTermsDays,
+        }}
+      />
       {mail ? <InvoiceMailSettings initial={mail.shop} /> : null}
     </div>
   );
@@ -194,7 +413,10 @@ async function AgendaSection({ locale, shopId }: Readonly<{ locale: RouteLocale;
   const { shop, role, session } = await memberShop(shopId, "bookings");
   const t = getDictionary(locale).console.boutique.agenda;
   const scope = agendaScope(role, session.account.id);
-  const [overview, calendars] = await Promise.all([feedOverview(shop.id, scope), calendarOverview(shop.id, scope, configuredKinds())]);
+  const [overview, calendars] = await Promise.all([
+    feedOverview(shop.id, scope),
+    calendarOverview(shop.id, scope, configuredKinds()),
+  ]);
   return (
     <div className="flex flex-col gap-5">
       <PageHeader as="h2" title={t.title} description={t.lead} />
@@ -208,7 +430,11 @@ async function AgendaSection({ locale, shopId }: Readonly<{ locale: RouteLocale;
 async function FiguresSection({ locale, shopId }: Readonly<{ locale: RouteLocale; shopId: string }>) {
   const { shop } = await memberShop(shopId, "settings");
   const t = getDictionary(locale).console.boutique.figures;
-  const [{ defaults }, tunable, overrides] = await Promise.all([adminFigureRules(), appSettings().get("figures.ownerTunable"), shopFigureOverrides(db(), shop.id)]);
+  const [{ defaults }, tunable, overrides] = await Promise.all([
+    adminFigureRules(),
+    appSettings().get("figures.ownerTunable"),
+    shopFigureOverrides(db(), shop.id),
+  ]);
   const usual = Object.fromEntries(OWNER_TUNABLE.map((key) => [key, defaults[key]])) as Record<OwnerTunable, number>;
   return (
     <div className="flex flex-col gap-5">
@@ -226,7 +452,11 @@ async function DataSection({ locale, shopId }: Readonly<{ locale: RouteLocale; s
   return (
     <div className="flex flex-col gap-5">
       <PageHeader as="h2" title={t.title} description={t.lead} />
-      <DataExports words={t} enabled={enabled} href={(file) => `/api/walker/exports/${file}?shopId=${shopId}&locale=${locale}`} />
+      <DataExports
+        words={t}
+        enabled={enabled}
+        href={(file) => `/api/walker/exports/${file}?shopId=${shopId}&locale=${locale}`}
+      />
     </div>
   );
 }
@@ -244,7 +474,13 @@ async function ShopsSection({ locale, shopId }: Readonly<{ locale: RouteLocale; 
         {shops.map((s) => (
           <li key={s.id} className="flex flex-wrap items-center justify-between gap-3 p-3">
             <span className="min-w-0 break-words font-semibold text-fg">{s.name}</span>
-            {s.id === shopId ? <span className="text-sm text-fg-secondary">{t.current}</span> : <Link className="font-semibold text-fg-accent underline" href={shopRoutes(locale, s.id).setup}>{t.open}</Link>}
+            {s.id === shopId ? (
+              <span className="text-sm text-fg-secondary">{t.current}</span>
+            ) : (
+              <Link className="font-semibold text-fg-accent underline" href={shopRoutes(locale, s.id).setup}>
+                {t.open}
+              </Link>
+            )}
           </li>
         ))}
       </ul>
@@ -258,25 +494,63 @@ async function ShopsSection({ locale, shopId }: Readonly<{ locale: RouteLocale; 
 }
 
 /** The body of one section of Boutique. */
-function boutiqueBody({ section, tab, community, locale, shopId }: Readonly<{ section: BoutiqueSection; tab: PageTab; community: boolean; locale: RouteLocale; shopId: string }>) {
-  if (section === "page" && tab === "composer") {return <ComposerTab locale={locale} shopId={shopId} />;}
-  if (section === "page") {return community ? <CommunityTab shopId={shopId} tab={tab as "wall" | "reels" | "board" | "reviews"} /> : <PageSection locale={locale} shopId={shopId} tab={tab} />;}
-  if (section === "languages") {return <LanguagesSection locale={locale} shopId={shopId} />;}
-  if (section === "hours") {return <HoursSection locale={locale} shopId={shopId} />;}
-  if (section === "rules") {return <RulesSection locale={locale} shopId={shopId} />;}
-  if (section === "team") {return <TeamSection locale={locale} shopId={shopId} />;}
-  if (section === "invoices") {return <InvoicesSection locale={locale} shopId={shopId} />;}
-  if (section === "agenda") {return <AgendaSection locale={locale} shopId={shopId} />;}
-  if (section === "figures") {return <FiguresSection locale={locale} shopId={shopId} />;}
-  if (section === "data") {return <DataSection locale={locale} shopId={shopId} />;}
+function boutiqueBody({
+  section,
+  tab,
+  community,
+  locale,
+  shopId,
+}: Readonly<{ section: BoutiqueSection; tab: PageTab; community: boolean; locale: RouteLocale; shopId: string }>) {
+  if (section === "page" && tab === "composer") {
+    return <ComposerTab locale={locale} shopId={shopId} />;
+  }
+  if (section === "page") {
+    return community ? (
+      <CommunityTab shopId={shopId} tab={tab as "wall" | "reels" | "board" | "reviews"} />
+    ) : (
+      <PageSection locale={locale} shopId={shopId} tab={tab} />
+    );
+  }
+  if (section === "languages") {
+    return <LanguagesSection locale={locale} shopId={shopId} />;
+  }
+  if (section === "hours") {
+    return <HoursSection locale={locale} shopId={shopId} />;
+  }
+  if (section === "rules") {
+    return <RulesSection locale={locale} shopId={shopId} />;
+  }
+  if (section === "team") {
+    return <TeamSection locale={locale} shopId={shopId} />;
+  }
+  if (section === "invoices") {
+    return <InvoicesSection locale={locale} shopId={shopId} />;
+  }
+  if (section === "agenda") {
+    return <AgendaSection locale={locale} shopId={shopId} />;
+  }
+  if (section === "figures") {
+    return <FiguresSection locale={locale} shopId={shopId} />;
+  }
+  if (section === "data") {
+    return <DataSection locale={locale} shopId={shopId} />;
+  }
   return <ShopsSection locale={locale} shopId={shopId} />;
 }
 
 /** One section of Boutique, named by the address. A section the role may not open is a 404, whatever the link says. */
-export default async function BoutiqueSectionPage({ params, searchParams }: Readonly<{ params: Promise<{ locale: string; shop: string; section: string }>; searchParams: Promise<{ tab?: string }> }>) {
+export default async function BoutiqueSectionPage({
+  params,
+  searchParams,
+}: Readonly<{
+  params: Promise<{ locale: string; shop: string; section: string }>;
+  searchParams: Promise<{ tab?: string }>;
+}>) {
   const { locale: rawLocale, shop: shopId, section: rawSection } = await params;
   const locale = asLocale(rawLocale);
-  if (!isBoutiqueSection(rawSection)) {notFound();}
+  if (!isBoutiqueSection(rawSection)) {
+    notFound();
+  }
   const section: BoutiqueSection = rawSection;
   const { tab: rawTab } = await searchParams;
   const { shop, role } = await memberShop(shopId, BOUTIQUE_NEEDS[section]);
@@ -284,14 +558,32 @@ export default async function BoutiqueSectionPage({ params, searchParams }: Read
   // A tab the role may not open is a 404, whatever the link says; without a tab, the first one it may open.
   const tabs = pageTabsAllowed((permission) => may(role, permission));
   const tab: PageTab = isPageTab(rawTab) ? rawTab : (tabs[0] ?? "identity");
-  if (section === "page" && !tabs.includes(tab)) {notFound();}
+  if (section === "page" && !tabs.includes(tab)) {
+    notFound();
+  }
   const base = readEnv().APP_PUBLIC_URL;
-  const header = { name: shop.name, published: shop.published, publicUrl: shop.slug ? `${base}/${locale}/s/${shop.slug}` : null };
+  const header = {
+    name: shop.name,
+    published: shop.published,
+    publicUrl: shop.slug ? `${base}/${locale}/s/${shop.slug}` : null,
+  };
   const current = section === "page" ? { section, tab } : { section };
   const community = COMMUNITY_TABS.has(tab);
   const body = boutiqueBody({ section, tab, community, locale, shopId: shop.id });
   return (
-    <BoutiqueHub locale={locale} shopId={shop.id} allowed={allowed} tabs={tabs} preview={section === "page" && (community || tab === "look") && shop.slug ? { src: `/${locale}/s/${shop.slug}?preview=1` } : undefined} current={current} shop={header}>
+    <BoutiqueHub
+      locale={locale}
+      shopId={shop.id}
+      allowed={allowed}
+      tabs={tabs}
+      preview={
+        section === "page" && (community || tab === "look") && shop.slug
+          ? { src: `/${locale}/s/${shop.slug}?preview=1` }
+          : undefined
+      }
+      current={current}
+      shop={header}
+    >
       {body}
     </BoutiqueHub>
   );

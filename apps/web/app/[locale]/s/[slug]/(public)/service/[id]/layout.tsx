@@ -7,7 +7,13 @@ import { loadPublicShop } from "@/lib/shop-page";
  * `loading.tsx`, so a `notFound()` thrown there arrives after the 200 has left; this layout sits above that boundary and decides
  * first (there is no `loading.tsx` on the `service` segment itself, which would wrap it again: the one of `[id]` is the same skeleton). A former shop address passes: the page itself moves it (308) with the rest of the path.
  */
-export default async function ServiceLayout({ children, params }: { children: React.ReactNode; params: Promise<{ slug: string; id: string }> }) {
+export default async function ServiceLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: Promise<{ slug: string; id: string }>;
+}) {
   const { slug, id } = await params;
   const page = await loadPublicShop(slug);
   if (page && !page.services.some((s) => s.id === id)) notFound();

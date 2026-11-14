@@ -13,7 +13,14 @@ export function POST(req: Request) {
     const { session, shop } = await requireOwner(req);
     const input = await readJson(req, shopMediaInputSchema);
     await saveShopMedia(db(), shop.id, input);
-    await audit({ action: "shop.media_changed", actorId: session.account.id, actorLabel: session.account.email, targetId: shop.id, detail: { cover: Boolean(input.cover), gallery: input.gallery?.length ?? 0 }, headers: req.headers });
+    await audit({
+      action: "shop.media_changed",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: shop.id,
+      detail: { cover: Boolean(input.cover), gallery: input.gallery?.length ?? 0 },
+      headers: req.headers,
+    });
     return Response.json({ ok: true });
   });
 }

@@ -8,7 +8,16 @@ import { bindProduct, BRAND_ID, PRODUCT_NAME } from "./brand";
 import { getDictionary } from "./i18n";
 import { renderMailTemplate } from "./mail-templates";
 
-const BRIEF = { shop: "Salon Laurier", line1: "a", line2: "", has2: false, line3: "", has3: false, url: "https://x.test", stop: "https://x.test/stop" };
+const BRIEF = {
+  shop: "Salon Laurier",
+  line1: "a",
+  line2: "",
+  has2: false,
+  line3: "",
+  has3: false,
+  url: "https://x.test",
+  stop: "https://x.test/stop",
+};
 
 describe("the commercial name (krizaka-internal#2039)", () => {
   it("is the commercial name", () => {
@@ -17,7 +26,10 @@ describe("the commercial name (krizaka-internal#2039)", () => {
   });
 
   it("fills {product} in a whole tree and leaves the other placeholders", () => {
-    expect(bindProduct({ a: ["{product} by {publisher}"], b: 3 }, "Folioviv")).toEqual({ a: ["Folioviv by {publisher}"], b: 3 });
+    expect(bindProduct({ a: ["{product} by {publisher}"], b: 3 }, "Folioviv")).toEqual({
+      a: ["Folioviv by {publisher}"],
+      b: 3,
+    });
   });
 
   it("the catalogues carry the placeholder, never a code name; the bound dictionaries carry the commercial name", () => {
@@ -40,6 +52,8 @@ describe("the commercial name (krizaka-internal#2039)", () => {
   });
 
   it("a mail without a given name wears the default commercial name", () => {
-    expect(renderMailTemplate("brief-weekly", BRIEF, { locale: "en", appUrl: "https://x.test" }).text).toContain(PRODUCT_NAME);
+    expect(renderMailTemplate("brief-weekly", BRIEF, { locale: "en", appUrl: "https://x.test" }).text).toContain(
+      PRODUCT_NAME,
+    );
   });
 });

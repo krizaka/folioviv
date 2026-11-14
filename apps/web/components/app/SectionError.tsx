@@ -11,7 +11,15 @@ export function SectionError({ what }: Readonly<{ what?: string }>) {
   const { say } = useSay();
   const router = useRouter();
   return (
-    <Alert tone="danger" title={say("states.error.title")} action={<Button size="sm" variant="secondary" onClick={() => router.refresh()}>{say("states.retry")}</Button>}>
+    <Alert
+      tone="danger"
+      title={say("states.error.title")}
+      action={
+        <Button size="sm" variant="secondary" onClick={() => router.refresh()}>
+          {say("states.retry")}
+        </Button>
+      }
+    >
       {what ?? say("states.error.body")}
     </Alert>
   );

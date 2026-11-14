@@ -4,7 +4,9 @@ import { describe, expect, it } from "vitest";
 // Dependabot alerts closed by krizaka-internal#3222: the lockfile must not resolve a version below the patched one again.
 const lock = readFileSync(new URL("../pnpm-lock.yaml", import.meta.url), "utf8");
 const resolved = (name) =>
-  [...lock.matchAll(new RegExp(`^  '?${name.replace("/", "\\/")}@(\\d+\\.\\d+\\.\\d+)(?=[':(])`, "gm"))].map((m) => m[1]);
+  [...lock.matchAll(new RegExp(`^  '?${name.replace("/", "\\/")}@(\\d+\\.\\d+\\.\\d+)(?=[':(])`, "gm"))].map(
+    (m) => m[1],
+  );
 const cmp = (a, b) => {
   const [x, y] = [a, b].map((v) => v.split(".").map(Number));
   return x[0] - y[0] || x[1] - y[1] || x[2] - y[2];

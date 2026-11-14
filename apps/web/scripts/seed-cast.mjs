@@ -45,23 +45,47 @@ export function castAccounts(env) {
   const local = isLocalHost(env.DATABASE_URL ?? "");
   const need = (name, fallback) => {
     const value = env[name] ?? (local ? fallback : undefined);
-    if (!value || value.length < 12) {throw new Error(`${name} is missing or shorter than 12 characters`);}
+    if (!value || value.length < 12) {
+      throw new Error(`${name} is missing or shorter than 12 characters`);
+    }
     return value;
   };
   const walkerSecret = need("QA_WALKER_PASSWORD", LOCAL_SECRET);
   const clientsSecret = need("QA_CLIENTS_PASSWORD", LOCAL_SECRET);
   const addressOf = (name, p) => {
     const email = (env[name] ?? `${p.id}@demo.folioviv.test`).trim().toLowerCase();
-    if (!/^[^@\s]+@[^@\s]+$/.test(email)) {throw new Error(`${name} is invalid`);}
+    if (!/^[^@\s]+@[^@\s]+$/.test(email)) {
+      throw new Error(`${name} is invalid`);
+    }
     return email;
   };
   const clientPersonas = castOf("folioviv").filter((p) => p.role === "client");
   return [
     { persona: WALKER, email: SAINT_HENRI_EMAILS[0], role: "USER", secret: walkerSecret },
-    ...clientPersonas.map((persona, i) => ({ persona, email: SAINT_HENRI_EMAILS[i + 1], role: "USER", secret: clientsSecret })),
-    { persona: ERIC, email: addressOf("QA_USER_EMAIL", ERIC), role: "USER", secret: need("QA_USER_PASSWORD", LOCAL_SECRET) },
-    { persona: KRIZAKA, email: (env.QA_KRIZAKA_EMAIL ?? KRIZAKA_EMAIL).trim().toLowerCase(), role: "USER", secret: need("QA_KRIZAKA_PASSWORD", LOCAL_SECRET) },
-    { persona: ADMIN, email: addressOf("QA_ADMIN_EMAIL", ADMIN), role: "ADMIN", secret: need("QA_ADMIN_PASSWORD", LOCAL_SECRET) },
+    ...clientPersonas.map((persona, i) => ({
+      persona,
+      email: SAINT_HENRI_EMAILS[i + 1],
+      role: "USER",
+      secret: clientsSecret,
+    })),
+    {
+      persona: ERIC,
+      email: addressOf("QA_USER_EMAIL", ERIC),
+      role: "USER",
+      secret: need("QA_USER_PASSWORD", LOCAL_SECRET),
+    },
+    {
+      persona: KRIZAKA,
+      email: (env.QA_KRIZAKA_EMAIL ?? KRIZAKA_EMAIL).trim().toLowerCase(),
+      role: "USER",
+      secret: need("QA_KRIZAKA_PASSWORD", LOCAL_SECRET),
+    },
+    {
+      persona: ADMIN,
+      email: addressOf("QA_ADMIN_EMAIL", ADMIN),
+      role: "ADMIN",
+      secret: need("QA_ADMIN_PASSWORD", LOCAL_SECRET),
+    },
   ];
 }
 
@@ -74,7 +98,8 @@ export const FINGERPRINT_QUERIES = {
   shops: "SELECT count(*)::int AS n FROM shops WHERE owner_id = $1",
   clients: "SELECT count(*)::int AS n FROM clients WHERE shop_id IN (SELECT id FROM shops WHERE owner_id = $1)",
   services: "SELECT count(*)::int AS n FROM services WHERE shop_id IN (SELECT id FROM shops WHERE owner_id = $1)",
-  appointments: "SELECT count(*)::int AS n FROM appointments WHERE shop_id IN (SELECT id FROM shops WHERE owner_id = $1)",
+  appointments:
+    "SELECT count(*)::int AS n FROM appointments WHERE shop_id IN (SELECT id FROM shops WHERE owner_id = $1)",
   invoices: "SELECT count(*)::int AS n FROM invoices WHERE shop_id IN (SELECT id FROM shops WHERE owner_id = $1)",
 };
 
@@ -93,8 +118,15 @@ export async function fingerprintOf(query, accountIds, walkerId) {
  * has its invoices alone, so there the check is « everything recorded is there »: the accounts exactly, every other count at least.
  */
 export function matchesRecorded(counts, expected, exact) {
-  const recorded = Object.fromEntries(expected.split(";").map((pair) => pair.split("=")).map(([k, v]) => [k, Number(v)]));
-  return Object.entries(recorded).every(([table, n]) => (exact || table === "accounts" ? counts[table] === n : counts[table] >= n));
+  const recorded = Object.fromEntries(
+    expected
+      .split(";")
+      .map((pair) => pair.split("="))
+      .map(([k, v]) => [k, Number(v)]),
+  );
+  return Object.entries(recorded).every(([table, n]) =>
+    exact || table === "accounts" ? counts[table] === n : counts[table] >= n,
+  );
 }
 
 /** What the demo shop holds, and nothing more: the clients of the seed with their dogs. A journey that adds to it must remove what it added. */
@@ -106,28 +138,42 @@ export const DEMO_CAST = {
 /** The seed works on dev and local only. */
 export function assertNotProduction(env) {
   const environment = env.APP_ENVIRONMENT ?? "dev";
-  if (environment !== "dev") {throw new Error(`seed-cast works only on dev and local, and APP_ENVIRONMENT is "${environment}" — refused`);}
+  if (environment !== "dev") {
+    throw new Error(`seed-cast works only on dev and local, and APP_ENVIRONMENT is "${environment}" — refused`);
+  }
 }
 
 /** `--clean` removes what a journey left on the demo shop; `--check` fails while anything of the kind is still there. */
 async function cleanAndCheckLeftovers(db, argv) {
   if (argv.includes("--clean")) {
     const cleaned = await cleanDemoLeftovers(db, DEMO_CAST);
-    console.log(`demo-clean: ${cleaned.clients} client file(s), ${cleaned.dogs} dog(s), ${cleaned.bookings} booking(s), ${cleaned.visits} visit(s), ${cleaned.accounts} sign-in(s) removed`);
+    console.log(
+      `demo-clean: ${cleaned.clients} client file(s), ${cleaned.dogs} dog(s), ${cleaned.bookings} booking(s), ${cleaned.visits} visit(s), ${cleaned.accounts} sign-in(s) removed`,
+    );
   }
-  if (!argv.includes("--check")) {return;}
+  if (!argv.includes("--check")) {
+    return;
+  }
   const left = await demoLeftovers(db, DEMO_CAST);
-  if (left.clients.length + left.dogs.length > 0) {throw new Error(`the demo shop holds data the cast does not name: ${left.clients.length} client file(s), ${left.dogs.length} dog(s) — run with --clean`);}
+  if (left.clients.length + left.dogs.length > 0) {
+    throw new Error(
+      `the demo shop holds data the cast does not name: ${left.clients.length} client file(s), ${left.dogs.length} dog(s) — run with --clean`,
+    );
+  }
 }
 
 async function main() {
   assertNotProduction(process.env);
   const env = process.env;
   const url = env.DATABASE_URL ?? "";
-  if (!url) {throw new Error("DATABASE_URL is required");}
+  if (!url) {
+    throw new Error("DATABASE_URL is required");
+  }
   const keyText = env.APP_DATA_ENCRYPTION_KEY ?? (isLocalHost(url) ? LOCAL_KEY : undefined);
   const key = Buffer.from(keyText ?? "", "base64");
-  if (key.length !== 32) {throw new Error("APP_DATA_ENCRYPTION_KEY must be 32 bytes, base64");}
+  if (key.length !== 32) {
+    throw new Error("APP_DATA_ENCRYPTION_KEY must be 32 bytes, base64");
+  }
   const accounts = castAccounts(env);
   const pool = new pg.Pool(poolConfig(url, env.DATABASE_CA_CERT, 2));
   try {
@@ -147,17 +193,29 @@ async function main() {
       ids.push(row.id);
     }
     const result = await seedSaintHenri(createDb(pool), key, fixedNow ? new Date(fixedNow) : new Date());
-    console.log(`seed-cast: ${WALKER.displayName} (${SAINT_HENRI.shop.name}), ${accounts.length - 4} clients, ${ERIC.displayName}, ${ADMIN.displayName} (administrator); shop ${result.created ? "created" : "already there"}`);
+    console.log(
+      `seed-cast: ${WALKER.displayName} (${SAINT_HENRI.shop.name}), ${accounts.length - 4} clients, ${ERIC.displayName}, ${ADMIN.displayName} (administrator); shop ${result.created ? "created" : "already there"}`,
+    );
     // The two owner states of the page audit (#405: an empty shop, a shop with one item per list): outside the fingerprint, which counts the cast alone.
     await ensureOwnerStates(pool, accounts[0].secret);
     const { fingerprint, counts } = await fingerprintOf((sql, values) => pool.query(sql, values), ids, ids[0]);
     console.log(`fingerprint: ${fingerprint}`);
     await cleanAndCheckLeftovers(createDb(pool), process.argv);
     if (process.argv.includes("--check")) {
-      const expected = JSON.parse(readFileSync(new URL("./cast-fingerprint.json", import.meta.url), "utf8")).fingerprint;
+      const expected = JSON.parse(
+        readFileSync(new URL("./cast-fingerprint.json", import.meta.url), "utf8"),
+      ).fingerprint;
       const exact = isLocalHost(url);
-      if (!matchesRecorded(counts, expected, exact)) {throw new Error(`the seeded data differs from the recorded fingerprint\n  expected ${expected}\n  got      ${fingerprint}`);}
-      console.log(exact ? "fingerprint: matches the recorded one" : "fingerprint: everything recorded is there (this database is lived in: counts may exceed it)");
+      if (!matchesRecorded(counts, expected, exact)) {
+        throw new Error(
+          `the seeded data differs from the recorded fingerprint\n  expected ${expected}\n  got      ${fingerprint}`,
+        );
+      }
+      console.log(
+        exact
+          ? "fingerprint: matches the recorded one"
+          : "fingerprint: everything recorded is there (this database is lived in: counts may exceed it)",
+      );
     }
   } finally {
     await pool.end();

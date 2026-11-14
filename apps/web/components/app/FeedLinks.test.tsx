@@ -29,15 +29,30 @@ const overview = (over: Partial<FeedOverview> = {}): FeedOverview => ({
 describe("the calendar links screen (#282)", () => {
   it("shows each feed's state, makes or renews the link and turns it off, with how to add it", () => {
     const t = text(renderToStaticMarkup(<FeedLinks overview={overview()} shopName="Salon Laurier" />));
-    for (const word of ["The whole shop · Salon Laurier", "Link active", "Make a new link", "Turn off", "Julie", "No link yet", "Make the link", "How to add it", "Google Calendar"]) expect(t).toContain(word);
+    for (const word of [
+      "The whole shop · Salon Laurier",
+      "Link active",
+      "Make a new link",
+      "Turn off",
+      "Julie",
+      "No link yet",
+      "Make the link",
+      "How to add it",
+      "Google Calendar",
+    ])
+      expect(t).toContain(word);
   });
 
   it("never draws an address or a QR code: they exist only in the answer that made it", () => {
-    expect(renderToStaticMarkup(<FeedLinks overview={overview()} shopName="S" />)).not.toMatch(/kf1\.|\/api\/feed\/|readOnly|<svg[^>]*role="img"/);
+    expect(renderToStaticMarkup(<FeedLinks overview={overview()} shopName="S" />)).not.toMatch(
+      /kf1\.|\/api\/feed\/|readOnly|<svg[^>]*role="img"/,
+    );
   });
 
   it("says so, and offers nothing, when the administrator switched the links off", () => {
-    const t = text(renderToStaticMarkup(<FeedLinks overview={overview({ enabled: false, shop: null, people: [] })} shopName="S" />));
+    const t = text(
+      renderToStaticMarkup(<FeedLinks overview={overview({ enabled: false, shop: null, people: [] })} shopName="S" />),
+    );
     expect(t).toContain("switched the calendar links off");
     expect(t).not.toContain("Make the link");
   });

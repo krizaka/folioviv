@@ -1,4 +1,11 @@
-import { currentAnnouncements, type ReelTransition, reviewScore, type ScoreRules, WALL_KIND, type WallTexture } from "@folioviv/core";
+import {
+  currentAnnouncements,
+  type ReelTransition,
+  reviewScore,
+  type ScoreRules,
+  WALL_KIND,
+  type WallTexture,
+} from "@folioviv/core";
 import type { CommunityView } from "@folioviv/db";
 
 import { type Locale, translator } from "@/lib/i18n";
@@ -91,15 +98,24 @@ export interface CommunityPublicView {
 const SHOWN = { reviews: 3, elsewhere: 2 } as const;
 
 const lang = (locale: Locale) => ({ fr: "fr-CA", en: "en-CA" })[locale];
-const monthOf = (at: Date, locale: Locale) => new Intl.DateTimeFormat(lang(locale), { month: "long", year: "numeric" }).format(at);
-export const dayOf = (day: string, locale: Locale) => new Intl.DateTimeFormat(lang(locale), { timeZone: "UTC", day: "numeric", month: "long" }).format(new Date(`${day}T12:00:00Z`));
-const numberOf = (n: number, locale: Locale) => new Intl.NumberFormat(lang(locale), { maximumFractionDigits: 1, minimumFractionDigits: 1 }).format(n);
+const monthOf = (at: Date, locale: Locale) =>
+  new Intl.DateTimeFormat(lang(locale), { month: "long", year: "numeric" }).format(at);
+export const dayOf = (day: string, locale: Locale) =>
+  new Intl.DateTimeFormat(lang(locale), { timeZone: "UTC", day: "numeric", month: "long" }).format(
+    new Date(`${day}T12:00:00Z`),
+  );
+const numberOf = (n: number, locale: Locale) =>
+  new Intl.NumberFormat(lang(locale), { maximumFractionDigits: 1, minimumFractionDigits: 1 }).format(n);
 
 const tvPlaceOf = (wallOn: boolean) => (wallOn ? "wall" : "reels");
 const plural = <T extends string>(count: number, one: T, other: T): T => (count === 1 ? one : other);
 
 /** The score and the latest verified reviews, or null under the administrator's minimum. */
-function reviewsView({ community, locale, rules }: Readonly<{ community: CommunityView; locale: Locale; rules: ScoreRules }>): ReviewsView | null {
+function reviewsView({
+  community,
+  locale,
+  rules,
+}: Readonly<{ community: CommunityView; locale: Locale; rules: ScoreRules }>): ReviewsView | null {
   const t = translator(locale);
   const result = reviewScore(community.reviews, rules);
   if (!result.shown || result.score === null) {
@@ -113,58 +129,127 @@ function reviewsView({ community, locale, rules }: Readonly<{ community: Communi
     distribution: [d[1], d[2], d[3], d[4], d[5]],
     minCount: rules.minCount,
     scoreText: t("console.shopPage.reviewScore", { score: shownScore }),
-    countText: t(plural(result.count, "console.shopPage.reviewCountOne", "console.shopPage.reviewCountOther"), { count: result.count }),
-    summaryText: t(plural(result.count, "console.shopPage.reviewSummaryOne", "console.shopPage.reviewSummaryOther"), { score: shownScore, count: result.count }),
-    cards: community.reviews.filter((r) => r.verified).slice(0, SHOWN.reviews).map((r) => ({
-      id: r.id,
-      author: `${r.firstName} ${r.lastInitial}.`,
-      date: monthOf(r.createdAt, locale),
-      dateTime: r.createdAt.toISOString().slice(0, 7),
-      service: r.serviceName,
-      rating: r.rating,
-      ratingText: t("console.shopPage.reviewRating", { rating: r.rating }),
-      text: r.body,
-      reply: r.reply || null,
-    })),
+    countText: t(plural(result.count, "console.shopPage.reviewCountOne", "console.shopPage.reviewCountOther"), {
+      count: result.count,
+    }),
+    summaryText: t(plural(result.count, "console.shopPage.reviewSummaryOne", "console.shopPage.reviewSummaryOther"), {
+      score: shownScore,
+      count: result.count,
+    }),
+    cards: community.reviews
+      .filter((r) => r.verified)
+      .slice(0, SHOWN.reviews)
+      .map((r) => ({
+        id: r.id,
+        author: `${r.firstName} ${r.lastInitial}.`,
+        date: monthOf(r.createdAt, locale),
+        dateTime: r.createdAt.toISOString().slice(0, 7),
+        service: r.serviceName,
+        rating: r.rating,
+        ratingText: t("console.shopPage.reviewRating", { rating: r.rating }),
+        text: r.body,
+        reply: r.reply || null,
+      })),
   };
 }
 
-export function buildCommunity(input: { community: CommunityView; locale: Locale; today: string; rules: ScoreRules; enabled: Record<"wall" | "reels" | "announcements" | "reviews", boolean> }): CommunityPublicView {
+export function buildCommunity(input: {
+  community: CommunityView;
+  locale: Locale;
+  today: string;
+  rules: ScoreRules;
+  enabled: Record<"wall" | "reels" | "announcements" | "reviews", boolean>;
+}): CommunityPublicView {
   const { community, locale, today, rules, enabled } = input;
   const t = translator(locale);
   const say = (fr: string, en: string) => ({ fr, en })[locale] || fr || en;
 
-  const blank = { attachment: "tape" as const, imageUrl: null, alt: "", caption: "", text: "", signature: "", variant: "enamel" as const };
+  const blank = {
+    attachment: "tape" as const,
+    imageUrl: null,
+    alt: "",
+    caption: "",
+    text: "",
+    signature: "",
+    variant: "enamel" as const,
+  };
   const pieceOf = (item: CommunityView["wall"]["items"][number]): WallPiece => {
     const place = { id: item.id, x: item.x, y: item.y, rotation: item.rotation, z: item.z };
     switch (item.kind) {
       case WALL_KIND.polaroid:
-        return { ...blank, ...place, kind: item.kind, attachment: item.attachment, imageUrl: item.imageUrl, alt: say(item.altFr, item.altEn), caption: say(item.captionFr, item.captionEn) };
+        return {
+          ...blank,
+          ...place,
+          kind: item.kind,
+          attachment: item.attachment,
+          imageUrl: item.imageUrl,
+          alt: say(item.altFr, item.altEn),
+          caption: say(item.captionFr, item.captionEn),
+        };
       case WALL_KIND.note:
-        return { ...blank, ...place, kind: item.kind, attachment: item.attachment, text: say(item.textFr, item.textEn), signature: item.signature };
+        return {
+          ...blank,
+          ...place,
+          kind: item.kind,
+          attachment: item.attachment,
+          text: say(item.textFr, item.textEn),
+          signature: item.signature,
+        };
       default:
         return { ...blank, ...place, kind: item.kind, variant: item.variant };
     }
   };
   const pieces: WallPiece[] = community.wall.items.map(pieceOf);
 
-  const video = (r: CommunityView["reels"][number]): VideoView => ({ id: r.id, title: say(r.titleFr, r.titleEn), mp4: r.mp4Url, webm: r.webmUrl, poster: r.posterUrl, platform: r.platform, externalUrl: r.externalUrl });
+  const video = (r: CommunityView["reels"][number]): VideoView => ({
+    id: r.id,
+    title: say(r.titleFr, r.titleEn),
+    mp4: r.mp4Url,
+    webm: r.webmUrl,
+    poster: r.posterUrl,
+    platform: r.platform,
+    externalUrl: r.externalUrl,
+  });
   const reels = enabled.reels ? community.reels.map(video) : [];
   const playlist = reels.filter((r) => r.mp4 || r.webm || r.externalUrl);
   const tv = playlist[0] ?? null;
   const elsewhere = reels.filter((r) => r.platform && r.id !== tv?.id).slice(0, SHOWN.elsewhere);
 
   const links = enabled.reels
-    ? (Object.entries(community.links) as [string, string][]).map(([platform, url]) => ({ platform, url, label: t(`console.shopPage.social.${platform}` as never, {} as never) }))
+    ? (Object.entries(community.links) as [string, string][]).map(([platform, url]) => ({
+        platform,
+        url,
+        label: t(`console.shopPage.social.${platform}` as never, {} as never),
+      }))
     : [];
 
   const flyers = enabled.announcements
-    ? currentAnnouncements(community.announcements, today).map((a) => ({ id: a.id, text: say(a.textFr, a.textEn), until: a.endsOn ? t("console.shopPage.flyerUntil", { day: dayOf(a.endsOn, locale) }) : null }))
+    ? currentAnnouncements(community.announcements, today).map((a) => ({
+        id: a.id,
+        text: say(a.textFr, a.textEn),
+        until: a.endsOn ? t("console.shopPage.flyerUntil", { day: dayOf(a.endsOn, locale) }) : null,
+      }))
     : [];
 
   const reviews = enabled.reviews ? reviewsView({ community, locale, rules }) : null;
 
   const wall = enabled.wall && pieces.length > 0 ? { texture: community.wall.texture, pieces } : null;
   const tvPlace = tv ? tvPlaceOf(enabled.wall) : null;
-  return { wall, tv, playlist, transition: community.reelTransition, tvPlace, elsewhere, links, flyers, reviews, has: { wall: wall !== null || tvPlace === "wall", reels: tvPlace === "reels" || elsewhere.length > 0 || links.length > 0, announcements: flyers.length > 0, reviews: reviews !== null } };
+  return {
+    wall,
+    tv,
+    playlist,
+    transition: community.reelTransition,
+    tvPlace,
+    elsewhere,
+    links,
+    flyers,
+    reviews,
+    has: {
+      wall: wall !== null || tvPlace === "wall",
+      reels: tvPlace === "reels" || elsewhere.length > 0 || links.length > 0,
+      announcements: flyers.length > 0,
+      reviews: reviews !== null,
+    },
+  };
 }

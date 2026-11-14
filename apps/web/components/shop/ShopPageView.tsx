@@ -84,20 +84,35 @@ type Ctx = {
 };
 const commonOf = (section: Section) => ({ id: section.key, "data-shop-key": section.key }) as const;
 
-
 /**
  * A fact on the hero is drawn over the shop's photo: it wears the `scrim` tone (white on a 60 % black veil, whatever the theme and the photo), never a
  * tinted tone whose text follows the theme (green on a dark photo was unreadable in the light theme, folioviv#567).
  */
-function heroFact(b: NonNullable<Args<"hero">["section"]["blocks"]>[number], { view, community }: Pick<Ctx, "view" | "community">): ReactNode {
+function heroFact(
+  b: NonNullable<Args<"hero">["section"]["blocks"]>[number],
+  { view, community }: Pick<Ctx, "view" | "community">,
+): ReactNode {
   if (b.settings.kind === "open-now" && view.status) {
-    return <Badge key={b.key} tone="scrim" dot={view.status.open} size="md">{view.status.label}{view.status.detail ? ` · ${view.status.detail}` : ""}</Badge>;
+    return (
+      <Badge key={b.key} tone="scrim" dot={view.status.open} size="md">
+        {view.status.label}
+        {view.status.detail ? ` · ${view.status.detail}` : ""}
+      </Badge>
+    );
   }
   if (b.settings.kind === "area" && view.area) {
-    return <Badge key={b.key} tone="scrim" size="md">{view.area}</Badge>;
+    return (
+      <Badge key={b.key} tone="scrim" size="md">
+        {view.area}
+      </Badge>
+    );
   }
   if (b.settings.kind === "score" && community?.reviews) {
-    return <Badge key={b.key} tone="scrim" size="md">{community.reviews.scoreText}</Badge>;
+    return (
+      <Badge key={b.key} tone="scrim" size="md">
+        {community.reviews.scoreText}
+      </Badge>
+    );
   }
   return null;
 }
@@ -109,12 +124,33 @@ function bannerOf(id: string) {
 }
 
 /** The shop's mark; with a second file for the dark theme both are drawn and the theme's rule shows one (`.kz-logo-*`, globals.css). */
-function Mark({ onLight, dark, alt, className }: Readonly<{ onLight: string; dark: string | null; alt: string; className: string }>) {
+function Mark({
+  onLight,
+  dark,
+  alt,
+  className,
+}: Readonly<{ onLight: string; dark: string | null; alt: string; className: string }>) {
   if (!dark) return <Image src={onLight} alt={alt} width={64} height={64} unoptimized className={className} />;
   return (
     <>
-      <Image src={onLight} alt={alt} width={64} height={64} unoptimized loading="lazy" className={cn(className, "kz-logo-onLight")} />
-      <Image src={dark} alt={alt} width={64} height={64} unoptimized loading="lazy" className={cn(className, "kz-logo-dark")} />
+      <Image
+        src={onLight}
+        alt={alt}
+        width={64}
+        height={64}
+        unoptimized
+        loading="lazy"
+        className={cn(className, "kz-logo-onLight")}
+      />
+      <Image
+        src={dark}
+        alt={alt}
+        width={64}
+        height={64}
+        unoptimized
+        loading="lazy"
+        className={cn(className, "kz-logo-dark")}
+      />
     </>
   );
 }
@@ -123,12 +159,35 @@ function heroSection({ section, c }: Args<"hero">): ReactNode {
   const { view, text, plan, book } = c;
   const common = commonOf(section);
   const logo = c.claim(view.logoUrl ?? defaultPicture("shop", view.name, 256)?.src ?? null) ?? null;
-  const logoDark = view.logoUrl ? c.claim(view.logoDarkUrl) ?? null : null;
+  const logoDark = view.logoUrl ? (c.claim(view.logoDarkUrl) ?? null) : null;
   const facts = [
-    logo ? <Mark key="logo" onLight={logo} dark={logoDark} alt={view.name} className="rounded-lg object-cover" /> : null,
+    logo ? (
+      <Mark key="logo" onLight={logo} dark={logoDark} alt={view.name} className="rounded-lg object-cover" />
+    ) : null,
     ...(section.blocks ?? []).map((b) => heroFact(b, c)),
   ];
-  return <HeroSection {...common} variant={section.variant === "tv" ? "poster" : section.variant} focus={section.settings.focus} title={view.name} lead={text(section.text?.lead) ?? view.tagline ?? undefined} facts={facts} actions={book()} cover={plan.cover ? { src: plan.cover.src, alt: plan.cover.alt, video: plan.cover.video, srcSet: coverSrcSet(plan.cover.src), phone: coverPhoneSet(plan.cover.src) } : bannerOf(view.name)} />;
+  return (
+    <HeroSection
+      {...common}
+      variant={section.variant === "tv" ? "poster" : section.variant}
+      focus={section.settings.focus}
+      title={view.name}
+      lead={text(section.text?.lead) ?? view.tagline ?? undefined}
+      facts={facts}
+      actions={book()}
+      cover={
+        plan.cover
+          ? {
+              src: plan.cover.src,
+              alt: plan.cover.alt,
+              video: plan.cover.video,
+              srcSet: coverSrcSet(plan.cover.src),
+              phone: coverPhoneSet(plan.cover.src),
+            }
+          : bannerOf(view.name)
+      }
+    />
+  );
 }
 
 function servicesSection({ section, c }: Args<"services">): ReactNode {
@@ -136,26 +195,76 @@ function servicesSection({ section, c }: Args<"services">): ReactNode {
   const title = (fallback: string) => c.titleOf(section, fallback);
   const lead = text(section.text?.lead);
   const common = commonOf(section);
-  const chosen = new Set(section.settings.source === "pick" ? (section.blocks ?? []).flatMap((b) => (b.type === "service" ? [b.settings.serviceId] : [])) : []);
-  const services = view.services.filter((s) => section.settings.source === "all" || chosen.has(s.id)).slice(0, section.variant === "cards" ? 6 : undefined).map((s) => ({ id: s.id, name: s.name, price: s.price, priceFrom: s.priceFrom ?? undefined, duration: s.duration, capacity: s.capacity ?? undefined, description: s.description ?? undefined, included: s.included, popular: Boolean(s.tag), href: s.href }));
+  const chosen = new Set(
+    section.settings.source === "pick"
+      ? (section.blocks ?? []).flatMap((b) => (b.type === "service" ? [b.settings.serviceId] : []))
+      : [],
+  );
+  const services = view.services
+    .filter((s) => section.settings.source === "all" || chosen.has(s.id))
+    .slice(0, section.variant === "cards" ? 6 : undefined)
+    .map((s) => ({
+      id: s.id,
+      name: s.name,
+      price: s.price,
+      priceFrom: s.priceFrom ?? undefined,
+      duration: s.duration,
+      capacity: s.capacity ?? undefined,
+      description: s.description ?? undefined,
+      included: s.included,
+      popular: Boolean(s.tag),
+      href: s.href,
+    }));
   if (!services.length) {
     return null;
   }
-  const aside = section.settings.aside === "hours" ? <OpeningHours label={t("console.shopPage.hours")} days={view.hours.days} today={view.hours.today} status={view.hours.status} /> : undefined;
-  return <ServicesSection {...common} variant={section.variant} services={services} title={title(t("console.shopPage.servicesTitle"))} lead={lead ?? t("console.shopPage.servicesLead")} groupBy={section.settings.groupBy} columns={section.settings.columns} aside={aside} chooseLabel={t("console.shopPage.choose")} popularLabel={t("console.shopPage.popular")} listLabel={t("console.shopPage.servicesLabel")} linkAs={Link} />;
+  const aside =
+    section.settings.aside === "hours" ? (
+      <OpeningHours
+        label={t("console.shopPage.hours")}
+        days={view.hours.days}
+        today={view.hours.today}
+        status={view.hours.status}
+      />
+    ) : undefined;
+  return (
+    <ServicesSection
+      {...common}
+      variant={section.variant}
+      services={services}
+      title={title(t("console.shopPage.servicesTitle"))}
+      lead={lead ?? t("console.shopPage.servicesLead")}
+      groupBy={section.settings.groupBy}
+      columns={section.settings.columns}
+      aside={aside}
+      chooseLabel={t("console.shopPage.choose")}
+      popularLabel={t("console.shopPage.popular")}
+      listLabel={t("console.shopPage.servicesLabel")}
+      linkAs={Link}
+    />
+  );
 }
 
 function bookingSection({ section, c }: Args<"booking">): ReactNode {
   const { view, t, plan, contact } = c;
   const common = commonOf(section);
-  const base = { ...common, variant: section.variant, label: t("console.shopPage.book"), href: view.bookHref, actionLabel: t("console.shopPage.book"), title: t("console.shopPage.closingTitle"), body: t("console.shopPage.closingBody"), linkAs: Link };
+  const base = {
+    ...common,
+    variant: section.variant,
+    label: t("console.shopPage.book"),
+    href: view.bookHref,
+    actionLabel: t("console.shopPage.book"),
+    title: t("console.shopPage.closingTitle"),
+    body: t("console.shopPage.closingBody"),
+    linkAs: Link,
+  };
   if (section.variant !== "closing") {
     return <BookingSection {...base} />;
   }
   const photo = plan.sections[section.key]?.[0];
   // The mark stands in for a photo, once: the logo the hero already shows is not drawn again.
   const logo = c.claim(view.logoUrl ?? defaultPicture("shop", view.name, 256)?.src ?? null);
-  const logoDark = view.logoUrl ? c.claim(view.logoDarkUrl) ?? null : null;
+  const logoDark = view.logoUrl ? (c.claim(view.logoDarkUrl) ?? null) : null;
   return (
     <BookingSection
       {...base}
@@ -173,19 +282,52 @@ function teamSection({ section, c }: Args<"team">): ReactNode {
   const title = (fallback: string) => c.titleOf(section, fallback);
   const lead = text(section.text?.lead);
   const common = commonOf(section);
-  return view.team.length ? <TeamSection {...common} variant={section.variant} members={view.team.map((m) => ({ id: m.id, name: m.name, role: m.state ?? undefined }))} title={title(t("console.journey.team"))} lead={lead ?? t("console.journey.teamLead")} /> : null;
+  return view.team.length ? (
+    <TeamSection
+      {...common}
+      variant={section.variant}
+      members={view.team.map((m) => ({ id: m.id, name: m.name, role: m.state ?? undefined }))}
+      title={title(t("console.journey.team"))}
+      lead={lead ?? t("console.journey.teamLead")}
+    />
+  ) : null;
 }
 
 function visitSection({ section, c }: Args<"visit">): ReactNode {
   const { view, t, contact } = c;
   const title = (fallback: string) => c.titleOf(section, fallback);
   const common = commonOf(section);
-  const mapped = section.variant !== "card" && view.map ? { label: t("console.shopPage.mapLabel"), center: view.map.center, zoom: view.map.zoom, places: view.map.places.map((p) => ({ position: p.position, label: p.name })), showLabel: t("console.shopPage.mapLabel") } : undefined;
+  const mapped =
+    section.variant !== "card" && view.map
+      ? {
+          label: t("console.shopPage.mapLabel"),
+          center: view.map.center,
+          zoom: view.map.zoom,
+          places: view.map.places.map((p) => ({ position: p.position, label: p.name })),
+          showLabel: t("console.shopPage.mapLabel"),
+        }
+      : undefined;
   // A map section with no place to draw is not a second card of the hours.
   if (section.variant !== "card" && !mapped) {
     return null;
   }
-  return <VisitSection {...common} variant={mapped ? section.variant : "card"} title={title(mapped ? t("console.shopPage.zones") : t("console.shopPage.hours"))} hours={view.hours.days} today={view.hours.today} status={view.hours.status} hoursLabel={t("console.shopPage.hours")} phone={section.settings.showPhone && contact?.phone && contact.phoneHref ? { href: contact.phoneHref, label: contact.phone } : undefined} map={mapped} />;
+  return (
+    <VisitSection
+      {...common}
+      variant={mapped ? section.variant : "card"}
+      title={title(mapped ? t("console.shopPage.zones") : t("console.shopPage.hours"))}
+      hours={view.hours.days}
+      today={view.hours.today}
+      status={view.hours.status}
+      hoursLabel={t("console.shopPage.hours")}
+      phone={
+        section.settings.showPhone && contact?.phone && contact.phoneHref
+          ? { href: contact.phoneHref, label: contact.phone }
+          : undefined
+      }
+      map={mapped}
+    />
+  );
 }
 
 function storySection({ section, c }: Args<"story">): ReactNode {
@@ -196,8 +338,30 @@ function storySection({ section, c }: Args<"story">): ReactNode {
   if (!body) {
     return null;
   }
-  const actions = contact ? <>{contact.phone && contact.phoneHref ? <ButtonLink href={contact.phoneHref} variant="secondary" size="md">{t("console.shopPage.call")} · {contact.phone}</ButtonLink> : null}{contact.email ? <ButtonLink href={`mailto:${contact.email}`} variant="ghost" size="md">{t("console.shopPage.write")}</ButtonLink> : null}</> : undefined;
-  return <StorySection {...common} variant={section.variant} title={title(t("console.shopPage.about"))} body={body} owner={view.about ? { name: view.about.name } : undefined} actions={actions} />;
+  const actions = contact ? (
+    <>
+      {contact.phone && contact.phoneHref ? (
+        <ButtonLink href={contact.phoneHref} variant="secondary" size="md">
+          {t("console.shopPage.call")} · {contact.phone}
+        </ButtonLink>
+      ) : null}
+      {contact.email ? (
+        <ButtonLink href={`mailto:${contact.email}`} variant="ghost" size="md">
+          {t("console.shopPage.write")}
+        </ButtonLink>
+      ) : null}
+    </>
+  ) : undefined;
+  return (
+    <StorySection
+      {...common}
+      variant={section.variant}
+      title={title(t("console.shopPage.about"))}
+      body={body}
+      owner={view.about ? { name: view.about.name } : undefined}
+      actions={actions}
+    />
+  );
 }
 
 function policiesSection({ section, c }: Args<"policies">): ReactNode {
@@ -206,12 +370,16 @@ function policiesSection({ section, c }: Args<"policies">): ReactNode {
   const common = commonOf(section);
   const byId = Object.fromEntries(view.policies.map((p) => [p.id, p]));
   const map = { cancellation: "cancellation", prices: "taxes", "booking-window": "horizon" } as const;
-  const items = section.settings.show.flatMap((k) => (byId[map[k]] ? [{ id: map[k], term: byId[map[k]]!.term, details: byId[map[k]]!.value }] : []));
+  const items = section.settings.show.flatMap((k) =>
+    byId[map[k]] ? [{ id: map[k], term: byId[map[k]]!.term, details: byId[map[k]]!.value }] : [],
+  );
   return <PoliciesSection {...common} title={title(t("console.shopPage.good"))} items={items} />;
 }
 
 const wallNotes = (pieces: readonly { kind: string; id: string; text?: string; signature?: string }[]) =>
-  pieces.flatMap((p) => (p.kind === "note" ? [{ id: p.id, text: p.text ?? "", signature: p.signature || undefined }] : []));
+  pieces.flatMap((p) =>
+    p.kind === "note" ? [{ id: p.id, text: p.text ?? "", signature: p.signature || undefined }] : [],
+  );
 
 function galleryLead(view: StorefrontView, variant: string, t: Ctx["t"]): string | undefined {
   if (variant === "wall") {
@@ -221,15 +389,28 @@ function galleryLead(view: StorefrontView, variant: string, t: Ctx["t"]): string
 }
 
 function galleryLabel(view: StorefrontView, variant: string, t: Ctx["t"]): string {
-  return view.galleryIllustrative && variant !== "wall" ? t("console.shopPage.galleryIllustrativeLabel") : t("console.shopPage.galleryLabel", { shop: view.name });
+  return view.galleryIllustrative && variant !== "wall"
+    ? t("console.shopPage.galleryIllustrativeLabel")
+    : t("console.shopPage.galleryLabel", { shop: view.name });
 }
 
 /**
  * The mosaic is the package's `ShopGallery` (folioviv#481): a bento on a desktop, a snap strip on a phone, the lightbox a lazy chunk opened by a tile (no script before). Every tile has a fixed ratio
  * (CLS 0); the `srcset` is the photo's width variants when it has some (`coverSrcSet`), else the file as it is.
  */
-function mosaicSection({ section, c, common, label, lead }: Args<"gallery"> & { common: ReturnType<typeof commonOf>; label: string; lead: string | undefined }): ReactNode {
-  const photos = (c.plan.sections[section.key] ?? []).map((p) => ({ id: p.id, src: p.src, alt: p.alt, srcSet: coverSrcSet(p.src) }));
+function mosaicSection({
+  section,
+  c,
+  common,
+  label,
+  lead,
+}: Args<"gallery"> & { common: ReturnType<typeof commonOf>; label: string; lead: string | undefined }): ReactNode {
+  const photos = (c.plan.sections[section.key] ?? []).map((p) => ({
+    id: p.id,
+    src: p.src,
+    alt: p.alt,
+    srcSet: coverSrcSet(p.src),
+  }));
   return (
     <ShopSection {...common} title={c.titleOf(section, label)} lead={lead} data-variant="mosaic">
       <ShopMosaic photos={photos} label={label} locale={c.locale} />
@@ -242,7 +423,12 @@ function gallerySection({ section, c }: Args<"gallery">): ReactNode {
   const title = (fallback: string) => c.titleOf(section, fallback);
   const lead = text(section.text?.lead);
   const common = commonOf(section);
-  const photos = (plan.sections[section.key] ?? []).map((p) => ({ id: p.id, photo: { src: p.src, alt: p.alt }, caption: p.caption, video: p.video }));
+  const photos = (plan.sections[section.key] ?? []).map((p) => ({
+    id: p.id,
+    photo: { src: p.src, alt: p.alt },
+    caption: p.caption,
+    video: p.video,
+  }));
   const pieces = section.variant === "wall" ? (community?.wall?.pieces ?? []) : [];
   const notes = wallNotes(pieces);
   if (!photos.length && !notes.length) {
@@ -252,10 +438,27 @@ function gallerySection({ section, c }: Args<"gallery">): ReactNode {
   if (section.variant === "mosaic") {
     return mosaicSection({ section, c, common, label, lead: lead ?? galleryLead(view, section.variant, t) });
   }
-  return <GallerySection {...common} variant={section.variant} photos={photos} notes={notes} sign={pieces.find((p) => p.kind === "sign")?.text || undefined} texture={community?.wall?.texture ?? section.settings.texture} title={title(section.variant === "wall" ? t("console.shopPage.wallTitle") : label)} lead={lead ?? galleryLead(view, section.variant, t)} label={label} />;
+  return (
+    <GallerySection
+      {...common}
+      variant={section.variant}
+      photos={photos}
+      notes={notes}
+      sign={pieces.find((p) => p.kind === "sign")?.text || undefined}
+      texture={community?.wall?.texture ?? section.settings.texture}
+      title={title(section.variant === "wall" ? t("console.shopPage.wallTitle") : label)}
+      lead={lead ?? galleryLead(view, section.variant, t)}
+      label={label}
+    />
+  );
 }
 
-const shortsOf = (community: Ctx["community"], claim: Ctx["claim"]) => (community?.elsewhere ?? []).flatMap((v) => (v.platform && v.externalUrl ? [{ id: v.id, platform: v.platform, url: v.externalUrl, title: v.title, poster: claim(v.poster) }] : []));
+const shortsOf = (community: Ctx["community"], claim: Ctx["claim"]) =>
+  (community?.elsewhere ?? []).flatMap((v) =>
+    v.platform && v.externalUrl
+      ? [{ id: v.id, platform: v.platform, url: v.externalUrl, title: v.title, poster: claim(v.poster) }]
+      : [],
+  );
 
 function videoSection({ section, c }: Args<"video">): ReactNode {
   const { view, t, text, claim, community, playLabels, notice } = c;
@@ -263,17 +466,47 @@ function videoSection({ section, c }: Args<"video">): ReactNode {
   const lead = text(section.text?.lead);
   const common = commonOf(section);
   if (section.variant === "tv") {
-    const playlist = (community?.playlist ?? []).map((v) => ({ id: v.id, title: v.title || t("console.shopPage.tvTitle", { shop: view.name }), src: v.mp4 ?? v.webm ?? undefined, poster: claim(v.poster), platform: v.platform ?? undefined, url: v.externalUrl ?? undefined }));
+    const playlist = (community?.playlist ?? []).map((v) => ({
+      id: v.id,
+      title: v.title || t("console.shopPage.tvTitle", { shop: view.name }),
+      src: v.mp4 ?? v.webm ?? undefined,
+      poster: claim(v.poster),
+      platform: v.platform ?? undefined,
+      url: v.externalUrl ?? undefined,
+    }));
     if (!playlist.length) {
       return null;
     }
-    return <ShopVideoLazy {...common} title={title(t("console.shopPage.reelsTitle"))} lead={lead} playlist={playlist} transition={community?.transition ?? "channel"} label={t("console.shopPage.tvTitle", { shop: view.name })} channel={t("console.shopPage.tvChannel")} labels={tvLabels(t)} playLabels={playLabels} notice={notice} />;
+    return (
+      <ShopVideoLazy
+        {...common}
+        title={title(t("console.shopPage.reelsTitle"))}
+        lead={lead}
+        playlist={playlist}
+        transition={community?.transition ?? "channel"}
+        label={t("console.shopPage.tvTitle", { shop: view.name })}
+        channel={t("console.shopPage.tvChannel")}
+        labels={tvLabels(t)}
+        playLabels={playLabels}
+        notice={notice}
+      />
+    );
   }
   const reels = shortsOf(community, claim);
   if (!reels.length) {
     return null;
   }
-  return <VideoSection {...common} variant="shorts" title={title(t("console.shopPage.reelsTitle"))} lead={lead} reels={reels} playLabels={playLabels} notice={notice} />;
+  return (
+    <VideoSection
+      {...common}
+      variant="shorts"
+      title={title(t("console.shopPage.reelsTitle"))}
+      lead={lead}
+      reels={reels}
+      playLabels={playLabels}
+      notice={notice}
+    />
+  );
 }
 
 /** The television's controls in the page's language (the library's English by default). */
@@ -293,29 +526,68 @@ function socialSection({ section, c }: Args<"social">): ReactNode {
   const { t, community, playLabels, notice, platformName } = c;
   const title = (fallback: string) => c.titleOf(section, fallback);
   const common = commonOf(section);
-  const links = (section.blocks?.length ? section.blocks.map((b) => ({ id: b.key, platform: b.settings.platform, url: b.settings.url })) : (community?.links ?? []).flatMap((l) => (isPlatform(l.platform) ? [{ id: l.platform, platform: l.platform, url: l.url }] : [])));
-  return <SocialSection {...common} variant={section.variant} title={title(t("console.shopPage.socialTitle"))} links={links} labels={Object.fromEntries(PLATFORMS.map((p) => [p, platformName(p)]))} playLabels={playLabels} notice={notice} />;
+  const links = section.blocks?.length
+    ? section.blocks.map((b) => ({ id: b.key, platform: b.settings.platform, url: b.settings.url }))
+    : (community?.links ?? []).flatMap((l) =>
+        isPlatform(l.platform) ? [{ id: l.platform, platform: l.platform, url: l.url }] : [],
+      );
+  return (
+    <SocialSection
+      {...common}
+      variant={section.variant}
+      title={title(t("console.shopPage.socialTitle"))}
+      links={links}
+      labels={Object.fromEntries(PLATFORMS.map((p) => [p, platformName(p)]))}
+      playLabels={playLabels}
+      notice={notice}
+    />
+  );
 }
 
 function bulletinSection({ section, c }: Args<"bulletin">): ReactNode {
   const { t, community, today } = c;
   const title = (fallback: string) => c.titleOf(section, fallback);
   const common = commonOf(section);
-  const flyers = (community?.flyers ?? []).map((f) => ({ id: f.id, text: f.until ? `${f.text} - ${f.until}` : f.text }));
-  return flyers.length ? <BulletinSection {...common} variant={section.variant} flyers={flyers} today={today} title={title(t("console.shopPage.announcementsTitle"))} /> : null;
+  const flyers = (community?.flyers ?? []).map((f) => ({
+    id: f.id,
+    text: f.until ? `${f.text} - ${f.until}` : f.text,
+  }));
+  return flyers.length ? (
+    <BulletinSection
+      {...common}
+      variant={section.variant}
+      flyers={flyers}
+      today={today}
+      title={title(t("console.shopPage.announcementsTitle"))}
+    />
+  ) : null;
 }
 
 function reviewsSection({ section, c }: Args<"reviews">): ReactNode {
   const { view, t, community } = c;
   const title = (fallback: string) => c.titleOf(section, fallback);
-  return community?.reviews ? <ShopReviews variant={section.variant} count={section.settings.count} title={title(t("console.shopPage.reviewsTitle"))} reviews={community.reviews} starText={t("console.shopPage.reviewStars", { stars: "{stars}", count: "{count}" })} replyLabel={t("console.shopPage.reviewReply")} ownerName={view.about?.name ?? view.name} /> : null;
+  return community?.reviews ? (
+    <ShopReviews
+      variant={section.variant}
+      count={section.settings.count}
+      title={title(t("console.shopPage.reviewsTitle"))}
+      reviews={community.reviews}
+      starText={t("console.shopPage.reviewStars", { stars: "{stars}", count: "{count}" })}
+      replyLabel={t("console.shopPage.reviewReply")}
+      ownerName={view.about?.name ?? view.name}
+    />
+  ) : null;
 }
 
 function faqSection({ section, c }: Args<"faq">): ReactNode {
   const { t, text } = c;
   const title = (fallback: string) => c.titleOf(section, fallback);
   const common = commonOf(section);
-  const questions = (section.blocks ?? []).flatMap((b) => { const q = text(b.settings.question); const a = text(b.settings.answer); return q && a ? [{ id: b.key, question: q, answer: a }] : []; });
+  const questions = (section.blocks ?? []).flatMap((b) => {
+    const q = text(b.settings.question);
+    const a = text(b.settings.answer);
+    return q && a ? [{ id: b.key, question: q, answer: a }] : [];
+  });
   return <FaqSection {...common} title={title(t("console.shopPage.faqTitle"))} questions={questions} />;
 }
 
@@ -335,7 +607,8 @@ const SECTIONS: Partial<Record<Section["type"], (args: { section: never; c: Ctx 
   reviews: reviewsSection as never,
   faq: faqSection as never,
 };
-const renderSection = (section: Section, c: Ctx): ReactNode => SECTIONS[section.type]?.({ section: section as never, c }) ?? null;
+const renderSection = (section: Section, c: Ctx): ReactNode =>
+  SECTIONS[section.type]?.({ section: section as never, c }) ?? null;
 
 /**
  * A shop's public page, drawn from its DOCUMENT (folioviv#401): `ShopFrame` and the `@krizaka/ui/shop/*` sections, in the document's order. The data (services, times,
@@ -348,7 +621,9 @@ export function ShopPageView({ page, view, locale, accent, paper, today, nextTim
   const pool: PhotoPool = {
     cover: view.cover,
     gallery: view.gallery.map((g) => ({ id: g.id, src: g.src, alt: g.alt, caption: g.caption, video: g.video })),
-    wall: (community?.wall?.pieces ?? []).flatMap((p) => (p.kind === "polaroid" && p.imageUrl ? [{ id: p.id, src: p.imageUrl, alt: p.alt, caption: p.caption }] : [])),
+    wall: (community?.wall?.pieces ?? []).flatMap((p) =>
+      p.kind === "polaroid" && p.imageUrl ? [{ id: p.id, src: p.imageUrl, alt: p.alt, caption: p.caption }] : [],
+    ),
   };
   const plan = planPhotos(page, pool);
   const claim = photoLedger(plan);
@@ -361,10 +636,20 @@ export function ShopPageView({ page, view, locale, accent, paper, today, nextTim
     const poster = heroVariant === "poster" || heroVariant === "tv" || heroVariant === undefined;
     if (poster && phone) {
       // The poster hero swaps its source on a phone: ask for that candidate there, the full file elsewhere.
-      preload(plan.cover.src, { as: "image", fetchPriority: "high", imageSrcSet: phone, imageSizes: "100vw", media: PHONE_MEDIA });
+      preload(plan.cover.src, {
+        as: "image",
+        fetchPriority: "high",
+        imageSrcSet: phone,
+        imageSizes: "100vw",
+        media: PHONE_MEDIA,
+      });
       preload(plan.cover.src, { as: "image", fetchPriority: "high", media: `not ${PHONE_MEDIA}` });
     } else {
-      preload(plan.cover.src, { as: "image", fetchPriority: "high", ...(srcSet ? { imageSrcSet: srcSet, imageSizes: coverSizes(heroVariant) } : {}) });
+      preload(plan.cover.src, {
+        as: "image",
+        fetchPriority: "high",
+        ...(srcSet ? { imageSrcSet: srcSet, imageSizes: coverSizes(heroVariant) } : {}),
+      });
     }
   }
 
@@ -382,7 +667,9 @@ export function ShopPageView({ page, view, locale, accent, paper, today, nextTim
     community,
     today,
     nextTime,
-    playLabels: Object.fromEntries(PLATFORMS.map((p) => [p, t("console.shopPage.facadePlay", { platform: platformName(p) })])) as Record<Platform, string>,
+    playLabels: Object.fromEntries(
+      PLATFORMS.map((p) => [p, t("console.shopPage.facadePlay", { platform: platformName(p) })]),
+    ) as Record<Platform, string>,
     notice: t("console.shopPage.facadeNotice", { platform: PLATFORMS.map(platformName).join(" · ") }),
     platformName,
     locale,
@@ -393,7 +680,11 @@ export function ShopPageView({ page, view, locale, accent, paper, today, nextTim
     <ShopFrame preset={page.preset.id} density={page.density} {...accentOf} data-testid="shop-page">
       {paper === "kraft" ? <PaperGrain /> : null}
       <MapSetup />
-      {page.sections.filter((s) => !s.disabled).map((s) => <Fragment key={s.key}>{renderSection(s, ctx)}</Fragment>)}
+      {page.sections
+        .filter((s) => !s.disabled)
+        .map((s) => (
+          <Fragment key={s.key}>{renderSection(s, ctx)}</Fragment>
+        ))}
     </ShopFrame>
   );
 }

@@ -3,8 +3,13 @@ import { fileURLToPath } from "node:url";
 import { expect, it } from "vitest";
 
 const dir = fileURLToPath(new URL("../drizzle/", import.meta.url));
-const journal = JSON.parse(readFileSync(`${dir}meta/_journal.json`, "utf8")) as { entries: { idx: number; tag: string; when: number }[] };
-const files = readdirSync(dir).filter((f) => f.endsWith(".sql")).map((f) => f.slice(0, -4)).sort();
+const journal = JSON.parse(readFileSync(`${dir}meta/_journal.json`, "utf8")) as {
+  entries: { idx: number; tag: string; when: number }[];
+};
+const files = readdirSync(dir)
+  .filter((f) => f.endsWith(".sql"))
+  .map((f) => f.slice(0, -4))
+  .sort();
 
 it("the journal lists exactly the migration files, in order, with no gap and no duplicate number", () => {
   expect(journal.entries.map((e) => e.tag)).toEqual(files);

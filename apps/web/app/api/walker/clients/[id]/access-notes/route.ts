@@ -15,7 +15,13 @@ export function GET(req: Request, { params }: { params: Promise<{ id: string }> 
     const { session, client } = await requireShopClient(req, idParam((await params).id), "access-notes");
     limit("access-notes", req, session.account.id, [120, 600]);
     const notes = await revealAccessNotes(db(), dataKey(), client.id);
-    await audit({ action: "client.access_notes_read", actorId: session.account.id, actorLabel: session.account.email, targetId: client.id, headers: req.headers });
+    await audit({
+      action: "client.access_notes_read",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: client.id,
+      headers: req.headers,
+    });
     return Response.json({ notes }, { headers: { "Cache-Control": "no-store" } });
   });
 }

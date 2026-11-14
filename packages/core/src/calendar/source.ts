@@ -30,7 +30,13 @@ export type BusyResult = { changed: false } | { changed: true; busy: BusyInterva
 /** Why a source could not be read; `retryable` tells the sync to try again later (backoff) rather than ask the owner to reconnect. */
 export class CalendarSourceError extends Error {
   constructor(
-    readonly code: "AK_CAL_UNREACHABLE" | "AK_CAL_REFUSED" | "AK_CAL_INVALID" | "AK_CAL_TOO_LARGE" | "AK_CAL_UNAUTHORIZED" | "AK_CAL_RATE_LIMITED",
+    readonly code:
+      | "AK_CAL_UNREACHABLE"
+      | "AK_CAL_REFUSED"
+      | "AK_CAL_INVALID"
+      | "AK_CAL_TOO_LARGE"
+      | "AK_CAL_UNAUTHORIZED"
+      | "AK_CAL_RATE_LIMITED",
     readonly retryable: boolean,
     message?: string,
   ) {
@@ -69,7 +75,9 @@ export interface ConnectableSource extends CalendarSource {
 
 /** Sorted, merged: overlapping or touching busy intervals become one. */
 export function mergeBusy(intervals: readonly BusyInterval[]): BusyInterval[] {
-  const sorted = intervals.filter((i) => i.endsAt.getTime() > i.startsAt.getTime()).sort((a, b) => Number(a.startsAt) - Number(b.startsAt));
+  const sorted = intervals
+    .filter((i) => i.endsAt.getTime() > i.startsAt.getTime())
+    .sort((a, b) => Number(a.startsAt) - Number(b.startsAt));
   const out: BusyInterval[] = [];
   for (const next of sorted) {
     const last = out.at(-1);
@@ -90,5 +98,8 @@ const MAX_BACKOFF_MINUTES = 1_440;
 
 /** Minutes until the next try: the administrator's interval, doubled at each consecutive failure, never beyond a day. */
 export function nextSyncDelayMinutes(intervalMinutes: number, failures: number): number {
-  return Math.min(intervalMinutes * 2 ** Math.min(Math.max(failures, 0), 10), Math.max(MAX_BACKOFF_MINUTES, intervalMinutes));
+  return Math.min(
+    intervalMinutes * 2 ** Math.min(Math.max(failures, 0), 10),
+    Math.max(MAX_BACKOFF_MINUTES, intervalMinutes),
+  );
 }

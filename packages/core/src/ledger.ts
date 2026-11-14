@@ -18,7 +18,13 @@ export interface LedgerEntry {
 }
 
 /** The entries an issued invoice posts: the GST and the QST it collected (nothing for a zero amount). */
-export function invoiceEntries(invoice: { id: string; number: string; issuedOn: string; gstCents: Cents; qstCents: Cents }): LedgerEntry[] {
+export function invoiceEntries(invoice: {
+  id: string;
+  number: string;
+  issuedOn: string;
+  gstCents: Cents;
+  qstCents: Cents;
+}): LedgerEntry[] {
   const period = `${invoice.issuedOn.slice(0, 7)}-01`;
   const source = { kind: "invoice" as const, id: invoice.id, label: invoice.number };
   return [
@@ -32,8 +38,16 @@ export function invoiceEntries(invoice: { id: string; number: string; issuedOn: 
  * shop claims half), rounded half away from zero to the cent. Entertainment and other restricted expenses are the merchant's call
  * (the share), shown as such in the working papers.
  */
-export function expenseEntries(expense: { id: string; supplier: string; paidOn: string; gstCents: Cents; qstCents: Cents; businessSharePct: number }): LedgerEntry[] {
-  if (!Number.isInteger(expense.businessSharePct) || expense.businessSharePct < 0 || expense.businessSharePct > 100) throw new RangeError("business share is a whole percentage, 0 to 100");
+export function expenseEntries(expense: {
+  id: string;
+  supplier: string;
+  paidOn: string;
+  gstCents: Cents;
+  qstCents: Cents;
+  businessSharePct: number;
+}): LedgerEntry[] {
+  if (!Number.isInteger(expense.businessSharePct) || expense.businessSharePct < 0 || expense.businessSharePct > 100)
+    throw new RangeError("business share is a whole percentage, 0 to 100");
   const share = (c: Cents) => applyRate(c, { numerator: expense.businessSharePct, denominator: 100 });
   const period = `${expense.paidOn.slice(0, 7)}-01`;
   const source = { kind: "expense" as const, id: expense.id, label: expense.supplier };
@@ -52,7 +66,8 @@ export interface Balance {
 
 /** The balance of one tax over a set of entries. collected − credits = net, always (the invariant tests hold it). */
 export function balance(entries: readonly LedgerEntry[], tax: Tax): Balance {
-  const of = (d: Direction) => entries.filter((e) => e.tax === tax && e.direction === d).reduce((s, e) => s + e.amountCents, 0);
+  const of = (d: Direction) =>
+    entries.filter((e) => e.tax === tax && e.direction === d).reduce((s, e) => s + e.amountCents, 0);
   const collected = of("collected");
   const credits = of("credit");
   return { collected, credits, net: collected - credits };

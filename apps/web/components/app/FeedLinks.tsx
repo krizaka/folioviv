@@ -17,13 +17,17 @@ function FeedRow({ staffId, name, state }: Readonly<{ staffId: string | null; na
   const call = useCall();
   const [url, setUrl] = useState<string | null>(null);
   const t = (key: string, vars?: Record<string, string | number>) => say(`boutique.agenda.feed.${key}`, vars);
-  const when = state.createdAt ? new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(state.rotatedAt ?? state.createdAt)) : "";
+  const when = state.createdAt
+    ? new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(state.rotatedAt ?? state.createdAt))
+    : "";
   const id = `feed-${staffId ?? "shop"}`;
   return (
     <li className="flex flex-col gap-3 border-t border-border-subtle pt-4 first:border-t-0 first:pt-0">
       <div className="flex flex-wrap items-center gap-2">
         <span className="min-w-0 break-words font-semibold text-fg">{name}</span>
-        <Badge tone={state.live ? "success" : "neutral"} size="sm">{state.live ? t("live") : t("none")}</Badge>
+        <Badge tone={state.live ? "success" : "neutral"} size="sm">
+          {state.live ? t("live") : t("none")}
+        </Badge>
         {state.live && when ? <span className="text-sm text-fg-muted">{t("since", { when })}</span> : null}
       </div>
       {url ? <FeedAddress id={id} name={name} url={url} /> : null}
@@ -71,7 +75,9 @@ export function FeedLinks({ overview, shopName }: Readonly<{ overview: FeedOverv
       <Card.Root className="flex flex-col gap-4 p-4">
         <ul className="m-0 flex list-none flex-col gap-4 p-0">
           {overview.shop ? <FeedRow staffId={null} name={`${t("shop")} · ${shopName}`} state={overview.shop} /> : null}
-          {overview.people.map((p) => <FeedRow key={p.id} staffId={p.id} name={p.name} state={p} />)}
+          {overview.people.map((p) => (
+            <FeedRow key={p.id} staffId={p.id} name={p.name} state={p} />
+          ))}
         </ul>
         {!overview.shop && overview.people.length === 0 ? <p className="m-0 text-fg-secondary">{t("nobody")}</p> : null}
       </Card.Root>

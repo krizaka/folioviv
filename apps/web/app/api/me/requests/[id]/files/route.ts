@@ -19,7 +19,8 @@ export const POST = (req: Request, { params }: { params: Promise<{ id: string }>
     const id = z.uuid().parse((await params).id);
     const media = await mediaStorage({ maxBytes: MAX_REQUEST_FILE_BYTES });
     if (!media) throw refuse(503, "UPLOAD_UNAVAILABLE", "media storage is not configured");
-    if (Number(req.headers.get("content-length") ?? 0) > MAX_REQUEST_FILE_BYTES + 4096) throw refuse(413, "UPLOAD_TOO_LARGE", "file too large");
+    if (Number(req.headers.get("content-length") ?? 0) > MAX_REQUEST_FILE_BYTES + 4096)
+      throw refuse(413, "UPLOAD_TOO_LARGE", "file too large");
     const form = await req.formData().catch(() => null);
     const clientId = String(form?.get("clientId") ?? "");
     if (!z.uuid().safeParse(clientId).success) throw refuse(400, "BAD_REQUEST", "clientId expected");
@@ -32,6 +33,13 @@ export const POST = (req: Request, { params }: { params: Promise<{ id: string }>
     if (!detectRequestFile(bytes)) throw refuse(400, "UPLOAD_NOT_ALLOWED", "not a JPEG, PNG, WebP image or a PDF");
     const stored = await storeRequestFile(media, request.shopId, request.id, bytes);
     const fileId = await addClientRequestFile(db(), client.id, request.id, { ...stored, bytes: bytes.length });
-    await audit({ action: "client.request_file_added", actorId: session.account.id, actorLabel: session.account.email, targetId: request.id, detail: { bytes: bytes.length, kind: stored.kind }, headers: req.headers });
+    await audit({
+      action: "client.request_file_added",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: request.id,
+      detail: { bytes: bytes.length, kind: stored.kind },
+      headers: req.headers,
+    });
     return Response.json({ id: fileId, url: stored.url, kind: stored.kind }, { status: 201 });
   });

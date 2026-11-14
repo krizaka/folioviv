@@ -22,7 +22,14 @@ export function PUT(req: Request) {
     const { session, shop } = await requireShop(req, "catalogue");
     const doc = await readJson(req, z.record(z.string(), z.unknown()));
     const { version } = await saveShopPageDraft(db(), shop.id, doc, session.account.id);
-    await audit({ action: "shop.page_draft_saved", actorId: session.account.id, actorLabel: session.account.email, targetId: shop.id, detail: { version }, headers: req.headers });
+    await audit({
+      action: "shop.page_draft_saved",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: shop.id,
+      detail: { version },
+      headers: req.headers,
+    });
     return Response.json({ version });
   });
 }

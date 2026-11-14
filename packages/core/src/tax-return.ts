@@ -25,13 +25,23 @@ export interface PreparedReturn {
   preparedOnly: true;
 }
 
-const months = (start: string, end: string) => (e: LedgerEntry) => e.period >= `${start.slice(0, 7)}-01` && e.period <= `${end.slice(0, 7)}-01`;
+const months = (start: string, end: string) => (e: LedgerEntry) =>
+  e.period >= `${start.slice(0, 7)}-01` && e.period <= `${end.slice(0, 7)}-01`;
 
-export function prepareReturn(input: { periodStart: string; periodEnd: string; suppliesCents: Cents; entries: readonly LedgerEntry[] }): PreparedReturn {
+export function prepareReturn(input: {
+  periodStart: string;
+  periodEnd: string;
+  suppliesCents: Cents;
+  entries: readonly LedgerEntry[];
+}): PreparedReturn {
   const inPeriod = input.entries.filter(months(input.periodStart, input.periodEnd));
   const line = (code: string, tax: Tax, direction: "collected" | "credit"): ReturnLine => {
     const picked = inPeriod.filter((e) => e.tax === tax && e.direction === direction);
-    return { line: code, amountCents: picked.reduce((s, e) => s + e.amountCents, 0), sources: picked.map((e) => ({ ...e.source, amountCents: e.amountCents })) };
+    return {
+      line: code,
+      amountCents: picked.reduce((s, e) => s + e.amountCents, 0),
+      sources: picked.map((e) => ({ ...e.source, amountCents: e.amountCents })),
+    };
   };
   const gst = balance(inPeriod, "gst");
   const qst = balance(inPeriod, "qst");
@@ -54,8 +64,15 @@ export function prepareReturn(input: { periodStart: string; periodEnd: string; s
 }
 
 /** Compares figures (an Sovkora Studio's, say) with the ledger's: every line that differs, by how much. */
-export function reconcile(ours: PreparedReturn, theirs: { line: string; amountCents: Cents }[]): { line: string; ours: Cents; theirs: Cents | null }[] {
+export function reconcile(
+  ours: PreparedReturn,
+  theirs: { line: string; amountCents: Cents }[],
+): { line: string; ours: Cents; theirs: Cents | null }[] {
   return ours.lines
-    .map((l) => ({ line: l.line, ours: l.amountCents, theirs: theirs.find((t) => t.line === l.line)?.amountCents ?? null }))
+    .map((l) => ({
+      line: l.line,
+      ours: l.amountCents,
+      theirs: theirs.find((t) => t.line === l.line)?.amountCents ?? null,
+    }))
     .filter((d) => d.theirs !== d.ours);
 }

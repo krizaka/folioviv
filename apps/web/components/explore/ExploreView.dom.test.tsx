@@ -13,24 +13,61 @@ const en = bindProduct(enRaw);
 
 vi.mock("next/dynamic", () => ({ default: () => () => <div data-testid="map-stub" /> }));
 // The address is the browser's: the adapter of @krizaka/query/url reads and writes it through the history, as in the app.
-vi.mock("next/navigation", () => ({ usePathname: () => "/explore", useRouter: () => ({ replace: () => undefined, push: () => undefined }), useSearchParams: () => new URLSearchParams(window.location.search) }));
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/explore",
+  useRouter: () => ({ replace: () => undefined, push: () => undefined }),
+  useSearchParams: () => new URLSearchParams(window.location.search),
+}));
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 const d = en.explore;
-const words: ExploreWords = { search: d.search, filters: d.filters, list: { ...d.list, countOne: d.list.count_one }, view: d.view, map: d.map, empty: d.empty, error: d.error, loading: d.loading };
-const shop = (slug: string, over: Partial<ExploreShop>): ExploreShop => ({ slug, name: slug.toUpperCase(), kind: "salon", area: null, taglineFr: null, taglineEn: null, quartiers: [], point: null, openNow: false, freeToday: false, ...over });
-const SHOPS = [shop("far", { point: [-73.4, 45.6], openNow: true }), shop("near", { point: [-73.581, 45.481], kind: "boutique", freeToday: true })];
+const words: ExploreWords = {
+  search: d.search,
+  filters: d.filters,
+  list: { ...d.list, countOne: d.list.count_one },
+  view: d.view,
+  map: d.map,
+  empty: d.empty,
+  error: d.error,
+  loading: d.loading,
+};
+const shop = (slug: string, over: Partial<ExploreShop>): ExploreShop => ({
+  slug,
+  name: slug.toUpperCase(),
+  kind: "salon",
+  area: null,
+  taglineFr: null,
+  taglineEn: null,
+  quartiers: [],
+  point: null,
+  openNow: false,
+  freeToday: false,
+  ...over,
+});
+const SHOPS = [
+  shop("far", { point: [-73.4, 45.6], openNow: true }),
+  shop("near", { point: [-73.581, 45.481], kind: "boutique", freeToday: true }),
+];
 
-const getCurrentPosition = vi.fn((ok: (p: { coords: { longitude: number; latitude: number } }) => void) => ok({ coords: { longitude: -73.58, latitude: 45.48 } }));
+const getCurrentPosition = vi.fn((ok: (p: { coords: { longitude: number; latitude: number } }) => void) =>
+  ok({ coords: { longitude: -73.58, latitude: 45.48 } }),
+);
 // Each test loads a fresh copy of the page and of React, as a new visit would. (The adapter still carries what an earlier test wrote to the address into the next one that opens on an address: the tests that write come after those that read, in this file's order.)
 let act: (cb: () => unknown) => Promise<void> | void = (cb) => void cb();
-let createRoot: (el: HTMLElement) => Root = () => { throw new Error("mount first"); };
+let createRoot: (el: HTMLElement) => Root = () => {
+  throw new Error("mount first");
+};
 let ExploreView: typeof import("./ExploreView").ExploreView = () => <div />;
 let root: Root | null = null;
 let host: HTMLElement | null = null;
 let requests: string[] = [];
 beforeAll(() => {
-  globalThis.matchMedia = ((q: string) => ({ matches: false, media: q, addEventListener: () => undefined, removeEventListener: () => undefined })) as never;
+  globalThis.matchMedia = ((q: string) => ({
+    matches: false,
+    media: q,
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+  })) as never;
   Object.defineProperty(navigator, "geolocation", { value: { getCurrentPosition }, configurable: true });
 });
 afterEach(async () => {
@@ -47,7 +84,12 @@ function answer(url: string) {
   const params = new URL(url, "http://x").searchParams;
   const kinds = params.get("kind")?.split(",");
   const near = params.get("near")?.split(",").map(Number);
-  const kept = SHOPS.filter((s) => (!kinds || kinds.includes(s.kind)) && (params.get("open") !== "now" || s.openNow) && (params.get("open") !== "free-today" || s.freeToday));
+  const kept = SHOPS.filter(
+    (s) =>
+      (!kinds || kinds.includes(s.kind)) &&
+      (params.get("open") !== "now" || s.openNow) &&
+      (params.get("open") !== "free-today" || s.freeToday),
+  );
   return { shops: rankByDistance(kept, near ? [near[0]!, near[1]!] : null), next: null };
 }
 
@@ -80,7 +122,10 @@ async function mount(opts: { address?: string; payload?: unknown; ok?: boolean; 
 const wait = (ms: number) => act(async () => new Promise((r) => setTimeout(r, ms)));
 const names = () => [...host!.querySelectorAll("[data-testid=explore-list] li h2")].map((h) => h.textContent);
 const button = (label: string) => [...host!.querySelectorAll("button")].find((b) => b.textContent === label)!;
-const chips = () => [...host!.querySelectorAll("[data-testid=explore-filters] button[aria-label^='Remove']")].map((b) => b.getAttribute("aria-label"));
+const chips = () =>
+  [...host!.querySelectorAll("[data-testid=explore-filters] button[aria-label^='Remove']")].map((b) =>
+    b.getAttribute("aria-label"),
+  );
 const search = () => new URLSearchParams(window.location.search);
 
 describe("Explorer (the list on a phone, jsdom)", () => {

@@ -15,7 +15,12 @@ export function POST(req: Request) {
     const session = await requireSession(req);
     const { current, password } = await readJson(req, body);
     limit("password-change", req, null, [10, 900]);
-    const who = { actorId: session.account.id, actorLabel: session.account.email, targetId: session.account.id, headers: req.headers };
+    const who = {
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: session.account.id,
+      headers: req.headers,
+    };
     try {
       await accounts().changePassword(session.account.id, { current, next: password }, session.id);
     } catch (error) {

@@ -1,0 +1,16 @@
+# Not formatted by Prettier: generated files, lockfiles, vendored code, build output (the `formatter` rule, krizaka/.github#427).
+node_modules
+dist
+build
+coverage
+.next
+.turbo
+.expo
+out
+*.min.*
+package-lock.json
+pnpm-lock.yaml
+CHANGELOG.md
+# vendored byte for byte from krizaka/sovkora (pinned by sha256)
+apps/web/lib/sovkora-contract/compliance-check-run.schema.json
+fixtures/sample-file/

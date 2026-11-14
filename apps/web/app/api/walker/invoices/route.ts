@@ -12,7 +12,17 @@ export function POST(req: Request) {
     const { shop } = await requireShop(req, "invoices");
     const input = await readJson(req, invoiceInputSchema);
     const { invoice, totals } = await issueShopInvoice(db(), shop.id, input);
-    return Response.json({ id: invoice.id, number: invoice.number, subtotalCents: totals.subtotalCents, gstCents: totals.gstCents, qstCents: totals.qstCents, totalCents: totals.totalCents }, { status: 201 });
+    return Response.json(
+      {
+        id: invoice.id,
+        number: invoice.number,
+        subtotalCents: totals.subtotalCents,
+        gstCents: totals.gstCents,
+        qstCents: totals.qstCents,
+        totalCents: totals.totalCents,
+      },
+      { status: 201 },
+    );
   });
 }
 
@@ -20,6 +30,9 @@ export function POST(req: Request) {
 export function GET(req: Request) {
   return handle(async () => {
     const { shop } = await requireShop(req, "invoices");
-    return Response.json({ invoices: await listInvoices(db(), shop.id) }, { headers: { "Cache-Control": "private, no-store" } });
+    return Response.json(
+      { invoices: await listInvoices(db(), shop.id) },
+      { headers: { "Cache-Control": "private, no-store" } },
+    );
   });
 }

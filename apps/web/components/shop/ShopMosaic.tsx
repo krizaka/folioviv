@@ -1,6 +1,6 @@
 "use client";
 
-import { ShopGallery, shopGalleryLabels, shopGalleryLabelsFr,type ShopGalleryPhoto } from "@krizaka/ui/shop-gallery";
+import { ShopGallery, shopGalleryLabels, shopGalleryLabelsFr, type ShopGalleryPhoto } from "@krizaka/ui/shop-gallery";
 
 import type { Locale } from "@/lib/i18n";
 
@@ -10,6 +10,10 @@ import type { Locale } from "@/lib/i18n";
  */
 const LABELS: Partial<Record<Locale, typeof shopGalleryLabels>> = { fr: shopGalleryLabelsFr };
 
-export function ShopMosaic({ photos, label, locale }: Readonly<{ photos: readonly ShopGalleryPhoto[]; label: string; locale: Locale }>) {
+export function ShopMosaic({
+  photos,
+  label,
+  locale,
+}: Readonly<{ photos: readonly ShopGalleryPhoto[]; label: string; locale: Locale }>) {
   return <ShopGallery photos={photos} label={label} labels={LABELS[locale] ?? shopGalleryLabels} />;
 }

@@ -35,14 +35,31 @@ export function DataPanel({ signInHref }: Readonly<{ signInHref: string }>) {
           </Button>
         </SettingsRow>
       </SettingsSection>
-      <SettingsSection variant="flat" title={say("account.data.deleteTitle")} description={say("account.data.deleteHint")}>
+      <SettingsSection
+        variant="flat"
+        title={say("account.data.deleteTitle")}
+        description={say("account.data.deleteHint")}
+      >
         <SettingsRow label={say("account.data.confirmPassword")} htmlFor="delete-password">
           <Field.Root>
-            <Input id="delete-password" type="password" autoComplete="current-password" value={secret} onChange={(event) => setSecret(event.target.value)} />
+            <Input
+              id="delete-password"
+              type="password"
+              autoComplete="current-password"
+              value={secret}
+              onChange={(event) => setSecret(event.target.value)}
+            />
           </Field.Root>
         </SettingsRow>
         <SettingsRow label={say("account.data.delete")}>
-          <ConfirmButton size="sm" variant="danger" disabled={secret.length === 0} loading={remove.isPending} confirmLabel={say("account.data.deleteConfirm")} onConfirm={() => remove.mutate()}>
+          <ConfirmButton
+            size="sm"
+            variant="danger"
+            disabled={secret.length === 0}
+            loading={remove.isPending}
+            confirmLabel={say("account.data.deleteConfirm")}
+            onConfirm={() => remove.mutate()}
+          >
             {say("account.data.delete")}
           </ConfirmButton>
         </SettingsRow>

@@ -21,7 +21,16 @@ export function GET(req: Request) {
     const rules = await translationRules();
     const rows = await translationRows(db(), shop.id);
     const today = localDay(requestNow(), shop.timezone);
-    return Response.json({ ...rows, allowed: rules.allowed, translationOn: rules.enabled, dailyLimit: rules.dailyLimit, usedToday: await translationRunsOn(db(), shop.id, today) }, { headers: { "Cache-Control": "private, no-store" } });
+    return Response.json(
+      {
+        ...rows,
+        allowed: rules.allowed,
+        translationOn: rules.enabled,
+        dailyLimit: rules.dailyLimit,
+        usedToday: await translationRunsOn(db(), shop.id, today),
+      },
+      { headers: { "Cache-Control": "private, no-store" } },
+    );
   });
 }
 
@@ -32,7 +41,14 @@ export function PUT(req: Request) {
     const input = await readJson(req, languagesBody);
     const rules = await translationRules();
     const saved = await saveShopLanguages(db(), shop.id, input, rules.allowed);
-    await audit({ action: "shop.languages_updated", actorId: session.account.id, actorLabel: session.account.email, targetId: shop.id, detail: { source: saved.source, enabled: saved.enabled }, headers: req.headers });
+    await audit({
+      action: "shop.languages_updated",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: shop.id,
+      detail: { source: saved.source, enabled: saved.enabled },
+      headers: req.headers,
+    });
     return Response.json(saved);
   });
 }

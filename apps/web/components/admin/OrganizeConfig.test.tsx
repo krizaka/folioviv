@@ -14,12 +14,34 @@ const fr = bindProduct(frRaw);
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: () => undefined }) }));
 
 const MESSAGES = { en: { console: en.console }, fr: { console: fr.console } } as const;
-const tags = { writers: ["owner", "manager"], userTags: false, max: 20, presets: { default: [{ name: "Fidèle", marker: "green" as const }], salon: [{ name: "Coloration", marker: "violet" as const }] } };
+const tags = {
+  writers: ["owner", "manager"],
+  userTags: false,
+  max: 20,
+  presets: {
+    default: [{ name: "Fidèle", marker: "green" as const }],
+    salon: [{ name: "Coloration", marker: "violet" as const }],
+  },
+};
 const client: StoredKind = { kind: "client", version: 3, config: { kind: "client", tags, status: null, views: [] } };
 const invoice: StoredKind = {
   kind: "invoice",
   version: 1,
-  config: { kind: "invoice", tags, views: [], status: { key: "invoice_state", label: { fr: "État", en: "State" }, mode: "derived", states: [{ key: "due", label: { fr: "À payer", en: "Due" }, tone: "neutral" }, { key: "paid", label: { fr: "Payée", en: "Paid" }, tone: "success" }], transitions: [] } },
+  config: {
+    kind: "invoice",
+    tags,
+    views: [],
+    status: {
+      key: "invoice_state",
+      label: { fr: "État", en: "State" },
+      mode: "derived",
+      states: [
+        { key: "due", label: { fr: "À payer", en: "Due" }, tone: "neutral" },
+        { key: "paid", label: { fr: "Payée", en: "Paid" }, tone: "success" },
+      ],
+      transitions: [],
+    },
+  },
 };
 const render = (stored: StoredKind, locale: "en" | "fr" = "fr") =>
   renderToStaticMarkup(

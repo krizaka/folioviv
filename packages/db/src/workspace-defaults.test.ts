@@ -2,12 +2,22 @@ import { INVOICE_STATE, SHOP_TYPES } from "@folioviv/core";
 import { checkKindConfig, checkMove, checkViewFilters, MARKERS, type StatusSet } from "@krizaka/organize/contract";
 import { describe, expect, it } from "vitest";
 
-import { CLIENT_KIND, INVOICE_KIND, INVOICE_STATUS_SET, KIND_DEFAULTS, presetVariant, TAG_WRITERS } from "./workspace-defaults";
+import {
+  CLIENT_KIND,
+  INVOICE_KIND,
+  INVOICE_STATUS_SET,
+  KIND_DEFAULTS,
+  presetVariant,
+  TAG_WRITERS,
+} from "./workspace-defaults";
 
 describe("the administrator's defaults of the workspace (folioviv#337)", () => {
-  it.each(KIND_DEFAULTS.map((k) => [k.kind, k] as const))("%s: the configuration is valid for the package", (_kind, config) => {
-    expect(() => checkKindConfig(config)).not.toThrow();
-  });
+  it.each(KIND_DEFAULTS.map((k) => [k.kind, k] as const))(
+    "%s: the configuration is valid for the package",
+    (_kind, config) => {
+      expect(() => checkKindConfig(config)).not.toThrow();
+    },
+  );
 
   it("only the owner and the manager write tags: staff read, a client never sees them", () => {
     expect([...TAG_WRITERS]).toEqual(["owner", "manager"]);
@@ -19,7 +29,10 @@ describe("the administrator's defaults of the workspace (folioviv#337)", () => {
       const fr = CLIENT_KIND.tags.presets[trade];
       const en = CLIENT_KIND.tags.presets[`${trade}_en`];
       expect(fr?.length, `${trade} (fr)`).toBeGreaterThanOrEqual(3);
-      expect(en?.map((t) => t.marker), `${trade} (en)`).toEqual(fr?.map((t) => t.marker));
+      expect(
+        en?.map((t) => t.marker),
+        `${trade} (en)`,
+      ).toEqual(fr?.map((t) => t.marker));
       for (const preset of [...fr!, ...en!]) expect(MARKERS).toContain(preset.marker);
     }
   });
@@ -42,7 +55,10 @@ describe("the administrator's defaults of the workspace (folioviv#337)", () => {
     expect(INVOICE_STATUS_SET.transitions).toEqual([]);
     expect(INVOICE_STATUS_SET.states.map((s) => s.key).sort()).toEqual(Object.values(INVOICE_STATE).sort());
     for (const from of Object.values(INVOICE_STATE)) {
-      for (const to of Object.values(INVOICE_STATE)) expect(() => checkMove(INVOICE_STATUS_SET, { from, to, role: "owner" }), `${from} → ${to}`).toThrowError(expect.objectContaining({ code: "STATUS_DERIVED" }));
+      for (const to of Object.values(INVOICE_STATE))
+        expect(() => checkMove(INVOICE_STATUS_SET, { from, to, role: "owner" }), `${from} → ${to}`).toThrowError(
+          expect.objectContaining({ code: "STATUS_DERIVED" }),
+        );
     }
   });
 

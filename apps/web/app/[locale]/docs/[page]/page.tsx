@@ -17,7 +17,9 @@ export function generateStaticParams() {
   return DOC_IDS.flatMap((page) => ["en", "fr"].map((locale) => ({ locale, page })));
 }
 
-export async function generateMetadata({ params }: Readonly<{ params: Promise<{ locale: string; page: string }> }>): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: Readonly<{ params: Promise<{ locale: string; page: string }> }>): Promise<Metadata> {
   const { locale, page } = await params;
   if (!isDocId(page)) return {};
   return pageMetadata(asLocale(locale), `docs/${page}`);

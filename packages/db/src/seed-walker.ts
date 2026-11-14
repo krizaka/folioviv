@@ -4,9 +4,32 @@ import { persona } from "@krizaka/org";
 import { and, eq, sql } from "drizzle-orm";
 
 import type { Db } from "./client";
-import { accounts, appointments, bookings, clients, dependants, invoices, services, shops, shopZones, staff } from "./schema";
+import {
+  accounts,
+  appointments,
+  bookings,
+  clients,
+  dependants,
+  invoices,
+  services,
+  shops,
+  shopZones,
+  staff,
+} from "./schema";
 import { issueInvoice, recordExpense } from "./shop-ops";
-import { addDependant, addWindow, addZone, bookVisit, joinShop, listSlots, saveShopMedia, saveShopPage, saveService, setAccessNotes, shopOfOwner } from "./service-shop";
+import {
+  addDependant,
+  addWindow,
+  addZone,
+  bookVisit,
+  joinShop,
+  listSlots,
+  saveShopMedia,
+  saveShopPage,
+  saveService,
+  setAccessNotes,
+  shopOfOwner,
+} from "./service-shop";
 import { seedDemoCommunity } from "./demo-community";
 import { applyTemplate, shopPageConfigOf } from "./shop-page";
 import { checkIn, checkOut, saveReport } from "./visits";
@@ -20,7 +43,14 @@ const cast = (id: string) => persona("folioviv", id);
  * operations the product uses — no row is written around the rules. Idempotent per walker account.
  */
 export const SAINT_HENRI = {
-  shop: { name: "Pattes de Saint-Henri", legalName: "Pattes de Saint-Henri (démo)", address: "2000 rue Notre-Dame O., Montréal QC H3J 1N4", slug: "pattes-saint-henri", ownerName: cast("lea").firstName, businessType: "pets" as const },
+  shop: {
+    name: "Pattes de Saint-Henri",
+    legalName: "Pattes de Saint-Henri (démo)",
+    address: "2000 rue Notre-Dame O., Montréal QC H3J 1N4",
+    slug: "pattes-saint-henri",
+    ownerName: cast("lea").firstName,
+    businessType: "pets" as const,
+  },
   /** The template of her trade the page wears (#261, step 6), applied once. */
   template: "pets-histoire",
   taglineFr: "Des promenades de quartier, avec une photo et un mot après chaque sortie.",
@@ -28,8 +58,10 @@ export const SAINT_HENRI = {
   /** What the storefront shows beyond the tagline: the locality, the bio (it says the shop is a demo), how to reach the shop. */
   profile: {
     area: "Saint-Henri, Montréal",
-    bioFr: "Je m'appelle Léa et je promène les chiens de Saint-Henri, de Griffintown et de la Pointe-Saint-Charles. Après chaque sortie, vous recevez une photo et un mot. Commerce fictif pour la démonstration de Folioviv — aucune personne réelle.",
-    bioEn: "I'm Léa and I walk dogs in Saint-Henri, Griffintown and Pointe-Saint-Charles. After every outing you get a photo and a note. A fictional shop that demonstrates Folioviv — no real person.",
+    bioFr:
+      "Je m'appelle Léa et je promène les chiens de Saint-Henri, de Griffintown et de la Pointe-Saint-Charles. Après chaque sortie, vous recevez une photo et un mot. Commerce fictif pour la démonstration de Folioviv — aucune personne réelle.",
+    bioEn:
+      "I'm Léa and I walk dogs in Saint-Henri, Griffintown and Pointe-Saint-Charles. After every outing you get a photo and a note. A fictional shop that demonstrates Folioviv — no real person.",
     publicPhone: "514-555-0100",
     publicEmail: "bonjour@pattes-saint-henri.example",
     seatUnitFr: "chiens",
@@ -37,12 +69,40 @@ export const SAINT_HENRI = {
   },
   zones: ["Saint-Henri", "Griffintown", "Pointe-Saint-Charles"],
   /** Where each area is centred, for the map of the storefront. */
-  zonePlaces: { "Saint-Henri": { lat: 45.4786, lng: -73.5878 }, Griffintown: { lat: 45.4935, lng: -73.561 }, "Pointe-Saint-Charles": { lat: 45.479, lng: -73.558 } } as Record<string, { lat: number; lng: number }>,
+  zonePlaces: {
+    "Saint-Henri": { lat: 45.4786, lng: -73.5878 },
+    Griffintown: { lat: 45.4935, lng: -73.561 },
+    "Pointe-Saint-Charles": { lat: 45.479, lng: -73.558 },
+  } as Record<string, { lat: number; lng: number }>,
   services: [
-    { nameFr: "Promenade solo 30 min", nameEn: "Solo walk 30 min", durationMinutes: 30, priceCents: 2_200, capacity: 1 },
-    { nameFr: "Promenade solo 60 min", nameEn: "Solo walk 60 min", durationMinutes: 60, priceCents: 3_500, capacity: 1 },
-    { nameFr: "Promenade en groupe 60 min", nameEn: "Group walk 60 min", durationMinutes: 60, priceCents: 2_200, capacity: 5 },
-    { nameFr: "Visite chiot 20 min", nameEn: "Puppy visit 20 min", durationMinutes: 20, priceCents: 1_800, capacity: 1 },
+    {
+      nameFr: "Promenade solo 30 min",
+      nameEn: "Solo walk 30 min",
+      durationMinutes: 30,
+      priceCents: 2_200,
+      capacity: 1,
+    },
+    {
+      nameFr: "Promenade solo 60 min",
+      nameEn: "Solo walk 60 min",
+      durationMinutes: 60,
+      priceCents: 3_500,
+      capacity: 1,
+    },
+    {
+      nameFr: "Promenade en groupe 60 min",
+      nameEn: "Group walk 60 min",
+      durationMinutes: 60,
+      priceCents: 2_200,
+      capacity: 5,
+    },
+    {
+      nameFr: "Visite chiot 20 min",
+      nameEn: "Puppy visit 20 min",
+      durationMinutes: 20,
+      priceCents: 1_800,
+      capacity: 1,
+    },
   ],
   /** The card of each service on the storefront, by its English name. */
   cards: {
@@ -67,15 +127,30 @@ export const SAINT_HENRI = {
     "Group walk 60 min": {
       descriptionFr: "De petites meutes de chiens qui s'entendent bien, au parc et le long du canal.",
       descriptionEn: "Small packs of dogs that get along, in the park and along the canal.",
-      includedFr: ["Rencontre d'essai avant la première sortie", "Ramassage à votre porte", "Une photo et un mot après"],
+      includedFr: [
+        "Rencontre d'essai avant la première sortie",
+        "Ramassage à votre porte",
+        "Une photo et un mot après",
+      ],
       includedEn: ["A meet-and-greet before the first walk", "Pick-up at your door", "A photo and a note after"],
     },
   } as Record<string, { descriptionFr: string; descriptionEn: string; includedFr: string[]; includedEn: string[] }>,
   /** The shop's photos: the cover (the Lachine canal at dawn, Folioviv's own demo image) and the gallery (the real recordings of the walker's journey on dev). */
   media: {
-    cover: { url: "https://krizaka-assets.b-cdn.net/sites/folioviv/demo/pets-cover.18173bdfbf.webp", altFr: "Le canal Lachine au petit matin, le chemin de la promenade.", altEn: "The Lachine canal at dawn, the walk's path." },
+    cover: {
+      url: "https://krizaka-assets.b-cdn.net/sites/folioviv/demo/pets-cover.18173bdfbf.webp",
+      altFr: "Le canal Lachine au petit matin, le chemin de la promenade.",
+      altEn: "The Lachine canal at dawn, the walk's path.",
+    },
     gallery: [
-      { url: "https://krizaka-assets.b-cdn.net/sites/sovkora/gallery/mtl-ruelle.021f8cb018.webp", altFr: "Une ruelle de quartier sous la pluie.", altEn: "A neighbourhood alley in the rain.", captionFr: "Le quartier", captionEn: "The neighbourhood", wide: true },
+      {
+        url: "https://krizaka-assets.b-cdn.net/sites/sovkora/gallery/mtl-ruelle.021f8cb018.webp",
+        altFr: "Une ruelle de quartier sous la pluie.",
+        altEn: "A neighbourhood alley in the rain.",
+        captionFr: "Le quartier",
+        captionEn: "The neighbourhood",
+        wide: true,
+      },
       {
         url: "https://krizaka-assets.b-cdn.net/sites/folioviv/tour/phone-report.af3aa7b92b.jpg",
         webmUrl: "https://krizaka-assets.b-cdn.net/sites/folioviv/tour/report.47b4fef558.webm",
@@ -85,7 +160,13 @@ export const SAINT_HENRI = {
         captionFr: "Le rapport après la sortie",
         captionEn: "The report after the walk",
       },
-      { url: "https://krizaka-assets.b-cdn.net/sites/folioviv/tour/phone-client.c5b88410f9.jpg", altFr: "Le rapport reçu par la cliente, avec la photo de son chien.", altEn: "The report as the client receives it, with her dog's photo.", captionFr: "Ce que vous recevez", captionEn: "What you receive" },
+      {
+        url: "https://krizaka-assets.b-cdn.net/sites/folioviv/tour/phone-client.c5b88410f9.jpg",
+        altFr: "Le rapport reçu par la cliente, avec la photo de son chien.",
+        altEn: "The report as the client receives it, with her dog's photo.",
+        captionFr: "Ce que vous recevez",
+        captionEn: "What you receive",
+      },
     ],
   },
   hours: [
@@ -96,11 +177,53 @@ export const SAINT_HENRI = {
     { weekday: 6, startsAt: "09:00", endsAt: "12:00" },
   ],
   clients: [
-    { email: "camille.tremblay@folioviv.test", name: cast("camille").displayName, phone: "514-555-0101", language: cast("camille").locale, notes: "Code de la porte 4821, clé de secours sous le pot de lavande.", dogs: [{ name: "Rex", breed: "Labrador", size: "large" as const, temperament: "Joueur, tire un peu en laisse" }] },
-    { email: "jordan.lee@folioviv.test", name: cast("jordan").displayName, phone: "514-555-0102", language: cast("jordan").locale, notes: "Buzzer 12, leash on the hook by the door.", dogs: [{ name: "Luna", breed: "Border collie", size: "medium" as const, temperament: "Shy with other dogs at first" }] },
-    { email: "nadia.benali@folioviv.test", name: cast("nadia").displayName, phone: "514-555-0103", language: cast("nadia").locale, notes: null, dogs: [{ name: "Biscuit", breed: "Cavapoo", size: "small" as const, temperament: "Doux" }, { name: "Pixel", breed: "Chihuahua", size: "small" as const, temperament: "Craintif des vélos" }] },
-    { email: "etienne.gagnon@folioviv.test", name: cast("etienne").displayName, phone: "514-555-0104", language: cast("etienne").locale, notes: "Cadenas du portail : 0719.", dogs: [{ name: "Érable", breed: "Golden retriever", size: "large" as const, temperament: "Adore l'eau" }] },
-    { email: "sofia.rossi@folioviv.test", name: cast("sofia").displayName, phone: "514-555-0105", language: cast("sofia").locale, notes: null, dogs: [{ name: "Tofu", breed: "Shiba inu", size: "medium" as const, temperament: "Independent, never off leash" }] },
+    {
+      email: "camille.tremblay@folioviv.test",
+      name: cast("camille").displayName,
+      phone: "514-555-0101",
+      language: cast("camille").locale,
+      notes: "Code de la porte 4821, clé de secours sous le pot de lavande.",
+      dogs: [{ name: "Rex", breed: "Labrador", size: "large" as const, temperament: "Joueur, tire un peu en laisse" }],
+    },
+    {
+      email: "jordan.lee@folioviv.test",
+      name: cast("jordan").displayName,
+      phone: "514-555-0102",
+      language: cast("jordan").locale,
+      notes: "Buzzer 12, leash on the hook by the door.",
+      dogs: [
+        { name: "Luna", breed: "Border collie", size: "medium" as const, temperament: "Shy with other dogs at first" },
+      ],
+    },
+    {
+      email: "nadia.benali@folioviv.test",
+      name: cast("nadia").displayName,
+      phone: "514-555-0103",
+      language: cast("nadia").locale,
+      notes: null,
+      dogs: [
+        { name: "Biscuit", breed: "Cavapoo", size: "small" as const, temperament: "Doux" },
+        { name: "Pixel", breed: "Chihuahua", size: "small" as const, temperament: "Craintif des vélos" },
+      ],
+    },
+    {
+      email: "etienne.gagnon@folioviv.test",
+      name: cast("etienne").displayName,
+      phone: "514-555-0104",
+      language: cast("etienne").locale,
+      notes: "Cadenas du portail : 0719.",
+      dogs: [{ name: "Érable", breed: "Golden retriever", size: "large" as const, temperament: "Adore l'eau" }],
+    },
+    {
+      email: "sofia.rossi@folioviv.test",
+      name: cast("sofia").displayName,
+      phone: "514-555-0105",
+      language: cast("sofia").locale,
+      notes: null,
+      dogs: [
+        { name: "Tofu", breed: "Shiba inu", size: "medium" as const, temperament: "Independent, never off leash" },
+      ],
+    },
   ],
 };
 
@@ -110,11 +233,33 @@ export const SAINT_HENRI_EMAILS = ["lea.beaulieu@folioviv.test", ...SAINT_HENRI.
 /** The storefront's words, places and photos of the persona: idempotent, so a shop seeded before them gains them on the next run. */
 export async function enrichSaintHenri(db: Db, ownerId: string, shopId: string): Promise<void> {
   const shop = (await db.select().from(shops).where(eq(shops.id, shopId)))[0]!;
-  if (!(await shopPageConfigOf(db, shopId)).templateId) await applyTemplate(db, shopId, { templateId: SAINT_HENRI.template, keepOrder: false });
-  const owner = { name: shop.name, legalName: shop.legalName, address: shop.address, slug: shop.slug ?? SAINT_HENRI.shop.slug, ownerName: SAINT_HENRI.shop.ownerName, businessType: SAINT_HENRI.shop.businessType, published: shop.published };
-  await saveShopPage(db, ownerId, { ...owner, taglineFr: SAINT_HENRI.taglineFr, taglineEn: SAINT_HENRI.taglineEn, ...SAINT_HENRI.profile });
-  for (const [name, place] of Object.entries(SAINT_HENRI.zonePlaces)) await db.update(shopZones).set(place).where(and(eq(shopZones.shopId, shopId), eq(shopZones.name, name)));
-  for (const [nameEn, card] of Object.entries(SAINT_HENRI.cards)) await db.update(services).set(card).where(and(eq(services.shopId, shopId), eq(services.nameEn, nameEn)));
+  if (!(await shopPageConfigOf(db, shopId)).templateId)
+    await applyTemplate(db, shopId, { templateId: SAINT_HENRI.template, keepOrder: false });
+  const owner = {
+    name: shop.name,
+    legalName: shop.legalName,
+    address: shop.address,
+    slug: shop.slug ?? SAINT_HENRI.shop.slug,
+    ownerName: SAINT_HENRI.shop.ownerName,
+    businessType: SAINT_HENRI.shop.businessType,
+    published: shop.published,
+  };
+  await saveShopPage(db, ownerId, {
+    ...owner,
+    taglineFr: SAINT_HENRI.taglineFr,
+    taglineEn: SAINT_HENRI.taglineEn,
+    ...SAINT_HENRI.profile,
+  });
+  for (const [name, place] of Object.entries(SAINT_HENRI.zonePlaces))
+    await db
+      .update(shopZones)
+      .set(place)
+      .where(and(eq(shopZones.shopId, shopId), eq(shopZones.name, name)));
+  for (const [nameEn, card] of Object.entries(SAINT_HENRI.cards))
+    await db
+      .update(services)
+      .set(card)
+      .where(and(eq(services.shopId, shopId), eq(services.nameEn, nameEn)));
   await saveShopMedia(db, shopId, SAINT_HENRI.media);
   await seedDemoCommunity(db, shopId, SAINT_HENRI.shop.slug);
 }
@@ -124,28 +269,95 @@ export async function enrichSaintHenri(db: Db, ownerId: string, shopId: string):
  * months and the expenses of a walker (the phone used 60 % for the shop, supplies, insurance), all issued through the
  * real operations so the ledger is the product's own. Once per shop: a shop that already has an invoice is left alone.
  */
-export async function seedSaintHenriBooks(db: Db, shopId: string, clientIds: Record<string, string>, now: Date): Promise<void> {
-  if ((await db.select({ id: invoices.id }).from(invoices).where(eq(invoices.shopId, shopId)).limit(1)).length > 0) return;
-  await db.update(shops).set({ registrant: true, gstNumber: "123456789RT0001", qstNumber: "1234567890TQ0001" }).where(eq(shops.id, shopId));
-  const day = (monthsBack: number, d: number) => `${localDay(addMonths(now, -monthsBack), "America/Toronto").slice(0, 8)}${String(d).padStart(2, "0")}`;
+export async function seedSaintHenriBooks(
+  db: Db,
+  shopId: string,
+  clientIds: Record<string, string>,
+  now: Date,
+): Promise<void> {
+  if ((await db.select({ id: invoices.id }).from(invoices).where(eq(invoices.shopId, shopId)).limit(1)).length > 0)
+    return;
+  await db
+    .update(shops)
+    .set({ registrant: true, gstNumber: "123456789RT0001", qstNumber: "1234567890TQ0001" })
+    .where(eq(shops.id, shopId));
+  const day = (monthsBack: number, d: number) =>
+    `${localDay(addMonths(now, -monthsBack), "America/Toronto").slice(0, 8)}${String(d).padStart(2, "0")}`;
   const ids = Object.values(clientIds);
   for (let back = 4; back >= 1; back--) {
     for (const [i, clientId] of ids.slice(0, 3).entries()) {
       const walks = 6 + ((back + i) % 4) * 2;
-      await issueInvoice(db, { shopId, clientId, language: i === 1 ? "en" : "fr", issuedOn: day(back, 26 - i), lines: [{ description: "Promenade en groupe 60 min", quantity: walks, unitPriceCents: 2_200, category: "standard" }] });
+      await issueInvoice(db, {
+        shopId,
+        clientId,
+        language: i === 1 ? "en" : "fr",
+        issuedOn: day(back, 26 - i),
+        lines: [
+          { description: "Promenade en groupe 60 min", quantity: walks, unitPriceCents: 2_200, category: "standard" },
+        ],
+      });
     }
-    await recordExpense(db, { shopId, supplier: "Fizz Mobile (forfait)", paidOn: day(back, 12), subtotalCents: 4_500, gstCents: 225, qstCents: 449, businessSharePct: 60 });
-    await recordExpense(db, { shopId, supplier: "Zoo Montréal Animalerie", paidOn: day(back, 18), subtotalCents: 3_800 + back * 400, gstCents: 190 + back * 20, qstCents: 379 + back * 40 });
+    await recordExpense(db, {
+      shopId,
+      supplier: "Fizz Mobile (forfait)",
+      paidOn: day(back, 12),
+      subtotalCents: 4_500,
+      gstCents: 225,
+      qstCents: 449,
+      businessSharePct: 60,
+    });
+    await recordExpense(db, {
+      shopId,
+      supplier: "Zoo Montréal Animalerie",
+      paidOn: day(back, 18),
+      subtotalCents: 3_800 + back * 400,
+      gstCents: 190 + back * 20,
+      qstCents: 379 + back * 40,
+    });
   }
 }
 
-export async function seedSaintHenri(db: Db, key: Buffer, now: Date): Promise<{ shopId: string; created: boolean; clientIds: Record<string, string> }> {
+/** The persona's five clients join the shop, each with their dogs (and the access notes, sealed with `key`). */
+async function joinSaintHenriClients(db: Db, key: Buffer, shopId: string) {
+  const clientIds: Record<string, string> = {};
+  const dogIds: Record<string, string> = {};
+  for (const c of SAINT_HENRI.clients) {
+    const [acc] = await db.select().from(accounts).where(eq(accounts.email, c.email));
+    if (!acc) throw new Error(`no account ${c.email}: create the accounts first`);
+    const { clientId } = await joinShop(db, acc.id, acc.email, shopId, {
+      fullName: c.name,
+      phone: c.phone,
+      language: c.language,
+      consentService: true,
+      consentReminders: c.language === "fr",
+    });
+    clientIds[c.email] = clientId;
+    for (const d of c.dogs)
+      dogIds[d.name] = await addDependant(db, clientId, {
+        kind: "dog",
+        name: d.name,
+        profile: { breed: d.breed, size: d.size, temperament: d.temperament },
+      });
+    if (c.notes) await setAccessNotes(db, key, clientId, c.notes);
+  }
+  return { clientIds, dogIds };
+}
+
+export async function seedSaintHenri(
+  db: Db,
+  key: Buffer,
+  now: Date,
+): Promise<{ shopId: string; created: boolean; clientIds: Record<string, string> }> {
   const [owner] = await db.select().from(accounts).where(eq(accounts.email, SAINT_HENRI_EMAILS[0]));
   if (!owner) throw new Error(`no account ${SAINT_HENRI_EMAILS[0]}: create the accounts first`);
   const existing = await shopOfOwner(db, owner.id);
   if (existing) {
     await enrichSaintHenri(db, owner.id, existing.id);
-    const known = Object.fromEntries((await db.select({ id: clients.id, email: clients.email }).from(clients).where(eq(clients.shopId, existing.id))).filter((c) => c.email).map((c) => [c.email!, c.id]));
+    const known = Object.fromEntries(
+      (await db.select({ id: clients.id, email: clients.email }).from(clients).where(eq(clients.shopId, existing.id)))
+        .filter((c) => c.email)
+        .map((c) => [c.email!, c.id]),
+    );
     await seedSaintHenriBooks(db, existing.id, known, now);
     return { shopId: existing.id, created: false, clientIds: {} };
   }
@@ -158,23 +370,16 @@ export async function seedSaintHenri(db: Db, key: Buffer, now: Date): Promise<{ 
   for (const w of SAINT_HENRI.hours) await addWindow(db, shopId, w);
   await saveShopPage(db, owner.id, { ...page, published: true });
 
-  const clientIds: Record<string, string> = {};
-  const dogIds: Record<string, string> = {};
-  for (const c of SAINT_HENRI.clients) {
-    const [acc] = await db.select().from(accounts).where(eq(accounts.email, c.email));
-    if (!acc) throw new Error(`no account ${c.email}: create the accounts first`);
-    const { clientId } = await joinShop(db, acc.id, acc.email, shopId, { fullName: c.name, phone: c.phone, language: c.language, consentService: true, consentReminders: c.language === "fr" });
-    clientIds[c.email] = clientId;
-    for (const d of c.dogs) dogIds[d.name] = await addDependant(db, clientId, { kind: "dog", name: d.name, profile: { breed: d.breed, size: d.size, temperament: d.temperament } });
-    if (c.notes) await setAccessNotes(db, key, clientId, c.notes);
-  }
+  const { clientIds, dogIds } = await joinSaintHenriClients(db, key, shopId);
 
   const group = services["Group walk 60 min"]!;
   const zone = zones["Saint-Henri"]!;
   /** The offered slot of a local day at a wall-clock time (minutes after midnight), asked as of `asOf`. */
   const slotAt = async (day: string, minutes: number, asOf: Date) => {
     const wanted = localInstant(day, minutes, "America/Toronto").getTime();
-    return (await listSlots(db, { shopId, serviceId: group, zoneId: zone, now: asOf, fromDay: day, days: 1 })).find((s) => s.startsAt.getTime() === wanted);
+    return (await listSlots(db, { shopId, serviceId: group, zoneId: zone, now: asOf, fromDay: day, days: 1 })).find(
+      (s) => s.startsAt.getTime() === wanted,
+    );
   };
 
   // A walk that already happened (a weekday morning in the last week, with its report), so the clients' space has a past to show.
@@ -182,10 +387,21 @@ export async function seedSaintHenri(db: Db, key: Buffer, now: Date): Promise<{ 
     const asOf = addDays(now, -(back + 2));
     const past = await slotAt(localDay(addDays(now, -back), "America/Toronto"), 9 * 60, asOf);
     if (!past) continue;
-    const booked = await bookVisit(db, { clientId: clientIds[SAINT_HENRI.clients[0]!.email]!, serviceId: group, zoneId: zone, dependantIds: [dogIds["Rex"]!], startsAt: past.startsAt, now: asOf });
+    const booked = await bookVisit(db, {
+      clientId: clientIds[SAINT_HENRI.clients[0]!.email]!,
+      serviceId: group,
+      zoneId: zone,
+      dependantIds: [dogIds["Rex"]!],
+      startsAt: past.startsAt,
+      now: asOf,
+    });
     await checkIn(db, shopId, booked.appointmentId, past.startsAt);
     await checkOut(db, shopId, booked.appointmentId, addMinutes(past.startsAt, 52));
-    await saveReport(db, { shopId, bookingId: booked.bookingIds[0]!, note: "Rex a très bien marché, 52 min autour du canal Lachine. Beaucoup d'énergie, pipi ✓" });
+    await saveReport(db, {
+      shopId,
+      bookingId: booked.bookingIds[0]!,
+      note: "Rex a très bien marché, 52 min autour du canal Lachine. Beaucoup d'énergie, pipi ✓",
+    });
     break;
   }
 
@@ -193,8 +409,22 @@ export async function seedSaintHenri(db: Db, key: Buffer, now: Date): Promise<{ 
   for (let ahead = 0; ahead <= 7; ahead++) {
     const upcoming = await slotAt(localDay(addDays(now, ahead), "America/Toronto"), 14 * 60, now);
     if (!upcoming) continue;
-    await bookVisit(db, { clientId: clientIds[SAINT_HENRI.clients[1]!.email]!, serviceId: group, zoneId: zone, dependantIds: [dogIds["Luna"]!], startsAt: upcoming.startsAt, now });
-    await bookVisit(db, { clientId: clientIds[SAINT_HENRI.clients[3]!.email]!, serviceId: group, zoneId: zone, dependantIds: [dogIds["Érable"]!], startsAt: upcoming.startsAt, now });
+    await bookVisit(db, {
+      clientId: clientIds[SAINT_HENRI.clients[1]!.email]!,
+      serviceId: group,
+      zoneId: zone,
+      dependantIds: [dogIds["Luna"]!],
+      startsAt: upcoming.startsAt,
+      now,
+    });
+    await bookVisit(db, {
+      clientId: clientIds[SAINT_HENRI.clients[3]!.email]!,
+      serviceId: group,
+      zoneId: zone,
+      dependantIds: [dogIds["Érable"]!],
+      startsAt: upcoming.startsAt,
+      now,
+    });
     break;
   }
   await enrichSaintHenri(db, owner.id, shopId);
@@ -216,7 +446,10 @@ const TEST_VISIT_SERVICE = "Puppy visit 20 min";
  * the injected clock, kept on the shop's current day (after 23:00 local it falls back to 22:30). The phone's Maestro flow then always
  * goes list, detail, start, finish. Not a slot offered to clients: it is inserted directly, once (a re-run finds it). Dev and CI only.
  */
-export async function seedTodayVisit(db: Db, now: Date): Promise<{ appointmentId: string; startsAt: Date; created: boolean }> {
+export async function seedTodayVisit(
+  db: Db,
+  now: Date,
+): Promise<{ appointmentId: string; startsAt: Date; created: boolean }> {
   const [owner] = await db.select().from(accounts).where(eq(accounts.email, SAINT_HENRI_EMAILS[0]));
   const shop = owner ? await shopOfOwner(db, owner.id) : undefined;
   if (!shop) throw new Error(`no shop for ${SAINT_HENRI_EMAILS[0]}: seed the Saint-Henri walker first`);
@@ -224,18 +457,47 @@ export async function seedTodayVisit(db: Db, now: Date): Promise<{ appointmentId
   const today = localDay(now, zone);
   const soon = addHours(now, 1);
   const startsAt = localDay(soon, zone) === today ? soon : localInstant(today, 22 * 60 + 30, zone);
-  const [service] = await db.select().from(services).where(and(eq(services.shopId, shop.id), eq(services.nameEn, TEST_VISIT_SERVICE), eq(services.active, true)));
+  const [service] = await db
+    .select()
+    .from(services)
+    .where(and(eq(services.shopId, shop.id), eq(services.nameEn, TEST_VISIT_SERVICE), eq(services.active, true)));
   if (!service) throw new Error(`the shop has no "${TEST_VISIT_SERVICE}" service`);
   const endsAt = addMinutes(startsAt, service.durationMinutes);
-  const [client] = await db.select().from(clients).where(and(eq(clients.shopId, shop.id), eq(clients.email, SAINT_HENRI.clients[0]!.email)));
+  const [client] = await db
+    .select()
+    .from(clients)
+    .where(and(eq(clients.shopId, shop.id), eq(clients.email, SAINT_HENRI.clients[0]!.email)));
   const [dog] = client ? await db.select().from(dependants).where(eq(dependants.clientId, client.id)) : [];
   if (!client || !dog) throw new Error("the Saint-Henri clients are not seeded");
-  const found = await db.select({ id: appointments.id }).from(appointments).where(and(eq(appointments.shopId, shop.id), eq(appointments.serviceId, service.id), eq(appointments.clientId, client.id), sql`lower(${appointments.during}) = ${startsAt.toISOString()}::timestamptz`));
+  const found = await db
+    .select({ id: appointments.id })
+    .from(appointments)
+    .where(
+      and(
+        eq(appointments.shopId, shop.id),
+        eq(appointments.serviceId, service.id),
+        eq(appointments.clientId, client.id),
+        sql`lower(${appointments.during}) = ${startsAt.toISOString()}::timestamptz`,
+      ),
+    );
   if (found[0]) return { appointmentId: found[0].id, startsAt, created: false };
   const walker =
-    (await db.select().from(staff).where(and(eq(staff.shopId, shop.id), eq(staff.name, TEST_WALKER))))[0] ??
-    (await db.insert(staff).values({ shopId: shop.id, name: TEST_WALKER }).returning())[0]!;
-  const [row] = await db.insert(appointments).values({ shopId: shop.id, staffId: walker.id, serviceId: service.id, clientId: client.id, during: `[${startsAt.toISOString()},${endsAt.toISOString()})` }).returning({ id: appointments.id });
+    (
+      await db
+        .select()
+        .from(staff)
+        .where(and(eq(staff.shopId, shop.id), eq(staff.name, TEST_WALKER)))
+    )[0] ?? (await db.insert(staff).values({ shopId: shop.id, name: TEST_WALKER }).returning())[0]!;
+  const [row] = await db
+    .insert(appointments)
+    .values({
+      shopId: shop.id,
+      staffId: walker.id,
+      serviceId: service.id,
+      clientId: client.id,
+      during: `[${startsAt.toISOString()},${endsAt.toISOString()})`,
+    })
+    .returning({ id: appointments.id });
   await db.insert(bookings).values({ appointmentId: row!.id, clientId: client.id, dependantId: dog.id });
   return { appointmentId: row!.id, startsAt, created: true };
 }

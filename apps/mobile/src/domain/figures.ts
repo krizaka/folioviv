@@ -40,7 +40,12 @@ export function meaningText(figure: FigureAnswer, say: Say): string {
 
 /** « 12 invoices · 3 expenses » (a source with no row is left out). */
 export function sourcesText(figure: FigureAnswer, say: Say): string {
-  return figure.sources.filter((s) => s.count > 0).map((s) => say(`figures.sources.${s.kind}`, { count: s.count })).join(" · ") || "—";
+  return (
+    figure.sources
+      .filter((s) => s.count > 0)
+      .map((s) => say(`figures.sources.${s.kind}`, { count: s.count }))
+      .join(" · ") || "—"
+  );
 }
 
 /** « What to do now »: the words of an action, from the catalogue and the action's own variables. */
@@ -48,16 +53,34 @@ export function actionText(action: NextActionAnswer, say: Say, locale: Locale): 
   const w = action.why;
   const money = (v: unknown) => dollars(Number(v), locale);
   if (action.kind === "chase") {
-    const more = Number(w.others) > 0 ? ` ${say("figures.actions.chase.more", { others: Number(w.others), total: money(w.totalCents) })}` : "";
-    return { title: say("figures.actions.chase.title", { number: String(w.number) }), why: `${say("figures.actions.chase.why", { days: Number(w.days), amount: money(w.amountCents) })}${more}` };
+    const more =
+      Number(w.others) > 0
+        ? ` ${say("figures.actions.chase.more", { others: Number(w.others), total: money(w.totalCents) })}`
+        : "";
+    return {
+      title: say("figures.actions.chase.title", { number: String(w.number) }),
+      why: `${say("figures.actions.chase.why", { days: Number(w.days), amount: money(w.amountCents) })}${more}`,
+    };
   }
   if (action.kind === "taxes") {
     const range = { start: String(w.periodStart), end: String(w.periodEnd) };
-    return { title: say("figures.actions.taxes.title"), why: action.urgency === "now" ? say("figures.actions.taxes.whyPast", range) : say("figures.actions.taxes.why", { days: Number(w.daysLeft), ...range }) };
+    return {
+      title: say("figures.actions.taxes.title"),
+      why:
+        action.urgency === "now"
+          ? say("figures.actions.taxes.whyPast", range)
+          : say("figures.actions.taxes.why", { days: Number(w.daysLeft), ...range }),
+    };
   }
   // 2026-01-04 was a Sunday: the weekday number (0 = Sunday) names the day in the owner's language.
-  const weekday = new Date(Date.UTC(2026, 0, 4 + Number(w.weekday))).toLocaleDateString(locale === "fr" ? "fr-CA" : "en-CA", { weekday: "long", timeZone: "UTC" });
-  return { title: say("figures.actions.slot.title", { weekday, time: String(w.startsAt) }), why: say("figures.actions.slot.why", { booked: Number(w.booked), offered: Number(w.offered) }) };
+  const weekday = new Date(Date.UTC(2026, 0, 4 + Number(w.weekday))).toLocaleDateString(
+    locale === "fr" ? "fr-CA" : "en-CA",
+    { weekday: "long", timeZone: "UTC" },
+  );
+  return {
+    title: say("figures.actions.slot.title", { weekday, time: String(w.startsAt) }),
+    why: say("figures.actions.slot.why", { booked: Number(w.booked), offered: Number(w.offered) }),
+  };
 }
 
 /** What goes before a term of a formula: nothing for the first, its operator, or a dot. */

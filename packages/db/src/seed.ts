@@ -18,11 +18,26 @@ export async function seedDemoShop(db: Db, ownerEmail: string, now = new Date())
   if (existing) return { shopId: existing.id, created: false };
   const [shop] = await db
     .insert(shops)
-    .values({ ownerId: owner.id, name: "Salon Laurier", legalName: "Salon Laurier inc.", kind: "salon", registrant: true, gstNumber: "123456789RT0001", qstNumber: "1234567890TQ0001", address: "1234 av. Laurier E., Montréal QC H2J 1G7" })
+    .values({
+      ownerId: owner.id,
+      name: "Salon Laurier",
+      legalName: "Salon Laurier inc.",
+      kind: "salon",
+      registrant: true,
+      gstNumber: "123456789RT0001",
+      qstNumber: "1234567890TQ0001",
+      address: "1234 av. Laurier E., Montréal QC H2J 1G7",
+    })
     .returning();
   // The shop's rules at their defaults, as a shop created by the app has them: without the row its slots cannot be listed.
   await db.insert(shopRules).values({ shopId: shop!.id });
-  const [julie, marc] = await db.insert(staff).values([{ shopId: shop!.id, name: "Julie" }, { shopId: shop!.id, name: "Marc" }]).returning();
+  const [julie, marc] = await db
+    .insert(staff)
+    .values([
+      { shopId: shop!.id, name: "Julie" },
+      { shopId: shop!.id, name: "Marc" },
+    ])
+    .returning();
   const [cut, colour, brushing] = await db
     .insert(services)
     .values([
@@ -34,9 +49,24 @@ export async function seedDemoShop(db: Db, ownerEmail: string, now = new Date())
   const people = await db
     .insert(clients)
     .values([
-      { shopId: shop!.id, fullName: persona("folioviv", "camille").displayName, email: "camille@example.test", language: persona("folioviv", "camille").locale },
-      { shopId: shop!.id, fullName: persona("folioviv", "jordan").displayName, email: "jordan@example.test", language: persona("folioviv", "jordan").locale },
-      { shopId: shop!.id, fullName: persona("folioviv", "nadia").displayName, phone: "514-555-0142", language: persona("folioviv", "nadia").locale },
+      {
+        shopId: shop!.id,
+        fullName: persona("folioviv", "camille").displayName,
+        email: "camille@example.test",
+        language: persona("folioviv", "camille").locale,
+      },
+      {
+        shopId: shop!.id,
+        fullName: persona("folioviv", "jordan").displayName,
+        email: "jordan@example.test",
+        language: persona("folioviv", "jordan").locale,
+      },
+      {
+        shopId: shop!.id,
+        fullName: persona("folioviv", "nadia").displayName,
+        phone: "514-555-0142",
+        language: persona("folioviv", "nadia").locale,
+      },
     ])
     .returning();
   for (const c of people) {
@@ -45,7 +75,8 @@ export async function seedDemoShop(db: Db, ownerEmail: string, now = new Date())
   }
   // Today, from 9:00 in Montréal (13:00 UTC in daylight time — the shop's zone decides what "today" is).
   const day = localDay(now, "America/Toronto");
-  const slot = (h: number, m = 0) => new Date(`${day}T${String(h + 4).padStart(2, "0")}:${String(m).padStart(2, "0")}:00Z`);
+  const slot = (h: number, m = 0) =>
+    new Date(`${day}T${String(h + 4).padStart(2, "0")}:${String(m).padStart(2, "0")}:00Z`);
   const todays = [
     { staffId: julie!.id, serviceId: cut!.id, clientId: people[0]!.id, startsAt: slot(9, 30) },
     { staffId: marc!.id, serviceId: colour!.id, clientId: people[1]!.id, startsAt: slot(10) },
@@ -63,6 +94,13 @@ export async function seedDemoShop(db: Db, ownerEmail: string, now = new Date())
       { description: "Coloration / Colour", quantity: 1, unitPriceCents: 9_500, category: "standard" },
     ],
   });
-  await recordExpense(db, { shopId: shop!.id, supplier: "Fournisseur Beauté inc.", paidOn: day, subtotalCents: 24_000, gstCents: 1_200, qstCents: 2_394 });
+  await recordExpense(db, {
+    shopId: shop!.id,
+    supplier: "Fournisseur Beauté inc.",
+    paidOn: day,
+    subtotalCents: 24_000,
+    gstCents: 1_200,
+    qstCents: 2_394,
+  });
   return { shopId: shop!.id, created: true };
 }

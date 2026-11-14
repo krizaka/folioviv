@@ -30,7 +30,18 @@ describe("the shop domain", () => {
   });
 
   it("never names a shop for a platform host, a nested label, a look-alike or the domain itself", () => {
-    for (const host of ["www.folioviv.shop", "folioviv.shop", "admin.folioviv.shop", "a.b.folioviv.shop", "ab.folioviv.shop", "bad_slug.folioviv.shop", "folioviv.shop.evil.example", "salon-laurier.folioviv.shop.evil.example", "salon.folioviv.sh", null]) {
+    for (const host of [
+      "www.folioviv.shop",
+      "folioviv.shop",
+      "admin.folioviv.shop",
+      "a.b.folioviv.shop",
+      "ab.folioviv.shop",
+      "bad_slug.folioviv.shop",
+      "folioviv.shop.evil.example",
+      "salon-laurier.folioviv.shop.evil.example",
+      "salon.folioviv.sh",
+      null,
+    ]) {
       expect(shopHostOf(host, hosted), String(host)).toBeNull();
     }
   });
@@ -46,7 +57,9 @@ describe("the shop domain", () => {
     expect(shopOriginOf("salon-laurier", hosted)).toBe("https://salon-laurier.folioviv.shop");
     expect(shopOriginOf("salon-laurier", legacy)).toBe("https://salon-laurier.folioviv.com");
     // A plain-http origin with a port (the CI server) keeps both.
-    expect(shopOriginOf("salon-laurier", { APP_PUBLIC_URL: "http://localhost:3000", APP_SHOP_DOMAIN: "shops.localhost" })).toBe("http://salon-laurier.shops.localhost:3000");
+    expect(
+      shopOriginOf("salon-laurier", { APP_PUBLIC_URL: "http://localhost:3000", APP_SHOP_DOMAIN: "shops.localhost" }),
+    ).toBe("http://salon-laurier.shops.localhost:3000");
     expect(appOriginOf(hosted)).toBe("https://www.folioviv.com");
   });
 
@@ -58,7 +71,9 @@ describe("the shop domain", () => {
 
 describe("what a shop's page may read of the browser's cookies", () => {
   it("drops the named cookies and keeps the others", () => {
-    expect(dropCookie("a=1; __Host-folioviv_session=tok; b=2", "__Host-folioviv_session", "folioviv_session")).toBe("a=1; b=2");
+    expect(dropCookie("a=1; __Host-folioviv_session=tok; b=2", "__Host-folioviv_session", "folioviv_session")).toBe(
+      "a=1; b=2",
+    );
     expect(dropCookie("folioviv_session=tok", "folioviv_session")).toBe("");
     expect(dropCookie(null, "folioviv_session")).toBe("");
   });

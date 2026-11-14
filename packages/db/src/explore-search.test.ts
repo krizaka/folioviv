@@ -3,7 +3,18 @@ import { eq, sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { exploreSearch, settleAvailability } from "./explore";
-import { appointments, busyIntervals, calendarConnections, daysOff, schedules, services, shopRules, shopZones, shops, staff } from "./schema";
+import {
+  appointments,
+  busyIntervals,
+  calendarConnections,
+  daysOff,
+  schedules,
+  services,
+  shopRules,
+  shopZones,
+  shops,
+  staff,
+} from "./schema";
 import { addZone } from "./service-shop";
 import { book } from "./shop-ops";
 import { freshDatabase } from "./test/db";
@@ -23,8 +34,11 @@ const search = async (query: Partial<Record<keyof ExploreQuery, unknown>>, now =
   await settleAvailability(t.db, now);
   return exploreSearch(t.db, exploreQuerySchema.parse(query), now);
 };
-const ask = async (query: Partial<Record<keyof ExploreQuery, unknown>>, now = MON_10) => (await search(query, now)).shops.map((s) => s.slug);
-const stale = async (shopId: string) => (await t.db.execute(sql`SELECT avail_stale FROM shop_search WHERE shop_id = ${shopId}`)).rows[0]!.avail_stale as boolean;
+const ask = async (query: Partial<Record<keyof ExploreQuery, unknown>>, now = MON_10) =>
+  (await search(query, now)).shops.map((s) => s.slug);
+const stale = async (shopId: string) =>
+  (await t.db.execute(sql`SELECT avail_stale FROM shop_search WHERE shop_id = ${shopId}`)).rows[0]!
+    .avail_stale as boolean;
 
 beforeAll(async () => {
   t = await freshDatabase();
@@ -135,13 +149,18 @@ describe("Explorer's combined search (real PostgreSQL)", () => {
     await t.db.update(shops).set({ name: "Chiens du Sud-Ouest" }).where(eq(shops.id, walker.shopId));
     expect(await ask({ q: "sud-ouest" })).toEqual(["pattes-x"]);
     expect(await ask({ q: "pattes" })).toEqual([]);
-    await t.db.update(services).set({ nameEn: "Hamster spa", nameFr: "Spa pour hamster" }).where(eq(services.id, walker.solo));
+    await t.db
+      .update(services)
+      .set({ nameEn: "Hamster spa", nameFr: "Spa pour hamster" })
+      .where(eq(services.id, walker.solo));
     expect(await ask({ q: "hamster" })).toEqual(["pattes-x"]);
     await t.db.update(shopZones).set({ active: false }).where(eq(shopZones.id, walker.zones.stHenri));
     expect(await ask({ near: [-73.5848, 45.4797], within: 1 })).toEqual([]); // its other areas have no position
     await t.db.update(shops).set({ published: false }).where(eq(shops.id, walker.shopId));
     expect(await ask({})).toEqual(["studio-x"]);
-    expect(await t.db.execute(sql`SELECT 1 FROM shop_search WHERE shop_id = ${walker.shopId}`).then((r) => r.rows.length)).toBe(0);
+    expect(
+      await t.db.execute(sql`SELECT 1 FROM shop_search WHERE shop_id = ${walker.shopId}`).then((r) => r.rows.length),
+    ).toBe(0);
   });
 
   it("carries nothing private (no street address, owner, legal name or tax number)", async () => {
@@ -167,7 +186,9 @@ describe("Explorer's combined search (real PostgreSQL)", () => {
     await t.db.insert(daysOff).values({ staffId: member!.id, onDate: "2026-10-19", reason: "test" });
     expect(await stale(studio.shopId)).toBe(true);
     // Before the sweep the list still says what was stored; the sweep settles it.
-    expect((await exploreSearch(t.db, exploreQuerySchema.parse({ q: "studio" }), MON_10)).shops[0]!.freeToday).toBe(true);
+    expect((await exploreSearch(t.db, exploreQuerySchema.parse({ q: "studio" }), MON_10)).shops[0]!.freeToday).toBe(
+      true,
+    );
     expect(await settleAvailability(t.db, MON_10)).toBeGreaterThanOrEqual(1);
     expect(await stale(studio.shopId)).toBe(false);
     const off = (await search({ q: "studio" }, MON_10)).shops[0]!;
@@ -191,22 +212,61 @@ describe("Explorer's combined search (real PostgreSQL)", () => {
   it("every writer that moves the answer raises the flag: a booking and its cancellation, hours, a day off, a rule, a person, a service and a calendar", async () => {
     const [member] = await t.db.select().from(staff).where(eq(staff.shopId, studio.shopId));
     const [service] = await t.db.select().from(services).where(eq(services.shopId, studio.shopId));
-    const settled = async () => { await settleAvailability(t.db, MON_10); expect(await stale(studio.shopId)).toBe(false); };
+    const settled = async () => {
+      await settleAvailability(t.db, MON_10);
+      expect(await stale(studio.shopId)).toBe(false);
+    };
     const raises = async (label: string, change: () => Promise<unknown>) => {
       await settled();
       await change();
       expect(await stale(studio.shopId), label).toBe(true);
     };
     let appointmentId = "";
-    await raises("a booking", async () => { appointmentId = (await book(t.db, { shopId: studio.shopId, staffId: member!.id, serviceId: service!.id, startsAt: new Date("2026-10-21T15:00:00Z") })).id; });
-    await raises("a cancellation", () => t.db.update(appointments).set({ status: "cancelled" }).where(eq(appointments.id, appointmentId)));
-    await raises("hours", () => t.db.insert(schedules).values({ staffId: member!.id, weekday: 6, startsAt: "10:00", endsAt: "12:00" }));
-    await raises("a day off", () => t.db.insert(daysOff).values({ staffId: member!.id, onDate: "2026-11-02", reason: "test" }));
-    await raises("a rule", () => t.db.update(shopRules).set({ minNoticeMinutes: 90 }).where(eq(shopRules.shopId, studio.shopId)));
-    await raises("a service", () => t.db.update(services).set({ durationMinutes: 45 }).where(eq(services.id, service!.id)));
+    await raises("a booking", async () => {
+      appointmentId = (
+        await book(t.db, {
+          shopId: studio.shopId,
+          staffId: member!.id,
+          serviceId: service!.id,
+          startsAt: new Date("2026-10-21T15:00:00Z"),
+        })
+      ).id;
+    });
+    await raises("a cancellation", () =>
+      t.db.update(appointments).set({ status: "cancelled" }).where(eq(appointments.id, appointmentId)),
+    );
+    await raises("hours", () =>
+      t.db.insert(schedules).values({ staffId: member!.id, weekday: 6, startsAt: "10:00", endsAt: "12:00" }),
+    );
+    await raises("a day off", () =>
+      t.db.insert(daysOff).values({ staffId: member!.id, onDate: "2026-11-02", reason: "test" }),
+    );
+    await raises("a rule", () =>
+      t.db.update(shopRules).set({ minNoticeMinutes: 90 }).where(eq(shopRules.shopId, studio.shopId)),
+    );
+    await raises("a service", () =>
+      t.db.update(services).set({ durationMinutes: 45 }).where(eq(services.id, service!.id)),
+    );
     await raises("a person", () => t.db.update(staff).set({ active: true }).where(eq(staff.id, member!.id)));
-    const [connection] = await t.db.insert(calendarConnections).values({ shopId: studio.shopId, kind: "ics", label: "Agenda", secretEnc: "x", consentTextVersion: "v1", consentedAt: MON_10 }).returning();
-    await raises("a calendar's busy time", () => t.db.insert(busyIntervals).values({ connectionId: connection!.id, shopId: studio.shopId, staffId: null, during: "[2026-10-22T14:00:00Z,2026-10-22T15:00:00Z)" }));
+    const [connection] = await t.db
+      .insert(calendarConnections)
+      .values({
+        shopId: studio.shopId,
+        kind: "ics",
+        label: "Agenda",
+        secretEnc: "x",
+        consentTextVersion: "v1",
+        consentedAt: MON_10,
+      })
+      .returning();
+    await raises("a calendar's busy time", () =>
+      t.db.insert(busyIntervals).values({
+        connectionId: connection!.id,
+        shopId: studio.shopId,
+        staffId: null,
+        during: "[2026-10-22T14:00:00Z,2026-10-22T15:00:00Z)",
+      }),
+    );
     await t.db.delete(schedules).where(eq(schedules.weekday, 6));
     await t.db.delete(daysOff).where(eq(daysOff.staffId, member!.id));
     await t.db.update(shopRules).set({ minNoticeMinutes: 120 }).where(eq(shopRules.shopId, studio.shopId));

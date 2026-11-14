@@ -16,7 +16,9 @@ export default async function AdminStorage({ params }: Readonly<{ params: Promis
         <h1 className="font-display text-2xl font-bold text-fg">{t("console.admin.storage.title")}</h1>
         <p className="max-w-prose text-fg-secondary">{t("console.admin.storage.lead")}</p>
       </header>
-      <StorageRegion saved={{ provider: saved.provider, endpoint: saved.endpoint, region: saved.region, bucket: saved.bucket }} />
+      <StorageRegion
+        saved={{ provider: saved.provider, endpoint: saved.endpoint, region: saved.region, bucket: saved.bucket }}
+      />
     </div>
   );
 }

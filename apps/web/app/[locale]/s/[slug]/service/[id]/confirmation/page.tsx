@@ -13,19 +13,18 @@ import { JourneyFrame } from "@/components/journey/JourneyFrame";
 import { pageSession } from "@/lib/access";
 import { searchValue } from "@/lib/booking-defaults";
 import { db } from "@/lib/db";
-import { asLocale, getDictionary, translator } from "@/lib/i18n";
+import { getDictionary, translator } from "@/lib/i18n";
 import { confirmationStep, journeyBase } from "@/lib/journey";
 import { backToHere } from "@/lib/next-url";
 import { accountRoutes } from "@/lib/routes";
+import { readServiceRoute, type ServiceRouteProps } from "@/lib/shop-page";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 /** Step 4 — the confirmation of a booking: when, with whom, where, the price, add to calendar, cancel while the window is open. For its own client only. */
-export default async function ConfirmationPage({ params, searchParams }: Readonly<{ params: Promise<{ locale: string; slug: string; id: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }>) {
-  const { locale: raw, slug, id } = await params;
-  const query = await searchParams;
-  const locale = asLocale(raw);
+export default async function ConfirmationPage(props: ServiceRouteProps) {
+  const { locale, slug, id, query } = await readServiceRoute(props);
   const t = translator(locale);
   const session = await pageSession();
   const here = backToHere(`/${locale}/s/${slug}/service/${id}/confirmation`, query);
@@ -37,11 +36,25 @@ export default async function ConfirmationPage({ params, searchParams }: Readonl
   const step = confirmationStep({ detail, locale });
   const cancelled = step.cancelled;
   return (
-    <JourneyFrame locale={locale} head={{ shop: detail.shop.name, step: t("console.journey.stepOf", { step: 4, total: 4, label: t("console.journey.stepBooked") }) }} path={`/${locale}/s/${slug}/service/${id}/confirmation`} back={{ href: journeyBase(locale, detail.shop.slug), label: detail.shop.name }} title={cancelled ? t("console.journey.cancelled") : t("console.journey.bookedTitle")} lead={cancelled ? undefined : t("console.journey.bookedLead")}>
+    <JourneyFrame
+      locale={locale}
+      head={{
+        shop: detail.shop.name,
+        step: t("console.journey.stepOf", { step: 4, total: 4, label: t("console.journey.stepBooked") }),
+      }}
+      path={`/${locale}/s/${slug}/service/${id}/confirmation`}
+      back={{ href: journeyBase(locale, detail.shop.slug), label: detail.shop.name }}
+      title={cancelled ? t("console.journey.cancelled") : t("console.journey.bookedTitle")}
+      lead={cancelled ? undefined : t("console.journey.bookedLead")}
+    >
       <div className="max-w-2xl rounded-xl border border-border-default bg-surface-1 p-5">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <h2 className="m-0 font-display text-xl font-bold text-fg">{step.title}</h2>
-          {cancelled ? null : <Stamp tone="ok" data-booked-stamp="">{t("console.journey.bookedStamp")}</Stamp>}
+          {cancelled ? null : (
+            <Stamp tone="ok" data-booked-stamp="">
+              {t("console.journey.bookedStamp")}
+            </Stamp>
+          )}
         </div>
         <DescriptionList
           layout="inline"
@@ -61,7 +74,15 @@ export default async function ConfirmationPage({ params, searchParams }: Readonl
           {step.cancellable && file ? (
             // The cancel control speaks through the console's client roots (language, query): this page sits outside the console layouts.
             <ConsoleProviders locale={locale} messages={{ console: getDictionary(locale).console }}>
-              <CancelBooking bookingId={detail.id} clientId={file.id} words={{ cancel: t("console.journey.cancelBooking"), confirm: t("console.journey.cancelBooking"), cancelling: t("console.journey.cancelling") }} />
+              <CancelBooking
+                bookingId={detail.id}
+                clientId={file.id}
+                words={{
+                  cancel: t("console.journey.cancelBooking"),
+                  confirm: t("console.journey.cancelBooking"),
+                  cancelling: t("console.journey.cancelling"),
+                }}
+              />
             </ConsoleProviders>
           ) : null}
           {step.phone && step.phoneHref ? (
@@ -71,7 +92,11 @@ export default async function ConfirmationPage({ params, searchParams }: Readonl
           ) : null}
         </div>
       ) : null}
-      {!cancelled && !step.cancellable ? <Alert tone="info">{t("console.journey.cancelTooLate")}</Alert> : <p className="m-0 text-sm text-fg-secondary">{step.cancelRule}</p>}
+      {!cancelled && !step.cancellable ? (
+        <Alert tone="info">{t("console.journey.cancelTooLate")}</Alert>
+      ) : (
+        <p className="m-0 text-sm text-fg-secondary">{step.cancelRule}</p>
+      )}
       <div className="flex flex-wrap gap-3">
         <ButtonLink href={accountRoutes(locale).home} variant="secondary" size="md">
           {t("console.journey.myBookings")}

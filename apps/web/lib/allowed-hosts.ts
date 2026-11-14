@@ -25,6 +25,7 @@ export function isAllowedHost(host: string | null | undefined, env: Env): boolea
   const site = publicHost(env);
   const apex = site.replace(/^www\./, "");
   const known = [site, apex, bare(env.APP_DEV_HOST), ...(env.APP_ALLOWED_HOSTS ?? "").split(",").map(bare)];
-  if (known.includes(name) || name === `admin.${apex}` || shopHostOf(name, env) !== null || isShopDomainRoot(name, env)) return true;
+  if (known.includes(name) || name === `admin.${apex}` || shopHostOf(name, env) !== null || isShopDomainRoot(name, env))
+    return true;
   return LOOPBACK.has(name) && (env.NODE_ENV !== "production" || LOOPBACK.has(site));
 }

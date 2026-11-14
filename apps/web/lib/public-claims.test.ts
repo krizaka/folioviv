@@ -87,10 +87,14 @@ function leaves(node: unknown, path: string[] = []): Array<[string, string]> {
 }
 
 const PLACE = /\bCanad|Toronto/i;
-const placePaths = (dict: unknown) => leaves(dict).filter(([, text]) => PLACE.test(text)).map(([path]) => path);
+const placePaths = (dict: unknown) =>
+  leaves(dict)
+    .filter(([, text]) => PLACE.test(text))
+    .map(([path]) => path);
 
 /** A law or a conformity named as a promise. « Loi 25 » in a feature name or a tagline is the same promise. */
-const LEGAL_PROMISE = /\bloi\s*(25|96)\b|\blaw\s*(25|96)\b|\bbill\s*(64|96)\b|dès la conception|by design|\bconform|\bcompliant|\bcompliance\b|\bconçu pour la loi\b/i;
+const LEGAL_PROMISE =
+  /\bloi\s*(25|96)\b|\blaw\s*(25|96)\b|\bbill\s*(64|96)\b|dès la conception|by design|\bconform|\bcompliant|\bcompliance\b|\bconçu pour la loi\b/i;
 
 const spec = readFileSync(SPEC, "utf8");
 const DEV = environmentOf("dev", spec);
@@ -166,16 +170,30 @@ describe("no public text promises conformity to a law (folioviv#362)", () => {
   });
 
   it("refuses a place claim outside the declared ones in llms.txt, the social card and the README", () => {
-    for (const text of [llmsText(), readFileSync(new URL("../app/og.png/route.tsx", import.meta.url), "utf8"), readFileSync(new URL("../../../README.md", import.meta.url), "utf8")]) {
+    for (const text of [
+      llmsText(),
+      readFileSync(new URL("../app/og.png/route.tsx", import.meta.url), "utf8"),
+      readFileSync(new URL("../../../README.md", import.meta.url), "utf8"),
+    ]) {
       expect(text).not.toMatch(/data in canada|données au canada/i);
     }
   });
 
   it("matches what it must catch (the rule itself)", () => {
-    for (const bad of ["Loi 25 by design", "Conçu pour la Loi 25", "Données conformes", "Law 25 compliant", "Loi 25 dès la conception"]) {
+    for (const bad of [
+      "Loi 25 by design",
+      "Conçu pour la Loi 25",
+      "Données conformes",
+      "Law 25 compliant",
+      "Loi 25 dès la conception",
+    ]) {
       expect(LEGAL_PROMISE.test(bad), bad).toBe(true);
     }
-    for (const good of ["Consent is noted by purpose", "Le consentement est noté par finalité", "Taxes prepared, return filed by you"]) {
+    for (const good of [
+      "Consent is noted by purpose",
+      "Le consentement est noté par finalité",
+      "Taxes prepared, return filed by you",
+    ]) {
       expect(LEGAL_PROMISE.test(good), good).toBe(false);
     }
   });

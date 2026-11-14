@@ -11,7 +11,21 @@ import { useFrameAccount } from "@/components/app/use-frame-account";
 import { BRAND_ID } from "@/lib/brand-id";
 import { useSay } from "@/lib/i18n-client";
 
-const ICONS = { overview: <HomeIcon />, users: <UserIcon />, shops: <UsersIcon />, invoices: <BillingIcon />, ledger: <ShieldIcon />, operations: <ServerIcon />, audit: <ClockIcon />, organize: <ShieldIcon />, incidents: <ShieldIcon />, addresses: <ShieldIcon />, prices: <BillingIcon />, storage: <ServerIcon />, associations: <ShieldIcon /> } as const;
+const ICONS = {
+  overview: <HomeIcon />,
+  users: <UserIcon />,
+  shops: <UsersIcon />,
+  invoices: <BillingIcon />,
+  ledger: <ShieldIcon />,
+  operations: <ServerIcon />,
+  audit: <ClockIcon />,
+  organize: <ShieldIcon />,
+  incidents: <ShieldIcon />,
+  addresses: <ShieldIcon />,
+  prices: <BillingIcon />,
+  storage: <ServerIcon />,
+  associations: <ShieldIcon />,
+} as const;
 export type AdminPlace = keyof typeof ICONS;
 
 /**
@@ -19,35 +33,65 @@ export type AdminPlace = keyof typeof ICONS;
  * rail, header and account menu as the shop's space (`ShopFrame`), with a chip saying where you are. The first five sections are the
  * tab bar on a phone; the others sit at the rail's foot.
  */
-export function AppFrame({ locale, email, name, avatarSeed, base, items, productName, children }: Readonly<{ locale: "en" | "fr"; productName: string; email: string; name?: string | null; avatarSeed?: string | null; base: string; items: AdminPlace[]; children: React.ReactNode }>) {
+export function AppFrame({
+  locale,
+  email,
+  name,
+  avatarSeed,
+  base,
+  items,
+  productName,
+  children,
+}: Readonly<{
+  locale: "en" | "fr";
+  productName: string;
+  email: string;
+  name?: string | null;
+  avatarSeed?: string | null;
+  base: string;
+  items: AdminPlace[];
+  children: React.ReactNode;
+}>) {
   const { say } = useSay();
-  const { path, account, language } = useFrameAccount({ locale, email, name, avatarSeed, profileHref: `${base}/profile` });
+  const { path, account, language } = useFrameAccount({
+    locale,
+    email,
+    name,
+    avatarSeed,
+    profileHref: `${base}/profile`,
+  });
   const hrefOf = (key: AdminPlace) => (key === "overview" ? base : `${base}/${key}`);
-  const sections: FrameSection[] = items.map((key, i) => ({ id: key, label: say(`shell.${key}`), href: hrefOf(key), icon: ICONS[key], place: i < 5 ? "main" : "foot" }));
+  const sections: FrameSection[] = items.map((key, i) => ({
+    id: key,
+    label: say(`shell.${key}`),
+    href: hrefOf(key),
+    icon: ICONS[key],
+    place: i < 5 ? "main" : "foot",
+  }));
   const isCurrent = (to: string) => path === to || (to !== base && path.startsWith(`${to}/`));
   return (
     <>
       <SkipLink>{say("shell.skip")}</SkipLink>
       <FrameSlot>
-      <KrizakaAppFrame
-        name={productName}
-        label={say("shell.admin")}
-        mark={<FoliovivLogo size={28} animated={false} />}
-        headerMark={<FoliovivLogo size={22} animated={false} />}
-        homeHref={base}
-        accent={BRAND_ID}
-        variant="admin"
-        sections={sections}
-        currentId={items.find((key) => isCurrent(hrefOf(key)))}
-        account={account}
-        language={language}
-        locale={locale}
-        linkAs={Link}
-      >
-        <main id="content" className="flex-1 p-4 md:p-6">
-          {children}
-        </main>
-      </KrizakaAppFrame>
+        <KrizakaAppFrame
+          name={productName}
+          label={say("shell.admin")}
+          mark={<FoliovivLogo size={28} animated={false} />}
+          headerMark={<FoliovivLogo size={22} animated={false} />}
+          homeHref={base}
+          accent={BRAND_ID}
+          variant="admin"
+          sections={sections}
+          currentId={items.find((key) => isCurrent(hrefOf(key)))}
+          account={account}
+          language={language}
+          locale={locale}
+          linkAs={Link}
+        >
+          <main id="content" className="flex-1 p-4 md:p-6">
+            {children}
+          </main>
+        </KrizakaAppFrame>
       </FrameSlot>
     </>
   );

@@ -24,9 +24,20 @@ export function processorCatalogue(plans: ProcessorPlans, entries: readonly Pric
     product: plans.product,
     plans: plans.plans.map((plan) => {
       const entry = entries.find((e) => e.key === plan.priceKey);
-      if (!entry) {throw new Error(`No price in the catalogue for ${plan.priceKey}`);}
-      if (entry.amountCents === null) {throw new Error(`${plan.priceKey} has no amount yet: it cannot be set up at the processor`);}
-      return { lookupKey: plan.lookupKey, name: plan.name, amount: entry.amountCents, currency: entry.currency.toLowerCase(), interval: entry.unit, taxCode: plan.taxCode };
+      if (!entry) {
+        throw new Error(`No price in the catalogue for ${plan.priceKey}`);
+      }
+      if (entry.amountCents === null) {
+        throw new Error(`${plan.priceKey} has no amount yet: it cannot be set up at the processor`);
+      }
+      return {
+        lookupKey: plan.lookupKey,
+        name: plan.name,
+        amount: entry.amountCents,
+        currency: entry.currency.toLowerCase(),
+        interval: entry.unit,
+        taxCode: plan.taxCode,
+      };
     }),
     portal: plans.portal,
   };

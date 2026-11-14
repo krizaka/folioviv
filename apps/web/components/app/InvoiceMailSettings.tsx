@@ -19,13 +19,18 @@ const settingsForm = createKrizakaForm({
   defaultValues: { message: "", fromName: "", copy: false, linkDays: 30 },
 });
 
-export function InvoiceMailSettings({ initial }: Readonly<{ initial: { message: string; fromName: string | null; copy: boolean; linkDays: number } }>) {
+export function InvoiceMailSettings({
+  initial,
+}: Readonly<{ initial: { message: string; fromName: string | null; copy: boolean; linkDays: number } }>) {
   const { say, locale } = useSay();
   const call = useCall();
   const form = settingsForm.useForm({
     i18n: { t: (key, vars) => say(key, vars as Record<string, string | number> | undefined), locale },
     onSubmit: async (values) => {
-      await call.run("/api/walker/invoices/settings", { method: "PUT", json: { ...values, fromName: values.fromName || null } });
+      await call.run("/api/walker/invoices/settings", {
+        method: "PUT",
+        json: { ...values, fromName: values.fromName || null },
+      });
     },
   });
   useEffect(() => {
@@ -41,7 +46,9 @@ export function InvoiceMailSettings({ initial }: Readonly<{ initial: { message: 
         <form.Switch name="copy" label={t("copy")} />
         <form.TextField name="linkDays" label={t("linkDays")} />
         {call.problem ? <Alert tone="danger">{call.problem}</Alert> : null}
-        <form.Submit size="md" disabled={call.pending}>{t("save")}</form.Submit>
+        <form.Submit size="md" disabled={call.pending}>
+          {t("save")}
+        </form.Submit>
       </form.Form>
     </Card.Root>
   );

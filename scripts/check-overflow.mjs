@@ -18,11 +18,29 @@ export const THEMES = ["dark", "light"];
 export const A11Y_WIDTHS = [390, 1440];
 export const A11Y_BASELINE = fileURLToPath(new URL("../a11y-baseline.json", import.meta.url));
 /** The two demo shops and every composition they offer (folioviv#404): the Krizaka UI showcase must not overflow at any width. */
-export const SHOP_PAGES = ["/en/s/cedre-ciseaux", "/fr/s/cedre-ciseaux?look=editorial", "/en/s/cedre-ciseaux?look=gallery", "/fr/s/pattes-saint-henri", "/en/s/pattes-saint-henri?look=journal"];
+export const SHOP_PAGES = [
+  "/en/s/cedre-ciseaux",
+  "/fr/s/cedre-ciseaux?look=editorial",
+  "/en/s/cedre-ciseaux?look=gallery",
+  "/fr/s/pattes-saint-henri",
+  "/en/s/pattes-saint-henri?look=journal",
+];
 /** The signed-in frame (folioviv#396, the « never overflows » containment of the shared `AppFrame`), relative to `/<locale>/app/<shop>`: the owner's rail, header and account menu at every width. */
 export const FRAME_PAGES = ["/today", "/clients", "/invoices", "/books", "/shop"];
 export const FRAME_LOCALES = ["fr", "en"];
-export const PAGES = ["/en", "/fr", "/en/explore", "/fr/explore", "/en/privacy", "/fr/privacy", "/en/changelog", "/fr/changelog", "/en/sign-in", "/fr/sign-in", ...SHOP_PAGES];
+export const PAGES = [
+  "/en",
+  "/fr",
+  "/en/explore",
+  "/fr/explore",
+  "/en/privacy",
+  "/fr/privacy",
+  "/en/changelog",
+  "/fr/changelog",
+  "/en/sign-in",
+  "/fr/sign-in",
+  ...SHOP_PAGES,
+];
 
 /** The basemap's tiles and glyphs: `/maps/v1`, which next.config rewrites to the media CDN. A layout audit measures boxes, not tiles (folioviv#625). */
 export const TILE_PATH = /\/maps\/v1\//;
@@ -55,14 +73,25 @@ const arg = (name, fallback) => {
  * edge and the site bar over the development notice (folioviv#440, `[data-top-chrome]`) are measured by the audit itself.
  */
 export const CHECKS = { status: true, emptyMain: true, frame: true, minAction: 36 };
-export const OPTIONS = { launch: launchWithStubbedTiles, widths: WIDTHS, themes: THEMES, themeKey: "kz-theme", height: 900, settleMs: SETTLE_MS, ignoreConsole: [], checks: CHECKS };
+export const OPTIONS = {
+  launch: launchWithStubbedTiles,
+  widths: WIDTHS,
+  themes: THEMES,
+  themeKey: "kz-theme",
+  height: 900,
+  settleMs: SETTLE_MS,
+  ignoreConsole: [],
+  checks: CHECKS,
+};
 export const A11Y = { app: "folioviv", baseline: A11Y_BASELINE, widths: A11Y_WIDTHS };
 
 /** The owner's session: sign in through the API, then the pages of the frame under the shop `/app` leads to, in both languages. */
 export function ownerSession(owner) {
   return {
     async signIn(context, { base }) {
-      const answer = await context.request.post(`${base}/api/auth/sign-in`, { data: { email: owner.email, password: owner.secret } });
+      const answer = await context.request.post(`${base}/api/auth/sign-in`, {
+        data: { email: owner.email, password: owner.secret },
+      });
       if (!answer.ok()) throw new Error(`sign-in as the owner answered ${answer.status()}`);
     },
     async routes(page, { base }) {
@@ -85,9 +114,22 @@ export const STATE_OWNERS = [
 ];
 
 export async function check({ base, shots, owner, states = [] }) {
-  const problems = await auditRoutes({ ...OPTIONS, base, routes: PAGES, shots, a11y: A11Y, session: owner ? ownerSession(owner) : undefined });
+  const problems = await auditRoutes({
+    ...OPTIONS,
+    base,
+    routes: PAGES,
+    shots,
+    a11y: A11Y,
+    session: owner ? ownerSession(owner) : undefined,
+  });
   for (const state of states) {
-    const found = await auditRoutes({ ...OPTIONS, base, routes: [], shots: shots && `${shots}/${state.state}`, session: ownerSession(state) });
+    const found = await auditRoutes({
+      ...OPTIONS,
+      base,
+      routes: [],
+      shots: shots && `${shots}/${state.state}`,
+      session: ownerSession(state),
+    });
     problems.push(...found.map((line) => `[${state.state} shop] ${line}`));
   }
   return problems;
@@ -95,14 +137,32 @@ export async function check({ base, shots, owner, states = [] }) {
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const { HYDRATION_OWNER_EMAIL: email, HYDRATION_OWNER_PASSWORD: secret } = process.env;
-  if (!email || !secret) process.stdout.write("check-overflow: no HYDRATION_OWNER_* credentials, the signed-in frame is not checked\n");
+  if (!email || !secret)
+    process.stdout.write("check-overflow: no HYDRATION_OWNER_* credentials, the signed-in frame is not checked\n");
   const password = process.env.HYDRATION_STATES_PASSWORD;
-  const states = STATE_OWNERS.flatMap((s) => (process.env[s.emailVariable] && password ? [{ state: s.state, email: process.env[s.emailVariable], secret: password }] : []));
-  if (states.length < STATE_OWNERS.length) process.stdout.write("check-overflow: no HYDRATION_STATES_PASSWORD or owner e-mails, the empty and one-item shops are not checked\n");
-  const problems = await check({ base: arg("base", "http://localhost:3000"), shots: arg("shots"), owner: email && secret ? { email, secret } : undefined, states });
+  const states = STATE_OWNERS.flatMap((s) =>
+    process.env[s.emailVariable] && password
+      ? [{ state: s.state, email: process.env[s.emailVariable], secret: password }]
+      : [],
+  );
+  if (states.length < STATE_OWNERS.length)
+    process.stdout.write(
+      "check-overflow: no HYDRATION_STATES_PASSWORD or owner e-mails, the empty and one-item shops are not checked\n",
+    );
+  const problems = await check({
+    base: arg("base", "http://localhost:3000"),
+    shots: arg("shots"),
+    owner: email && secret ? { email, secret } : undefined,
+    states,
+  });
   if (problems.length) {
     console.error(`${problems.length} responsive problem(s):\n  ${problems.join("\n  ")}`);
     process.exit(1);
   }
-  console.log(`no horizontal overflow: ${PAGES.length} public pages${email && secret ? ` and ${FRAME_PAGES.length * FRAME_LOCALES.length} pages of the signed-in frame${states.length ? `, as the busy, the empty and the one-item shop` : ""}` : ""} x ${WIDTHS.length} widths x ${THEMES.length} themes`);
+  const framePages = FRAME_PAGES.length * FRAME_LOCALES.length;
+  const shopStates = states.length ? ", as the busy, the empty and the one-item shop" : "";
+  const signedIn = email && secret ? ` and ${framePages} pages of the signed-in frame${shopStates}` : "";
+  console.log(
+    `no horizontal overflow: ${PAGES.length} public pages${signedIn} x ${WIDTHS.length} widths x ${THEMES.length} themes`,
+  );
 }

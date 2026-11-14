@@ -18,10 +18,11 @@ const token = (theme: string, name: string) => {
 type Rgb = readonly [number, number, number];
 const rgb = ([h, s, l]: readonly [number, number, number]): Rgb => {
   const a = s * Math.min(l, 1 - l);
-  const f = (n: number) => l - a * Math.max(-1, Math.min((n + h / 30) % 12 - 3, 9 - ((n + h / 30) % 12), 1));
+  const f = (n: number) => l - a * Math.max(-1, Math.min(((n + h / 30) % 12) - 3, 9 - ((n + h / 30) % 12), 1));
   return [f(0), f(8), f(4)];
 };
-const mix = (a: Rgb, b: Rgb, weightOfA: number): Rgb => [0, 1, 2].map((i) => a[i]! * weightOfA + b[i]! * (1 - weightOfA)) as unknown as Rgb;
+const mix = (a: Rgb, b: Rgb, weightOfA: number): Rgb =>
+  [0, 1, 2].map((i) => a[i]! * weightOfA + b[i]! * (1 - weightOfA)) as unknown as Rgb;
 const lum = (c: Rgb) => {
   const [r, g, b] = c.map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)) as [number, number, number];
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;

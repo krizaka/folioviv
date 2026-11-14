@@ -15,7 +15,10 @@ const en = bindProduct(enRaw);
 const fr = bindProduct(frRaw);
 
 vi.mock("@/app/actions/remember-shop", () => ({ rememberShop: () => Promise.resolve() }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: () => undefined, replace: () => undefined, push: () => undefined }), usePathname: () => "/fr/app/s1/invoices/new" }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: () => undefined, replace: () => undefined, push: () => undefined }),
+  usePathname: () => "/fr/app/s1/invoices/new",
+}));
 
 const MESSAGES = { en: { console: en.console }, fr: { console: fr.console } } as const;
 const base: InvoiceFormProps = {
@@ -25,7 +28,15 @@ const base: InvoiceFormProps = {
     registrant: true,
     termsDays: 30,
     clients: [{ id: "c-1", fullName: "Studio Lumen inc. (démo)", language: "fr" }],
-    services: [{ id: "s-hour", nameFr: "Développement (à l'heure)", nameEn: "Development (hourly)", priceCents: 15_000, taxCategory: "standard" }],
+    services: [
+      {
+        id: "s-hour",
+        nameFr: "Développement (à l'heure)",
+        nameEn: "Development (hourly)",
+        priceCents: 15_000,
+        taxCategory: "standard",
+      },
+    ],
   },
   start: { clientId: "c-1", lines: [emptyLine("l0", "s-hour", "1.5")] },
 };
@@ -41,7 +52,12 @@ const render = (props: Partial<InvoiceFormProps> = {}) => {
     </I18nProvider>,
   );
 };
-const readable = (html: string) => html.replace(/<[^>]*>/g, " ").replace(/&#x27;/g, "'").replace(/&[a-z#0-9]+;/gi, " ").replace(/\s+/g, " ");
+const readable = (html: string) =>
+  html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&#x27;/g, "'")
+    .replace(/&[a-z#0-9]+;/gi, " ")
+    .replace(/\s+/g, " ");
 
 describe("Nouvelle facture (D3): numbered steps, lines added and removed, the total in view", () => {
   it("asks in three numbered steps: 01 Pour qui ? · 02 Quoi ? · 03 Quand ?", () => {
@@ -62,7 +78,9 @@ describe("Nouvelle facture (D3): numbered steps, lines added and removed, the to
   it("adds and removes lines with real buttons (the keyboard's), never removing the last one", () => {
     const html = render();
     expect(html).toMatch(/<button[^>]*type="button"[^>]*>[\s\S]*?Ajouter une ligne/);
-    expect(html).toMatch(/<button[^>]*aria-label="Retirer la ligne 1"[^>]*disabled=""|<button[^>]*disabled=""[^>]*aria-label="Retirer la ligne 1"/);
+    expect(html).toMatch(
+      /<button[^>]*aria-label="Retirer la ligne 1"[^>]*disabled=""|<button[^>]*disabled=""[^>]*aria-label="Retirer la ligne 1"/,
+    );
     const two = render({ start: { clientId: "", lines: [emptyLine("l0", "s-hour"), emptyLine("l1")] } });
     expect(two).toContain('aria-label="Retirer la ligne 2"');
     expect(two).not.toMatch(/aria-label="Retirer la ligne 1"[^>]*disabled/);

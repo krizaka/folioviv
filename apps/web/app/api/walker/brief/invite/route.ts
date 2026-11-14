@@ -20,7 +20,14 @@ export function POST(req: Request) {
     const { id } = await readJson(req, z.object({ id: z.string().regex(/^\d{4}-W\d{2}:[a-z]+:[A-Za-z0-9-]+$/) }));
     try {
       const result = await inviteRegulars(shop, id, requestNow(), mailSettings());
-      await audit({ action: "brief.invited", actorId: session.account.id, actorLabel: session.account.email, targetId: shop.id, detail: { recommendation: id, ...result }, headers: req.headers });
+      await audit({
+        action: "brief.invited",
+        actorId: session.account.id,
+        actorLabel: session.account.email,
+        targetId: shop.id,
+        detail: { recommendation: id, ...result },
+        headers: req.headers,
+      });
       return Response.json(result);
     } catch (error) {
       if (error instanceof BriefActionError) throw refuse(STATUS[error.code], error.code, error.code);

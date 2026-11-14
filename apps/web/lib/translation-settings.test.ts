@@ -12,11 +12,16 @@ const fr = bindProduct(frRaw);
 describe("the administrator's side of the shop page's languages (#258)", () => {
   it("holds a switch (off until the Studio is wired), the allowed languages and a daily limit, all global", () => {
     expect(SETTINGS["features.storefrontTranslation"]).toMatchObject({ default: false, scopes: ["global"] });
-    expect(SETTINGS["storefront.languages.allowed"]).toMatchObject({ default: ["fr", "en", "es"], scopes: ["global"], choices: ["fr", "en", "es"] });
+    expect(SETTINGS["storefront.languages.allowed"]).toMatchObject({
+      default: ["fr", "en", "es"],
+      scopes: ["global"],
+      choices: ["fr", "en", "es"],
+    });
     const limit = SETTINGS["limits.translationsPerShopPerDay"];
     expect(limit.scopes).toEqual(["global"]);
     expect(limit.schema.safeParse(limit.default).success).toBe(true);
-    for (const value of [0, -1, 1.5, "20", (limit.max ?? 0) + 1]) expect(limit.schema.safeParse(value).success).toBe(false);
+    for (const value of [0, -1, 1.5, "20", (limit.max ?? 0) + 1])
+      expect(limit.schema.safeParse(value).success).toBe(false);
     expect(SETTINGS["storefront.languages.allowed"].schema.safeParse(["fr", "de"]).success).toBe(false);
   });
 

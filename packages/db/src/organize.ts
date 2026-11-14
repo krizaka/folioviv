@@ -18,4 +18,5 @@ export const SHOP_AVATAR_SEEDS = ["plain-1", "plain-2", "plain-3", "plain-4", "p
 /** A SQL executor: the rows of a statement with its parameters (the app's pool, a test's client). */
 export type SqlQuery = (sql: string, params?: unknown[]) => Promise<unknown[]>;
 
-export const organizeOver = (query: SqlQuery) => createOrganize({ query: (sql, params) => query(sql, params) as Promise<never>, schema: ORGANIZE_SCHEMA });
+export const organizeOver = (query: SqlQuery) =>
+  createOrganize({ query: (sql, params) => query(sql, params) as Promise<never>, schema: ORGANIZE_SCHEMA });

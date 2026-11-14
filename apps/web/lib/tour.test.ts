@@ -19,7 +19,9 @@ describe("the home's screens", () => {
 
   it("are allowed by the page's CSP: the media host, for images", () => {
     for (const nonce of [undefined, "abc"]) {
-      expect(contentSecurityPolicy({ nonce, production: true, upgradeInsecure: true })).toContain(`img-src 'self' data: blob: ${MEDIA_CDN}`);
+      expect(contentSecurityPolicy({ nonce, production: true, upgradeInsecure: true })).toContain(
+        `img-src 'self' data: blob: ${MEDIA_CDN}`,
+      );
     }
   });
 });

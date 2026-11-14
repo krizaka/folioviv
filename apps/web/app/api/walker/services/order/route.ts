@@ -19,8 +19,16 @@ export function PUT(req: Request) {
   return handle(async () => {
     const { session, shop } = await requireShop(req, "catalogue");
     const { order } = await readJson(req, body);
-    if (!(await reorderServices(db(), shop.id, order))) throw refuse(409, "SERVICE_ORDER", "The order must list this shop's offers, each once");
-    await audit({ action: "shop.services_reordered", actorId: session.account.id, actorLabel: session.account.email, targetId: shop.id, detail: { count: order.length }, headers: req.headers });
+    if (!(await reorderServices(db(), shop.id, order)))
+      throw refuse(409, "SERVICE_ORDER", "The order must list this shop's offers, each once");
+    await audit({
+      action: "shop.services_reordered",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      targetId: shop.id,
+      detail: { count: order.length },
+      headers: req.headers,
+    });
     await announcePage(shop.id);
     return Response.json({ ok: true });
   });

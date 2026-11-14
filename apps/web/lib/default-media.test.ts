@@ -16,14 +16,22 @@ describe("the default media are on the CDN and described (#267)", () => {
   it("every path the data names is in the manifest, with a 10-hex hash, and nothing else is", () => {
     const files = manifest.files as Record<string, string>;
     const paths = defaultMediaPaths();
-    expect(paths.filter((p) => !files[p]), "paths missing from lib/default-media.manifest.json").toEqual([]);
-    expect(Object.keys(files).filter((p) => !paths.includes(p)), "manifest entries no default uses").toEqual([]);
+    expect(
+      paths.filter((p) => !files[p]),
+      "paths missing from lib/default-media.manifest.json",
+    ).toEqual([]);
+    expect(
+      Object.keys(files).filter((p) => !paths.includes(p)),
+      "manifest entries no default uses",
+    ).toEqual([]);
     for (const hash of Object.values(files)) expect(hash).toMatch(/^[0-9a-f]{10}$/);
   });
 
   it("an address is the hashed object on the media zone: name.hash.ext under apps/folioviv/, never a guess", () => {
     const [path] = defaultMediaPaths();
-    expect(defaultFileUrl(path!)).toMatch(/^https:\/\/krizaka-assets\.b-cdn\.net\/apps\/folioviv\/defaults\/.+\.[0-9a-f]{10}\.(avif|webp|webm|mp4)$/);
+    expect(defaultFileUrl(path!)).toMatch(
+      /^https:\/\/krizaka-assets\.b-cdn\.net\/apps\/folioviv\/defaults\/.+\.[0-9a-f]{10}\.(avif|webp|webm|mp4)$/,
+    );
     expect(defaultFileUrl("defaults/nope/cover/x.webp")).toBeNull();
   });
 
@@ -31,7 +39,9 @@ describe("the default media are on the CDN and described (#267)", () => {
     for (const m of DEFAULT_MEDIA) {
       for (const messages of [en, fr]) {
         const [, type, slot, n] = m.altKey.split(".");
-        const text = (messages.console.defaultMedia as Record<string, Record<string, Record<string, string>>>)[type!]?.[slot!]?.[n!];
+        const text = (messages.console.defaultMedia as Record<string, Record<string, Record<string, string>>>)[type!]?.[
+          slot!
+        ]?.[n!];
         expect(text, `${m.altKey} in ${messages === en ? "en" : "fr"}`).toBeTruthy();
       }
     }
@@ -84,18 +94,24 @@ describe("each demo shop's images belong to its trade (folioviv#383)", () => {
       expect(latestTemplate(demo.template)!.shopTypes, demo.template).toContain(demo.shopType);
       const resolved = resolveDefaults(demo.shopType);
       expect(resolved.cover?.id, demo.shop.slug).toMatch(new RegExp(`^${demo.shopType}-cover`));
-      for (const image of [...resolved.gallery, ...resolved.service]) expect(image.id, demo.shop.slug).toMatch(new RegExp(`^${demo.shopType}-`));
+      for (const image of [...resolved.gallery, ...resolved.service])
+        expect(image.id, demo.shop.slug).toMatch(new RegExp(`^${demo.shopType}-`));
     }
   });
 
   it("no description of a trade names an object the trade must not show", () => {
-    for (const [type, banned] of Object.entries(OFF_TRADE)) for (const text of alts(type)) expect(text, `${type}: ${text}`).not.toMatch(banned);
+    for (const [type, banned] of Object.entries(OFF_TRADE))
+      for (const text of alts(type)) expect(text, `${type}: ${text}`).not.toMatch(banned);
   });
 
   it("the prompts the images are drawn from say the same", async () => {
     const { readFileSync } = await import("node:fs");
     const { join } = await import("node:path");
-    const prompts = JSON.parse(readFileSync(join(__dirname, "../scripts/default-media/prompts.json"), "utf8")) as { types: Record<string, { cover: string[]; gallery: string[] }> };
-    for (const [type, banned] of Object.entries(OFF_TRADE)) for (const text of [...prompts.types[type]!.cover, ...prompts.types[type]!.gallery]) expect(text, `${type}: ${text}`).not.toMatch(banned);
+    const prompts = JSON.parse(readFileSync(join(__dirname, "../scripts/default-media/prompts.json"), "utf8")) as {
+      types: Record<string, { cover: string[]; gallery: string[] }>;
+    };
+    for (const [type, banned] of Object.entries(OFF_TRADE))
+      for (const text of [...prompts.types[type]!.cover, ...prompts.types[type]!.gallery])
+        expect(text, `${type}: ${text}`).not.toMatch(banned);
   });
 });

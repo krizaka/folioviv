@@ -44,7 +44,10 @@ export interface DefaultMedia {
   /** The message of its description: `console.defaultMedia.<type>.<slot>.<n>` (FR and EN). */
   altKey: string;
   /** Every file of it, as logical paths. */
-  files: { images: { width: number; format: (typeof RENDITION_FORMATS)[number]; path: string }[]; video?: { webm: string; mp4: string; poster: string } };
+  files: {
+    images: { width: number; format: (typeof RENDITION_FORMATS)[number]; path: string }[];
+    video?: { webm: string; mp4: string; poster: string };
+  };
 }
 
 function build(type: ShopType, slot: DefaultSlot, n: number): DefaultMedia {
@@ -58,16 +61,35 @@ function build(type: ShopType, slot: DefaultSlot, n: number): DefaultMedia {
     n,
     altKey: `defaultMedia.${type}.${slot}.${n}`,
     files: {
-      images: spec.widths.flatMap((width) => RENDITION_FORMATS.map((format) => ({ width, format, path: `${dir}/${name}-${width}.${format}` }))),
-      ...(spec.video ? { video: { webm: `${dir}/${name}-loop.webm`, mp4: `${dir}/${name}-loop.mp4`, poster: `${dir}/${name}-poster.webp` } } : {}),
+      images: spec.widths.flatMap((width) =>
+        RENDITION_FORMATS.map((format) => ({ width, format, path: `${dir}/${name}-${width}.${format}` })),
+      ),
+      ...(spec.video
+        ? {
+            video: {
+              webm: `${dir}/${name}-loop.webm`,
+              mp4: `${dir}/${name}-loop.mp4`,
+              poster: `${dir}/${name}-poster.webp`,
+            },
+          }
+        : {}),
     },
   };
 }
 
 /** Every default, by type and slot. */
-export const DEFAULT_MEDIA: readonly DefaultMedia[] = SHOP_TYPES.flatMap((type) => DEFAULT_SLOT_IDS.flatMap((slot) => Array.from({ length: DEFAULT_SLOTS[slot].count }, (_, i) => build(type, slot, i + 1))));
+export const DEFAULT_MEDIA: readonly DefaultMedia[] = SHOP_TYPES.flatMap((type) =>
+  DEFAULT_SLOT_IDS.flatMap((slot) =>
+    Array.from({ length: DEFAULT_SLOTS[slot].count }, (_, i) => build(type, slot, i + 1)),
+  ),
+);
 
-export const defaultsFor = (type: ShopType, slot: DefaultSlot): DefaultMedia[] => DEFAULT_MEDIA.filter((m) => m.type === type && m.slot === slot);
+export const defaultsFor = (type: ShopType, slot: DefaultSlot): DefaultMedia[] =>
+  DEFAULT_MEDIA.filter((m) => m.type === type && m.slot === slot);
 
 /** Every logical path the defaults use: what the CDN manifest must name. */
-export const defaultMediaPaths = (): string[] => DEFAULT_MEDIA.flatMap((m) => [...m.files.images.map((f) => f.path), ...(m.files.video ? Object.values(m.files.video) : [])]);
+export const defaultMediaPaths = (): string[] =>
+  DEFAULT_MEDIA.flatMap((m) => [
+    ...m.files.images.map((f) => f.path),
+    ...(m.files.video ? Object.values(m.files.video) : []),
+  ]);

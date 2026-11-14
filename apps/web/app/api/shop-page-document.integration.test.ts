@@ -19,16 +19,24 @@ describe.runIf(enabled)("the shop page document over HTTP", () => {
   const stamp = `${Date.now()}-${randomUUID().slice(0, 8)}`;
   const people = {} as Record<"owner" | "manager" | "staff" | "other", { id: string; token: string }>;
   let shopId: string;
-  const call = (handler: unknown, method: string, token: string | undefined, json?: unknown) => apiCall(handler as Handler, method, "/api/walker/page/x", { token, json });
-  const audits = async (action: string) => (await query("SELECT 1 FROM audit_log WHERE action = $1 AND target_id = $2", [action, shopId])).length;
+  const call = (handler: unknown, method: string, token: string | undefined, json?: unknown) =>
+    apiCall(handler as Handler, method, "/api/walker/page/x", { token, json });
+  const audits = async (action: string) =>
+    (await query("SELECT 1 FROM audit_log WHERE action = $1 AND target_id = $2", [action, shopId])).length;
 
   beforeAll(async () => {
     vi.stubEnv("REALTIME_BUS", "memory");
     await migrate();
-    for (const label of ["owner", "manager", "staff", "other"] as const) people[label] = await testAccount(label, stamp);
+    for (const label of ["owner", "manager", "staff", "other"] as const)
+      people[label] = await testAccount(label, stamp);
     shopId = (await openBookableShop(people.owner.token, "Atelier P", `p-${stamp}`)).shopId;
     await openBookableShop(people.other.token, "Atelier Q", `q-${stamp}`);
-    for (const label of ["manager", "staff"] as const) await query("INSERT INTO memberships (scope_id, account_id, role, created_at) VALUES ($1, $2, $3, now())", [shopId, people[label].id, label]);
+    for (const label of ["manager", "staff"] as const)
+      await query("INSERT INTO memberships (scope_id, account_id, role, created_at) VALUES ($1, $2, $3, now())", [
+        shopId,
+        people[label].id,
+        label,
+      ]);
   });
   beforeEach(() => resetRateLimits());
   afterAll(() => closeSuite(stamp));
@@ -84,8 +92,12 @@ describe.runIf(enabled)("the shop page document over HTTP", () => {
     expect(await audits("shop.page_draft_discarded")).toBe(1);
     expect((await call(getDraft, "GET", people.owner.token)).body.draft).toBe(false);
     await call(putDraft, "PUT", people.owner.token, doc);
-    const archived = (await call(versions, "GET", people.owner.token)).body.versions.find((v: { status: string }) => v.status === "archived");
-    expect((await call(rollback, "POST", people.owner.token, { version: archived.version })).body.draftReset).toBe(true);
+    const archived = (await call(versions, "GET", people.owner.token)).body.versions.find(
+      (v: { status: string }) => v.status === "archived",
+    );
+    expect((await call(rollback, "POST", people.owner.token, { version: archived.version })).body.draftReset).toBe(
+      true,
+    );
     expect((await call(getDraft, "GET", people.owner.token)).body.draft).toBe(false);
   });
 });

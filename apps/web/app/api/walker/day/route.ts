@@ -14,6 +14,14 @@ export function GET(req: Request) {
     const { shop, role, session } = await requireShop(req, "agenda");
     const asked = queryOf(req).date;
     const day = asked === undefined ? await shopDay(db(), shop.id, requestNow()) : dayParam.parse(asked);
-    return Response.json({ shopId: shop.id, timezone: shop.timezone, day, visits: await dayVisits(db(), shop.id, day, agendaScope(role, session.account.id)) }, { headers: { "Cache-Control": "private, no-store" } });
+    return Response.json(
+      {
+        shopId: shop.id,
+        timezone: shop.timezone,
+        day,
+        visits: await dayVisits(db(), shop.id, day, agendaScope(role, session.account.id)),
+      },
+      { headers: { "Cache-Control": "private, no-store" } },
+    );
   });
 }

@@ -12,5 +12,16 @@ export const GET = (req: Request) =>
   handle(async () => {
     const { shop, role } = await requireShop(req, "team");
     const roles = team();
-    return Response.json(await teamAct(async () => ({ shopId: shop.id, you: role, members: await roles.members(shop.id), invitations: await roles.pendingInvitations(shop.id, systemClock.now()), roles: SHOP_ROLES.roles, permissions: SHOP_ROLES.permissions, manages: SHOP_ROLES.manages, all: SHOP_PERMISSIONS })));
+    return Response.json(
+      await teamAct(async () => ({
+        shopId: shop.id,
+        you: role,
+        members: await roles.members(shop.id),
+        invitations: await roles.pendingInvitations(shop.id, systemClock.now()),
+        roles: SHOP_ROLES.roles,
+        permissions: SHOP_ROLES.permissions,
+        manages: SHOP_ROLES.manages,
+        all: SHOP_PERMISSIONS,
+      })),
+    );
   });

@@ -46,13 +46,18 @@ export interface ClientFilePanelProps {
   tags?: TagLite[];
 }
 
-
 /**
  * A client's file on Show · detail (D5, review K3b): the name as the page's `h1` with the avatar and the state (what they still
  * owe) on the profile banner (krizaka-ui#650), the contact and the client's tags on one line, « Facturer ce client »; the binder's dividers
  * in the address (Résumé · Factures · Visites · Notes, `Tabs.Nav variant="binder"`, krizaka-ui#648); the signed notes in the side column (under the content on a phone). Each invoice wears the list's state.
  */
-const standing = (i: Bill) => ({ totalCents: i.totalCents, paidCents: i.paidCents, dueOn: i.dueOn, isCredit: i.creditOf !== null, superseded: i.superseded });
+const standing = (i: Bill) => ({
+  totalCents: i.totalCents,
+  paidCents: i.paidCents,
+  dueOn: i.dueOn,
+  isCredit: i.creditOf !== null,
+  superseded: i.superseded,
+});
 
 /** The count a tab wears on the binder's divider: the lists have one, the summary none. */
 function tabCount(t: ClientFileTab, counts: { invoices: number; visits: number; notes: number }): number | undefined {
@@ -61,10 +66,17 @@ function tabCount(t: ClientFileTab, counts: { invoices: number; visits: number; 
 }
 
 /** A list of the file under its heading: the table, or the sentence saying there is nothing yet. */
-function ListSection({ id, title, empty, children }: Readonly<{ id: string; title: string; empty: string | null; children: React.ReactNode }>) {
+function ListSection({
+  id,
+  title,
+  empty,
+  children,
+}: Readonly<{ id: string; title: string; empty: string | null; children: React.ReactNode }>) {
   return (
     <section aria-labelledby={id} className="flex flex-col gap-3">
-      <h2 id={id} className="text-lg font-semibold text-fg">{title}</h2>
+      <h2 id={id} className="text-lg font-semibold text-fg">
+        {title}
+      </h2>
       {empty === null ? children : <p className="text-fg-secondary">{empty}</p>}
     </section>
   );
@@ -72,13 +84,28 @@ function ListSection({ id, title, empty, children }: Readonly<{ id: string; titl
 
 /** The visits that took place (not cancelled, not missed, started), the latest of them, and the next booked one. */
 function visitSummary(visits: Visit[], now: number) {
-  const began = visits.filter((v) => v.status !== AppointmentStatus.Cancelled && v.status !== AppointmentStatus.NoShow && Date.parse(v.startsAt) <= now);
+  const began = visits.filter(
+    (v) =>
+      v.status !== AppointmentStatus.Cancelled &&
+      v.status !== AppointmentStatus.NoShow &&
+      Date.parse(v.startsAt) <= now,
+  );
   const upcoming = visits.filter((v) => v.status === AppointmentStatus.Booked && Date.parse(v.startsAt) > now);
   return { began, last: began[0], next: upcoming.at(-1) };
 }
 
 /** The line under the name: phone, e-mail, since when, and the client's tags with their editor for who may organise. */
-function ClientMeta({ client, timeZone, tags, organize }: Readonly<{ client: ClientFilePanelProps["file"]["client"]; timeZone: string; tags: NonNullable<ClientFilePanelProps["tags"]>; organize: ClientFilePanelProps["organize"] }>) {
+function ClientMeta({
+  client,
+  timeZone,
+  tags,
+  organize,
+}: Readonly<{
+  client: ClientFilePanelProps["file"]["client"];
+  timeZone: string;
+  tags: NonNullable<ClientFilePanelProps["tags"]>;
+  organize: ClientFilePanelProps["organize"];
+}>) {
   const { say, locale } = useSay();
   const parts = [
     client.phone ? (
@@ -91,7 +118,9 @@ function ClientMeta({ client, timeZone, tags, organize }: Readonly<{ client: Cli
         {client.email}
       </a>
     ) : null,
-    <span key="since" className="whitespace-nowrap">{say("clients.file.since", { date: formatDate(client.since, locale, timeZone) })}</span>,
+    <span key="since" className="whitespace-nowrap">
+      {say("clients.file.since", { date: formatDate(client.since, locale, timeZone) })}
+    </span>,
   ].filter(Boolean);
   const showsTags = tags.length > 0 || organize?.canWrite;
   return (
@@ -116,11 +145,35 @@ type VisitColumnsContext = { say: Say; locale: SayLocale; timeZone: string };
 
 /** Built outside the component: the cells are render functions, not components of the table's parent. */
 const visitColumnsOf = ({ say, locale, timeZone }: VisitColumnsContext): DataTableColumn<Visit>[] => [
-  { id: "date", header: say("clients.file.date"), type: "title", card: "title", sortable: true, value: (v) => v.startsAt, cell: (v) => <span className="whitespace-nowrap">{`${formatDate(v.startsAt, locale, timeZone)} · ${formatTime(v.startsAt, locale, timeZone)}`}</span> },
+  {
+    id: "date",
+    header: say("clients.file.date"),
+    type: "title",
+    card: "title",
+    sortable: true,
+    value: (v) => v.startsAt,
+    cell: (v) => (
+      <span className="whitespace-nowrap">{`${formatDate(v.startsAt, locale, timeZone)} · ${formatTime(v.startsAt, locale, timeZone)}`}</span>
+    ),
+  },
   { id: "service", header: say("clients.file.service"), value: (v) => v.service[locale] },
   { id: "staff", header: say("clients.file.with"), priority: 2, value: (v) => v.staff },
-  { id: "status", header: say("clients.file.status"), type: "status", value: (v) => v.status, cell: (v) => <Badge tone={STATUS_TONE[v.status]}>{say(`today.statuses.${v.status}`)}</Badge> },
-  { id: "price", header: say("clients.file.price"), type: "number", priority: 2, value: (v) => v.priceCents, cell: (v) => formatMoney(v.priceCents, locale) },];
+  {
+    id: "status",
+    header: say("clients.file.status"),
+    type: "status",
+    value: (v) => v.status,
+    cell: (v) => <Badge tone={STATUS_TONE[v.status]}>{say(`today.statuses.${v.status}`)}</Badge>,
+  },
+  {
+    id: "price",
+    header: say("clients.file.price"),
+    type: "number",
+    priority: 2,
+    value: (v) => v.priceCents,
+    cell: (v) => formatMoney(v.priceCents, locale),
+  },
+];
 
 type BillColumnsOfContext = { say: Say; locale: SayLocale; routes: ShopRoutes; today: string };
 
@@ -138,7 +191,13 @@ const billColumnsOf = ({ say, locale, routes, today }: BillColumnsOfContext): Da
       </Link>
     ),
   },
-  { id: "date", header: say("clients.file.date"), sortable: true, value: (i) => i.issuedOn, cell: (i) => <span className="whitespace-nowrap">{formatDate(`${i.issuedOn}T12:00:00Z`, locale, "UTC")}</span> },
+  {
+    id: "date",
+    header: say("clients.file.date"),
+    sortable: true,
+    value: (i) => i.issuedOn,
+    cell: (i) => <span className="whitespace-nowrap">{formatDate(`${i.issuedOn}T12:00:00Z`, locale, "UTC")}</span>,
+  },
   {
     id: "state",
     header: say("clients.file.status"),
@@ -153,9 +212,26 @@ const billColumnsOf = ({ say, locale, routes, today }: BillColumnsOfContext): Da
       );
     },
   },
-  { id: "total", header: say("clients.file.total"), type: "number", value: (i) => i.totalCents, cell: (i) => formatMoney(i.totalCents, locale) },];
+  {
+    id: "total",
+    header: say("clients.file.total"),
+    type: "number",
+    value: (i) => i.totalCents,
+    cell: (i) => formatMoney(i.totalCents, locale),
+  },
+];
 
-export function ClientFilePanel({ file, timeZone, nowIso, mayInvoice = false, notes, tab, today, organize, tags = [] }: Readonly<ClientFilePanelProps>) {
+export function ClientFilePanel({
+  file,
+  timeZone,
+  nowIso,
+  mayInvoice = false,
+  notes,
+  tab,
+  today,
+  organize,
+  tags = [],
+}: Readonly<ClientFilePanelProps>) {
   const { say, locale } = useSay();
   const routes = useShopRoutes();
   const labels = useTableLabels();
@@ -163,7 +239,8 @@ export function ClientFilePanel({ file, timeZone, nowIso, mayInvoice = false, no
   const { began, last, next } = visitSummary(file.visits, Date.parse(nowIso));
   const spent = file.invoices.reduce((sum, i) => sum + i.totalCents, 0);
   const owed = file.invoices.reduce((n, i) => n + remainingCents(standing(i)), 0);
-  const tabHref = (t: ClientFileTab) => (t === "summary" ? routes.client(client.id) : `${routes.client(client.id)}?tab=${t}`);
+  const tabHref = (t: ClientFileTab) =>
+    t === "summary" ? routes.client(client.id) : `${routes.client(client.id)}?tab=${t}`;
   const day = (iso: string | undefined) => (iso ? formatDate(iso, locale, timeZone) : say("clients.never"));
 
   const visitColumns = useMemo(() => visitColumnsOf({ say, locale, timeZone }), [say, locale, timeZone]);
@@ -176,7 +253,13 @@ export function ClientFilePanel({ file, timeZone, nowIso, mayInvoice = false, no
       eyebrow={say("clients.file.eyebrow")}
       media={<ClientAvatar id={client.id} name={client.fullName} size="lg" />}
       title={client.fullName}
-      status={owed > 0 ? <Badge tone="warning">{say("clients.state.owes", { amount: formatMoney(owed, locale) })}</Badge> : <Badge tone="success">{say("clients.state.upToDate")}</Badge>}
+      status={
+        owed > 0 ? (
+          <Badge tone="warning">{say("clients.state.owes", { amount: formatMoney(owed, locale) })}</Badge>
+        ) : (
+          <Badge tone="success">{say("clients.state.upToDate")}</Badge>
+        )
+      }
       meta={<ClientMeta client={client} timeZone={timeZone} tags={tags} organize={organize} />}
       actions={
         mayInvoice ? (
@@ -188,7 +271,13 @@ export function ClientFilePanel({ file, timeZone, nowIso, mayInvoice = false, no
       tabs={
         <Tabs.Nav label={say("clients.file.sections")} variant="binder" current={tabHref(tab)}>
           {CLIENT_FILE_TABS.map((t) => (
-            <Tabs.NavLink key={t} href={tabHref(t)} exact hue={t === "summary" ? "accent" : "neutral"} count={tabCount(t, { invoices: file.invoices.length, visits: file.visits.length, notes: notes.length })}>
+            <Tabs.NavLink
+              key={t}
+              href={tabHref(t)}
+              exact
+              hue={t === "summary" ? "accent" : "neutral"}
+              count={tabCount(t, { invoices: file.invoices.length, visits: file.visits.length, notes: notes.length })}
+            >
               {say(`clients.file.tabs.${t}`)}
             </Tabs.NavLink>
           ))}
@@ -210,13 +299,36 @@ export function ClientFilePanel({ file, timeZone, nowIso, mayInvoice = false, no
         </div>
       ) : null}
       {tab === "invoices" ? (
-        <ListSection id="client-invoices" title={say("clients.file.invoices")} empty={file.invoices.length === 0 ? say("clients.file.noInvoices") : null}>
-          <DataTable caption={say("clients.file.invoices")} rows={file.invoices} columns={billColumns} labels={labels} getRowId={(i) => i.id} rowLabel={(i) => i.number} />
+        <ListSection
+          id="client-invoices"
+          title={say("clients.file.invoices")}
+          empty={file.invoices.length === 0 ? say("clients.file.noInvoices") : null}
+        >
+          <DataTable
+            caption={say("clients.file.invoices")}
+            rows={file.invoices}
+            columns={billColumns}
+            labels={labels}
+            getRowId={(i) => i.id}
+            rowLabel={(i) => i.number}
+          />
         </ListSection>
       ) : null}
       {tab === "visits" ? (
-        <ListSection id="client-visits" title={say("clients.file.visits")} empty={file.visits.length === 0 ? say("clients.file.noVisits") : null}>
-          <DataTable caption={say("clients.file.visits")} rows={file.visits} columns={visitColumns} labels={labels} getRowId={(v) => v.id} rowLabel={(v) => formatDate(v.startsAt, locale, timeZone)} defaultSort={{ column: "date", direction: "descending" }} />
+        <ListSection
+          id="client-visits"
+          title={say("clients.file.visits")}
+          empty={file.visits.length === 0 ? say("clients.file.noVisits") : null}
+        >
+          <DataTable
+            caption={say("clients.file.visits")}
+            rows={file.visits}
+            columns={visitColumns}
+            labels={labels}
+            getRowId={(v) => v.id}
+            rowLabel={(v) => formatDate(v.startsAt, locale, timeZone)}
+            defaultSort={{ column: "date", direction: "descending" }}
+          />
         </ListSection>
       ) : null}
       {tab === "notes" ? notesColumn : null}

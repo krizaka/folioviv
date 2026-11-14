@@ -19,14 +19,22 @@ export function useSectionDraft<T extends object>(saved: T, persist: (values: T)
   const [kept, setKept] = useState(saved);
   const [before, setBefore] = useState(saved);
   const status = useSaveStatus();
-  const run = (values: T) => status.track(async () => {
-    await persist(values);
-    router.refresh();
-  });
+  const run = (values: T) =>
+    status.track(async () => {
+      await persist(values);
+      router.refresh();
+    });
   const save: SectionSave = {
     dirty: JSON.stringify(draft) !== JSON.stringify(kept),
     status: status.status,
-    labels: { save: say("account.save.save"), saving: say("account.save.saving"), saved: say("account.save.saved"), error: say("account.save.error"), undo: say("account.save.undo"), discard: say("account.save.discard") },
+    labels: {
+      save: say("account.save.save"),
+      saving: say("account.save.saving"),
+      saved: say("account.save.saved"),
+      error: say("account.save.error"),
+      undo: say("account.save.undo"),
+      discard: say("account.save.discard"),
+    },
     onDiscard: () => setDraft(kept),
     onSave: () => {
       setBefore(kept);

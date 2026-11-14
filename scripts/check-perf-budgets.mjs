@@ -14,7 +14,12 @@ import { fileURLToPath } from "node:url";
 
 export const BUDGETS_FILE = fileURLToPath(new URL("../perf-budgets.json", import.meta.url));
 export const LIMITS = { lcpMs: 2500, cls: 0, screens: 5 };
-export const SHOP_ROUTES = ["/en/s/cedre-ciseaux", "/fr/s/cedre-ciseaux", "/en/s/pattes-saint-henri", "/fr/s/pattes-saint-henri"];
+export const SHOP_ROUTES = [
+  "/en/s/cedre-ciseaux",
+  "/fr/s/cedre-ciseaux",
+  "/en/s/pattes-saint-henri",
+  "/fr/s/pattes-saint-henri",
+];
 // The explore pages are measured and reported, but their absolute budgets do not block until the page exists (folioviv#473).
 export const NON_BLOCKING_ROUTES = ["/en/explore", "/fr/explore"];
 export const VIEWPORT = { width: 390, height: 844 };
@@ -27,7 +32,8 @@ export const median = (xs) => {
 export const spread = (xs) => (xs.length ? Math.max(...xs) - Math.min(...xs) : 0);
 
 /** Phone screens a page takes: its height at 390 px over the viewport's height. */
-export const screensOf = (pageHeight, viewportHeight = VIEWPORT.height) => Math.round((pageHeight / viewportHeight) * 100) / 100;
+export const screensOf = (pageHeight, viewportHeight = VIEWPORT.height) =>
+  Math.round((pageHeight / viewportHeight) * 100) / 100;
 
 /** The medians of the samples of one route. */
 export function summarise(samples) {
@@ -76,7 +82,8 @@ export function blocksRun(problems, perfBlocking = process.env.PERF_BLOCKING) {
 /** The new ratchet entries: existing ones only go down, new routes are recorded at what was measured. */
 export function lowered(recorded, measured) {
   const next = { ...recorded };
-  for (const [route, bytes] of Object.entries(measured)) next[route] = route in next ? Math.min(next[route], bytes) : bytes;
+  for (const [route, bytes] of Object.entries(measured))
+    next[route] = route in next ? Math.min(next[route], bytes) : bytes;
   return next;
 }
 
@@ -88,7 +95,13 @@ const arg = (name, fallback) => {
 /** In the page, before any script: collects the LCP (and whether its element is in the hero) with its attribution (the web-vitals
  *  split: TTFB, resource load delay, resource load duration, element render delay) and the layout shifts without recent input, with their sources. */
 function observe(heroSelector) {
-  const describe = (n) => (n ? `${n.nodeName.toLowerCase()}${n.id ? `#${n.id}` : ""}${typeof n.className === "string" && n.className ? `.${n.className.trim().split(/\s+/).slice(0, 2).join(".")}` : ""}` : "(removed)");
+  const describe = (n) => {
+    if (!n) return "(removed)";
+    const id = n.id ? "#" + n.id : "";
+    const classes =
+      typeof n.className === "string" && n.className ? "." + n.className.trim().split(/\s+/).slice(0, 2).join(".") : "";
+    return n.nodeName.toLowerCase() + id + classes;
+  };
   window.__perf = { lcp: 0, hero: false, cls: 0, attribution: null, shifts: [] };
   new PerformanceObserver((list) => {
     const e = list.getEntries().at(-1);
@@ -100,34 +113,69 @@ function observe(heroSelector) {
     const loadStart = res ? Math.max(ttfb, res.requestStart) : ttfb;
     const loadEnd = res ? res.responseEnd : loadStart;
     window.__perf.attribution = {
-      element: describe(e.element), url: e.url || null, size: e.size, startTime: Math.round(e.startTime),
-      ttfb: Math.round(ttfb), resourceLoadDelay: Math.round(loadStart - ttfb), resourceLoadDuration: Math.round(loadEnd - loadStart),
+      element: describe(e.element),
+      url: e.url || null,
+      size: e.size,
+      startTime: Math.round(e.startTime),
+      ttfb: Math.round(ttfb),
+      resourceLoadDelay: Math.round(loadStart - ttfb),
+      resourceLoadDuration: Math.round(loadEnd - loadStart),
       elementRenderDelay: Math.round(e.startTime - loadEnd),
-      transferSize: res ? res.transferSize : null, encodedBodySize: res ? res.encodedBodySize : null, decodedBodySize: res ? res.decodedBodySize : null,
+      transferSize: res ? res.transferSize : null,
+      encodedBodySize: res ? res.encodedBodySize : null,
+      decodedBodySize: res ? res.decodedBodySize : null,
     };
   }).observe({ type: "largest-contentful-paint", buffered: true });
   new PerformanceObserver((list) => {
     for (const e of list.getEntries()) {
       if (e.hadRecentInput) continue;
       window.__perf.cls += e.value;
-      window.__perf.shifts.push({ value: Math.round(e.value * 1000) / 1000, at: Math.round(e.startTime), sources: (e.sources || []).map((x) => ({ node: describe(x.node), from: x.previousRect && [x.previousRect.x, x.previousRect.y, x.previousRect.width, x.previousRect.height].map(Math.round), to: x.currentRect && [x.currentRect.x, x.currentRect.y, x.currentRect.width, x.currentRect.height].map(Math.round) })) });
+      globalThis.__perf.shifts.push({
+        value: Math.round(e.value * 1000) / 1000,
+        at: Math.round(e.startTime),
+        sources: (e.sources || []).map((x) => ({
+          node: describe(x.node),
+          from:
+            x.previousRect &&
+            [x.previousRect.x, x.previousRect.y, x.previousRect.width, x.previousRect.height].map(Math.round),
+          to:
+            x.currentRect &&
+            [x.currentRect.x, x.currentRect.y, x.currentRect.width, x.currentRect.height].map(Math.round),
+        })),
+      });
     }
   }).observe({ type: "layout-shift", buffered: true });
 }
 
 async function sample(browser, url) {
-  const context = await browser.newContext({ viewport: VIEWPORT, deviceScaleFactor: 3, isMobile: true, hasTouch: true });
+  const context = await browser.newContext({
+    viewport: VIEWPORT,
+    deviceScaleFactor: 3,
+    isMobile: true,
+    hasTouch: true,
+  });
   await context.addInitScript(observe, HERO);
   const page = await context.newPage();
   const cdp = await context.newCDPSession(page);
   await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });
   // Slow 4G, as Lighthouse's mobile profile: 150 ms RTT, 1.6 Mbit/s down, 750 kbit/s up.
   await cdp.send("Network.enable");
-  await cdp.send("Network.emulateNetworkConditions", { offline: false, latency: 150, downloadThroughput: (1.6 * 1024 * 1024) / 8, uploadThroughput: (750 * 1024) / 8 });
+  await cdp.send("Network.emulateNetworkConditions", {
+    offline: false,
+    latency: 150,
+    downloadThroughput: (1.6 * 1024 * 1024) / 8,
+    uploadThroughput: (750 * 1024) / 8,
+  });
   let jsBytes = 0;
   const pending = [];
   page.on("response", (r) => {
-    if (r.request().resourceType() === "script") pending.push(r.body().then((b) => (jsBytes += b.length)).catch(() => {}));
+    if (r.request().resourceType() === "script")
+      pending.push(
+        r
+          .body()
+          .then((b) => (jsBytes += b.length))
+          .catch(() => {}),
+      );
   });
   await page.goto(url, { waitUntil: "load" });
   await page.waitForTimeout(1500);
@@ -138,10 +186,24 @@ async function sample(browser, url) {
   let headers = null;
   if (perf.attribution?.url) {
     const r = await context.request.head(perf.attribution.url).catch(() => null);
-    if (r) headers = Object.fromEntries(["content-type", "content-length", "cache-control", "age", "cdn-cache", "server"].map((h) => [h, r.headers()[h]]));
+    if (r)
+      headers = Object.fromEntries(
+        ["content-type", "content-length", "cache-control", "age", "cdn-cache", "server"].map((h) => [
+          h,
+          r.headers()[h],
+        ]),
+      );
   }
   await context.close();
-  return { attribution: perf.attribution && { ...perf.attribution, headers }, shifts: perf.shifts, lcpMs: perf.lcp, cls: perf.cls, screens: screensOf(height), heroLcp: perf.hero, jsBytes };
+  return {
+    attribution: perf.attribution && { ...perf.attribution, headers },
+    shifts: perf.shifts,
+    lcpMs: perf.lcp,
+    cls: perf.cls,
+    screens: screensOf(height),
+    heroLcp: perf.hero,
+    jsBytes,
+  };
 }
 
 async function main() {
@@ -159,7 +221,9 @@ async function main() {
     const last = samples.at(-1);
     console.log(`  attribution ${route}: ${JSON.stringify(last.attribution)}`);
     console.log(`  shifts ${route}: ${JSON.stringify(last.shifts)}`);
-    console.log(`${route}: LCP ${s.lcpMs} ms (spread ${s.lcpSpreadMs}), hero ${s.heroLcp}, CLS ${s.cls} (spread ${s.clsSpread}), ${s.screens} screens, JS ${s.jsBytes} B`);
+    console.log(
+      `${route}: LCP ${s.lcpMs} ms (spread ${s.lcpSpreadMs}), hero ${s.heroLcp}, CLS ${s.cls} (spread ${s.clsSpread}), ${s.screens} screens, JS ${s.jsBytes} B`,
+    );
   }
   await browser.close();
   writeFileSync(out, `${JSON.stringify(report, null, 2)}\n`);
@@ -168,12 +232,14 @@ async function main() {
   const measured = Object.fromEntries(Object.entries(report).map(([r, s]) => [r, s.jsBytes]));
   const js = ratchet(recorded, measured);
   if (js.added.length) console.log(`No JS baseline yet: ${js.added.join(", ")} (run with --update to record)`);
-  if (process.argv.includes("--update")) writeFileSync(BUDGETS_FILE, `${JSON.stringify({ jsBytes: lowered(recorded, measured) }, null, 2)}\n`);
+  if (process.argv.includes("--update"))
+    writeFileSync(BUDGETS_FILE, `${JSON.stringify({ jsBytes: lowered(recorded, measured) }, null, 2)}\n`);
 
   const problems = Object.entries(report).flatMap(([route, s]) => judge(route, s));
   const blockingProblems = problems.filter((p) => !NON_BLOCKING_ROUTES.some((r) => p.startsWith(`${r}:`)));
   const jsProblems = js.increased.map((i) => `${i.route}: client JS ${i.to} B > ${i.from} B recorded`);
-  for (const p of [...problems, ...jsProblems]) console.error(`${blockingProblems.includes(p) || jsProblems.includes(p) ? "FAIL" : "WARN"} ${p}`);
+  for (const p of [...problems, ...jsProblems])
+    console.error(`${blockingProblems.includes(p) || jsProblems.includes(p) ? "FAIL" : "WARN"} ${p}`);
   if (jsProblems.length || blocksRun(blockingProblems)) process.exit(1);
   if (problems.length) console.log("Absolute budgets missed, reported without failing (PERF_BLOCKING=0).");
 }

@@ -6,9 +6,26 @@ import type { GalleryLine } from "@/lib/storefront-form";
 import { addPhoto, adoptCover, GALLERY_MAX, mediaPayload } from "./proposed-media";
 
 /** A still the setup page reads back from the database: its loop fields are null, as the page's `line()` gives them. */
-const still = (n: number): GalleryLine => ({ url: `https://cdn.test/own-${n}.jpg`, altFr: `Photo ${n}`, altEn: `Picture ${n}`, webmUrl: null, mp4Url: null, wide: false });
-const cover = { src: "https://cdn.test/pets-cover-1.webp", altFr: "Un parc", altEn: "A park", webm: "https://cdn.test/l.webm", mp4: "https://cdn.test/l.mp4" };
-const photo = (n: number) => ({ src: `https://cdn.test/pets-gallery-${n}.webp`, altFr: `Proposée ${n}`, altEn: `Proposed ${n}` });
+const still = (n: number): GalleryLine => ({
+  url: `https://cdn.test/own-${n}.jpg`,
+  altFr: `Photo ${n}`,
+  altEn: `Picture ${n}`,
+  webmUrl: null,
+  mp4Url: null,
+  wide: false,
+});
+const cover = {
+  src: "https://cdn.test/pets-cover-1.webp",
+  altFr: "Un parc",
+  altEn: "A park",
+  webm: "https://cdn.test/l.webm",
+  mp4: "https://cdn.test/l.mp4",
+};
+const photo = (n: number) => ({
+  src: `https://cdn.test/pets-gallery-${n}.webp`,
+  altFr: `Proposée ${n}`,
+  altEn: `Proposed ${n}`,
+});
 
 describe("what « Images proposées » sends to the media route (#267)", () => {
   it("a retained still carries no null loop field: the route takes the body as it is", () => {
@@ -17,12 +34,22 @@ describe("what « Images proposées » sends to the media route (#267)", () => {
     expect(body.gallery[0]).not.toHaveProperty("webmUrl");
     expect(body.gallery[0]).not.toHaveProperty("mp4Url");
     expect(shopMediaInputSchema.safeParse(body).success).toBe(true);
-    expect(shopMediaInputSchema.safeParse({ cover: null, gallery: [still(1)] }).success, "the raw line, with its nulls, is what the route refused").toBe(false);
+    expect(
+      shopMediaInputSchema.safeParse({ cover: null, gallery: [still(1)] }).success,
+      "the raw line, with its nulls, is what the route refused",
+    ).toBe(false);
   });
 
   it("adopting the proposed cover keeps the photos, and carries the loop", () => {
     const state = adoptCover({ cover: still(9), gallery: [still(1)] }, cover);
-    expect(state.cover).toMatchObject({ url: cover.src, webmUrl: cover.webm, mp4Url: cover.mp4, altFr: "Un parc", altEn: "A park", wide: false });
+    expect(state.cover).toMatchObject({
+      url: cover.src,
+      webmUrl: cover.webm,
+      mp4Url: cover.mp4,
+      altFr: "Un parc",
+      altEn: "A park",
+      wide: false,
+    });
     expect(state.gallery.map((g) => g.url)).toEqual([still(1).url]);
     expect(mediaPayload(state).cover).toMatchObject({ webmUrl: cover.webm, mp4Url: cover.mp4 });
   });

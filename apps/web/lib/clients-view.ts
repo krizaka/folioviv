@@ -30,15 +30,25 @@ const MATCHES: Record<ClientFilter, (c: ClientRowView) => boolean> = {
  */
 export function clientsView(clients: readonly ClientRowView[], { q, filter }: ClientsQuery) {
   const needle = plain(q);
-  const found = needle ? clients.filter((c) => plain(`${c.fullName} ${c.email ?? ""} ${c.phone ?? ""}`).includes(needle)) : clients;
+  const found = needle
+    ? clients.filter((c) => plain(`${c.fullName} ${c.email ?? ""} ${c.phone ?? ""}`).includes(needle))
+    : clients;
   return {
     rows: found.filter(MATCHES[filter]),
-    counts: Object.fromEntries(CLIENT_FILTERS.map((f) => [f, clients.filter(MATCHES[f]).length])) as Record<ClientFilter, number>,
-    strip: { count: clients.length, owedCents: clients.reduce((n, c) => n + c.owedCents, 0), upToDate: clients.filter((c) => c.owedCents === 0).length },
+    counts: Object.fromEntries(CLIENT_FILTERS.map((f) => [f, clients.filter(MATCHES[f]).length])) as Record<
+      ClientFilter,
+      number
+    >,
+    strip: {
+      count: clients.length,
+      owedCents: clients.reduce((n, c) => n + c.owedCents, 0),
+      upToDate: clients.filter((c) => c.owedCents === 0).length,
+    },
   };
 }
 
 /** The binder's sections of a client's file (D5), in their order; the first is the address without `?tab=`. */
 export const CLIENT_FILE_TABS = ["summary", "invoices", "visits", "notes"] as const;
 export type ClientFileTab = (typeof CLIENT_FILE_TABS)[number];
-export const readClientFileTab = (tab: string | undefined): ClientFileTab => CLIENT_FILE_TABS.find((t) => t === tab) ?? "summary";
+export const readClientFileTab = (tab: string | undefined): ClientFileTab =>
+  CLIENT_FILE_TABS.find((t) => t === tab) ?? "summary";

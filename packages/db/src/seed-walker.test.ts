@@ -39,7 +39,14 @@ describe("the Saint-Henri walker persona", () => {
     expect(page?.popularServiceId).toBe(page?.services.find((s) => s.capacity === 5)?.id);
     const clients = await shopClients(t.db, first.shopId);
     expect(clients).toHaveLength(5);
-    expect(clients.flatMap((c) => c.dependants.map((d) => d.name)).sort((a, b) => a.localeCompare(b))).toEqual(["Biscuit", "Érable", "Luna", "Pixel", "Rex", "Tofu"]);
+    expect(clients.flatMap((c) => c.dependants.map((d) => d.name)).sort((a, b) => a.localeCompare(b))).toEqual([
+      "Biscuit",
+      "Érable",
+      "Luna",
+      "Pixel",
+      "Rex",
+      "Tofu",
+    ]);
     expect(clients.filter((c) => c.hasNotes)).toHaveLength(3);
     const camille = first.clientIds[SAINT_HENRI.clients[0]!.email]!;
     expect(await revealAccessNotes(t.db, key, camille)).toContain("4821");
@@ -50,14 +57,22 @@ describe("the Saint-Henri walker persona", () => {
     const owner = (await t.db.select().from(accounts).where(eq(accounts.email, SAINT_HENRI_EMAILS[0])))[0]!;
     const shop = (await shopOfOwner(t.db, owner.id))!;
     const group = page!.services.find((s) => s.capacity === 5)!;
-    const joinable = (await listSlots(t.db, { shopId: shop.id, serviceId: group.id, zoneId: page!.zones[0]!.id, now: NOW })).find((s) => s.joins);
+    const joinable = (
+      await listSlots(t.db, { shopId: shop.id, serviceId: group.id, zoneId: page!.zones[0]!.id, now: NOW })
+    ).find((s) => s.joins);
     expect(joinable).toMatchObject({ seatsLeft: 3, capacity: 5 });
     const day = await dayVisits(t.db, shop.id, joinable!.startsAt.toISOString().slice(0, 10));
-    expect(day[0]!.bookings.map((b) => b.dependant.name).sort((a, b) => a.localeCompare(b))).toEqual(["Érable", "Luna"]);
+    expect(day[0]!.bookings.map((b) => b.dependant.name).sort((a, b) => a.localeCompare(b))).toEqual([
+      "Érable",
+      "Luna",
+    ]);
   });
 
   it("wears the story template of her trade, applied once by the seed (#261, step 6)", async () => {
-    const shop = (await shopOfOwner(t.db, (await t.db.select().from(accounts).where(eq(accounts.email, SAINT_HENRI_EMAILS[0])))[0]!.id))!;
+    const shop = (await shopOfOwner(
+      t.db,
+      (await t.db.select().from(accounts).where(eq(accounts.email, SAINT_HENRI_EMAILS[0])))[0]!.id,
+    ))!;
     const config = await shopPageConfigOf(t.db, shop.id);
     expect(SAINT_HENRI.template).toBe("pets-histoire");
     expect(config).toMatchObject({ templateId: "pets-histoire", templateVersion: 1, sectionsCustom: false });
@@ -88,14 +103,20 @@ describe("the Saint-Henri walker persona", () => {
     expect(get("209").amountCents).toBe(get("203").amountCents - get("206").amountCents);
     const n = await t.db.execute(sql`SELECT count(*)::int AS n FROM invoices`);
     await seedSaintHenri(t.db, randomBytes(32), NOW);
-    expect(((await t.db.execute(sql`SELECT count(*)::int AS n FROM invoices`)).rows[0] as { n: number }).n).toBe((n.rows[0] as { n: number }).n);
+    expect(((await t.db.execute(sql`SELECT count(*)::int AS n FROM invoices`)).rows[0] as { n: number }).n).toBe(
+      (n.rows[0] as { n: number }).n,
+    );
   });
 
   it("books a test visit TODAY at the injected clock + 1 h, whatever the hour, once (#433)", async () => {
     const owner = (await t.db.select().from(accounts).where(eq(accounts.email, SAINT_HENRI_EMAILS[0])))[0]!;
     const shop = (await shopOfOwner(t.db, owner.id))!;
     // 11:00, 15:00 (Montréal) and 23:30 (the hour would cross midnight: the visit stays on the day).
-    for (const [now, day] of [["2026-10-21T15:00:00Z", "2026-10-21"], ["2026-10-21T19:00:00Z", "2026-10-21"], ["2026-10-22T03:30:00Z", "2026-10-21"]] as const) {
+    for (const [now, day] of [
+      ["2026-10-21T15:00:00Z", "2026-10-21"],
+      ["2026-10-21T19:00:00Z", "2026-10-21"],
+      ["2026-10-22T03:30:00Z", "2026-10-21"],
+    ] as const) {
       const first = await seedTodayVisit(t.db, new Date(now));
       expect(first.created).toBe(true);
       expect(localDay(first.startsAt, shop.timezone)).toBe(day);

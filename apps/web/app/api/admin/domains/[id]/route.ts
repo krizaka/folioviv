@@ -9,7 +9,12 @@ export function DELETE(req: Request, { params }: { params: Promise<{ id: string 
   return handle(async () => {
     const session = await requireAdmin(req);
     const shopId = idParam(new URL(req.url).searchParams.get("shopId") ?? "");
-    await removeDomain(shopId, idParam((await params).id), { action: "domain.revoke", actorId: session.account.id, actorLabel: session.account.email, headers: req.headers });
+    await removeDomain(shopId, idParam((await params).id), {
+      action: "domain.revoke",
+      actorId: session.account.id,
+      actorLabel: session.account.email,
+      headers: req.headers,
+    });
     return new Response(null, { status: 204 });
   });
 }

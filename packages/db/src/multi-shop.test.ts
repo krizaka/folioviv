@@ -21,11 +21,17 @@ describe("an owner with several shops", () => {
     const second = await saveShopPage(t.db, owner.id, page("second"), { additional: true, maxShops: 5 });
     expect(second.created).toBe(true);
     expect(second.shopId).not.toBe(first.shopId);
-    expect((await shopsOfOwner(t.db, owner.id)).map((s) => [s.slug, s.isDefault])).toEqual([["premier", true], ["second", false]]);
+    expect((await shopsOfOwner(t.db, owner.id)).map((s) => [s.slug, s.isDefault])).toEqual([
+      ["premier", true],
+      ["second", false],
+    ]);
     expect((await shopOfOwner(t.db, owner.id))?.id).toBe(first.shopId);
     expect((await shopOfOwner(t.db, owner.id, second.shopId))?.id).toBe(second.shopId);
     await setDefaultShop(t.db, owner.id, second.shopId);
-    expect((await shopsOfOwner(t.db, owner.id)).map((s) => [s.slug, s.isDefault])).toEqual([["second", true], ["premier", false]]);
+    expect((await shopsOfOwner(t.db, owner.id)).map((s) => [s.slug, s.isDefault])).toEqual([
+      ["second", true],
+      ["premier", false],
+    ]);
     expect((await shopOfOwner(t.db, owner.id))?.id).toBe(second.shopId);
   });
 
@@ -37,7 +43,9 @@ describe("an owner with several shops", () => {
     await saveShopPage(t.db, owner.id, page("save-b", "Renamed B"), { shopId: b.shopId });
     expect((await shopsOfOwner(t.db, owner.id)).map((s) => s.name)).toEqual(["Renamed A", "Renamed B"]);
     const stranger = await account(t.db, "stranger@example.test");
-    await expect(saveShopPage(t.db, stranger.id, page("save-x"), { shopId: a.shopId })).rejects.toMatchObject({ code: "AK_SHOP_UNKNOWN" });
+    await expect(saveShopPage(t.db, stranger.id, page("save-x"), { shopId: a.shopId })).rejects.toMatchObject({
+      code: "AK_SHOP_UNKNOWN",
+    });
     await expect(setDefaultShop(t.db, stranger.id, a.shopId)).rejects.toBeInstanceOf(ShopError);
     expect(await shopOfOwner(t.db, stranger.id, a.shopId)).toBeNull();
   });
@@ -56,16 +64,26 @@ describe("the number of shops an owner may run (#265)", () => {
     const owner = await account(t.db, "limit@example.test");
     await saveShopPage(t.db, owner.id, page("l-one"));
     await saveShopPage(t.db, owner.id, page("l-two"), { additional: true, maxShops: 2 });
-    await expect(saveShopPage(t.db, owner.id, page("l-three"), { additional: true, maxShops: 2 })).rejects.toMatchObject({ code: "AK_SHOP_LIMIT" });
+    await expect(
+      saveShopPage(t.db, owner.id, page("l-three"), { additional: true, maxShops: 2 }),
+    ).rejects.toMatchObject({ code: "AK_SHOP_LIMIT" });
     expect((await shopsOfOwner(t.db, owner.id)).map((s) => s.slug)).toEqual(["l-one", "l-two"]);
   });
 
   it("holds under concurrency: simultaneous additions at 1 of 3 create exactly two more, never more", async () => {
     const owner = await account(t.db, "race@example.test");
     await saveShopPage(t.db, owner.id, page("r-one"));
-    const results = await Promise.allSettled(Array.from({ length: 6 }, (_, i) => saveShopPage(t.db, owner.id, page(`r-more-${i}`), { additional: true, maxShops: 3 })));
+    const results = await Promise.allSettled(
+      Array.from({ length: 6 }, (_, i) =>
+        saveShopPage(t.db, owner.id, page(`r-more-${i}`), { additional: true, maxShops: 3 }),
+      ),
+    );
     expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(2);
-    expect(results.filter((r): r is PromiseRejectedResult => r.status === "rejected").every((r) => r.reason?.code === "AK_SHOP_LIMIT")).toBe(true);
+    expect(
+      results
+        .filter((r): r is PromiseRejectedResult => r.status === "rejected")
+        .every((r) => r.reason?.code === "AK_SHOP_LIMIT"),
+    ).toBe(true);
     expect(await shopsOfOwner(t.db, owner.id)).toHaveLength(3);
   });
 
@@ -75,7 +93,8 @@ describe("the number of shops an owner may run (#265)", () => {
     await saveShopPage(t.db, a.id, page("c-a1"));
     await saveShopPage(t.db, a.id, page("c-a2"), { additional: true, maxShops: 5 });
     await saveShopPage(t.db, b.id, page("c-b1"));
-    await expect(saveShopPage(t.db, b.id, page("c-b2"), { additional: true, maxShops: 2 })).resolves.toMatchObject({ created: true });
+    await expect(saveShopPage(t.db, b.id, page("c-b2"), { additional: true, maxShops: 2 })).resolves.toMatchObject({
+      created: true,
+    });
   });
 });
-

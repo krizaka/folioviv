@@ -3,7 +3,9 @@ import { fileURLToPath } from "node:url";
 
 const packageVersion = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8")).version;
 // package.json's version + the short commit DigitalOcean passes at build (APP_COMMIT_SHA): the version every page shows.
-const appVersion = process.env.APP_VERSION?.trim() || (process.env.APP_COMMIT_SHA ? `${packageVersion}+${process.env.APP_COMMIT_SHA.slice(0, 7)}` : packageVersion);
+const appVersion =
+  process.env.APP_VERSION?.trim() ||
+  (process.env.APP_COMMIT_SHA ? `${packageVersion}+${process.env.APP_COMMIT_SHA.slice(0, 7)}` : packageVersion);
 
 // The Content-Security-Policy is not here: a nonce is per response, so the proxy sets it (lib/csp.ts, proxy.ts), the strict one on the shop pages.
 
@@ -31,18 +33,47 @@ export const retiredAddresses = [
   { source: "/:locale(en|fr)/changelog", destination: "/:locale", permanent: true },
   { source: "/:locale(en|fr)/app/connections", destination: "/:locale/app", permanent: true },
   // « Ma page boutique », the languages and the team moved into Boutique (K4).
-  { source: `/:locale(en|fr)/app/:shop(${UUID})/shop`, destination: "/:locale/app/:shop/settings/page", permanent: true },
-  { source: `/:locale(en|fr)/app/:shop(${UUID})/shop/languages`, destination: "/:locale/app/:shop/settings/languages", permanent: true },
-  { source: `/:locale(en|fr)/app/:shop(${UUID})/team`, destination: "/:locale/app/:shop/settings/team", permanent: true },
+  {
+    source: `/:locale(en|fr)/app/:shop(${UUID})/shop`,
+    destination: "/:locale/app/:shop/settings/page",
+    permanent: true,
+  },
+  {
+    source: `/:locale(en|fr)/app/:shop(${UUID})/shop/languages`,
+    destination: "/:locale/app/:shop/settings/languages",
+    permanent: true,
+  },
+  {
+    source: `/:locale(en|fr)/app/:shop(${UUID})/team`,
+    destination: "/:locale/app/:shop/settings/team",
+    permanent: true,
+  },
   // One language of addresses in the signed-in space: English, in both locales (folioviv#582). The French words answer 308.
   { source: `/:locale(en|fr)/app/:shop(${UUID})/aujourdhui`, destination: "/:locale/app/:shop/today", permanent: true },
-  { source: `/:locale(en|fr)/app/:shop(${UUID})/boutique`, destination: "/:locale/app/:shop/settings", permanent: true },
-  { source: `/:locale(en|fr)/app/:shop(${UUID})/boutique/:section`, destination: "/:locale/app/:shop/settings/:section", permanent: true },
+  {
+    source: `/:locale(en|fr)/app/:shop(${UUID})/boutique`,
+    destination: "/:locale/app/:shop/settings",
+    permanent: true,
+  },
+  {
+    source: `/:locale(en|fr)/app/:shop(${UUID})/boutique/:section`,
+    destination: "/:locale/app/:shop/settings/:section",
+    permanent: true,
+  },
   // One way to book: the public steps, signing in at the last one. The old signed-in page keeps its service, person, area and time.
-  { source: "/:locale(en|fr)/s/:slug/book", has: [{ type: "query", key: "service", value: `(?<service>${UUID})` }], destination: "/:locale/s/:slug/service/:service/confirm", permanent: true },
+  {
+    source: "/:locale(en|fr)/s/:slug/book",
+    has: [{ type: "query", key: "service", value: `(?<service>${UUID})` }],
+    destination: "/:locale/s/:slug/service/:service/confirm",
+    permanent: true,
+  },
   { source: "/:locale(en|fr)/s/:slug/book", destination: "/:locale/s/:slug", permanent: true },
   // One language of addresses: English (the code's). The French word of a public step answers 308.
-  { source: "/:locale(en|fr)/s/:slug/service/:id/creneau", destination: "/:locale/s/:slug/service/:id/slots", permanent: true },
+  {
+    source: "/:locale(en|fr)/s/:slug/service/:id/creneau",
+    destination: "/:locale/s/:slug/service/:id/slots",
+    permanent: true,
+  },
 ];
 
 /** @type {import('next').NextConfig} */

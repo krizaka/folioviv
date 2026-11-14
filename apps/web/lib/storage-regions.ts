@@ -20,7 +20,13 @@ export const REGION_CHOICES: readonly RegionChoice[] = S3_PRESETS.flatMap((p) =>
     ? []
     : p.regions.map((region) => {
         const endpoint = presetEndpoint(p.id, region) ?? "";
-        return { id: `${p.id}:${region}`, preset: p.id as RegionChoice["preset"], region, endpoint, residency: residencyLabel({ provider: "s3", endpoint, region }) };
+        return {
+          id: `${p.id}:${region}`,
+          preset: p.id as RegionChoice["preset"],
+          region,
+          endpoint,
+          residency: residencyLabel({ provider: "s3", endpoint, region }),
+        };
       }),
 );
 
@@ -32,19 +38,34 @@ const hostOf = (endpoint: string) => (endpoint.startsWith("https://") ? endpoint
 
 /** The choice a saved configuration corresponds to, or null (another provider, a custom endpoint). */
 export function choiceOf(settings: { provider: string; endpoint: string; region: string }): RegionChoice | null {
-  return REGION_CHOICES.find((c) => settings.provider === "s3" && c.region === settings.region && hostOf(c.endpoint) === hostOf(settings.endpoint)) ?? null;
+  return (
+    REGION_CHOICES.find(
+      (c) =>
+        settings.provider === "s3" && c.region === settings.region && hostOf(c.endpoint) === hostOf(settings.endpoint),
+    ) ?? null
+  );
 }
 
 /** The residency of whatever is saved (any provider), in the keys the messages speak: `console.admin.storage.residency.<key>`. */
-export function residencyOfSaved(settings: { provider: string; endpoint: string; region: string }): ResidencyLabel["key"] {
+export function residencyOfSaved(settings: {
+  provider: string;
+  endpoint: string;
+  region: string;
+}): ResidencyLabel["key"] {
   if (settings.provider === "local") {
     return "device";
   }
-  return residencyLabel({ provider: settings.provider === "s3" ? "s3" : "http", endpoint: settings.endpoint, region: settings.region }).key;
+  return residencyLabel({
+    provider: settings.provider === "s3" ? "s3" : "http",
+    endpoint: settings.endpoint,
+    region: settings.region,
+  }).key;
 }
 
 /** The settings a choice sets (the access keys stay in the environment). */
-export const settingsOf = (choice: RegionChoice): Record<"storage.provider" | "storage.endpoint" | "storage.region", string> => ({
+export const settingsOf = (
+  choice: RegionChoice,
+): Record<"storage.provider" | "storage.endpoint" | "storage.region", string> => ({
   "storage.provider": "s3",
   "storage.endpoint": choice.endpoint,
   "storage.region": choice.region,

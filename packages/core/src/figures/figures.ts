@@ -6,7 +6,6 @@ import { applyRate, type Cents } from "../money";
 import { inPeriod, type Period } from "./period";
 import { FIGURE_STATE, type FigureState, type FigureThresholds, judge } from "./thresholds";
 
-
 /** What the figures read: one shop, one moment, already in the shop's calendar. The database layer builds it; nothing here reads a clock or a database. */
 export interface FiguresInput {
   /** The shop's calendar day (`yyyy-MM-dd`) and the instant it was computed (ISO). */
@@ -29,7 +28,15 @@ export interface FiguresInput {
     superseded: boolean;
   }[];
   payments: { id: string; invoiceId: string; amountCents: Cents; receivedOn: string }[];
-  expenses: { id: string; supplier: string; paidOn: string; subtotalCents: Cents; gstCents: Cents; qstCents: Cents; businessSharePct: number }[];
+  expenses: {
+    id: string;
+    supplier: string;
+    paidOn: string;
+    subtotalCents: Cents;
+    gstCents: Cents;
+    qstCents: Cents;
+    businessSharePct: number;
+  }[];
   /** The appointments of the period, one row each: `done`, `noShow`, `cancelled`, or still `booked`. */
   appointments: { id: string; day: string; status: "booked" | "done" | "cancelled" | "noShow" }[];
 }
@@ -106,7 +113,11 @@ export interface Figure {
   state: FigureState;
 }
 
-const source = (kind: FigureSource["kind"], ids: readonly string[]): FigureSource => ({ kind, ids: ids.slice(0, MAX_SOURCE_IDS), count: ids.length });
+const source = (kind: FigureSource["kind"], ids: readonly string[]): FigureSource => ({
+  kind,
+  ids: ids.slice(0, MAX_SOURCE_IDS),
+  count: ids.length,
+});
 const sum = (xs: readonly number[]) => xs.reduce((s, x) => s + x, 0);
 
 /** A whole percent of `part` over `whole`, rounded half up, in exact integer arithmetic; null when there is no whole. */
@@ -114,16 +125,18 @@ export function percent(part: number, whole: number): number | null {
   if (whole === 0) return null;
   const n = BigInt(part) * 100n;
   const d = BigInt(Math.abs(whole));
-  const sign = (part < 0) !== (whole < 0) ? -1n : 1n;
+  const sign = part < 0 !== whole < 0 ? -1n : 1n;
   const abs = n < 0n ? -n : n;
   return Number(sign * ((2n * abs + d) / (2n * d)));
 }
 
 /** The instant after which the figure is called stale (ISO). */
-export const staleAt = (figure: Pick<Figure, "computedAt" | "staleAfterHours">) => addHours(parseISO(figure.computedAt), figure.staleAfterHours).toISOString();
+export const staleAt = (figure: Pick<Figure, "computedAt" | "staleAfterHours">) =>
+  addHours(parseISO(figure.computedAt), figure.staleAfterHours).toISOString();
 
 /** Whether a computed figure is still fresh at `now` (ISO). */
-export const isStale = (figure: Pick<Figure, "computedAt" | "staleAfterHours">, now: string) => differenceInMilliseconds(parseISO(now), parseISO(figure.computedAt)) > hoursToMilliseconds(figure.staleAfterHours);
+export const isStale = (figure: Pick<Figure, "computedAt" | "staleAfterHours">, now: string) =>
+  differenceInMilliseconds(parseISO(now), parseISO(figure.computedAt)) > hoursToMilliseconds(figure.staleAfterHours);
 
 /**
  * The owner's figures for a period, each with its meaning's formula as data, its sources and its state (#260). Money is integer cents; the taxes are
@@ -139,7 +152,14 @@ export function computeFigures(input: FiguresInput, thresholds: FigureThresholds
   const entries: LedgerEntry[] = [...issued.flatMap(invoiceEntries), ...paidExpenses.flatMap(expenseEntries)];
   const gst = balance(entries, "gst");
   const qst = balance(entries, "qst");
-  const ledgerSources = [source("invoice", [...new Set(entries.filter((e) => e.source.kind === SOURCE_KIND.invoice).map((e) => e.source.id))]), source("expense", [...new Set(entries.filter((e) => e.source.kind === SOURCE_KIND.expense).map((e) => e.source.id))])];
+  const ledgerSources = [
+    source("invoice", [
+      ...new Set(entries.filter((e) => e.source.kind === SOURCE_KIND.invoice).map((e) => e.source.id)),
+    ]),
+    source("expense", [
+      ...new Set(entries.filter((e) => e.source.kind === SOURCE_KIND.expense).map((e) => e.source.id)),
+    ]),
+  ];
 
   // Revenue: without tax, credit notes counted negative (so a cancelled invoice and its credit note cancel out).
   const invoicedCents = sum(issued.map((i) => i.subtotalCents));
@@ -148,15 +168,25 @@ export function computeFigures(input: FiguresInput, thresholds: FigureThresholds
   const collectedRate = percent(collectedCents, sum(issued.map((i) => i.totalCents)));
 
   // What is still owed, today, whatever the period.
-  const standing = (i: FiguresInput["invoices"][number]) => ({ totalCents: i.totalCents, paidCents: i.paidCents, dueOn: i.dueOn, isCredit: i.isCredit, superseded: i.superseded });
-  const open = invoices.map((i) => ({ i, owed: remainingCents(standing(i)), state: invoiceState(standing(i), input.today) })).filter((x) => x.owed > 0);
+  const standing = (i: FiguresInput["invoices"][number]) => ({
+    totalCents: i.totalCents,
+    paidCents: i.paidCents,
+    dueOn: i.dueOn,
+    isCredit: i.isCredit,
+    superseded: i.superseded,
+  });
+  const open = invoices
+    .map((i) => ({ i, owed: remainingCents(standing(i)), state: invoiceState(standing(i), input.today) }))
+    .filter((x) => x.owed > 0);
   const toCollectCents = sum(open.map((x) => x.owed));
   const overdue = open.filter((x) => x.state === INVOICE_STATE.overdue);
   const overdueCents = sum(overdue.map((x) => x.owed));
   const overdueRate = percent(overdueCents, toCollectCents);
 
   // Margin: the revenue without tax, minus the expenses without tax at the share used for the business.
-  const spentCents = sum(paidExpenses.map((e) => applyRate(e.subtotalCents, { numerator: e.businessSharePct, denominator: 100 })));
+  const spentCents = sum(
+    paidExpenses.map((e) => applyRate(e.subtotalCents, { numerator: e.businessSharePct, denominator: 100 })),
+  );
   const marginCents = invoicedCents - spentCents;
   const marginRate = percent(marginCents, invoicedCents);
 
@@ -177,54 +207,172 @@ export function computeFigures(input: FiguresInput, thresholds: FigureThresholds
     appointments: [],
     noShows: ["noShow"],
   };
-  const figure = (id: FigureId, value: number, unit: Unit, rate: number | null, formula: FormulaTerm[], sources: FigureSource[], state: FigureState, extra: Partial<Figure> = {}): Figure => ({ id, value, unit, rate, formula, lexicon: TERMS[id], sources, state, ...base, ...extra });
+  const figure = (
+    id: FigureId,
+    value: number,
+    unit: Unit,
+    rate: number | null,
+    formula: FormulaTerm[],
+    sources: FigureSource[],
+    outcome: Pick<Figure, "state"> & Partial<Figure>,
+  ): Figure => ({ id, value, unit, rate, formula, lexicon: TERMS[id], sources, ...base, ...outcome });
 
   return {
-    invoiced: figure(FIGURE_ID.invoiced, invoicedCents, "cents", null, [{ label: "invoicesSubtotal", value: invoicedCents, unit: "cents" }], [source("invoice", issued.map((i) => i.id))], issued.length ? FIGURE_STATE.good : FIGURE_STATE.info),
+    invoiced: figure(
+      FIGURE_ID.invoiced,
+      invoicedCents,
+      "cents",
+      null,
+      [{ label: "invoicesSubtotal", value: invoicedCents, unit: "cents" }],
+      [
+        source(
+          "invoice",
+          issued.map((i) => i.id),
+        ),
+      ],
+      { state: issued.length ? FIGURE_STATE.good : FIGURE_STATE.info },
+    ),
     collected: figure(
       FIGURE_ID.collected,
       collectedCents,
       "cents",
       collectedRate,
-      [{ label: "paymentsReceived", value: collectedCents, unit: "cents" }, { label: "invoicedWithTaxes", value: sum(issued.map((i) => i.totalCents)), unit: "cents", op: "÷" }],
-      [source("payment", periodPayments.map((p) => p.id))],
-      judge(collectedRate, { watch: thresholds.collectedWatchPct, alert: thresholds.collectedAlertPct }, "higher"),
+      [
+        { label: "paymentsReceived", value: collectedCents, unit: "cents" },
+        { label: "invoicedWithTaxes", value: sum(issued.map((i) => i.totalCents)), unit: "cents", op: "÷" },
+      ],
+      [
+        source(
+          "payment",
+          periodPayments.map((p) => p.id),
+        ),
+      ],
+      {
+        state: judge(
+          collectedRate,
+          { watch: thresholds.collectedWatchPct, alert: thresholds.collectedAlertPct },
+          "higher",
+        ),
+      },
     ),
     toCollect: figure(
       FIGURE_ID.toCollect,
       toCollectCents,
       "cents",
       overdueRate,
-      [{ label: "invoicesTotal", value: sum(open.map((x) => x.i.totalCents)), unit: "cents" }, { label: "paymentsReceived", value: sum(open.map((x) => x.i.paidCents)), unit: "cents", op: "−" }, { label: "overdue", value: overdueCents, unit: "cents" }],
-      [source("invoice", open.map((x) => x.i.id))],
-      judge(overdueRate, { watch: thresholds.overdueWatchPct, alert: thresholds.overdueAlertPct }, "lower"),
-      { period: null },
+      [
+        { label: "invoicesTotal", value: sum(open.map((x) => x.i.totalCents)), unit: "cents" },
+        { label: "paymentsReceived", value: sum(open.map((x) => x.i.paidCents)), unit: "cents", op: "−" },
+        { label: "overdue", value: overdueCents, unit: "cents" },
+      ],
+      [
+        source(
+          "invoice",
+          open.map((x) => x.i.id),
+        ),
+      ],
+      {
+        state: judge(overdueRate, { watch: thresholds.overdueWatchPct, alert: thresholds.overdueAlertPct }, "lower"),
+        period: null,
+      },
     ),
-    gstCollected: figure(FIGURE_ID.gstCollected, gst.collected, "cents", null, [{ label: "gstOnInvoices", value: gst.collected, unit: "cents" }], [ledgerSources[0]!], FIGURE_STATE.info),
-    qstCollected: figure(FIGURE_ID.qstCollected, qst.collected, "cents", null, [{ label: "qstOnInvoices", value: qst.collected, unit: "cents" }], [ledgerSources[0]!], FIGURE_STATE.info),
-    gstToRemit: figure(FIGURE_ID.gstToRemit, gst.net, "cents", null, [{ label: "gstOnInvoices", value: gst.collected, unit: "cents" }, { label: "gstOnExpenses", value: gst.credits, unit: "cents", op: "−" }], ledgerSources, FIGURE_STATE.info),
-    qstToRemit: figure(FIGURE_ID.qstToRemit, qst.net, "cents", null, [{ label: "qstOnInvoices", value: qst.collected, unit: "cents" }, { label: "qstOnExpenses", value: qst.credits, unit: "cents", op: "−" }], ledgerSources, FIGURE_STATE.info),
+    gstCollected: figure(
+      FIGURE_ID.gstCollected,
+      gst.collected,
+      "cents",
+      null,
+      [{ label: "gstOnInvoices", value: gst.collected, unit: "cents" }],
+      [ledgerSources[0]!],
+      { state: FIGURE_STATE.info },
+    ),
+    qstCollected: figure(
+      FIGURE_ID.qstCollected,
+      qst.collected,
+      "cents",
+      null,
+      [{ label: "qstOnInvoices", value: qst.collected, unit: "cents" }],
+      [ledgerSources[0]!],
+      { state: FIGURE_STATE.info },
+    ),
+    gstToRemit: figure(
+      FIGURE_ID.gstToRemit,
+      gst.net,
+      "cents",
+      null,
+      [
+        { label: "gstOnInvoices", value: gst.collected, unit: "cents" },
+        { label: "gstOnExpenses", value: gst.credits, unit: "cents", op: "−" },
+      ],
+      ledgerSources,
+      { state: FIGURE_STATE.info },
+    ),
+    qstToRemit: figure(
+      FIGURE_ID.qstToRemit,
+      qst.net,
+      "cents",
+      null,
+      [
+        { label: "qstOnInvoices", value: qst.collected, unit: "cents" },
+        { label: "qstOnExpenses", value: qst.credits, unit: "cents", op: "−" },
+      ],
+      ledgerSources,
+      { state: FIGURE_STATE.info },
+    ),
     margin: figure(
       FIGURE_ID.margin,
       marginCents,
       "cents",
       marginRate,
-      [{ label: "invoicesSubtotal", value: invoicedCents, unit: "cents" }, { label: "expensesBusinessShare", value: spentCents, unit: "cents", op: "−" }],
-      [source("invoice", issued.map((i) => i.id)), source("expense", paidExpenses.map((e) => e.id))],
-      judge(marginRate, { watch: thresholds.marginWatchPct, alert: thresholds.marginAlertPct }, "higher"),
+      [
+        { label: "invoicesSubtotal", value: invoicedCents, unit: "cents" },
+        { label: "expensesBusinessShare", value: spentCents, unit: "cents", op: "−" },
+      ],
+      [
+        source(
+          "invoice",
+          issued.map((i) => i.id),
+        ),
+        source(
+          "expense",
+          paidExpenses.map((e) => e.id),
+        ),
+      ],
+      { state: judge(marginRate, { watch: thresholds.marginWatchPct, alert: thresholds.marginAlertPct }, "higher") },
     ),
-    appointments: figure(FIGURE_ID.appointments, done.length, "count", null, [{ label: "appointmentsDone", value: done.length, unit: "count" }], [source("appointment", done.map((a) => a.id))], done.length ? FIGURE_STATE.good : FIGURE_STATE.info, { cadence: CADENCE.onChange }),
+    appointments: figure(
+      FIGURE_ID.appointments,
+      done.length,
+      "count",
+      null,
+      [{ label: "appointmentsDone", value: done.length, unit: "count" }],
+      [
+        source(
+          "appointment",
+          done.map((a) => a.id),
+        ),
+      ],
+      { state: done.length ? FIGURE_STATE.good : FIGURE_STATE.info, cadence: CADENCE.onChange },
+    ),
     noShows: figure(
       FIGURE_ID.noShows,
       missed.length,
       "count",
       noShowRate,
-      [{ label: "appointmentsNoShow", value: missed.length, unit: "count" }, { label: "appointmentsDue", value: done.length + missed.length, unit: "count", op: "÷" }],
-      [source("appointment", missed.map((a) => a.id))],
-      judge(noShowRate, { watch: thresholds.noShowWatchPct, alert: thresholds.noShowAlertPct }, "lower"),
+      [
+        { label: "appointmentsNoShow", value: missed.length, unit: "count" },
+        { label: "appointmentsDue", value: done.length + missed.length, unit: "count", op: "÷" },
+      ],
+      [
+        source(
+          "appointment",
+          missed.map((a) => a.id),
+        ),
+      ],
+      { state: judge(noShowRate, { watch: thresholds.noShowWatchPct, alert: thresholds.noShowAlertPct }, "lower") },
     ),
   };
 }
 
 /** The days an invoice is overdue at `today` (0 when it is not). */
-export const daysOverdue = (dueOn: string | null, today: string) => (dueOn && dueOn < today ? differenceInCalendarDays(parseISO(today), parseISO(dueOn)) : 0);
+export const daysOverdue = (dueOn: string | null, today: string) =>
+  dueOn && dueOn < today ? differenceInCalendarDays(parseISO(today), parseISO(dueOn)) : 0;

@@ -32,9 +32,18 @@ describe("the owner's storefront configuration", () => {
   it("rejects missing or duplicate sections and non-HTTPS logos", async () => {
     const shop = await walkerShop(t.db, "page-invalid");
     const config = defaultShopPageConfig();
-    await expect(saveShopPageConfig(t.db, shop.shopId, { ...config, sections: config.sections.slice(1) })).rejects.toThrow();
-    await expect(saveShopPageConfig(t.db, shop.shopId, { ...config, sections: [...config.sections.slice(0, -1), config.sections[0]!] })).rejects.toThrow();
-    await expect(saveShopPageConfig(t.db, shop.shopId, { ...config, logoUrl: "http://cdn.example/logo.png" })).rejects.toThrow();
+    await expect(
+      saveShopPageConfig(t.db, shop.shopId, { ...config, sections: config.sections.slice(1) }),
+    ).rejects.toThrow();
+    await expect(
+      saveShopPageConfig(t.db, shop.shopId, {
+        ...config,
+        sections: [...config.sections.slice(0, -1), config.sections[0]!],
+      }),
+    ).rejects.toThrow();
+    await expect(
+      saveShopPageConfig(t.db, shop.shopId, { ...config, logoUrl: "http://cdn.example/logo.png" }),
+    ).rejects.toThrow();
   });
 });
 
@@ -65,8 +74,12 @@ describe("the shop type and the proposed images (#267)", () => {
 
   it("refuses a type that is not one of the trades, in the schema and in the database", async () => {
     const shop = await walkerShop(t.db, "page-type-bad");
-    await expect(saveShopPageConfig(t.db, shop.shopId, { ...defaultShopPageConfig(), shopType: "restaurant" })).rejects.toThrow();
-    await expect(t.pool.query("INSERT INTO shop_page (shop_id, shop_type) VALUES ($1, 'bar')", [shop.shopId])).rejects.toThrow();
+    await expect(
+      saveShopPageConfig(t.db, shop.shopId, { ...defaultShopPageConfig(), shopType: "restaurant" }),
+    ).rejects.toThrow();
+    await expect(
+      t.pool.query("INSERT INTO shop_page (shop_id, shop_type) VALUES ($1, 'bar')", [shop.shopId]),
+    ).rejects.toThrow();
   });
 
   it("a save that names only the trade or the switch leaves the sections and the logo as they were: the images card never overwrites the look card", async () => {
@@ -78,7 +91,12 @@ describe("the shop type and the proposed images (#267)", () => {
     await saveShopPageConfig(t.db, shop.shopId, { shopType: "coaching" });
     await saveShopPageConfig(t.db, shop.shopId, { useDefaults: false });
     // The reversed order is the owner's own (#261): flagged once, and a save that names no sections leaves the flag alone.
-    expect(await shopPageConfigOf(t.db, shop.shopId)).toEqual({ ...config, shopType: "coaching", useDefaults: false, sectionsCustom: true });
+    expect(await shopPageConfigOf(t.db, shop.shopId)).toEqual({
+      ...config,
+      shopType: "coaching",
+      useDefaults: false,
+      sectionsCustom: true,
+    });
   });
 
   it("a first save that names only the trade starts from today's page", async () => {

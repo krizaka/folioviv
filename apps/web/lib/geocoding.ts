@@ -38,7 +38,10 @@ export function normaliseQuery(raw: string): string | null {
 }
 
 /** A port that remembers recent answers, so a repeated search costs the vendor nothing (a vendor's usage policy asks for it). */
-export function cachedGeocoder(port: GeocodingPort, options: { ttlMs: number; max: number; now?: () => number }): GeocodingPort {
+export function cachedGeocoder(
+  port: GeocodingPort,
+  options: { ttlMs: number; max: number; now?: () => number },
+): GeocodingPort {
   const now = options.now ?? Date.now;
   const memory = new Map<string, { at: number; places: GeoPlace[] }>();
   return {

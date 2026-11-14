@@ -24,11 +24,17 @@ export function DependantsList({ dependants }: Readonly<{ dependants: DependantV
         <li key={d.id} className="rounded-lg border border-border-default bg-surface-1 p-3">
           <p className="flex flex-wrap items-center gap-2 font-semibold text-fg">
             {d.name} <Badge tone="neutral">{say(`clients.kinds.${d.kind}`)}</Badge>
-            <span className="text-sm font-normal text-fg-secondary">{[d.profile.breed, d.profile.size ? say(`clients.sizes.${d.profile.size}`) : null].filter(Boolean).join(" · ")}</span>
+            <span className="text-sm font-normal text-fg-secondary">
+              {[d.profile.breed, d.profile.size ? say(`clients.sizes.${d.profile.size}`) : null]
+                .filter(Boolean)
+                .join(" · ")}
+            </span>
           </p>
           {d.profile.temperament ? <p className="text-sm text-fg-secondary">{d.profile.temperament}</p> : null}
           {d.profile.vet ? <p className="text-xs text-fg-muted">{say("clients.vet", d.profile.vet)}</p> : null}
-          {d.profile.emergency ? <p className="text-xs text-fg-muted">{say("clients.emergency", d.profile.emergency)}</p> : null}
+          {d.profile.emergency ? (
+            <p className="text-xs text-fg-muted">{say("clients.emergency", d.profile.emergency)}</p>
+          ) : null}
         </li>
       ))}
     </ul>
@@ -36,7 +42,15 @@ export function DependantsList({ dependants }: Readonly<{ dependants: DependantV
 }
 
 /** The access notes (keys, door codes) open on demand, only where the business type keeps dependants. */
-export function AccessNotesFor({ clientId, clientName, present }: { clientId: string; clientName: string; present: boolean }) {
+export function AccessNotesFor({
+  clientId,
+  clientName,
+  present,
+}: {
+  clientId: string;
+  clientName: string;
+  present: boolean;
+}) {
   const vocabulary = useVocabulary();
   return vocabulary.dependants && present ? <AccessNotes clientId={clientId} clientName={clientName} /> : null;
 }

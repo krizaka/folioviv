@@ -8,7 +8,9 @@ export const dynamic = "force-dynamic";
 const COLORS = ["blue", "green", "amber", "red", "violet", "gray"] as const;
 
 export function GET(req: Request) {
-  return handle(async () => Response.json({ tags: await organize().tags.list((await requireSession(req)).account.id) }));
+  return handle(async () =>
+    Response.json({ tags: await organize().tags.list((await requireSession(req)).account.id) }),
+  );
 }
 
 export function POST(req: Request) {

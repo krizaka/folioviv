@@ -10,7 +10,19 @@ import { SHOP_TYPES } from "../shop-media";
  */
 
 /** The sections a template can order. `hero` is not here: it is always first. `trust` (story, contact, policies) becomes orderable in step 3 (it is injected before `gallery` today). */
-export const TEMPLATE_SECTIONS = ["trust", "services", "team", "hours", "zones", "gallery", "wall", "reels", "announcements", "reviews", "follow"] as const;
+export const TEMPLATE_SECTIONS = [
+  "trust",
+  "services",
+  "team",
+  "hours",
+  "zones",
+  "gallery",
+  "wall",
+  "reels",
+  "announcements",
+  "reviews",
+  "follow",
+] as const;
 export type TemplateSection = (typeof TEMPLATE_SECTIONS)[number];
 
 /** The three layouts that carry the structure (see the doc's wireframes). */
@@ -38,7 +50,12 @@ export const PAPERS = ["plain", "dot-grid", "kraft", "ruled"] as const;
 /** The four papers of the shop frame (`ShopFrame paper`, @krizaka/ui): what a template's `paper` becomes on the page (folioviv#305). `ruled` is the Seyès ruling; `dot-grid`, retired by the notebook, is the tinted `washi`. */
 export const FRAME_PAPERS = ["plain", "seyes", "kraft", "washi"] as const;
 export type FramePaper = (typeof FRAME_PAPERS)[number];
-const FRAME_PAPER_OF: Record<(typeof PAPERS)[number], FramePaper> = { plain: "plain", ruled: "seyes", kraft: "kraft", "dot-grid": "washi" };
+const FRAME_PAPER_OF: Record<(typeof PAPERS)[number], FramePaper> = {
+  plain: "plain",
+  ruled: "seyes",
+  kraft: "kraft",
+  "dot-grid": "washi",
+};
 export const framePaperOf = (paper: (typeof PAPERS)[number]): FramePaper => FRAME_PAPER_OF[paper];
 
 /** The media slots a template names (`default`: the trade's proposed images, `none`: nothing is proposed). */
@@ -73,7 +90,9 @@ export const cahierSchema = z.object({
   /** The wall's default texture; the owner may change it. */
   wallTexture: z.enum(["brick", "zellige", "ridge", "plaster"]),
   noteHold: z.enum(["tape", "pin"]),
-  doodles: z.array(z.object({ kind: z.enum(["arrow", "circle", "star", "wave"]), near: z.enum(["book", "services", "wall"]) })).max(2),
+  doodles: z
+    .array(z.object({ kind: z.enum(["arrow", "circle", "star", "wave"]), near: z.enum(["book", "services", "wall"]) }))
+    .max(2),
 });
 export type Cahier = z.infer<typeof cahierSchema>;
 
@@ -81,9 +100,13 @@ export type Cahier = z.infer<typeof cahierSchema>;
  * A full `TextStyle` of `@krizaka/ui` (every key present, every value from its tables), checked with the library's own `parseTextStyle`. The pen (`cahier`) is for
  * notes, never for a title, a body or a price (the text roles of a template).
  */
-export const fullTextStyleSchema = z.custom<TextStyle>((value) => JSON.stringify(parseTextStyle(value)) === JSON.stringify(sortLike(value)) && (value as TextStyle).font !== "cahier", {
-  message: "a complete TextStyle of @krizaka/ui, and never the pen",
-});
+export const fullTextStyleSchema = z.custom<TextStyle>(
+  (value) =>
+    JSON.stringify(parseTextStyle(value)) === JSON.stringify(sortLike(value)) && (value as TextStyle).font !== "cahier",
+  {
+    message: "a complete TextStyle of @krizaka/ui, and never the pen",
+  },
+);
 
 /** The value with its keys in the order `parseTextStyle` answers, so two equal styles compare equal as text. */
 function sortLike(value: unknown): unknown {
@@ -117,16 +140,22 @@ export const templateSchema = z
   })
   .superRefine((t, ctx) => {
     const notebook = t.version >= CAHIER_VERSION;
-    if (notebook && !t.cahier) ctx.addIssue({ code: "custom", message: `version ${t.version} carries the cahier block` });
+    if (notebook && !t.cahier)
+      ctx.addIssue({ code: "custom", message: `version ${t.version} carries the cahier block` });
     if (!notebook && t.cahier) ctx.addIssue({ code: "custom", message: "a v1 template has no cahier block" });
     for (const role of TEXT_ROLES) {
       const full = fullTextStyleSchema.safeParse(t.textStyles[role]).success;
-      if (full !== notebook) ctx.addIssue({ code: "custom", message: `${role}: ${notebook ? "a v2 template uses full TextStyles" : "a v1 template uses the legacy styles"}` });
+      if (full !== notebook)
+        ctx.addIssue({
+          code: "custom",
+          message: `${role}: ${notebook ? "a v2 template uses full TextStyles" : "a v1 template uses the legacy styles"}`,
+        });
     }
     const ids = t.sections.map((s) => s.id);
     if (new Set(ids).size !== ids.length) ctx.addIssue({ code: "custom", message: "a section occurs once" });
     for (const s of t.sections) {
-      if (!(SECTION_VARIANTS[s.id] as readonly string[]).includes(s.variant)) ctx.addIssue({ code: "custom", message: `${s.id} has no variant ${s.variant}` });
+      if (!(SECTION_VARIANTS[s.id] as readonly string[]).includes(s.variant))
+        ctx.addIssue({ code: "custom", message: `${s.id} has no variant ${s.variant}` });
     }
   });
 export type Template = z.infer<typeof templateSchema>;

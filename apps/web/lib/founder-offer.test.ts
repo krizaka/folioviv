@@ -10,6 +10,7 @@ import { readEnv } from "./env";
 import { founderCap, founderEntry, founderOfferCopy, onSale } from "./founder-offer";
 import { format } from "./i18n";
 import { FOUNDER, PRICES } from "./pricing";
+import { compact } from "./test-source";
 
 const read = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 const NOW = new Date("2026-11-01T12:00:00Z");
@@ -49,9 +50,13 @@ describe("every figure of the offer is the catalogue's, formatted with the local
     const enCopy = founderOfferCopy(entry, "en")!;
     const frCopy = founderOfferCopy(entry, "fr")!;
     expect(format(en.landing.founder.title, enCopy)).toBe("Founder offer: $39 a month plus taxes, setup included");
-    expect(format(fr.landing.founder.title, frCopy).replace(/\s/g, " ")).toBe("Offre fondateur : 39 $ par mois plus taxes, mise en route incluse");
+    expect(format(fr.landing.founder.title, frCopy).replace(/\s/g, " ")).toBe(
+      "Offre fondateur : 39 $ par mois plus taxes, mise en route incluse",
+    );
     expect(format(fr.landing.founder.points[1]!, frCopy).replace(/\s/g, " ")).toMatch(/^0 % sur les cartes/);
-    expect(format(en.landing.founder.points[2]!, enCopy)).toBe("Pre-authorised debit or B2B transfer: 0.5% an order, capped at $15; the funds stay with the payment processor");
+    expect(format(en.landing.founder.points[2]!, enCopy)).toBe(
+      "Pre-authorised debit or B2B transfer: 0.5% an order, capped at $15; the funds stay with the payment processor",
+    );
     expect(enCopy.limit).toBe(20);
   });
   it("follows the administrator's change from its date, and ends the offer when the administrator makes it internal", async () => {
@@ -81,7 +86,11 @@ describe("the founder gate reads the cap from the catalogue (folioviv#371)", () 
     expect(await founderGate(accounts(40), "founder", founderCap(raised))).toBe("member");
   });
   it("the checkout, the home and the subscription page read the cap and the price from the catalogue, never a setting or the processor", () => {
-    for (const f of ["app/api/billing/checkout/route.ts", "components/home/FounderOffer.tsx", "app/[locale]/(app)/app/(account)/profile/subscription/page.tsx"]) {
+    for (const f of [
+      "app/api/billing/checkout/route.ts",
+      "components/home/FounderOffer.tsx",
+      "app/[locale]/(app)/app/(account)/profile/subscription/page.tsx",
+    ]) {
       const src = read(f);
       expect(src, f).toMatch(/appPrices\(\)/);
       expect(src, f).toMatch(/founderCap\(entry\)/);
@@ -90,7 +99,7 @@ describe("the founder gate reads the cap from the catalogue (folioviv#371)", () 
   });
   it("the checkout sells only the amount the catalogue shows, and records the version it sold", () => {
     const src = read("app/api/billing/checkout/route.ts");
-    expect(src).toMatch(/\.amount !== entry\.amountCents\) \{?throw refuse\(503, "PRICE_NOT_READY"/);
+    expect(compact(src)).toContain(compact('.amount !== entry.amountCents){throw refuse(503, "PRICE_NOT_READY"'));
     expect(src).toMatch(/recordOfferedVersion\(query, account\.id, entry\.versionId\)/);
   });
 });

@@ -1,4 +1,15 @@
-import { bookingPreselect, localDay, MEMBER_STATE, type MemberDay, memberStateAt, openStatus, resolveTemplate, type Template, weekdayOf, weekSchedule } from "@folioviv/core";
+import {
+  bookingPreselect,
+  localDay,
+  MEMBER_STATE,
+  type MemberDay,
+  memberStateAt,
+  openStatus,
+  resolveTemplate,
+  type Template,
+  weekdayOf,
+  weekSchedule,
+} from "@folioviv/core";
 import type { PublicMedia, PublicShop } from "@folioviv/db";
 
 import type { CommunityPublicView } from "@/lib/community-view";
@@ -52,7 +63,14 @@ export interface DayView {
 }
 
 /** What a default image says to a screen reader, in the page's language. */
-export type ServiceImage = { id: string; alt: string; src: string; sources: DefaultImage["sources"]; width: number; height: number };
+export type ServiceImage = {
+  id: string;
+  alt: string;
+  src: string;
+  sources: DefaultImage["sources"];
+  width: number;
+  height: number;
+};
 
 export interface StorefrontView {
   name: string;
@@ -67,17 +85,42 @@ export interface StorefrontView {
   team: { id: string; name: string; state: string | null; free: boolean }[];
   zones: { id: string; name: string }[];
   map: { center: LngLat; zoom: number; places: { id: string; name: string; position: LngLat }[] } | null;
-  hours: { today: string; status: { open: boolean; label: string; detail?: string }; days: { id: string; label: string; hours: string }[] };
+  hours: {
+    today: string;
+    status: { open: boolean; label: string; detail?: string };
+    days: { id: string; label: string; hours: string }[];
+  };
   policies: { id: string; term: string; value: string }[];
   about: { name: string; text: string } | null;
   contact: { phone: string | null; phoneHref: string | null; email: string | null } | null;
-  gallery: { id: string; src: string; alt: string; caption?: string; shape: "portrait" | "wide"; video?: { webm?: string; mp4?: string } }[];
+  gallery: {
+    id: string;
+    src: string;
+    alt: string;
+    caption?: string;
+    shape: "portrait" | "wide";
+    video?: { webm?: string; mp4?: string };
+  }[];
   /** The photos are the trade's proposed pictures, not the shop's own (#267): the page says so, never « Photos de {shop} ». */
   galleryIllustrative: boolean;
   logoUrl: string | null;
   /** The logo for the dark theme, when the brand has two files (#597). */
   logoDarkUrl: string | null;
-  sections: { id: "services" | "team" | "hours" | "zones" | "trust" | "gallery" | "wall" | "reels" | "announcements" | "reviews" | "follow"; visible: boolean }[];
+  sections: {
+    id:
+      | "services"
+      | "team"
+      | "hours"
+      | "zones"
+      | "trust"
+      | "gallery"
+      | "wall"
+      | "reels"
+      | "announcements"
+      | "reviews"
+      | "follow";
+    visible: boolean;
+  }[];
   /** The template the shop applied (#261), or null: a shop with none renders exactly as before. Its order is already in `sections`; the variants and the hue are drawn here. */
   template: { id: string; version: number; layout: string; hue: string; variants: Record<string, string> } | null;
   preparedSections: Record<"wall" | "reels" | "announcements" | "reviews" | "follow", boolean>;
@@ -91,10 +134,14 @@ export interface Selection {
 }
 
 /** The service and the zone the page shows times for: the address's when the shop offers them, else the popular service (or the first) and the first zone. */
-export function resolveSelection(page: PublicShop, selection: Selection): { serviceId: string | null; zoneId: string | null } {
+export function resolveSelection(
+  page: PublicShop,
+  selection: Selection,
+): { serviceId: string | null; zoneId: string | null } {
   const picked = bookingPreselect({ service: selection.service, zone: selection.zone }, page.services, page.zones);
   return {
-    serviceId: picked.serviceId ?? (page.services.find((s) => s.id === page.popularServiceId) ?? page.services[0])?.id ?? null,
+    serviceId:
+      picked.serviceId ?? (page.services.find((s) => s.id === page.popularServiceId) ?? page.services[0])?.id ?? null,
     zoneId: picked.zoneId ?? page.zones[0]?.id ?? null,
   };
 }
@@ -112,8 +159,10 @@ export function clockLabel(clock: string, locale: Locale): string {
 }
 
 const lang = (locale: Locale) => (locale === "fr" ? "fr-CA" : "en-CA");
-const dayName = (day: string, locale: Locale, weekday: "short" | "long") => new Intl.DateTimeFormat(lang(locale), { timeZone: "UTC", weekday }).format(new Date(`${day}T12:00:00Z`));
-const money = (cents: number, locale: Locale) => new Intl.NumberFormat(lang(locale), { style: "currency", currency: "CAD" }).format(cents / 100);
+const dayName = (day: string, locale: Locale, weekday: "short" | "long") =>
+  new Intl.DateTimeFormat(lang(locale), { timeZone: "UTC", weekday }).format(new Date(`${day}T12:00:00Z`));
+const money = (cents: number, locale: Locale) =>
+  new Intl.NumberFormat(lang(locale), { style: "currency", currency: "CAD" }).format(cents / 100);
 
 const telHref = (phone: string): string | null => {
   const digits = phone.replace(/\D/g, "");
@@ -125,25 +174,44 @@ const telHref = (phone: string): string | null => {
 /** The zoom that shows every place with a margin (Web Mercator: a degree of longitude is 256·2^z/360 px). */
 function zoomFor(positions: readonly LngLat[]): number {
   if (positions.length < 2) return 13;
-  const span = Math.max(Math.max(...positions.map((p) => p[0])) - Math.min(...positions.map((p) => p[0])), Math.max(...positions.map((p) => p[1])) - Math.min(...positions.map((p) => p[1])));
+  const span = Math.max(
+    Math.max(...positions.map((p) => p[0])) - Math.min(...positions.map((p) => p[0])),
+    Math.max(...positions.map((p) => p[1])) - Math.min(...positions.map((p) => p[1])),
+  );
   return Math.min(14, Math.max(9, Math.round(Math.log2(360 / (span * 2.6)))));
 }
 
 const mediaView = (m: PublicMedia, locale: Locale) => {
-  const video = m.webmUrl || m.mp4Url ? { ...(m.webmUrl ? { webm: m.webmUrl } : {}), ...(m.mp4Url ? { mp4: m.mp4Url } : {}) } : undefined;
+  const video =
+    m.webmUrl || m.mp4Url
+      ? { ...(m.webmUrl ? { webm: m.webmUrl } : {}), ...(m.mp4Url ? { mp4: m.mp4Url } : {}) }
+      : undefined;
   return { src: m.url, alt: locale === "fr" ? m.altFr : m.altEn, ...(video ? { video } : {}) };
 };
 
-const longDate = (day: string, locale: Locale) => new Intl.DateTimeFormat(lang(locale), { timeZone: "UTC", day: "numeric", month: "long" }).format(new Date(`${day}T12:00:00Z`));
+const longDate = (day: string, locale: Locale) =>
+  new Intl.DateTimeFormat(lang(locale), { timeZone: "UTC", day: "numeric", month: "long" }).format(
+    new Date(`${day}T12:00:00Z`),
+  );
 
 /** One member on the public page: a first name and one state, never a client, a service or a reason (folioviv#209). */
-function memberView(member: { id: string; name: string }, day: MemberDay | undefined, now: Date, timezone: string, locale: Locale, t: ReturnType<typeof translator>): StorefrontView["team"][number] {
+function memberView(
+  member: { id: string; name: string },
+  day: MemberDay | undefined,
+  now: Date,
+  timezone: string,
+  locale: Locale,
+  t: ReturnType<typeof translator>,
+): StorefrontView["team"][number] {
   if (!day) return { id: member.id, name: member.name, state: null, free: false };
   const state = memberStateAt(day, now, timezone);
   const label = (() => {
-    if (state.kind === MEMBER_STATE.busy) return t("console.shopPage.member.busy", { time: clockLabel(state.until, locale) });
-    if (state.kind === MEMBER_STATE.startsAt) return t("console.shopPage.member.startsAt", { time: clockLabel(state.time, locale) });
-    if (state.kind === MEMBER_STATE.off) return t("console.shopPage.member.off", { day: longDate(state.until, locale) });
+    if (state.kind === MEMBER_STATE.busy)
+      return t("console.shopPage.member.busy", { time: clockLabel(state.until, locale) });
+    if (state.kind === MEMBER_STATE.startsAt)
+      return t("console.shopPage.member.startsAt", { time: clockLabel(state.time, locale) });
+    if (state.kind === MEMBER_STATE.off)
+      return t("console.shopPage.member.off", { day: longDate(state.until, locale) });
     return t(`console.shopPage.member.${state.kind}`);
   })();
   return { id: member.id, name: member.name, state: label, free: state.kind === MEMBER_STATE.free };
@@ -155,28 +223,53 @@ type StatusT = ReturnType<typeof translator>;
 function statusView(open: ReturnType<typeof openStatus> | null, t: StatusT, locale: Locale): StorefrontView["status"] {
   if (!open) return null;
   const time = (clock: string) => clockLabel(clock, locale);
-  if (open.open) return { open: true, label: t("console.shopPage.open"), detail: t("console.shopPage.closesAt", { time: time(open.closesAt!) }) };
+  if (open.open)
+    return {
+      open: true,
+      label: t("console.shopPage.open"),
+      detail: t("console.shopPage.closesAt", { time: time(open.closesAt!) }),
+    };
   const next = open.nextOpen;
   let detail = "";
   if (next?.today) detail = t("console.shopPage.opensAt", { time: time(next.time) });
   else if (next?.tomorrow) detail = t("console.shopPage.opensTomorrow", { time: time(next.time) });
-  else if (next) detail = t("console.shopPage.opensOn", { day: dayName(next.day, locale, "long"), time: time(next.time) });
+  else if (next)
+    detail = t("console.shopPage.opensOn", { day: dayName(next.day, locale, "long"), time: time(next.time) });
   return { open: false, label: t("console.shopPage.closed"), detail };
 }
 
 /** The page's sections in the shop's order; one is visible when the owner shows it, its feature is on and it has something to show. */
-function sectionsView(sections: readonly { id: string; visible: boolean }[], prepared: Record<string, boolean>, community: CommunityPublicView | undefined): StorefrontView["sections"] {
+function sectionsView(
+  sections: readonly { id: string; visible: boolean }[],
+  prepared: Record<string, boolean>,
+  community: CommunityPublicView | undefined,
+): StorefrontView["sections"] {
   const has: Record<string, boolean> = community?.has ?? {};
-  return sections.map((section) => ({ ...section, visible: section.visible && (prepared[section.id] ?? true) && (has[section.id] ?? true) })) as StorefrontView["sections"];
+  return sections.map((section) => ({
+    ...section,
+    visible: section.visible && (prepared[section.id] ?? true) && (has[section.id] ?? true),
+  })) as StorefrontView["sections"];
 }
 
 /** « Up to 5 dogs » (the shop's own unit) or « Up to 5 seats »; null for a single visit. */
 function capacityLabel(capacity: number, unit: string | null, t: StatusT): string | null {
   if (capacity <= 1) return null;
-  return unit ? t("console.shopPage.capacityUnit", { count: capacity, unit }) : t("console.shopPage.capacitySeats", { count: capacity });
+  return unit
+    ? t("console.shopPage.capacityUnit", { count: capacity, unit })
+    : t("console.shopPage.capacitySeats", { count: capacity });
 }
 
-export function buildStorefront(input: { page: PublicShop; /** The shop as a place (B45): its wall, videos, board and reviews, already built. */ community?: CommunityPublicView; locale: Locale; /** The language of the shop's own texts when it is not the product's (a Spanish page); defaults to `locale`. */ contentLocale?: PageLocale; /** The proposed images of the shop's type, when the page shows them (#267): used where the owner has none. */ defaults?: ResolvedDefaults; /** The templates catalogue (the published one by default; tests hand one with several versions). */ catalogue?: readonly Template[]; now: Date; teamDay?: ReadonlyMap<string, MemberDay>; enabledUpcomingSections?: Partial<Record<"wall" | "reels" | "announcements" | "reviews" | "follow", boolean>> }): StorefrontView {
+export function buildStorefront(input: {
+  page: PublicShop;
+  /** The shop as a place (B45): its wall, videos, board and reviews, already built. */ community?: CommunityPublicView;
+  locale: Locale;
+  /** The language of the shop's own texts when it is not the product's (a Spanish page); defaults to `locale`. */ contentLocale?: PageLocale;
+  /** The proposed images of the shop's type, when the page shows them (#267): used where the owner has none. */ defaults?: ResolvedDefaults;
+  /** The templates catalogue (the published one by default; tests hand one with several versions). */ catalogue?: readonly Template[];
+  now: Date;
+  teamDay?: ReadonlyMap<string, MemberDay>;
+  enabledUpcomingSections?: Partial<Record<"wall" | "reels" | "announcements" | "reviews" | "follow", boolean>>;
+}): StorefrontView {
   const { page, locale, now } = input;
   const t = translator(locale);
   const timezone = page.shop.timezone;
@@ -186,7 +279,13 @@ export function buildStorefront(input: { page: PublicShop; /** The shop as a pla
   const content = input.contentLocale ?? locale;
   const translated = new Map((page.translations ?? []).map((x) => [`${x.key}|${x.locale}`, x.text]));
   const sourceIsFr = (page.languages?.source ?? "fr") === "fr";
-  const own = (kind: "shop" | "service", refId: string, field: string, fr: string | null | undefined, en: string | null | undefined): string | null => {
+  const own = (
+    kind: "shop" | "service",
+    refId: string,
+    field: string,
+    fr: string | null | undefined,
+    en: string | null | undefined,
+  ): string | null => {
     const written = ({ fr, en } as Record<string, string | null | undefined>)[content] ?? null;
     if (written?.trim()) return written;
     const done = translated.get(`${kind}:${refId}:${field}|${content}`);
@@ -206,8 +305,16 @@ export function buildStorefront(input: { page: PublicShop; /** The shop as a pla
   // The proposed images (#267): described in the page's language; used only where the owner has no media of their own.
   const proposed = input.defaults;
   const describe = (altKey: string) => t(`console.${altKey}` as never, {} as never);
-  const asImage = (d: DefaultImage): ServiceImage => ({ id: d.id, alt: describe(d.altKey), src: d.src, sources: d.sources, width: d.width, height: d.height });
-  const image = (index: number): ServiceImage | null => (proposed?.service.length ? asImage(proposed.service[index % proposed.service.length]!) : null);
+  const asImage = (d: DefaultImage): ServiceImage => ({
+    id: d.id,
+    alt: describe(d.altKey),
+    src: d.src,
+    sources: d.sources,
+    width: d.width,
+    height: d.height,
+  });
+  const image = (index: number): ServiceImage | null =>
+    proposed?.service.length ? asImage(proposed.service[index % proposed.service.length]!) : null;
 
   // Services, as cards.
   const unit = pick(page.shop.seatUnitFr, page.shop.seatUnitEn);
@@ -215,7 +322,9 @@ export function buildStorefront(input: { page: PublicShop; /** The shop as a pla
     id: s.id,
     name: own("service", s.id, "name", s.nameFr, s.nameEn) ?? s.nameFr,
     description: own("service", s.id, "description", s.descriptionFr, s.descriptionEn),
-    included: (own("service", s.id, "included", s.includedFr.join("\n"), s.includedEn.join("\n")) ?? "").split("\n").filter(Boolean),
+    included: (own("service", s.id, "included", s.includedFr.join("\n"), s.includedEn.join("\n")) ?? "")
+      .split("\n")
+      .filter(Boolean),
     duration: t("console.shopPage.minutes", { minutes: s.durationMinutes }),
     capacity: capacityLabel(s.capacity, unit, t),
     price: isOnQuote(s) ? t("console.shopPage.onQuote") : money(s.priceCents, locale),
@@ -226,9 +335,18 @@ export function buildStorefront(input: { page: PublicShop; /** The shop as a pla
   }));
 
   // Where: chips and a map of the places that have a position.
-  const placed = page.zones.filter((z) => z.lat !== null && z.lng !== null).map((z) => ({ id: z.id, name: z.name, position: [z.lng!, z.lat!] as LngLat }));
+  const placed = page.zones
+    .filter((z) => z.lat !== null && z.lng !== null)
+    .map((z) => ({ id: z.id, name: z.name, position: [z.lng!, z.lat!] as LngLat }));
   const map = placed.length
-    ? { center: [placed.reduce((n, p) => n + p.position[0], 0) / placed.length, placed.reduce((n, p) => n + p.position[1], 0) / placed.length] as LngLat, zoom: zoomFor(placed.map((p) => p.position)), places: placed }
+    ? {
+        center: [
+          placed.reduce((n, p) => n + p.position[0], 0) / placed.length,
+          placed.reduce((n, p) => n + p.position[1], 0) / placed.length,
+        ] as LngLat,
+        zoom: zoomFor(placed.map((p) => p.position)),
+        places: placed,
+      }
     : null;
 
   // The week, compact, today marked.
@@ -237,25 +355,64 @@ export function buildStorefront(input: { page: PublicShop; /** The shop as a pla
   const week = weekSchedule(windows).map((d) => ({
     id: String(d.weekday),
     label: t(`console.shopSetup.weekdays.${String(d.weekday) as "0"}`),
-    hours: d.windows.length ? d.windows.map((w) => `${time(w.startsAt)} – ${time(w.endsAt)}`).join(", ") : t("console.shopPage.closedDay"),
+    hours: d.windows.length
+      ? d.windows.map((w) => `${time(w.startsAt)} – ${time(w.endsAt)}`).join(", ")
+      : t("console.shopPage.closedDay"),
   }));
 
   const policies = [
-    { id: "cancellation", term: t("console.shopPage.policyCancellation"), value: t("console.shopPage.cancellation", { hours: page.rules.cancellationHours }) },
+    {
+      id: "cancellation",
+      term: t("console.shopPage.policyCancellation"),
+      value: t("console.shopPage.cancellation", { hours: page.rules.cancellationHours }),
+    },
     { id: "taxes", term: t("console.shopPage.policyTaxes"), value: t("console.shopPage.taxes") },
-    { id: "horizon", term: t("console.shopPage.policyHorizon"), value: t("console.shopPage.horizon", { days: page.rules.bookingHorizonDays }) },
+    {
+      id: "horizon",
+      term: t("console.shopPage.policyHorizon"),
+      value: t("console.shopPage.horizon", { days: page.rules.bookingHorizonDays }),
+    },
   ];
 
   const bio = own("shop", page.shop.id, "bio", page.shop.bioFr, page.shop.bioEn);
   const phone = page.shop.publicPhone;
   const email = page.shop.publicEmail;
-  const pageSections = page.pageConfig?.sections ?? ["services", "team", "hours", "zones", "trust", "gallery", "wall", "reels", "announcements", "reviews", "follow"].map((id) => ({ id, visible: true }));
+  const pageSections =
+    page.pageConfig?.sections ??
+    [
+      "services",
+      "team",
+      "hours",
+      "zones",
+      "trust",
+      "gallery",
+      "wall",
+      "reels",
+      "announcements",
+      "reviews",
+      "follow",
+    ].map((id) => ({ id, visible: true }));
   const enabled = input.enabledUpcomingSections ?? {};
   // A shop that never applied a template (or whose template the catalogue no longer holds) renders exactly as it always did.
-  const appliedTemplate = resolveTemplate({ templateId: page.pageConfig?.templateId, templateVersion: page.pageConfig?.templateVersion }, input.catalogue);
-  const preparedSections = { wall: enabled.wall ?? false, reels: enabled.reels ?? false, announcements: enabled.announcements ?? false, reviews: enabled.reviews ?? false, follow: enabled.follow ?? false };
+  const appliedTemplate = resolveTemplate(
+    { templateId: page.pageConfig?.templateId, templateVersion: page.pageConfig?.templateVersion },
+    input.catalogue,
+  );
+  const preparedSections = {
+    wall: enabled.wall ?? false,
+    reels: enabled.reels ?? false,
+    announcements: enabled.announcements ?? false,
+    reviews: enabled.reviews ?? false,
+    follow: enabled.follow ?? false,
+  };
 
-  const proposedCover = proposed?.cover ? { src: proposed.cover.poster, alt: describe(proposed.cover.altKey), video: { webm: proposed.cover.webm, mp4: proposed.cover.mp4 } } : null;
+  const proposedCover = proposed?.cover
+    ? {
+        src: proposed.cover.poster,
+        alt: describe(proposed.cover.altKey),
+        video: { webm: proposed.cover.webm, mp4: proposed.cover.mp4 },
+      }
+    : null;
   const cover = page.media.cover ? mediaView(page.media.cover, locale) : proposedCover;
 
   return {
@@ -266,21 +423,41 @@ export function buildStorefront(input: { page: PublicShop; /** The shop as a pla
     status,
     bookHref: serviceId ? pageHref(serviceId) : base,
     services,
-    team: page.team.length > 1 ? page.team.map((m) => memberView(m, input.teamDay?.get(m.id), now, timezone, locale, t)) : [],
+    team:
+      page.team.length > 1
+        ? page.team.map((m) => memberView(m, input.teamDay?.get(m.id), now, timezone, locale, t))
+        : [],
     zones: page.zones.map((z) => ({ id: z.id, name: z.name })),
     map,
     hours: { today: todayId, status: status ?? { open: false, label: t("console.shopPage.closed") }, days: week },
     policies,
     about: bio ? { name: page.shop.ownerName, text: bio } : null,
-    contact: phone || email ? { phone: phone || null, phoneHref: phone ? telHref(phone) : null, email: email || null } : null,
+    contact:
+      phone || email ? { phone: phone || null, phoneHref: phone ? telHref(phone) : null, email: email || null } : null,
     gallery: page.media.gallery.length
-      ? page.media.gallery.map((m) => ({ id: m.id, ...mediaView(m, locale), ...(pick(m.captionFr, m.captionEn) ? { caption: pick(m.captionFr, m.captionEn)! } : {}), shape: m.wide ? ("wide" as const) : ("portrait" as const) }))
-      : (proposed?.gallery ?? []).map((d) => ({ id: d.id, src: d.src, alt: describe(d.altKey), shape: "portrait" as const })),
+      ? page.media.gallery.map((m) => ({
+          id: m.id,
+          ...mediaView(m, locale),
+          ...(pick(m.captionFr, m.captionEn) ? { caption: pick(m.captionFr, m.captionEn)! } : {}),
+          shape: m.wide ? ("wide" as const) : ("portrait" as const),
+        }))
+      : (proposed?.gallery ?? []).map((d) => ({
+          id: d.id,
+          src: d.src,
+          alt: describe(d.altKey),
+          shape: "portrait" as const,
+        })),
     galleryIllustrative: page.media.gallery.length === 0 && (proposed?.gallery.length ?? 0) > 0,
     logoUrl: page.pageConfig?.logoUrl ?? null,
     logoDarkUrl: page.pageConfig?.logoDarkUrl ?? null,
     sections: sectionsView(pageSections, preparedSections, input.community),
-    template: appliedTemplate && { id: appliedTemplate.id, version: appliedTemplate.version, layout: appliedTemplate.layout, hue: appliedTemplate.hue, variants: Object.fromEntries(appliedTemplate.sections.map((x) => [x.id, x.variant])) },
+    template: appliedTemplate && {
+      id: appliedTemplate.id,
+      version: appliedTemplate.version,
+      layout: appliedTemplate.layout,
+      hue: appliedTemplate.hue,
+      variants: Object.fromEntries(appliedTemplate.sections.map((x) => [x.id, x.variant])),
+    },
     preparedSections,
     community: input.community ?? null,
   };

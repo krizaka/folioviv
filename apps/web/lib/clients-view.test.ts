@@ -2,7 +2,18 @@ import { describe, expect, it } from "vitest";
 
 import { CLIENT_FILTERS, clientsView, readClientsQuery } from "./clients-view";
 
-const row = (fullName: string, over: Partial<Parameters<typeof clientsView>[0][number]> = {}) => ({ id: fullName, fullName, email: null, phone: null, visits: 0, lastVisitAt: null, nextVisitAt: null, spentCents: 0, owedCents: 0, ...over });
+const row = (fullName: string, over: Partial<Parameters<typeof clientsView>[0][number]> = {}) => ({
+  id: fullName,
+  fullName,
+  email: null,
+  phone: null,
+  visits: 0,
+  lastVisitAt: null,
+  nextVisitAt: null,
+  spentCents: 0,
+  owedCents: 0,
+  ...over,
+});
 const shop = [
   row("Studio Lumen inc.", { owedCents: 3_174, email: "contact@lumen.test" }),
   row("Atelier Boréal inc.", { nextVisitAt: "2026-10-30T14:00:00.000Z" }),
@@ -22,9 +33,15 @@ describe("Clients on the catalogue (D5): the plan strip, the search and the filt
   });
 
   it("searches a name or an e-mail, whatever the case and the accents", () => {
-    expect(clientsView(shop, { q: "boreal", filter: "all" }).rows.map((r) => r.fullName)).toEqual(["Atelier Boréal inc."]);
-    expect(clientsView(shop, { q: "LUMEN.TEST", filter: "all" }).rows.map((r) => r.fullName)).toEqual(["Studio Lumen inc."]);
-    expect(clientsView(shop, { q: "studio", filter: "upcoming" }).rows.map((r) => r.fullName)).toEqual(["Nord Studio Montréal Ltd."]);
+    expect(clientsView(shop, { q: "boreal", filter: "all" }).rows.map((r) => r.fullName)).toEqual([
+      "Atelier Boréal inc.",
+    ]);
+    expect(clientsView(shop, { q: "LUMEN.TEST", filter: "all" }).rows.map((r) => r.fullName)).toEqual([
+      "Studio Lumen inc.",
+    ]);
+    expect(clientsView(shop, { q: "studio", filter: "upcoming" }).rows.map((r) => r.fullName)).toEqual([
+      "Nord Studio Montréal Ltd.",
+    ]);
   });
 
   it("reads the address: an unknown filter is « all », the query trimmed", () => {

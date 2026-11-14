@@ -21,7 +21,15 @@ interface Register {
   contexts: string[];
   contextsNotDeployed: Record<string, string>;
   stores: Array<{ id: string; supplier: string; region: string; country: string; province: string }>;
-  processors: Array<{ id: string; name: string; category: string; deployed: boolean; region: string; agreement: string; dpa: string }>;
+  processors: Array<{
+    id: string;
+    name: string;
+    category: string;
+    deployed: boolean;
+    region: string;
+    agreement: string;
+    dpa: string;
+  }>;
 }
 
 /** What the spec says: the app region, the database region, the media endpoint's region, the environment contexts it sets. */
@@ -38,7 +46,9 @@ export function storesOfSpec(spec: string): Record<string, string> {
 
 export function contextsOfSpec(spec: string): string[] {
   const keys = [...spec.matchAll(/^\s*- key: ([A-Z0-9_]+)/gm)].map((m) => m[1]!);
-  return [...new Set(keys.filter((k) => k.includes("_")).map((k) => `${k.split("_")[0]}_`))].filter((c) => c !== "NODE_" && c !== "NEXT_") // NEXT_PUBLIC_*: a public build-time value, not a data context.sort();
+  return [...new Set(keys.filter((k) => k.includes("_")).map((k) => `${k.split("_")[0]}_`))].filter(
+    (c) => c !== "NODE_" && c !== "NEXT_",
+  ); // NEXT_PUBLIC_*: a public build-time value, not a data context.sort();
 }
 
 /** What the register fails to cover for a given spec. */
@@ -48,10 +58,13 @@ export function gaps(spec: string, register: Pick<Register, "contexts" | "stores
   for (const [id, region] of Object.entries(stores)) {
     const listed = register.stores.find((s) => s.id === id);
     if (!listed) out.push(`store « ${id} » (${region}) is not in the register`);
-    else if (listed.region !== region) out.push(`store « ${id} » is in ${region} in the spec and ${listed.region} in the register`);
+    else if (listed.region !== region)
+      out.push(`store « ${id} » is in ${region} in the spec and ${listed.region} in the register`);
   }
-  for (const s of register.stores) if (!(s.id in stores)) out.push(`the register lists store « ${s.id} » the spec no longer has`);
-  for (const c of contextsOfSpec(spec)) if (!register.contexts.includes(c)) out.push(`the spec sets ${c}* and the register does not list that context`);
+  for (const s of register.stores)
+    if (!(s.id in stores)) out.push(`the register lists store « ${s.id} » the spec no longer has`);
+  for (const c of contextsOfSpec(spec))
+    if (!register.contexts.includes(c)) out.push(`the spec sets ${c}* and the register does not list that context`);
   return out;
 }
 
@@ -62,7 +75,11 @@ describe("the transfer register follows the deployment spec (folioviv#369)", () 
 
   it("proves each region it states: the spec names it", () => {
     expect(storesOfSpec(SPEC)).toEqual({ app: "tor", database: "tor1", media: "ny" });
-    expect(REGISTER.stores.map((s) => [s.id, s.country])).toEqual([["app", "CA"], ["database", "CA"], ["media", "US"]]);
+    expect(REGISTER.stores.map((s) => [s.id, s.country])).toEqual([
+      ["app", "CA"],
+      ["database", "CA"],
+      ["media", "US"],
+    ]);
   });
 
   it("stays silent about Québec hosting: nothing is stored in Québec", () => {
@@ -72,8 +89,12 @@ describe("the transfer register follows the deployment spec (folioviv#369)", () 
   it("refuses a store the register does not list (the rule itself)", () => {
     const added = `${SPEC}\n      - key: MAIL_PROVIDER\n        value: mailgun\n`;
     expect(gaps(added, REGISTER)).toEqual(["the spec sets MAIL_* and the register does not list that context"]);
-    expect(gaps(SPEC.replace("value: ny.storage.bunnycdn.com", "value: storage.bunnycdn.com"), REGISTER)).toEqual(["store « media » is in storage in the spec and ny in the register"]);
-    expect(gaps(SPEC.replace("(tor1", "(nyc1"), REGISTER)).toEqual(["store « database » is in nyc1 in the spec and tor1 in the register"]);
+    expect(gaps(SPEC.replace("value: ny.storage.bunnycdn.com", "value: storage.bunnycdn.com"), REGISTER)).toEqual([
+      "store « media » is in storage in the spec and ny in the register",
+    ]);
+    expect(gaps(SPEC.replace("(tor1", "(nyc1"), REGISTER)).toEqual([
+      "store « database » is in nyc1 in the spec and tor1 in the register",
+    ]);
   });
 
   it("keeps a context that is not deployed named, with its reason, for the day it is", () => {
@@ -94,7 +115,7 @@ describe("the transfer register follows the deployment spec (folioviv#369)", () 
   it("names every supplier in the readable version, and points the open regions to .github#285", () => {
     for (const p of REGISTER.processors) expect(TRANSFERS_MD, p.id).toContain(p.name);
     expect(TRANSFERS_MD).toContain("krizaka/.github#285");
-    expect(TRANSFERS_MD).toContain("Canadian hosting for production is *planned*");
+    expect(TRANSFERS_MD.replaceAll("_", "*")).toContain("Canadian hosting for production is *planned*");
     expect(TRANSFERS_MD).toContain("https://www.legisquebec.gouv.qc.ca/");
   });
 
@@ -107,7 +128,10 @@ describe("the transfer register follows the deployment spec (folioviv#369)", () 
 });
 
 describe("the privacy notice names every category of processor (folioviv#369)", () => {
-  it.each([["en", en], ["fr", fr]] as const)("%s: a line per category, none promising a residency", (_lang, m) => {
+  it.each([
+    ["en", en],
+    ["fr", fr],
+  ] as const)("%s: a line per category, none promising a residency", (_lang, m) => {
     const items = m.privacy.processors.items;
     expect(items).toHaveLength(5);
     const text = items.map((i) => `${i.h} ${i.p}`).join(" ");

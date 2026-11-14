@@ -11,6 +11,10 @@ export function GET(req: Request) {
   return handle(async () => {
     await requireAdmin(req);
     const service = appSettings();
-    return Response.json({ settings: describeSettings(settings), values: await service.snapshot(), overrides: await service.overrides({ scope: "global", id: "" }) });
+    return Response.json({
+      settings: describeSettings(settings),
+      values: await service.snapshot(),
+      overrides: await service.overrides({ scope: "global", id: "" }),
+    });
   });
 }

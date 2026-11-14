@@ -13,7 +13,21 @@ import type { ShopRoutes } from "@/lib/routes";
  * (a link to the rows), when it was computed and its state against the thresholds the administrator set. The lexique's words used by a figure
  * follow it as glossary terms, the ones that need an accountant marked. Server-rendered: nothing here fetches.
  */
-export function FiguresPanel({ ids, figures, locale, routes, timeZone, now }: Readonly<{ ids: readonly FigureId[]; figures: Record<FigureId, Figure>; locale: Locale; routes: ShopRoutes; timeZone: string; now: string }>) {
+export function FiguresPanel({
+  ids,
+  figures,
+  locale,
+  routes,
+  timeZone,
+  now,
+}: Readonly<{
+  ids: readonly FigureId[];
+  figures: Record<FigureId, Figure>;
+  locale: Locale;
+  routes: ShopRoutes;
+  timeZone: string;
+  now: string;
+}>) {
   const t = getDictionary(locale).console;
   return (
     <div className="grid gap-4 md:grid-cols-2" data-testid="figures">
@@ -31,10 +45,20 @@ export function FiguresPanel({ ids, figures, locale, routes, timeZone, now }: Re
               formulaLabel={t.figures.howComputed}
               formula={view.formula}
               sourceLabel={t.figures.source}
-              source={<Link href={view.href} className="underline underline-offset-2">{view.sources}</Link>}
+              source={
+                <Link href={view.href} className="underline underline-offset-2">
+                  {view.sources}
+                </Link>
+              }
               thresholds={view.thresholds}
               stateLabels={view.stateWords}
-              freshness={{ lastRead: view.freshness.lastRead, expectedAt: view.freshness.expectedAt, now, lastReadLabel: t.figures.updatedLabel, staleLabel: t.figures.stale }}
+              freshness={{
+                lastRead: view.freshness.lastRead,
+                expectedAt: view.freshness.expectedAt,
+                now,
+                lastReadLabel: t.figures.updatedLabel,
+                staleLabel: t.figures.stale,
+              }}
               maskedLabel={view.label}
             />
             {view.lexicon.length ? (
@@ -43,7 +67,10 @@ export function FiguresPanel({ ids, figures, locale, routes, timeZone, now }: Re
                 {view.lexicon.map((term, i) => (
                   <span key={term.id}>
                     {i ? " · " : ""}
-                    <GlossaryTerm term={term.term} definition={term.accountant ? `${term.definition} ${t.lexicon.accountant}` : term.definition} />
+                    <GlossaryTerm
+                      term={term.term}
+                      definition={term.accountant ? `${term.definition} ${t.lexicon.accountant}` : term.definition}
+                    />
                   </span>
                 ))}
               </p>

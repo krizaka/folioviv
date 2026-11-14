@@ -12,7 +12,17 @@ import { plansView } from "./founder-offer";
 import { paymentsFrom } from "./payments/config";
 import { processorCatalogue, type ProcessorPlans } from "./payments/processor-catalogue";
 import { publicPrices } from "./price-catalogue";
-import { ASSOCIATION, cardFeeCents, directDebitFeeCents, FOUNDER, type PriceKey, PRICES, PROCESSOR_PLANS, SCALE, STARTER } from "./pricing";
+import {
+  ASSOCIATION,
+  cardFeeCents,
+  directDebitFeeCents,
+  FOUNDER,
+  type PriceKey,
+  PRICES,
+  PROCESSOR_PLANS,
+  SCALE,
+  STARTER,
+} from "./pricing";
 import { SETTINGS } from "./settings";
 import { pricesInForce } from "./test-prices";
 
@@ -24,7 +34,9 @@ const plans = JSON.parse(read("infra/payments/plans.json")) as ProcessorPlans;
 function sources(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
     const path = join(dir, name);
-    if (statSync(path).isDirectory()) {return name === "node_modules" || name === ".next" ? [] : sources(path);}
+    if (statSync(path).isDirectory()) {
+      return name === "node_modules" || name === ".next" ? [] : sources(path);
+    }
     return /\.(ts|tsx)$/.test(name) && !/\.test\./.test(name) ? [path] : [];
   });
 }
@@ -32,11 +44,39 @@ function sources(dir: string): string[] {
 describe("the seed of the catalogue is the history: the founder offer, Starter and Scale as first sold, and the new Association entry (folioviv#371, ADR-009)", () => {
   it("the founder offer 39 $ a month for the first 20 businesses; Starter 45 $ and Scale B2B 99 $ a month, public — CAD, plus taxes", () => {
     expect(PRICES.keys).toEqual([FOUNDER, STARTER, SCALE, ASSOCIATION]);
-    expect(PRICES.defaultOf(FOUNDER)).toEqual({ unit: "month", amountCents: 3900, currency: "CAD", taxes: "plus-taxes", availability: "founder-limited", limits: { founderCap: 20, cardFeeBps: 0, directDebitBps: 50, directDebitCapCents: 1500 } });
-    expect(PRICES.defaultOf(STARTER)).toEqual({ unit: "month", amountCents: 4500, currency: "CAD", taxes: "plus-taxes", availability: "public", limits: { cardFeeBps: 0, directDebitBps: 50, directDebitCapCents: 1500 } });
-    expect(PRICES.defaultOf(SCALE)).toEqual({ unit: "month", amountCents: 9900, currency: "CAD", taxes: "plus-taxes", availability: "public", limits: { cardFeeBps: 0, directDebitBps: 25, directDebitCapCents: 1000 } });
+    expect(PRICES.defaultOf(FOUNDER)).toEqual({
+      unit: "month",
+      amountCents: 3900,
+      currency: "CAD",
+      taxes: "plus-taxes",
+      availability: "founder-limited",
+      limits: { founderCap: 20, cardFeeBps: 0, directDebitBps: 50, directDebitCapCents: 1500 },
+    });
+    expect(PRICES.defaultOf(STARTER)).toEqual({
+      unit: "month",
+      amountCents: 4500,
+      currency: "CAD",
+      taxes: "plus-taxes",
+      availability: "public",
+      limits: { cardFeeBps: 0, directDebitBps: 50, directDebitCapCents: 1500 },
+    });
+    expect(PRICES.defaultOf(SCALE)).toEqual({
+      unit: "month",
+      amountCents: 9900,
+      currency: "CAD",
+      taxes: "plus-taxes",
+      availability: "public",
+      limits: { cardFeeBps: 0, directDebitBps: 25, directDebitCapCents: 1000 },
+    });
     // The seed is never rewritten (a subscriber sold at `seed:folioviv.starter` keeps 45 $): the new grid is a dated version of the catalogue.
-    expect(PRICES.defaultOf(ASSOCIATION)).toEqual({ unit: "month", amountCents: 100, currency: "CAD", taxes: "plus-taxes", availability: "public", limits: { trialDays: 90, cardFeeBps: 0, directDebitBps: 50, directDebitCapCents: 1500 } });
+    expect(PRICES.defaultOf(ASSOCIATION)).toEqual({
+      unit: "month",
+      amountCents: 100,
+      currency: "CAD",
+      taxes: "plus-taxes",
+      availability: "public",
+      limits: { trialDays: 90, cardFeeBps: 0, directDebitBps: 50, directDebitCapCents: 1500 },
+    });
   });
 
   it("the grid in force: Starter 29 $ with 90 free days, Pro 69 $, Association 1 $ with 90 free days, the founder offer ended", async () => {
@@ -57,14 +97,18 @@ describe("the seed of the catalogue is the history: the founder offer, Starter a
     for (const key of PRICES.keys) {
       const price = PRICES.defaultOf(key);
       expect(price.limits.cardFeeBps, key).toBe(0);
-      for (const order of [0, 1, 999, 4500, 1_000_000]) {expect(cardFeeCents(price, order), key).toBe(0);}
+      for (const order of [0, 1, 999, 4500, 1_000_000]) {
+        expect(cardFeeCents(price, order), key).toBe(0);
+      }
     }
   });
 
   it("the pre-authorised debit fee of any order is at most the entry's cap, in every entry", () => {
     for (const key of PRICES.keys) {
       const price = PRICES.defaultOf(key);
-      for (const order of [0, 1, 4500, 199_999, 200_000, 300_000, 400_000, 10_000_000, 99_999_999]) {expect(directDebitFeeCents(price, order), key).toBeLessThanOrEqual(price.limits.directDebitCapCents);}
+      for (const order of [0, 1, 4500, 199_999, 200_000, 300_000, 400_000, 10_000_000, 99_999_999]) {
+        expect(directDebitFeeCents(price, order), key).toBeLessThanOrEqual(price.limits.directDebitCapCents);
+      }
     }
   });
 
@@ -81,26 +125,49 @@ describe("the seed of the catalogue is the history: the founder offer, Starter a
     expect(directDebitFeeCents(scale, 400_000)).toBe(1000);
     expect(directDebitFeeCents(scale, 400_400)).toBe(1000);
     expect(directDebitFeeCents(scale, 200_000)).toBe(500);
-    for (const bad of [-1, 1.5, Number.NaN]) {expect(() => directDebitFeeCents(starter, bad)).toThrow(RangeError);}
+    for (const bad of [-1, 1.5, Number.NaN]) {
+      expect(() => directDebitFeeCents(starter, bad)).toThrow(RangeError);
+    }
   });
 
   it("the processor's catalogue is built from the prices in force in the database, never from typed amounts (folioviv#633)", async () => {
-    expect(plans.plans.map((p) => p.lookupKey).sort()).toEqual(Object.values(PROCESSOR_PLANS).map((p) => p.lookupKey).sort());
+    expect(plans.plans.map((p) => p.lookupKey).sort()).toEqual(
+      Object.values(PROCESSOR_PLANS)
+        .map((p) => p.lookupKey)
+        .sort(),
+    );
     expect(read("infra/payments/plans.json")).not.toMatch(/"amount|amountCents|"currency|"interval/);
-    const entries = await (await pricesInForce(new Date("2026-11-01T12:00:00Z"))).catalogue(new Date("2026-11-02T12:00:00Z"));
+    const entries = await (
+      await pricesInForce(new Date("2026-11-01T12:00:00Z"))
+    ).catalogue(new Date("2026-11-02T12:00:00Z"));
     const built = processorCatalogue(plans, entries);
     for (const key of PRICES.keys) {
       const entry = entries.find((e) => e.key === key)!;
-      expect(built.plans.find((p) => p.lookupKey === PROCESSOR_PLANS[key as PriceKey].lookupKey), key).toMatchObject({ amount: entry.amountCents, currency: "cad", interval: entry.unit });
+      expect(
+        built.plans.find((p) => p.lookupKey === PROCESSOR_PLANS[key as PriceKey].lookupKey),
+        key,
+      ).toMatchObject({ amount: entry.amountCents, currency: "cad", interval: entry.unit });
     }
     expect(built.plans.map((p) => p.amount)).toEqual([3900, 2900, 6900, 100]);
     // A change scheduled from the console reaches the processor's catalogue without any file edit.
     const prices = await pricesInForce(new Date("2026-11-01T12:00:00Z"));
-    await prices.schedule({ id: null, label: "admin" }, SCALE, { amountCents: 7900 }, new Date("2026-11-03T12:00:00Z"), new Date("2026-11-02T12:00:00Z"));
+    await prices.schedule(
+      { id: null, label: "admin" },
+      SCALE,
+      { amountCents: 7900 },
+      new Date("2026-11-03T12:00:00Z"),
+      new Date("2026-11-02T12:00:00Z"),
+    );
     const later = processorCatalogue(plans, await prices.catalogue(new Date("2026-11-04T12:00:00Z")));
     expect(later.plans.find((p) => p.lookupKey === PROCESSOR_PLANS[SCALE].lookupKey)?.amount).toBe(7900);
     // An entry without a figure, or a missing one, is refused: the processor never sells a guess.
-    await prices.schedule({ id: null, label: "admin" }, SCALE, { availability: "preparing" }, new Date("2026-11-05T12:00:00Z"), new Date("2026-11-02T12:00:00Z"));
+    await prices.schedule(
+      { id: null, label: "admin" },
+      SCALE,
+      { availability: "preparing" },
+      new Date("2026-11-05T12:00:00Z"),
+      new Date("2026-11-02T12:00:00Z"),
+    );
     expect(() => processorCatalogue(plans, [])).toThrow(/No price/);
   });
 
@@ -109,17 +176,29 @@ describe("the seed of the catalogue is the history: the founder offer, Starter a
     expect(e.PAYMENTS_PRICE_KEY_STARTER).toBe(PROCESSOR_PLANS[STARTER].lookupKey);
     expect(e.PAYMENTS_PRICE_KEY_SCALE).toBe(PROCESSOR_PLANS[SCALE].lookupKey);
     expect(e.PAYMENTS_PRICE_KEY_ASSOCIATION).toBe(PROCESSOR_PLANS[ASSOCIATION].lookupKey);
-    const port = paymentsFrom({ ...e, PAYMENTS_PROVIDER: "stripe", PAYMENTS_STRIPE_SECRET_KEY: "x", PAYMENTS_STRIPE_WEBHOOK_SECRET: "y" });
+    const port = paymentsFrom({
+      ...e,
+      PAYMENTS_PROVIDER: "stripe",
+      PAYMENTS_STRIPE_SECRET_KEY: "x",
+      PAYMENTS_STRIPE_WEBHOOK_SECRET: "y",
+    });
     await expect(port!.price("unknown")).rejects.toThrow(/Unknown plan/);
   });
 
   it("the public view never shows an internal entry, and an entry in preparation shows without a figure", async () => {
     const now = new Date("2026-11-01T12:00:00Z");
     const prices = await pricesInForce(now);
-    expect(plansView(await publicPrices(prices, now), "en")).toEqual({ starter: { price: "$29" }, scale: { price: "$69" } });
+    expect(plansView(await publicPrices(prices, now), "en")).toEqual({
+      starter: { price: "$29" },
+      scale: { price: "$69" },
+    });
     await prices.schedule({ id: null, label: "admin" }, SCALE, { availability: "preparing" }, now, now);
     const preparing = await publicPrices(prices, now);
-    expect(preparing.find((e) => e.key === SCALE)).toMatchObject({ availability: "preparing", amountCents: null, limits: {} });
+    expect(preparing.find((e) => e.key === SCALE)).toMatchObject({
+      availability: "preparing",
+      amountCents: null,
+      limits: {},
+    });
     expect(plansView(preparing, "en").scale).toEqual({ price: null });
     // The administrator ends the founder offer and hides Scale: neither is shown any more.
     await prices.schedule({ id: null, label: "admin" }, FOUNDER, { availability: "internal" }, now, now);
@@ -132,8 +211,14 @@ describe("the seed of the catalogue is the history: the founder offer, Starter a
 
   it("the former setting `plans.founder.limit` is retired: the cap has one source, the Starter entry", () => {
     expect(Object.keys(SETTINGS)).not.toContain("plans.founder.limit");
-    const files = [...sources(join(ROOT, "apps/web/lib")), ...sources(join(ROOT, "apps/web/components")), ...sources(join(ROOT, "apps/web/app"))];
-    for (const file of files) {expect(readFileSync(file, "utf8"), file).not.toMatch(/["']plans\.founder\.limit["']/);}
+    const files = [
+      ...sources(join(ROOT, "apps/web/lib")),
+      ...sources(join(ROOT, "apps/web/components")),
+      ...sources(join(ROOT, "apps/web/app")),
+    ];
+    for (const file of files) {
+      expect(readFileSync(file, "utf8"), file).not.toMatch(/["']plans\.founder\.limit["']/);
+    }
   });
 });
 
@@ -150,11 +235,19 @@ describe("every price shown says « plus taxes », and none is typed in a messag
   it("each text that carries a {price} says the taxes are extra", () => {
     const texts: string[] = [];
     for (const m of [en, fr]) {
-      texts.push(m.landing.founder.title, ...m.landing.founder.points, m.landing.founder.plans.price, m.console.account.subscription.founderHint, m.console.account.subscription.priceLine);
+      texts.push(
+        m.landing.founder.title,
+        ...m.landing.founder.points,
+        m.landing.founder.plans.price,
+        m.console.account.subscription.founderHint,
+        m.console.account.subscription.priceLine,
+      );
     }
     const priced = texts.filter((t) => t.includes("{price}"));
     expect(priced.length).toBe(10);
-    for (const t of priced) {expect(t, t).toMatch(SAYS_TAXES);}
+    for (const t of priced) {
+      expect(t, t).toMatch(SAYS_TAXES);
+    }
   });
 
   it("the offer says « 0 % on cards » from the catalogue's card rate", () => {
@@ -165,13 +258,23 @@ describe("every price shown says « plus taxes », and none is typed in a messag
   });
 
   it("no claim of conformity, hosting place, uptime or escrow in the pricing words; Scale's B2B features are « soon »", () => {
-    for (const m of [en, fr]) {expect(JSON.stringify([m.landing.founder, m.console.account.subscription, m.console.admin.prices])).not.toMatch(/PIPEDA|Loi 25|Law 25|conform|hébergé au|hosted in|uptime|disponibilité de \d|99[.,]9|séquestre|escrow/i);}
+    for (const m of [en, fr]) {
+      expect(JSON.stringify([m.landing.founder, m.console.account.subscription, m.console.admin.prices])).not.toMatch(
+        /PIPEDA|Loi 25|Law 25|conform|hébergé au|hosted in|uptime|disponibilité de \d|99[.,]9|séquestre|escrow/i,
+      );
+    }
     expect(en.landing.founder.plans.scaleSoon).toMatch(/coming soon/);
     expect(fr.landing.founder.plans.scaleSoon).toMatch(/bientôt/);
   });
 
   it("the seed is the only place a plan amount is written (no 4500 or 9900 elsewhere in the web sources)", () => {
-    const files = [...sources(join(ROOT, "apps/web/lib")), ...sources(join(ROOT, "apps/web/components")), ...sources(join(ROOT, "apps/web/app"))].filter((f) => !f.endsWith("lib/pricing.ts"));
-    for (const file of files) {expect(readFileSync(file, "utf8"), file).not.toMatch(/\b(4500|9900|3900|4900)\b/);}
+    const files = [
+      ...sources(join(ROOT, "apps/web/lib")),
+      ...sources(join(ROOT, "apps/web/components")),
+      ...sources(join(ROOT, "apps/web/app")),
+    ].filter((f) => !f.endsWith("lib/pricing.ts"));
+    for (const file of files) {
+      expect(readFileSync(file, "utf8"), file).not.toMatch(/\b(4500|9900|3900|4900)\b/);
+    }
   });
 });

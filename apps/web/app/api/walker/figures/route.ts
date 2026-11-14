@@ -17,6 +17,9 @@ export function GET(req: Request) {
     const { shop } = await requireShop(req, "reports");
     const now = requestNow();
     const { figures, actions, period } = await loadFigures(shop, await shopDay(db(), shop.id, now), now);
-    return Response.json({ period, figures: Object.values(figures), actions }, { headers: { "Cache-Control": "private, no-store" } });
+    return Response.json(
+      { period, figures: Object.values(figures), actions },
+      { headers: { "Cache-Control": "private, no-store" } },
+    );
   });
 }

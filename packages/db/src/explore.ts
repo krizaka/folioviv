@@ -21,7 +21,10 @@ export type ExploreShopResult = ExploreShop & {
   /** The shop's next bookable time as the sweep stored it (« prochain créneau »); the shop page computes the live one. */
   nextFreeAt: string | null;
 };
-export interface ExplorePage { shops: ExploreShopResult[]; next: number | null }
+export interface ExplorePage {
+  shops: ExploreShopResult[];
+  next: number | null;
+}
 
 /** The shop's local clock at `now`, in SQL: the instant is a bound value (the injected clock), the zone is the shop's own. */
 const localNow = (now: Date) => sql`(${now.toISOString()}::timestamptz AT TIME ZONE s.timezone)`;
@@ -43,13 +46,17 @@ const windowAheadSql = (now: Date, days: number) => sql`EXISTS (
   WHERE NOT EXISTS (SELECT 1 FROM days_off d WHERE d.staff_id = st.id AND d.on_date = x.day))`;
 
 /** The stored next free time is still ahead and falls on the shop's local today. */
-const freeTodaySql = (now: Date) => sql`(s.next_free_at > ${now.toISOString()}::timestamptz AND (s.next_free_at AT TIME ZONE s.timezone)::date = ${localNow(now)}::date)`;
+const freeTodaySql = (now: Date) =>
+  sql`(s.next_free_at > ${now.toISOString()}::timestamptz AND (s.next_free_at AT TIME ZONE s.timezone)::date = ${localNow(now)}::date)`;
 
 /** Haversine distance in metres from `origin` to the shop's position (null when the shop has none). */
 const distanceSql = ([lng, lat]: readonly [number, number]) => sql`(2 * ${EARTH_RADIUS_M} * asin(sqrt(least(1,
   power(sin(radians(s.lat - ${lat}) / 2), 2) + cos(radians(${lat})) * cos(radians(s.lat)) * power(sin(radians(s.lng - ${lng}) / 2), 2)))))`;
 
-export interface CompiledExplore { conditions: SQL[]; distance: SQL | null }
+export interface CompiledExplore {
+  conditions: SQL[];
+  distance: SQL | null;
+}
 
 /**
  * ADR-006 decision 3: the filters of an `ExploreQuery` as parameterised SQL conditions over `shop_search` (alias `s`), combined with
@@ -69,7 +76,13 @@ export function compileExplore(query: ExploreQuery, now: Date): CompiledExplore 
       conditions.push(sql`(s.search @@ to_tsquery('simple', ${prefixes}) OR ${words.join(" ")} <% s.name_norm)`);
     }
   }
-  if (query.kinds) conditions.push(sql`s.kind IN (${sql.join(query.kinds.map((k) => sql`${k}`), sql`, `)})`);
+  if (query.kinds)
+    conditions.push(
+      sql`s.kind IN (${sql.join(
+        query.kinds.map((k) => sql`${k}`),
+        sql`, `,
+      )})`,
+    );
   if (query.open === "now") conditions.push(openNowSql(now));
   // Both read what the sweep stored (`settleAvailability`): the slot engine never runs on the list path.
   if (query.open === "week") conditions.push(sql`s.open_week`);
@@ -91,8 +104,21 @@ export function compileExplore(query: ExploreQuery, now: Date): CompiledExplore 
 }
 
 interface Row extends Record<string, unknown> {
-  shop_id: string; slug: string; name: string; kind: ExploreShop["kind"]; area: string | null; tagline_fr: string | null; tagline_en: string | null;
-  timezone: string; quartiers: string[]; lat: number | null; lng: number | null; open_now: boolean; free_today: boolean; next_free_at: string | null; distance_m: number | null;
+  shop_id: string;
+  slug: string;
+  name: string;
+  kind: ExploreShop["kind"];
+  area: string | null;
+  tagline_fr: string | null;
+  tagline_en: string | null;
+  timezone: string;
+  quartiers: string[];
+  lat: number | null;
+  lng: number | null;
+  open_now: boolean;
+  free_today: boolean;
+  next_free_at: string | null;
+  distance_m: number | null;
 }
 
 /** Runs `work` over `items`, at most `size` at a time. */
@@ -102,10 +128,16 @@ async function inBatches<T>(items: readonly T[], size: number, work: (item: T) =
 
 /** The first time a client could book at the shop within the next days (the earliest of its first services), null = none. */
 async function nextFreeTime(db: Db, shopId: string, now: Date): Promise<Date | null> {
-  const rows = (await db.execute(sql`SELECT id FROM services WHERE shop_id = ${shopId} AND active ORDER BY duration_minutes, name_en LIMIT ${SERVICES_CHECKED}`)).rows as { id: string }[];
+  const rows = (
+    await db.execute(
+      sql`SELECT id FROM services WHERE shop_id = ${shopId} AND active ORDER BY duration_minutes, name_en LIMIT ${SERVICES_CHECKED}`,
+    )
+  ).rows as { id: string }[];
   let first: Date | null = null;
   for (const service of rows) {
-    const slots = await listSlots(db, { shopId, serviceId: service.id, zoneId: null, now, days: AHEAD_DAYS }).catch(() => []);
+    const slots = await listSlots(db, { shopId, serviceId: service.id, zoneId: null, now, days: AHEAD_DAYS }).catch(
+      () => [],
+    );
     const at = slots[0]?.startsAt;
     if (at && (!first || at < first)) first = at;
   }
@@ -121,7 +153,8 @@ async function nextFreeTime(db: Db, shopId: string, now: Date): Promise<Date | n
  */
 export async function settleAvailability(db: Db, now: Date, batch: number = SETTLE_BATCH): Promise<number> {
   const at = now.toISOString();
-  const claimed = (await db.execute(sql`
+  const claimed = (
+    await db.execute(sql`
     UPDATE shop_search u SET avail_stale = false
      WHERE u.shop_id IN (
        SELECT q.shop_id FROM shop_search q
@@ -129,7 +162,8 @@ export async function settleAvailability(db: Db, now: Date, batch: number = SETT
            OR q.avail_at > ${at}::timestamptz OR (q.next_free_at IS NOT NULL AND q.next_free_at <= ${at}::timestamptz)
         ORDER BY q.avail_stale DESC, q.shop_id
         LIMIT ${batch} FOR UPDATE SKIP LOCKED)
-    RETURNING u.shop_id`)).rows as { shop_id: string }[];
+    RETURNING u.shop_id`)
+  ).rows as { shop_id: string }[];
   await inBatches(claimed, SLOT_CONCURRENCY, async ({ shop_id: shopId }) => {
     const free = await nextFreeTime(db, shopId, now);
     await db.execute(sql`

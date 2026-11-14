@@ -14,7 +14,12 @@ export function GET(req: Request) {
   return handle(async () => {
     limit("explore-geocode", req, null, [30, 60]);
     const url = new URL(req.url);
-    const answer = await geocodeAnswer(geocoder(), url.searchParams.get("q") ?? "", asLocale(url.searchParams.get("locale") ?? "en"), req.signal);
+    const answer = await geocodeAnswer(
+      geocoder(),
+      url.searchParams.get("q") ?? "",
+      asLocale(url.searchParams.get("locale") ?? "en"),
+      req.signal,
+    );
     return Response.json(answer, { headers: { "Cache-Control": "private, no-store" } });
   });
 }

@@ -34,17 +34,53 @@ export interface InvoiceDetailViewProps {
  * the ledger received) as a chip, « Envoyer la facture » the one primary with « Modifier » and « Imprimer » beside it; the aside
  * holds the deliveries and the chain (what it replaces, what replaced or cancelled it). The document keeps its own language.
  */
-export function InvoiceDetailView({ invoice, deliveries, locale, routes, today, defaultMessage, issued = false }: Readonly<InvoiceDetailViewProps>) {
+export function InvoiceDetailView({
+  invoice,
+  deliveries,
+  locale,
+  routes,
+  today,
+  defaultMessage,
+  issued = false,
+}: Readonly<InvoiceDetailViewProps>) {
   const t = getDictionary(locale).console;
-  const state = invoiceState({ totalCents: invoice.totalCents, paidCents: invoice.paidCents, dueOn: invoice.dueOn, isCredit: invoice.creditOf !== null, superseded: Boolean(invoice.replacedBy ?? invoice.creditedBy) }, today);
+  const state = invoiceState(
+    {
+      totalCents: invoice.totalCents,
+      paidCents: invoice.paidCents,
+      dueOn: invoice.dueOn,
+      isCredit: invoice.creditOf !== null,
+      superseded: Boolean(invoice.replacedBy ?? invoice.creditedBy),
+    },
+    today,
+  );
   // An invoice that still stands can be corrected (#207); a credit note or an already credited invoice cannot.
   const correctable = !invoice.creditOf && !invoice.creditedBy;
   const chain = [
-    invoice.replaces ? { href: routes.invoice(invoice.replaces.id), text: format(t.invoices.chain.replaces, { number: invoice.replaces.number }) } : null,
-    invoice.replacedBy ? { href: routes.invoice(invoice.replacedBy.id), text: format(t.invoices.chain.replacedBy, { number: invoice.replacedBy.number }) } : null,
-    invoice.creditedBy && !invoice.replacedBy ? { href: routes.invoice(invoice.creditedBy.id), text: format(t.invoices.chain.creditedBy, { number: invoice.creditedBy.number }) } : null,
+    invoice.replaces
+      ? {
+          href: routes.invoice(invoice.replaces.id),
+          text: format(t.invoices.chain.replaces, { number: invoice.replaces.number }),
+        }
+      : null,
+    invoice.replacedBy
+      ? {
+          href: routes.invoice(invoice.replacedBy.id),
+          text: format(t.invoices.chain.replacedBy, { number: invoice.replacedBy.number }),
+        }
+      : null,
+    invoice.creditedBy && !invoice.replacedBy
+      ? {
+          href: routes.invoice(invoice.creditedBy.id),
+          text: format(t.invoices.chain.creditedBy, { number: invoice.creditedBy.number }),
+        }
+      : null,
   ].filter((c): c is { href: string; text: string } => c !== null);
-  const meta = [invoice.client?.fullName ?? t.invoices.list.noClient, formatDate(`${invoice.issuedOn}T12:00:00Z`, locale, "UTC"), formatMoney(invoice.totalCents, locale)].join(" · ");
+  const meta = [
+    invoice.client?.fullName ?? t.invoices.list.noClient,
+    formatDate(`${invoice.issuedOn}T12:00:00Z`, locale, "UTC"),
+    formatMoney(invoice.totalCents, locale),
+  ].join(" · ");
   return (
     <DetailLayout
       back={<Link href={routes.invoices}>{t.invoices.title}</Link>}
@@ -58,7 +94,14 @@ export function InvoiceDetailView({ invoice, deliveries, locale, routes, today, 
       meta={<span className="tabular-nums">{meta}</span>}
       actions={
         <div className="flex flex-wrap items-start gap-2">
-          {invoice.clientId ? <InvoiceSendAction invoiceId={invoice.id} email={invoice.client?.email ?? null} defaultMessage={defaultMessage} primary /> : null}
+          {invoice.clientId ? (
+            <InvoiceSendAction
+              invoiceId={invoice.id}
+              email={invoice.client?.email ?? null}
+              defaultMessage={defaultMessage}
+              primary
+            />
+          ) : null}
           {correctable ? (
             <ButtonLink href={routes.invoiceCorrect(invoice.id)} variant="secondary" size="md">
               {t.invoices.actions.correct}
@@ -88,7 +131,12 @@ export function InvoiceDetailView({ invoice, deliveries, locale, routes, today, 
       }
     >
       {issued ? (
-        <Alert tone="success" className="mb-4" icon={<Mascot bird="beaver" mood="success" size={48} />} title={format(t.invoices.issued.title, { number: invoice.number })}>
+        <Alert
+          tone="success"
+          className="mb-4"
+          icon={<Mascot bird="beaver" mood="success" size={48} />}
+          title={format(t.invoices.issued.title, { number: invoice.number })}
+        >
           {invoice.clientId ? t.invoices.issued.next : null}
         </Alert>
       ) : null}

@@ -19,10 +19,19 @@ export default function Profile() {
   const shop = useQuery(queries.shop());
   const me = useQuery(queries.me());
   return (
-    <Screen header={<Header title={t("profile.title")} backLabel={t("common.back")} onBack={() => router.back()} size="inline" />}>
+    <Screen
+      header={
+        <Header title={t("profile.title")} backLabel={t("common.back")} onBack={() => router.back()} size="inline" />
+      }
+    >
       <View style={{ gap: 8 }}>
         <Txt variant="label">{t("settings.language")}</Txt>
-        <Segmented aria-label={t("settings.language")} options={LOCALES.map((value) => ({ value, label: t(`settings.languages.${value}`) }))} value={locale} onValueChange={setLocale} />
+        <Segmented
+          aria-label={t("settings.language")}
+          options={LOCALES.map((value) => ({ value, label: t(`settings.languages.${value}`) }))}
+          value={locale}
+          onValueChange={setLocale}
+        />
       </View>
       {me.data ? (
         <Card.Root>
@@ -41,8 +50,14 @@ export default function Profile() {
           </Card.Body>
         </Card.Root>
       ) : null}
-      <Button variant="secondary" label={t("settings.signOut")} onPress={() => void signOut().then(() => router.replace("/sign-in"))} />
-      <Txt tone="muted" variant="caption">{t("settings.version", { version: APP_VERSION })}</Txt>
+      <Button
+        variant="secondary"
+        label={t("settings.signOut")}
+        onPress={() => void signOut().then(() => router.replace("/sign-in"))}
+      />
+      <Txt tone="muted" variant="caption">
+        {t("settings.version", { version: APP_VERSION })}
+      </Txt>
     </Screen>
   );
 }

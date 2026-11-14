@@ -10,14 +10,38 @@ const seen: RetroTvProps[] = [];
 vi.mock("@krizaka/ui/retro-tv", () => ({
   RetroTv: (props: RetroTvProps) => {
     seen.push(props);
-    return <div data-testid="tv">{props.playlist?.map((p) => <div key={p.id} data-testid="programme">{p.src ? <video src={p.src} /> : props.renderEmbed?.(p)}</div>)}</div>;
+    return (
+      <div data-testid="tv">
+        {props.playlist?.map((p) => (
+          <div key={p.id} data-testid="programme">
+            {p.src ? <video src={p.src} /> : props.renderEmbed?.(p)}
+          </div>
+        ))}
+      </div>
+    );
   },
 }));
-vi.mock("@krizaka/ui/page", () => ({ Section: ({ children }: { children: ReactNode }) => <section>{children}</section> }));
+vi.mock("@krizaka/ui/page", () => ({
+  Section: ({ children }: { children: ReactNode }) => <section>{children}</section>,
+}));
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-const labels = { play: "Play", pause: "Pause", next: "Next", previous: "Previous", soundOff: "Sound off", soundOn: "Sound on", captions: "Captions", seek: "Seek", nowPlaying: "Now" };
-const playLabels = { tiktok: "Load TikTok and play", "youtube-shorts": "Load YouTube and play", instagram: "Load Instagram and play" };
+const labels = {
+  play: "Play",
+  pause: "Pause",
+  next: "Next",
+  previous: "Previous",
+  soundOff: "Sound off",
+  soundOn: "Sound on",
+  captions: "Captions",
+  seek: "Seek",
+  nowPlaying: "Now",
+};
+const playLabels = {
+  tiktok: "Load TikTok and play",
+  "youtube-shorts": "Load YouTube and play",
+  instagram: "Load Instagram and play",
+};
 const playlist: TvProgramme[] = [
   { id: "a", title: "First", src: "https://cdn.test/a.mp4", poster: "https://cdn.test/a.jpg" },
   { id: "b", title: "A public Short", platform: "youtube-shorts", url: "https://www.youtube.com/shorts/sOpin6X2--0" },
@@ -28,12 +52,35 @@ async function draw(transition: "channel" | "crossfade" | "slide" = "channel") {
   const host = document.createElement("div");
   document.body.append(host);
   const root = createRoot(host);
-  await act(async () => root.render(<ShopVideoTv title="Videos" playlist={playlist} transition={transition} label="Videos of the shop" channel="Latest" labels={labels} playLabels={playLabels} notice="Platform sees your visit." />));
-  return { host, last: () => seen.at(-1)!, done: () => { act(() => root.unmount()); host.remove(); } };
+  await act(async () =>
+    root.render(
+      <ShopVideoTv
+        title="Videos"
+        playlist={playlist}
+        transition={transition}
+        label="Videos of the shop"
+        channel="Latest"
+        labels={labels}
+        playLabels={playLabels}
+        notice="Platform sees your visit."
+      />,
+    ),
+  );
+  return {
+    host,
+    last: () => seen.at(-1)!,
+    done: () => {
+      act(() => root.unmount());
+      host.remove();
+    },
+  };
 }
 
 describe("the shop's television (#469)", () => {
-  beforeEach(() => { seen.length = 0; localStorage.clear(); });
+  beforeEach(() => {
+    seen.length = 0;
+    localStorage.clear();
+  });
   afterEach(() => localStorage.clear());
 
   it("plays the owner's videos in their order, with their transition, then again (the set loops its playlist)", async () => {
@@ -66,7 +113,9 @@ describe("the shop's television (#469)", () => {
   });
 
   it("works when the browser keeps no storage", () => {
-    const get = vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => { throw new Error("blocked"); });
+    const get = vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new Error("blocked");
+    });
     expect(rememberedSound()).toBeNull();
     get.mockRestore();
   });

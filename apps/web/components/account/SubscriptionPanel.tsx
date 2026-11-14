@@ -33,7 +33,11 @@ export interface SubscriptionView {
   selling?: boolean;
   /** Every plan of the catalogue (the ones /pricing sells), for an active account: « Current plan » on hers, « Change plan » on the others. */
   planList?: { id: "starter" | "scale" | "association"; price: string }[];
-  plans?: { id: "starter" | "scale" | "association"; price: string; trial: { months: number | null; days: number } | null }[];
+  plans?: {
+    id: "starter" | "scale" | "association";
+    price: string;
+    trial: { months: number | null; days: number } | null;
+  }[];
   /** The Association plan: the proof state of this account, and whether an administrator approved it. */
   association?: { status: "pending" | "approved" | "rejected" | null; note: string | null };
 }
@@ -58,21 +62,52 @@ export function SubscriptionPanel({ subscription }: Readonly<{ subscription: Sub
   const [problem, setProblem] = useState<string | null>(null);
   const open = useMutation({
     mutationFn: async (kind: "portal" | "founder" | "starter" | "scale" | "association") => {
-      const { url } = (await krizakaFetch(kind === "portal" ? "/api/billing/portal" : `/api/billing/checkout?locale=${locale}&plan=${kind}`, { method: "POST" })) as { url: string };
+      const { url } = (await krizakaFetch(
+        kind === "portal" ? "/api/billing/portal" : `/api/billing/checkout?locale=${locale}&plan=${kind}`,
+        { method: "POST" },
+      )) as { url: string };
       window.location.assign(url);
     },
     onError: (error) => setProblem(say(`errors.${errorKey(error)}`)),
     onMutate: () => setProblem(null),
   });
   return (
-    <SettingsSection variant="flat" title={say("account.subscription.title")} description={say("account.subscription.description")}>
+    <SettingsSection
+      variant="flat"
+      title={say("account.subscription.title")}
+      description={say("account.subscription.description")}
+    >
       <SettingsRow label={say("account.subscription.status")}>
-        <Badge tone={subscription.active ? "success" : "neutral"}>{say(subscription.active ? "account.subscription.active" : "account.subscription.none")}</Badge>
+        <Badge tone={subscription.active ? "success" : "neutral"}>
+          {say(subscription.active ? "account.subscription.active" : "account.subscription.none")}
+        </Badge>
       </SettingsRow>
-      {subscription.active && subscription.periodEnd ? <SettingsRow label={say("account.subscription.renews")}>{formatDate(subscription.periodEnd, locale, "UTC")}</SettingsRow> : null}
-      {subscription.trialEndsAt ? <SettingsRow label={say("account.subscription.trialEnds")} description={say("account.subscription.trialEndsHint")}>{formatDate(subscription.trialEndsAt, locale, "UTC")}</SettingsRow> : null}
-      {subscription.active && subscription.currentPlan ? <SettingsRow label={say("account.subscription.currentPlan")}>{say(`account.subscription.plan.${subscription.currentPlan}`)}</SettingsRow> : null}
-      {subscription.active && subscription.soldPrice ? <SettingsRow label={say("account.subscription.yourPrice")} description={say("account.subscription.yourPriceHint")}>{say("account.subscription.priceLine", { price: subscription.soldPrice })}</SettingsRow> : null}
+      {subscription.active && subscription.periodEnd ? (
+        <SettingsRow label={say("account.subscription.renews")}>
+          {formatDate(subscription.periodEnd, locale, "UTC")}
+        </SettingsRow>
+      ) : null}
+      {subscription.trialEndsAt ? (
+        <SettingsRow
+          label={say("account.subscription.trialEnds")}
+          description={say("account.subscription.trialEndsHint")}
+        >
+          {formatDate(subscription.trialEndsAt, locale, "UTC")}
+        </SettingsRow>
+      ) : null}
+      {subscription.active && subscription.currentPlan ? (
+        <SettingsRow label={say("account.subscription.currentPlan")}>
+          {say(`account.subscription.plan.${subscription.currentPlan}`)}
+        </SettingsRow>
+      ) : null}
+      {subscription.active && subscription.soldPrice ? (
+        <SettingsRow
+          label={say("account.subscription.yourPrice")}
+          description={say("account.subscription.yourPriceHint")}
+        >
+          {say("account.subscription.priceLine", { price: subscription.soldPrice })}
+        </SettingsRow>
+      ) : null}
       {subscription.hasCustomer ? (
         <SettingsRow label={say("account.subscription.manage")} description={say("account.subscription.manageHint")}>
           <Button size="sm" variant="secondary" loading={open.isPending} onClick={() => open.mutate("portal")}>
@@ -80,22 +115,49 @@ export function SubscriptionPanel({ subscription }: Readonly<{ subscription: Sub
           </Button>
         </SettingsRow>
       ) : null}
-      {subscription.active ? <ActivePlans subscription={subscription} pending={open.isPending} onChange={() => open.mutate("portal")} /> : <NotSubscribed subscription={subscription} pending={open.isPending} onChoose={(plan) => open.mutate(plan)} onProblem={setProblem} />}
+      {subscription.active ? (
+        <ActivePlans subscription={subscription} pending={open.isPending} onChange={() => open.mutate("portal")} />
+      ) : (
+        <NotSubscribed
+          subscription={subscription}
+          pending={open.isPending}
+          onChoose={(plan) => open.mutate(plan)}
+          onProblem={setProblem}
+        />
+      )}
       {problem ? <Alert tone="danger">{problem}</Alert> : null}
     </SettingsSection>
   );
 }
 
 /** The catalogue seen by a subscriber: the plan she is on says « Current plan », the others lead to the hosted page where a plan is changed. */
-function ActivePlans({ subscription, pending, onChange }: Readonly<{ subscription: SubscriptionView; pending: boolean; onChange: () => void }>) {
+function ActivePlans({
+  subscription,
+  pending,
+  onChange,
+}: Readonly<{ subscription: SubscriptionView; pending: boolean; onChange: () => void }>) {
   const { say } = useSay();
-  const name = { starter: "account.subscription.planStarter", scale: "account.subscription.planScale", association: "account.subscription.planAssociation" } as const;
+  const name = {
+    starter: "account.subscription.planStarter",
+    scale: "account.subscription.planScale",
+    association: "account.subscription.planAssociation",
+  } as const;
   return (
     <>
       {(subscription.planList ?? []).map((plan) => (
-        <SettingsRow key={plan.id} label={say(name[plan.id])} description={say("account.subscription.planHint", { price: plan.price })}>
-          {plan.id === subscription.currentPlan ? <Badge tone="success">{say("account.subscription.currentPlan")}</Badge> : null}
-          {plan.id !== subscription.currentPlan && subscription.hasCustomer ? <Button size="sm" variant="secondary" loading={pending} onClick={onChange}>{say("account.subscription.changePlan")}</Button> : null}
+        <SettingsRow
+          key={plan.id}
+          label={say(name[plan.id])}
+          description={say("account.subscription.planHint", { price: plan.price })}
+        >
+          {plan.id === subscription.currentPlan ? (
+            <Badge tone="success">{say("account.subscription.currentPlan")}</Badge>
+          ) : null}
+          {plan.id !== subscription.currentPlan && subscription.hasCustomer ? (
+            <Button size="sm" variant="secondary" loading={pending} onClick={onChange}>
+              {say("account.subscription.changePlan")}
+            </Button>
+          ) : null}
         </SettingsRow>
       ))}
     </>
@@ -103,33 +165,82 @@ function ActivePlans({ subscription, pending, onChange }: Readonly<{ subscriptio
 }
 
 /** What an account without a subscription is offered: the founder offer while it is on sale (choosing it accepts the terms), or why there is none. */
-function NotSubscribed({ subscription, pending, onChoose, onProblem }: Readonly<{ subscription: SubscriptionView; pending: boolean; onChoose: (plan: "founder" | "starter" | "scale" | "association") => void; onProblem: (message: string | null) => void }>) {
+function NotSubscribed({
+  subscription,
+  pending,
+  onChoose,
+  onProblem,
+}: Readonly<{
+  subscription: SubscriptionView;
+  pending: boolean;
+  onChoose: (plan: "founder" | "starter" | "scale" | "association") => void;
+  onProblem: (message: string | null) => void;
+}>) {
   const { say } = useSay();
   const plans = subscription.plans ?? [];
-  const name = { starter: "account.subscription.planStarter", scale: "account.subscription.planScale", association: "account.subscription.planAssociation" } as const;
+  const name = {
+    starter: "account.subscription.planStarter",
+    scale: "account.subscription.planScale",
+    association: "account.subscription.planAssociation",
+  } as const;
   return (
     <>
-      {subscription.selling === false && plans.length ? <p className="py-4 text-sm text-fg-secondary">{say("account.subscription.plannedNote")}</p> : null}
-      {plans.filter((plan) => plan.id !== "association").map((plan) => (
-        <SettingsRow key={plan.id} label={say(name[plan.id])} description={say(plan.trial && subscription.selling !== false ? "account.subscription.planHintTrial" : "account.subscription.planHint", { price: plan.price, trial: plan.trial ? trialText(say, plan.trial) : "" })}>
-          {subscription.selling === false ? null : (
-            <Button size="sm" variant={plan.id === "starter" ? "primary" : "secondary"} loading={pending} onClick={() => onChoose(plan.id)}>
-              {say(plan.trial ? "account.subscription.startTrial" : "account.subscription.choosePlan")}
-            </Button>
-          )}
-        </SettingsRow>
-      ))}
-      {subscription.selling !== false && plans.some((plan) => plan.id === "association") ? <AssociationRow subscription={subscription} pending={pending} onChoose={() => onChoose("association")} onProblem={onProblem} /> : null}
+      {subscription.selling === false && plans.length ? (
+        <p className="py-4 text-sm text-fg-secondary">{say("account.subscription.plannedNote")}</p>
+      ) : null}
+      {plans
+        .filter((plan) => plan.id !== "association")
+        .map((plan) => (
+          <SettingsRow
+            key={plan.id}
+            label={say(name[plan.id])}
+            description={say(
+              plan.trial && subscription.selling !== false
+                ? "account.subscription.planHintTrial"
+                : "account.subscription.planHint",
+              { price: plan.price, trial: plan.trial ? trialText(say, plan.trial) : "" },
+            )}
+          >
+            {subscription.selling === false ? null : (
+              <Button
+                size="sm"
+                variant={plan.id === "starter" ? "primary" : "secondary"}
+                loading={pending}
+                onClick={() => onChoose(plan.id)}
+              >
+                {say(plan.trial ? "account.subscription.startTrial" : "account.subscription.choosePlan")}
+              </Button>
+            )}
+          </SettingsRow>
+        ))}
+      {subscription.selling !== false && plans.some((plan) => plan.id === "association") ? (
+        <AssociationRow
+          subscription={subscription}
+          pending={pending}
+          onChoose={() => onChoose("association")}
+          onProblem={onProblem}
+        />
+      ) : null}
       {plans.length && subscription.selling !== false ? <TermsNote /> : null}
       {subscription.offer && subscription.selling !== false ? (
-        <SettingsRow label={say("account.subscription.founder")} description={say("account.subscription.founderHint", { price: subscription.offer.price, cardRate: subscription.offer.cardRate })}>
+        <SettingsRow
+          label={say("account.subscription.founder")}
+          description={say("account.subscription.founderHint", {
+            price: subscription.offer.price,
+            cardRate: subscription.offer.cardRate,
+          })}
+        >
           <Button size="sm" variant="primary" loading={pending} onClick={() => onChoose("founder")}>
             {say("account.subscription.choose")}
           </Button>
         </SettingsRow>
       ) : null}
-      {subscription.offerFull ? <p className="py-4 text-sm text-fg-secondary">{say("account.subscription.offerFull")}</p> : null}
-      {!plans.length && !subscription.offer && !subscription.offerFull && !subscription.hasCustomer ? <p className="py-4 text-sm text-fg-secondary">{say("account.subscription.unavailable")}</p> : null}
+      {subscription.offerFull ? (
+        <p className="py-4 text-sm text-fg-secondary">{say("account.subscription.offerFull")}</p>
+      ) : null}
+      {!plans.length && !subscription.offer && !subscription.offerFull && !subscription.hasCustomer ? (
+        <p className="py-4 text-sm text-fg-secondary">{say("account.subscription.unavailable")}</p>
+      ) : null}
       {subscription.offer ? <TermsNote /> : null}
     </>
   );
@@ -139,12 +250,18 @@ const KINDS = ["neq", "charity", "incorporation"] as const;
 
 type Say = ReturnType<typeof useSay>["say"];
 const trialText = (say: Say, trial: { months: number | null; days: number } | null): string => {
-  if (!trial) {return "";}
-  return trial.months ? say("account.subscription.trialMonths", { months: trial.months }) : say("account.subscription.trialDays", { days: trial.days });
+  if (!trial) {
+    return "";
+  }
+  return trial.months
+    ? say("account.subscription.trialMonths", { months: trial.months })
+    : say("account.subscription.trialDays", { days: trial.days });
 };
 
 const rejectionText = (say: Say, status: string | null, note: string | null): string | null => {
-  if (status !== "rejected") {return null;}
+  if (status !== "rejected") {
+    return null;
+  }
   return note ? say("account.subscription.assoRejected", { note }) : say("account.subscription.assoRejectedPlain");
 };
 
@@ -152,21 +269,40 @@ const rejectionText = (say: Say, status: string | null, note: string | null): st
  * The Association plan: the shop sends one proof (NEQ, registered charity number, incorporation reference); an administrator checks it
  * (`/console/associations`). Until approved the account stays on Starter. Approved, the plan is bought like the others.
  */
-function AssociationRow({ subscription, pending, onChoose, onProblem }: Readonly<{ subscription: SubscriptionView; pending: boolean; onChoose: () => void; onProblem: (message: string | null) => void }>) {
+function AssociationRow({
+  subscription,
+  pending,
+  onChoose,
+  onProblem,
+}: Readonly<{
+  subscription: SubscriptionView;
+  pending: boolean;
+  onChoose: () => void;
+  onProblem: (message: string | null) => void;
+}>) {
   const { say } = useSay();
   const plan = subscription.plans?.find((p) => p.id === "association");
   const status = subscription.association?.status ?? null;
   const [sent, setSent] = useState(false);
-  if (!plan) {return null;}
+  if (!plan) {
+    return null;
+  }
   const rejection = rejectionText(say, status, subscription.association?.note ?? null);
   const trial = trialText(say, plan.trial);
   const pendingNow = status === "pending" || sent;
   return (
-    <SettingsRow label={say("account.subscription.associationTitle")} description={say("account.subscription.associationHint", { trial, price: plan.price })}>
+    <SettingsRow
+      label={say("account.subscription.associationTitle")}
+      description={say("account.subscription.associationHint", { trial, price: plan.price })}
+    >
       <div className="flex flex-col gap-3" data-testid="association">
         {status === "approved" ? <ApprovedBlock plan={plan} pending={pending} onChoose={onChoose} /> : null}
-        {status !== "approved" && pendingNow ? <Badge tone="neutral">{say("account.subscription.assoPending")}</Badge> : null}
-        {status !== "approved" && !pendingNow ? <ProofForm rejection={rejection} onProblem={onProblem} onSent={() => setSent(true)} /> : null}
+        {status !== "approved" && pendingNow ? (
+          <Badge tone="neutral">{say("account.subscription.assoPending")}</Badge>
+        ) : null}
+        {status !== "approved" && !pendingNow ? (
+          <ProofForm rejection={rejection} onProblem={onProblem} onSent={() => setSent(true)} />
+        ) : null}
       </div>
     </SettingsRow>
   );
@@ -175,7 +311,11 @@ function AssociationRow({ subscription, pending, onChoose, onProblem }: Readonly
 type AssociationPlan = NonNullable<SubscriptionView["plans"]>[number];
 
 /** Approved: the plan is bought like the others, with its free months. */
-function ApprovedBlock({ plan, pending, onChoose }: Readonly<{ plan: AssociationPlan; pending: boolean; onChoose: () => void }>) {
+function ApprovedBlock({
+  plan,
+  pending,
+  onChoose,
+}: Readonly<{ plan: AssociationPlan; pending: boolean; onChoose: () => void }>) {
   const { say } = useSay();
   return (
     <>
@@ -188,13 +328,21 @@ function ApprovedBlock({ plan, pending, onChoose }: Readonly<{ plan: Association
 }
 
 /** The proof's form: what it is, its number or reference, a word for the reviewer. */
-function ProofForm({ rejection, onProblem, onSent }: Readonly<{ rejection: string | null; onProblem: (message: string | null) => void; onSent: () => void }>) {
+function ProofForm({
+  rejection,
+  onProblem,
+  onSent,
+}: Readonly<{ rejection: string | null; onProblem: (message: string | null) => void; onSent: () => void }>) {
   const { say } = useSay();
   const [kind, setKind] = useState<(typeof KINDS)[number]>("neq");
   const [reference, setReference] = useState("");
   const [note, setNote] = useState("");
   const submit = useMutation({
-    mutationFn: () => krizakaFetch("/api/billing/association", { method: "POST", json: { kind, reference, ...(note ? { note } : {}) } }),
+    mutationFn: () =>
+      krizakaFetch("/api/billing/association", {
+        method: "POST",
+        json: { kind, reference, ...(note ? { note } : {}) },
+      }),
     onMutate: () => onProblem(null),
     onSuccess: onSent,
     onError: (error) => onProblem(say(`errors.${errorKey(error)}`)),
@@ -220,7 +368,13 @@ function ProofForm({ rejection, onProblem, onSent }: Readonly<{ rejection: strin
         <Field.Label htmlFor="asso-note">{say("account.subscription.assoNote")}</Field.Label>
         <Input id="asso-note" value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} />
       </Field.Root>
-      <Button size="sm" variant="secondary" loading={submit.isPending} disabled={reference.trim().length === 0} onClick={() => submit.mutate()}>
+      <Button
+        size="sm"
+        variant="secondary"
+        loading={submit.isPending}
+        disabled={reference.trim().length === 0}
+        onClick={() => submit.mutate()}
+      >
         {say("account.subscription.assoSubmit")}
       </Button>
     </>

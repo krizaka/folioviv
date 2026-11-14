@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isPlanId, planRefusal, trialDaysFor, trialDaysOf, trialMonthsOf,TrialRefused } from "./plans";
+import { isPlanId, planRefusal, trialDaysFor, trialDaysOf, trialMonthsOf, TrialRefused } from "./plans";
 
 const starter = { availability: "public", amountCents: 2900, limits: { trialDays: 90 } } as const;
 
@@ -37,10 +37,18 @@ describe("who may buy which plan", () => {
   });
 
   it("an internal or in-preparation entry is not on sale; the founder entry only while founder-limited", () => {
-    expect(planRefusal("starter", { availability: "internal", amountCents: 2900 }, { associationApproved: false })).toBe("PLAN_NOT_ON_SALE");
-    expect(planRefusal("scale", { availability: "preparing", amountCents: null }, { associationApproved: false })).toBe("PLAN_NOT_ON_SALE");
-    expect(planRefusal("founder", { availability: "founder-limited", amountCents: 3900 }, { associationApproved: false })).toBeNull();
-    expect(planRefusal("starter", { availability: "founder-limited", amountCents: 3900 }, { associationApproved: false })).toBe("PLAN_NOT_ON_SALE");
+    expect(
+      planRefusal("starter", { availability: "internal", amountCents: 2900 }, { associationApproved: false }),
+    ).toBe("PLAN_NOT_ON_SALE");
+    expect(planRefusal("scale", { availability: "preparing", amountCents: null }, { associationApproved: false })).toBe(
+      "PLAN_NOT_ON_SALE",
+    );
+    expect(
+      planRefusal("founder", { availability: "founder-limited", amountCents: 3900 }, { associationApproved: false }),
+    ).toBeNull();
+    expect(
+      planRefusal("starter", { availability: "founder-limited", amountCents: 3900 }, { associationApproved: false }),
+    ).toBe("PLAN_NOT_ON_SALE");
   });
 
   it("knows its plan ids", () => {

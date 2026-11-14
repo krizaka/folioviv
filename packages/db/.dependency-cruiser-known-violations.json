@@ -4,10 +4,7 @@
     "from": "../core/src/brief/gaps.ts",
     "to": "../../node_modules/.pnpm/date-fns@4.4.0/node_modules/date-fns/index.cjs",
     "unresolvedTo": "date-fns",
-    "dependencyTypes": [
-      "npm",
-      "import"
-    ],
+    "dependencyTypes": ["npm", "import"],
     "rule": {
       "severity": "error",
       "name": "krizaka-first-dates"
@@ -18,10 +15,7 @@
     "from": "../core/src/figures/actions.ts",
     "to": "../../node_modules/.pnpm/date-fns@4.4.0/node_modules/date-fns/index.cjs",
     "unresolvedTo": "date-fns",
-    "dependencyTypes": [
-      "npm",
-      "import"
-    ],
+    "dependencyTypes": ["npm", "import"],
     "rule": {
       "severity": "error",
       "name": "krizaka-first-dates"
@@ -32,10 +26,7 @@
     "from": "../core/src/figures/figures.ts",
     "to": "../../node_modules/.pnpm/date-fns@4.4.0/node_modules/date-fns/index.cjs",
     "unresolvedTo": "date-fns",
-    "dependencyTypes": [
-      "npm",
-      "import"
-    ],
+    "dependencyTypes": ["npm", "import"],
     "rule": {
       "severity": "error",
       "name": "krizaka-first-dates"
@@ -46,10 +37,7 @@
     "from": "../core/src/figures/period.ts",
     "to": "../../node_modules/.pnpm/date-fns@4.4.0/node_modules/date-fns/index.cjs",
     "unresolvedTo": "date-fns",
-    "dependencyTypes": [
-      "npm",
-      "import"
-    ],
+    "dependencyTypes": ["npm", "import"],
     "rule": {
       "severity": "error",
       "name": "krizaka-first-dates"
@@ -60,10 +48,7 @@
     "from": "../core/src/service-shop.ts",
     "to": "../../node_modules/.pnpm/@date-fns+tz@1.5.0/node_modules/@date-fns/tz/index.cjs",
     "unresolvedTo": "@date-fns/tz",
-    "dependencyTypes": [
-      "npm",
-      "import"
-    ],
+    "dependencyTypes": ["npm", "import"],
     "rule": {
       "severity": "error",
       "name": "krizaka-first-dates"
@@ -74,10 +59,7 @@
     "from": "../core/src/service-shop.ts",
     "to": "../../node_modules/.pnpm/date-fns@4.4.0/node_modules/date-fns/index.cjs",
     "unresolvedTo": "date-fns",
-    "dependencyTypes": [
-      "npm",
-      "import"
-    ],
+    "dependencyTypes": ["npm", "import"],
     "rule": {
       "severity": "error",
       "name": "krizaka-first-dates"
@@ -88,10 +70,7 @@
     "from": "../core/src/storefront.ts",
     "to": "../../node_modules/.pnpm/@date-fns+tz@1.5.0/node_modules/@date-fns/tz/index.cjs",
     "unresolvedTo": "@date-fns/tz",
-    "dependencyTypes": [
-      "npm",
-      "import"
-    ],
+    "dependencyTypes": ["npm", "import"],
     "rule": {
       "severity": "error",
       "name": "krizaka-first-dates"
@@ -102,10 +81,7 @@
     "from": "../core/src/storefront.ts",
     "to": "../../node_modules/.pnpm/date-fns@4.4.0/node_modules/date-fns/index.cjs",
     "unresolvedTo": "date-fns",
-    "dependencyTypes": [
-      "npm",
-      "import"
-    ],
+    "dependencyTypes": ["npm", "import"],
     "rule": {
       "severity": "error",
       "name": "krizaka-first-dates"
@@ -116,10 +92,7 @@
     "from": "../core/src/time-off.ts",
     "to": "../../node_modules/.pnpm/date-fns@4.4.0/node_modules/date-fns/index.cjs",
     "unresolvedTo": "date-fns",
-    "dependencyTypes": [
-      "npm",
-      "import"
-    ],
+    "dependencyTypes": ["npm", "import"],
     "rule": {
       "severity": "error",
       "name": "krizaka-first-dates"
@@ -130,10 +103,7 @@
     "from": "src/invoice-deliveries.ts",
     "to": "../../node_modules/.pnpm/date-fns@4.4.0/node_modules/date-fns/index.cjs",
     "unresolvedTo": "date-fns",
-    "dependencyTypes": [
-      "npm",
-      "import"
-    ],
+    "dependencyTypes": ["npm", "import"],
     "rule": {
       "severity": "error",
       "name": "krizaka-first-dates"
@@ -144,10 +114,7 @@
     "from": "src/qa-reset-walker.ts",
     "to": "../../node_modules/.pnpm/date-fns@4.4.0/node_modules/date-fns/index.cjs",
     "unresolvedTo": "date-fns",
-    "dependencyTypes": [
-      "npm",
-      "import"
-    ],
+    "dependencyTypes": ["npm", "import"],
     "rule": {
       "severity": "error",
       "name": "krizaka-first-dates"
@@ -158,10 +125,7 @@
     "from": "src/seed-krizaka.ts",
     "to": "../../node_modules/.pnpm/date-fns@4.4.0/node_modules/date-fns/index.cjs",
     "unresolvedTo": "date-fns",
-    "dependencyTypes": [
-      "npm",
-      "import"
-    ],
+    "dependencyTypes": ["npm", "import"],
     "rule": {
       "severity": "error",
       "name": "krizaka-first-dates"
@@ -172,10 +136,7 @@
     "from": "src/seed-walker.ts",
     "to": "../../node_modules/.pnpm/date-fns@4.4.0/node_modules/date-fns/index.cjs",
     "unresolvedTo": "date-fns",
-    "dependencyTypes": [
-      "npm",
-      "import"
-    ],
+    "dependencyTypes": ["npm", "import"],
     "rule": {
       "severity": "error",
       "name": "krizaka-first-dates"
@@ -186,10 +147,7 @@
     "from": "src/service-shop.ts",
     "to": "../../node_modules/.pnpm/date-fns@4.4.0/node_modules/date-fns/index.cjs",
     "unresolvedTo": "date-fns",
-    "dependencyTypes": [
-      "npm",
-      "import"
-    ],
+    "dependencyTypes": ["npm", "import"],
     "rule": {
       "severity": "error",
       "name": "krizaka-first-dates"
@@ -200,10 +158,7 @@
     "from": "src/visits.ts",
     "to": "../../node_modules/.pnpm/date-fns@4.4.0/node_modules/date-fns/index.cjs",
     "unresolvedTo": "date-fns",
-    "dependencyTypes": [
-      "npm",
-      "import"
-    ],
+    "dependencyTypes": ["npm", "import"],
     "rule": {
       "severity": "error",
       "name": "krizaka-first-dates"

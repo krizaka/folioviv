@@ -12,7 +12,10 @@ import { ADMIN, castAccounts, ERIC, fingerprintOf, LOCAL_SECRET, matchesRecorded
 
 const root = fileURLToPath(new URL("../../..", import.meta.url));
 // Sources only: tests may use a name as a fixture, and the old UX review is prose.
-const files = execFileSync("git", ["ls-files", "*.ts", "*.tsx", "*.mjs", "*.json", "*.sh"], { encoding: "utf8", cwd: root })
+const files = execFileSync("git", ["ls-files", "*.ts", "*.tsx", "*.mjs", "*.json", "*.sh"], {
+  encoding: "utf8",
+  cwd: root,
+})
   .split("\n")
   .filter((f) => f && !/\.test\.|\/test\/|\/__tests__\/|pnpm-lock|messages\/|dev-preview\.json|^docs\//.test(f));
 const text = (f: string) => readFileSync(`${root}/${f}`, "utf8");
@@ -24,25 +27,61 @@ describe("the cast is the only source of the personas", () => {
   });
 
   it("never shows a qa or admin account as a display name", () => {
-    expect(files.filter((f) => /name:\s*["'`](qa[ _-]?(user|admin)|admin|administrator)["'`]/i.test(text(f)))).toEqual([]);
+    expect(files.filter((f) => /name:\s*["'`](qa[ _-]?(user|admin)|admin|administrator)["'`]/i.test(text(f)))).toEqual(
+      [],
+    );
   });
 
   it("names the QA accounts and the seeded accounts after their personas", () => {
     expect(QA_PERSONAS.USER).toEqual(ERIC);
     expect(QA_PERSONAS.ADMIN).toEqual(ADMIN);
-    const env = { QA_USER_EMAIL: "a@x.test", QA_USER_PASSWORD: "x".repeat(14), QA_ADMIN_EMAIL: "b@x.test", QA_ADMIN_PASSWORD: "y".repeat(14) };
+    const env = {
+      QA_USER_EMAIL: "a@x.test",
+      QA_USER_PASSWORD: "x".repeat(14),
+      QA_ADMIN_EMAIL: "b@x.test",
+      QA_ADMIN_PASSWORD: "y".repeat(14),
+    };
     expect(accountsFromEnv(env).map((a: { name: string }) => a.name)).toEqual([ERIC.displayName, ADMIN.displayName]);
   });
 
   it("gives the cast accounts: the walker, five clients, Éric, the company (owner of the real Krizaka shop), the administrator; a default secret only on this machine", () => {
     const local = castAccounts({ DATABASE_URL: "postgres://u@localhost:5432/x" });
-    expect(local.map((a: { persona: { id: string } }) => a.persona.id)).toEqual(["lea", "camille", "jordan", "nadia", "etienne", "sofia", "eric", "krizaka", "mira"]);
+    expect(local.map((a: { persona: { id: string } }) => a.persona.id)).toEqual([
+      "lea",
+      "camille",
+      "jordan",
+      "nadia",
+      "etienne",
+      "sofia",
+      "eric",
+      "krizaka",
+      "mira",
+    ]);
     expect(local.every((a: { secret: string }) => a.secret === LOCAL_SECRET)).toBe(true);
     expect(() => castAccounts({ DATABASE_URL: "postgres://u@db.example.com/x" })).toThrow(/QA_WALKER_PASSWORD/);
-    const remote = castAccounts({ DATABASE_URL: "postgres://u@db.example.com/x", QA_WALKER_PASSWORD: "w".repeat(14), QA_CLIENTS_PASSWORD: "c".repeat(14), QA_ADMIN_PASSWORD: "a".repeat(14), QA_KRIZAKA_PASSWORD: "k".repeat(14), QA_USER_PASSWORD: "u".repeat(14), QA_ADMIN_EMAIL: "Boss@x.test" });
+    const remote = castAccounts({
+      DATABASE_URL: "postgres://u@db.example.com/x",
+      QA_WALKER_PASSWORD: "w".repeat(14),
+      QA_CLIENTS_PASSWORD: "c".repeat(14),
+      QA_ADMIN_PASSWORD: "a".repeat(14),
+      QA_KRIZAKA_PASSWORD: "k".repeat(14),
+      QA_USER_PASSWORD: "u".repeat(14),
+      QA_ADMIN_EMAIL: "Boss@x.test",
+    });
     expect(remote.at(-1)).toMatchObject({ email: "boss@x.test", role: "ADMIN" });
-    expect(remote.find((a: { persona: { id: string } }) => a.persona.id === "krizaka")).toMatchObject({ email: "folioviv@krizaka.com", role: "USER" });
-    expect(() => castAccounts({ DATABASE_URL: "postgres://u@db.example.com/x", QA_WALKER_PASSWORD: "w".repeat(14), QA_CLIENTS_PASSWORD: "c".repeat(14), QA_ADMIN_PASSWORD: "a".repeat(14), QA_USER_PASSWORD: "u".repeat(14) })).toThrow(/QA_KRIZAKA_PASSWORD/);
+    expect(remote.find((a: { persona: { id: string } }) => a.persona.id === "krizaka")).toMatchObject({
+      email: "folioviv@krizaka.com",
+      role: "USER",
+    });
+    expect(() =>
+      castAccounts({
+        DATABASE_URL: "postgres://u@db.example.com/x",
+        QA_WALKER_PASSWORD: "w".repeat(14),
+        QA_CLIENTS_PASSWORD: "c".repeat(14),
+        QA_ADMIN_PASSWORD: "a".repeat(14),
+        QA_USER_PASSWORD: "u".repeat(14),
+      }),
+    ).toThrow(/QA_KRIZAKA_PASSWORD/);
   });
 
   it("counts the walker's shop only, never another cast account's own rows (a dev database holds Éric's studio shop too)", async () => {
@@ -76,7 +115,14 @@ describe("the demo shop is the cast and nothing more (folioviv #1915)", () => {
     const { DEMO_CAST } = await import("../scripts/seed-cast.mjs");
     expect(DEMO_CAST.shopSlug).toBe("pattes-saint-henri");
     expect(DEMO_CAST.clients).toHaveLength(5);
-    expect(DEMO_CAST.clients.flatMap((c: { dogs: string[] }) => c.dogs)).toEqual(["Rex", "Luna", "Biscuit", "Pixel", "Érable", "Tofu"]);
+    expect(DEMO_CAST.clients.flatMap((c: { dogs: string[] }) => c.dogs)).toEqual([
+      "Rex",
+      "Luna",
+      "Biscuit",
+      "Pixel",
+      "Érable",
+      "Tofu",
+    ]);
   });
   it("lets the walker journey clean up after itself", () => {
     expect(readFileSync(`${root}/package.json`, "utf8")).toMatch(/"e2e:walker": "[^"]*demo:clean/);

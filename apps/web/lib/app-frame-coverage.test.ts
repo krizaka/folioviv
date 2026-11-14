@@ -5,7 +5,8 @@ import { describe, expect, it } from "vitest";
 
 const APP = join(__dirname, "../app/[locale]/(app)/app");
 const read = (p: string) => readFileSync(p, "utf8");
-const walk = (dir: string): string[] => readdirSync(dir).flatMap((f) => (statSync(join(dir, f)).isDirectory() ? walk(join(dir, f)) : [join(dir, f)]));
+const walk = (dir: string): string[] =>
+  readdirSync(dir).flatMap((f) => (statSync(join(dir, f)).isDirectory() ? walk(join(dir, f)) : [join(dir, f)]));
 
 /** The groups of the signed-in space, each with a layout that draws the frame: the account (a client, or no shop in use) and a shop. */
 const FRAMED = ["(account)", "[shop]"];

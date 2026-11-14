@@ -15,7 +15,12 @@ describe("default pictures come from the org JSON (folioviv#411)", () => {
   });
 
   it("falls back to null, never to a guessed URL, when the JSON lacks the kind", () => {
-    const empty = { version: "v1", base: "x", rule: {}, kinds: { person: [], folder: [], organisation: [], shop: [], banner: [] } } as unknown as OrgDefaults;
+    const empty = {
+      version: "v1",
+      base: "x",
+      rule: {},
+      kinds: { person: [], folder: [], organisation: [], shop: [], banner: [] },
+    } as unknown as OrgDefaults;
     expect(defaultFor("shop", "Salon Alma", empty)).toBeUndefined();
     expect(listDefaults("banner", empty)).toEqual([]);
   });

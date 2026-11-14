@@ -1,7 +1,14 @@
 "use client";
 
 import { EXPLORE_KINDS, EXPLORE_OPEN, EXPLORE_RADII, type ExploreRadius, type ExploreUrlState } from "@folioviv/core";
-import { parseAsArrayOf, parseAsFloat, parseAsString, parseAsStringLiteral, useQueryStates, withUrlDefaults } from "@krizaka/query/url";
+import {
+  parseAsArrayOf,
+  parseAsFloat,
+  parseAsString,
+  parseAsStringLiteral,
+  useQueryStates,
+  withUrlDefaults,
+} from "@krizaka/query/url";
 
 const RADII = EXPLORE_RADII.map(String) as ["1", "3", "10", "25"];
 
@@ -15,7 +22,8 @@ const parsers = {
   view: withUrlDefaults(parseAsArrayOf(parseAsFloat)),
 };
 
-const pair = (v: readonly number[] | null): readonly [number, number] | null => (v?.length === 2 ? [v[0]!, v[1]!] : null);
+const pair = (v: readonly number[] | null): readonly [number, number] | null =>
+  v?.length === 2 ? [v[0]!, v[1]!] : null;
 
 export interface ExploreView3 {
   center: readonly [number, number];
@@ -30,12 +38,25 @@ export function cameraOf(v: readonly number[] | null): ExploreView3 | null {
 /** The explorer's filters and camera as the address holds them (one `replace` history entry per change: no back-button flood). */
 export function useExploreUrl() {
   const [raw, setRaw] = useQueryStates(parsers);
-  const state: ExploreUrlState = { q: raw.q, kinds: raw.kind, open: raw.open, near: pair(raw.near), within: raw.within ? (Number(raw.within) as ExploreRadius) : null };
+  const state: ExploreUrlState = {
+    q: raw.q,
+    kinds: raw.kind,
+    open: raw.open,
+    near: pair(raw.near),
+    within: raw.within ? (Number(raw.within) as ExploreRadius) : null,
+  };
   const apply = (next: ExploreUrlState) =>
-    setRaw({ q: next.q || null, kind: next.kinds.length > 0 ? [...next.kinds] : null, open: next.open, near: next.near ? [...next.near] : null, within: next.near && next.within ? (String(next.within) as (typeof RADII)[number]) : null });
+    setRaw({
+      q: next.q || null,
+      kind: next.kinds.length > 0 ? [...next.kinds] : null,
+      open: next.open,
+      near: next.near ? [...next.near] : null,
+      within: next.near && next.within ? (String(next.within) as (typeof RADII)[number]) : null,
+    });
   const camera = cameraOf(raw.view);
   // @fixed: four decimals are about ten metres, one decimal of zoom is a quarter step: enough to restore a view, and the address stays short
   const round = (n: number, d: number) => Number(n.toFixed(d));
-  const setCamera = (center: readonly [number, number], zoom: number) => setRaw({ view: [round(center[0], 4), round(center[1], 4), round(zoom, 1)] });
+  const setCamera = (center: readonly [number, number], zoom: number) =>
+    setRaw({ view: [round(center[0], 4), round(center[1], 4), round(zoom, 1)] });
   return { state, apply, camera, setCamera };
 }

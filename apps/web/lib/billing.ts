@@ -24,12 +24,19 @@ export interface Subscription {
 
 export async function subscriptionOf(query: Query, accountId: string, now: Date): Promise<Subscription> {
   const [r] = await query<{ status: string | null; end: Date | null; customer: string | null }>(
-    "SELECT subscription_status AS status, current_period_end AS \"end\", payment_customer_id AS customer FROM accounts WHERE id = $1",
+    'SELECT subscription_status AS status, current_period_end AS "end", payment_customer_id AS customer FROM accounts WHERE id = $1',
     [accountId],
   );
   const live = !!r?.status && LIVE_STATUSES.has(r.status);
   const trialing = r?.status === TRIALING;
-  return { active: !!r && live && (!r.end || r.end > now), status: r?.status ?? null, periodEnd: r?.end?.toISOString() ?? null, customerId: r?.customer ?? null, trialing, trialEndsAt: trialing ? (r?.end?.toISOString() ?? null) : null };
+  return {
+    active: !!r && live && (!r.end || r.end > now),
+    status: r?.status ?? null,
+    periodEnd: r?.end?.toISOString() ?? null,
+    customerId: r?.customer ?? null,
+    trialing,
+    trialEndsAt: trialing ? (r?.end?.toISOString() ?? null) : null,
+  };
 }
 
 /**
@@ -37,16 +44,30 @@ export async function subscriptionOf(query: Query, accountId: string, now: Date)
  * recorded for it). The trial itself lives on the subscription at the processor (`trialing`), never in a second table.
  */
 export async function trialEligible(query: Query, accountId: string): Promise<boolean> {
-  const [r] = await query<{ sub: string | null }>("SELECT payment_subscription_id AS sub FROM accounts WHERE id = $1", [accountId]);
+  const [r] = await query<{ sub: string | null }>("SELECT payment_subscription_id AS sub FROM accounts WHERE id = $1", [
+    accountId,
+  ]);
   return !!r && !r.sub;
 }
 
 /** The processor's customer of an account, created once (the id is kept; a second call reuses it). */
-export async function customerOf(query: Query, accountId: string, create: () => Promise<{ id: string }>): Promise<string> {
-  const [r] = await query<{ customer: string | null }>("SELECT payment_customer_id AS customer FROM accounts WHERE id = $1", [accountId]);
-  if (r?.customer) {return r.customer;}
+export async function customerOf(
+  query: Query,
+  accountId: string,
+  create: () => Promise<{ id: string }>,
+): Promise<string> {
+  const [r] = await query<{ customer: string | null }>(
+    "SELECT payment_customer_id AS customer FROM accounts WHERE id = $1",
+    [accountId],
+  );
+  if (r?.customer) {
+    return r.customer;
+  }
   const made = await create();
-  const [kept] = await query<{ customer: string }>("UPDATE accounts SET payment_customer_id = COALESCE(payment_customer_id, $2) WHERE id = $1 RETURNING payment_customer_id AS customer", [accountId, made.id]);
+  const [kept] = await query<{ customer: string }>(
+    "UPDATE accounts SET payment_customer_id = COALESCE(payment_customer_id, $2) WHERE id = $1 RETURNING payment_customer_id AS customer",
+    [accountId, made.id],
+  );
   return kept?.customer ?? made.id;
 }
 
@@ -58,7 +79,9 @@ export interface FounderSeats {
 }
 
 export async function founderSeats(query: Query, limit: number): Promise<FounderSeats> {
-  const [r] = await query<{ taken: number }>("SELECT count(*)::int AS taken FROM accounts WHERE payment_subscription_id IS NOT NULL");
+  const [r] = await query<{ taken: number }>(
+    "SELECT count(*)::int AS taken FROM accounts WHERE payment_subscription_id IS NOT NULL",
+  );
   const taken = r?.taken ?? 0;
   return { limit, taken, open: taken < limit };
 }
@@ -70,8 +93,13 @@ export async function founderSeats(query: Query, limit: number): Promise<Founder
 export type FounderGate = "open" | "member" | "full";
 
 export async function founderGate(query: Query, accountId: string, limit: number): Promise<FounderGate> {
-  const [own] = await query<{ sub: string | null }>("SELECT payment_subscription_id AS sub FROM accounts WHERE id = $1", [accountId]);
-  if (own?.sub) {return "member";}
+  const [own] = await query<{ sub: string | null }>(
+    "SELECT payment_subscription_id AS sub FROM accounts WHERE id = $1",
+    [accountId],
+  );
+  if (own?.sub) {
+    return "member";
+  }
   return (await founderSeats(query, limit)).open ? "open" : "full";
 }
 
@@ -81,12 +109,18 @@ export async function founderGate(query: Query, accountId: string, limit: number
  * so a founder keeps the founder price whatever the administrator schedules later.
  */
 export async function recordOfferedVersion(query: Query, accountId: string, versionId: string): Promise<void> {
-  await query("UPDATE accounts SET subscription_price_version = $2 WHERE id = $1 AND payment_subscription_id IS NULL", [accountId, versionId]);
+  await query("UPDATE accounts SET subscription_price_version = $2 WHERE id = $1 AND payment_subscription_id IS NULL", [
+    accountId,
+    versionId,
+  ]);
 }
 
 /** The version of the catalogue an account's subscription was sold at, or null (no subscription, or sold before the catalogue). */
 export async function soldVersionOf(query: Query, accountId: string): Promise<string | null> {
-  const [r] = await query<{ version: string | null }>("SELECT subscription_price_version AS version FROM accounts WHERE id = $1 AND payment_subscription_id IS NOT NULL", [accountId]);
+  const [r] = await query<{ version: string | null }>(
+    "SELECT subscription_price_version AS version FROM accounts WHERE id = $1 AND payment_subscription_id IS NOT NULL",
+    [accountId],
+  );
   return r?.version ?? null;
 }
 
@@ -98,19 +132,35 @@ export type Transaction = <T>(work: (query: TxQuery) => Promise<T>) => Promise<T
  * that throws rolls both back, so the processor's retry applies the event; a replay changes nothing. The record is the
  * `payment_events` table.
  */
-export function applyPaymentEvent(transaction: Transaction, event: PaymentEvent): Promise<"applied" | "duplicate" | "ignored"> {
-  return applyOnceInTransaction(transaction, event, {
-    async subscription_started(e, query) {
-      if (e.customerId) {await query("UPDATE accounts SET payment_customer_id = COALESCE(payment_customer_id, $2) WHERE id = $1", [e.accountId, e.customerId]);}
-      await query("UPDATE accounts SET payment_subscription_id = $2, subscription_status = COALESCE(subscription_status, 'active') WHERE id = $1", [e.accountId, e.subscriptionId]);
-    },
-    async subscription_changed(e, query) {
-      const rows = await query(
-        `UPDATE accounts SET subscription_status = $3, payment_subscription_id = $4, current_period_end = to_timestamp($5)
+export function applyPaymentEvent(
+  transaction: Transaction,
+  event: PaymentEvent,
+): Promise<"applied" | "duplicate" | "ignored"> {
+  return applyOnceInTransaction(
+    transaction,
+    event,
+    {
+      async subscription_started(e, query) {
+        if (e.customerId) {
+          await query("UPDATE accounts SET payment_customer_id = COALESCE(payment_customer_id, $2) WHERE id = $1", [
+            e.accountId,
+            e.customerId,
+          ]);
+        }
+        await query(
+          "UPDATE accounts SET payment_subscription_id = $2, subscription_status = COALESCE(subscription_status, 'active') WHERE id = $1",
+          [e.accountId, e.subscriptionId],
+        );
+      },
+      async subscription_changed(e, query) {
+        const rows = await query(
+          `UPDATE accounts SET subscription_status = $3, payment_subscription_id = $4, current_period_end = to_timestamp($5)
            WHERE payment_customer_id = $1 OR id::text = $2 RETURNING id`,
-        [e.customerId, e.accountId, e.status, e.subscriptionId, e.periodEnd],
-      );
-      return rows.length ? undefined : "ignored";
+          [e.customerId, e.accountId, e.status, e.subscriptionId, e.periodEnd],
+        );
+        return rows.length ? undefined : "ignored";
+      },
     },
-  }, { table: { schema: "public", table: "payment_events" } });
+    { table: { schema: "public", table: "payment_events" } },
+  );
 }

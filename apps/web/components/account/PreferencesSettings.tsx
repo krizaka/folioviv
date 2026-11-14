@@ -21,7 +21,8 @@ export interface PreferencesView {
 }
 
 /** What the account keeps of a theme: the mode (a surface set is dark). The set itself, the density and the accent stay on this device. */
-const modeOf = (themeId: string): "light" | "dark" | "system" => (themeId === "light" || themeId === "system" ? themeId : "dark");
+const modeOf = (themeId: string): "light" | "dark" | "system" =>
+  themeId === "light" || themeId === "system" ? themeId : "dark";
 
 /**
  * Appearance (ADR-006 §4, krizaka-ui#657): the package's `AppearanceSettings` over `useAppearance()`. The theme set is the product register's —
@@ -43,9 +44,14 @@ export function PreferencesSettings({ preferences }: Readonly<{ preferences: Pre
       ...(t.id === "system" && light && dark ? { halves: [light, dark] as const } : {}),
     }));
   }, [say]);
-  const save = (patch: { locale?: string; theme?: string }) => krizakaFetch("/api/me/profile", { method: "PATCH", json: patch });
+  const save = (patch: { locale?: string; theme?: string }) =>
+    krizakaFetch("/api/me/profile", { method: "PATCH", json: patch });
   return (
-    <SettingsSection variant="flat" title={say("account.profile.sections.preferences")} description={say("account.preferences.description")}>
+    <SettingsSection
+      variant="flat"
+      title={say("account.profile.sections.preferences")}
+      description={say("account.preferences.description")}
+    >
       <AppearanceSettings
         themes={themes}
         theme={state.themeId}
@@ -53,7 +59,10 @@ export function PreferencesSettings({ preferences }: Readonly<{ preferences: Pre
           state.setThemeId(id);
           void save({ theme: modeOf(id) });
         }}
-        densities={appearance.densities.map((value) => ({ value, label: say(`account.preferences.densities.${value}`) }))}
+        densities={appearance.densities.map((value) => ({
+          value,
+          label: say(`account.preferences.densities.${value}`),
+        }))}
         density={state.density}
         onDensityChange={state.setDensity}
         languages={LANGUAGES}

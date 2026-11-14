@@ -32,7 +32,11 @@ export default function Books() {
         {(b) => (
           <>
             <Txt tone="secondary">{t("books.period", { from: b.period.start, to: b.period.end })}</Txt>
-            <View role="radiogroup" aria-label={t("books.periods")} style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+            <View
+              role="radiogroup"
+              aria-label={t("books.periods")}
+              style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}
+            >
               {b.choices.map((id) => (
                 <Chip key={id} selected={id === b.period.id} onSelectedChange={() => router.setParams({ period: id })}>
                   {id.replace("-", " ")}
@@ -48,9 +52,19 @@ export default function Books() {
                 </Card.Body>
               </Card.Root>
             ))}
-            <Button variant="secondary" label={t("figures.open")} onPress={() => router.navigate(routes.figures(locale, shop) as never)} />
-            <Txt tone="muted" variant="caption">{t("books.lead")}</Txt>
-            <Button variant="ghost" label={t("books.web")} onPress={() => void Linking.openURL(webUrl(routes.books(locale, shop, b.period.id)))} />
+            <Button
+              variant="secondary"
+              label={t("figures.open")}
+              onPress={() => router.navigate(routes.figures(locale, shop) as never)}
+            />
+            <Txt tone="muted" variant="caption">
+              {t("books.lead")}
+            </Txt>
+            <Button
+              variant="ghost"
+              label={t("books.web")}
+              onPress={() => void Linking.openURL(webUrl(routes.books(locale, shop, b.period.id)))}
+            />
           </>
         )}
       </QueryStates>

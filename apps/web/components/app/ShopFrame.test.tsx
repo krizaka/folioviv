@@ -5,9 +5,17 @@ import { describe, expect, it, vi } from "vitest";
 import { ShopFrame, type ShopFrameProps } from "./ShopFrame";
 
 const where = vi.hoisted(() => ({ path: "/fr/app/s-1/today" }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }), usePathname: () => where.path }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
+  usePathname: () => where.path,
+}));
 vi.mock("@/app/actions/remember-shop", () => ({ rememberShop: () => Promise.resolve() }));
-vi.mock("@/lib/i18n-client", () => ({ useSay: () => ({ say: (key: string, vars?: Record<string, string>) => (vars ? `${key} ${Object.values(vars).join(" ")}` : key), locale: "fr" }) }));
+vi.mock("@/lib/i18n-client", () => ({
+  useSay: () => ({
+    say: (key: string, vars?: Record<string, string>) => (vars ? `${key} ${Object.values(vars).join(" ")}` : key),
+    locale: "fr",
+  }),
+}));
 
 const shop = "/fr/app/s-1";
 const OWNER: ShopFrameProps = {
@@ -30,7 +38,12 @@ const OWNER: ShopFrameProps = {
   profileHref: "/fr/app/profile",
   children: <p>page</p>,
 };
-const render = (props: ShopFrameProps) => renderToStaticMarkup(<KrizakaQueryProvider><ShopFrame {...props} /></KrizakaQueryProvider>);
+const render = (props: ShopFrameProps) =>
+  renderToStaticMarkup(
+    <KrizakaQueryProvider>
+      <ShopFrame {...props} />
+    </KrizakaQueryProvider>,
+  );
 const railItems = (html: string) => html.match(/<a[^>]*data-rail-item[^>]*>/g) ?? [];
 
 describe("the owner's frame (docs/ux/2026-10-full-review.md § 4.1): where you work on the rail, who you are under the avatar", () => {
@@ -39,7 +52,13 @@ describe("the owner's frame (docs/ux/2026-10-full-review.md § 4.1): where you w
   it("has the five destinations on the rail, the day marked as the current one, and nothing about the account there", () => {
     const items = railItems(html);
     expect(items).toHaveLength(5);
-    expect(items.map((a) => a.match(/aria-label="([^",]+)/)![1])).toEqual(["shell.today", "shell.clients", "shell.invoices", "shell.books", "shell.shop"]);
+    expect(items.map((a) => a.match(/aria-label="([^",]+)/)![1])).toEqual([
+      "shell.today",
+      "shell.clients",
+      "shell.invoices",
+      "shell.books",
+      "shell.shop",
+    ]);
     expect(items[0]).toContain('aria-current="page"');
     expect(html).not.toContain("shell.profile");
     expect(html).not.toContain("shell.team");
@@ -74,7 +93,12 @@ describe("the owner's frame (docs/ux/2026-10-full-review.md § 4.1): where you w
   it("keeps the rail's « Boutique » current on the team screen, which is a sibling route of the shop's setup", () => {
     where.path = "/fr/app/s-1/team";
     try {
-      const items = railItems(render({ ...OWNER, places: [...OWNER.places.slice(0, 4), { key: "shop", href: `${shop}/shop`, also: [`${shop}/team`] }] }));
+      const items = railItems(
+        render({
+          ...OWNER,
+          places: [...OWNER.places.slice(0, 4), { key: "shop", href: `${shop}/shop`, also: [`${shop}/team`] }],
+        }),
+      );
       expect(items[4]).toContain('aria-current="page"');
       expect(items[0]).not.toContain('aria-current="page"');
     } finally {
@@ -121,7 +145,7 @@ describe("the B2 frame (D1b): the search, the language, the rail with its words 
 
   it("keeps the language and the theme in the account menu, the one place of the family: none of its own in the header", () => {
     expect(html).not.toContain("header-language");
-    expect(html).not.toContain("data-testid=\"account-menu-header\"");
+    expect(html).not.toContain('data-testid="account-menu-header"');
   });
 
   it("shows the rail's words on a desktop and counts on the day and the invoices, said in words", () => {
@@ -140,14 +164,25 @@ describe("the B2 frame (D1b): the search, the language, the rail with its words 
 
 describe("the same frame for other roles and for a client", () => {
   it("shows no primary action to a staff member, whose rail is the day alone", () => {
-    const html = render({ ...OWNER, places: [{ key: "today", href: `${shop}/today` }], newInvoiceHref: null, shop: { current: { id: "s-1", name: "Pattes de Saint-Henri" }, others: [], addHref: null } });
+    const html = render({
+      ...OWNER,
+      places: [{ key: "today", href: `${shop}/today` }],
+      newInvoiceHref: null,
+      shop: { current: { id: "s-1", name: "Pattes de Saint-Henri" }, others: [], addHref: null },
+    });
     expect(railItems(html)).toHaveLength(1);
     expect(html).not.toContain('data-testid="primary-action"');
     expect(html).toMatch(/data-testid="shop-chip"[^>]*>Pattes de Saint-Henri</);
   });
 
   it("gives a client their bookings and the account menu, no shop chip, no invoice", () => {
-    const html = render({ ...OWNER, places: [{ key: "bookings", href: "/fr/app" }], shop: undefined, newInvoiceHref: null, dev: false });
+    const html = render({
+      ...OWNER,
+      places: [{ key: "bookings", href: "/fr/app" }],
+      shop: undefined,
+      newInvoiceHref: null,
+      dev: false,
+    });
     expect(railItems(html).map((a) => a.match(/aria-label="([^"]+)"/)![1])).toEqual(["shell.bookings"]);
     expect(html).not.toContain("shop-chip");
     expect(html).not.toContain("primary-action");

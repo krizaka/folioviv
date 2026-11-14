@@ -15,11 +15,15 @@ const minutesOf = (value: string) => Number(value.slice(0, 2)) * 60 + Number(val
 
 /** A shop's windows of one weekday, in order, back-to-back ones merged (08–12 then 12–17 is one run to 17). */
 function runsOf(windows: readonly WeeklyWindow[], weekday: number): { startsAt: string; endsAt: string }[] {
-  const sorted = windows.filter((w) => w.weekday === weekday).map((w) => ({ startsAt: clock(w.startsAt), endsAt: clock(w.endsAt) })).sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+  const sorted = windows
+    .filter((w) => w.weekday === weekday)
+    .map((w) => ({ startsAt: clock(w.startsAt), endsAt: clock(w.endsAt) }))
+    .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
   const runs: { startsAt: string; endsAt: string }[] = [];
   for (const w of sorted) {
     const last = runs[runs.length - 1];
-    if (last && minutesOf(w.startsAt) <= minutesOf(last.endsAt)) last.endsAt = minutesOf(w.endsAt) > minutesOf(last.endsAt) ? w.endsAt : last.endsAt;
+    if (last && minutesOf(w.startsAt) <= minutesOf(last.endsAt))
+      last.endsAt = minutesOf(w.endsAt) > minutesOf(last.endsAt) ? w.endsAt : last.endsAt;
     else runs.push({ ...w });
   }
   return runs;
@@ -44,7 +48,12 @@ export interface OpenStatus {
 }
 
 /** Whether the shop is open at `now`, in its own time zone, and when it closes or opens next. The end of a window is closed. */
-export function openStatus(windows: readonly WeeklyWindow[], now: Date, timezone: string, daysOff: readonly string[] = []): OpenStatus {
+export function openStatus(
+  windows: readonly WeeklyWindow[],
+  now: Date,
+  timezone: string,
+  daysOff: readonly string[] = [],
+): OpenStatus {
   const today = localDay(now, timezone);
   const local = new TZDate(now, timezone);
   const minutes = local.getHours() * 60 + local.getMinutes();
@@ -55,8 +64,14 @@ export function openStatus(windows: readonly WeeklyWindow[], now: Date, timezone
     if (daysOff.includes(day)) continue;
     const weekday = weekdayOf(day);
     for (const run of runsOf(windows, weekday)) {
-      if (i === 0 && minutesOf(run.startsAt) <= minutes && minutes < minutesOf(run.endsAt)) return { open: true, closesAt: run.endsAt, nextOpen: null };
-      if (i > 0 || minutesOf(run.startsAt) > minutes) return { open: false, closesAt: null, nextOpen: { day, weekday, time: run.startsAt, today: i === 0, tomorrow: i === 1 } };
+      if (i === 0 && minutesOf(run.startsAt) <= minutes && minutes < minutesOf(run.endsAt))
+        return { open: true, closesAt: run.endsAt, nextOpen: null };
+      if (i > 0 || minutesOf(run.startsAt) > minutes)
+        return {
+          open: false,
+          closesAt: null,
+          nextOpen: { day, weekday, time: run.startsAt, today: i === 0, tomorrow: i === 1 },
+        };
     }
   }
   return { open: false, closesAt: null, nextOpen: null };
@@ -67,7 +82,14 @@ export function openStatus(windows: readonly WeeklyWindow[], now: Date, timezone
  * later today, done for the day, away today, or on time off until a day. Read from their weekly hours, today's visits and
  * their time off — never a client, a service or a reason. Pure: the clock and the zone are parameters.
  */
-export const MEMBER_STATE = { free: "free", busy: "busy", startsAt: "startsAt", done: "done", away: "away", off: "off" } as const;
+export const MEMBER_STATE = {
+  free: "free",
+  busy: "busy",
+  startsAt: "startsAt",
+  done: "done",
+  away: "away",
+  off: "off",
+} as const;
 export type MemberState =
   | { kind: typeof MEMBER_STATE.free }
   | { kind: typeof MEMBER_STATE.busy; until: string }
@@ -88,7 +110,8 @@ const localMinutes = (instant: Date, timezone: string) => {
   const local = new TZDate(instant, timezone);
   return local.getHours() * 60 + local.getMinutes();
 };
-const clockOf = (minutes: number) => `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+const clockOf = (minutes: number) =>
+  `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
 
 export function memberStateAt(member: MemberDay, now: Date, timezone: string): MemberState {
   if (member.offUntil) return { kind: MEMBER_STATE.off, until: member.offUntil };
@@ -104,7 +127,8 @@ export function memberStateAt(member: MemberDay, now: Date, timezone: string): M
   const visits = [...member.visits].sort((a, b) => compareAsc(a.startsAt, b.startsAt));
   let until: Date | null = null;
   for (const v of visits) {
-    if (until === null ? v.startsAt <= now && now < v.endsAt : v.startsAt <= until && v.endsAt > until) until = v.endsAt;
+    if (until === null ? v.startsAt <= now && now < v.endsAt : v.startsAt <= until && v.endsAt > until)
+      until = v.endsAt;
   }
   if (!until) return { kind: MEMBER_STATE.free };
   return { kind: MEMBER_STATE.busy, until: clockOf(Math.min(localMinutes(until, timezone), minutesOf(run.endsAt))) };
@@ -119,7 +143,10 @@ export interface DaySchedule {
 export function weekSchedule(windows: readonly WeeklyWindow[]): DaySchedule[] {
   return [1, 2, 3, 4, 5, 6, 0].map((weekday) => ({
     weekday,
-    windows: windows.filter((w) => w.weekday === weekday).map((w) => ({ startsAt: clock(w.startsAt), endsAt: clock(w.endsAt) })).sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
+    windows: windows
+      .filter((w) => w.weekday === weekday)
+      .map((w) => ({ startsAt: clock(w.startsAt), endsAt: clock(w.endsAt) }))
+      .sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
   }));
 }
 
@@ -130,7 +157,11 @@ export interface SlotDay {
 }
 
 /** The offered slots grouped by the shop's local day (first days, first times) — what the page shows as chips. */
-export function groupSlotsByDay(slots: readonly Slot[], timezone: string, limits: { maxDays: number; maxPerDay: number }): SlotDay[] {
+export function groupSlotsByDay(
+  slots: readonly Slot[],
+  timezone: string,
+  limits: { maxDays: number; maxPerDay: number },
+): SlotDay[] {
   const days: SlotDay[] = [];
   for (const slot of slots) {
     const day = localDay(slot.startsAt, timezone);
@@ -150,7 +181,11 @@ export function groupSlotsByDay(slots: readonly Slot[], timezone: string, limits
  * one service (a lone service is not more popular than anything). Never a guess: no bookings, no tag.
  */
 // @fixed: display heuristic, not a business rule — three bookings before a service is called popular, two services to compare.
-export function popularServiceId(counts: readonly { serviceId: string; bookings: number }[], minBookings = 3, minServices = 2): string | null {
+export function popularServiceId(
+  counts: readonly { serviceId: string; bookings: number }[],
+  minBookings = 3,
+  minServices = 2,
+): string | null {
   if (counts.length < minServices) return null;
   const sorted = [...counts].sort((a, b) => b.bookings - a.bookings);
   const [first, second] = sorted;
@@ -176,6 +211,7 @@ export function bookingPreselect(
 ): BookingPreselect {
   const serviceId = services.find((s) => s.id === input.service)?.id ?? null;
   const zoneId = zones.find((z) => z.id === input.zone)?.id ?? null;
-  const start = serviceId && input.start && instant.safeParse(input.start).success ? new Date(input.start).toISOString() : null;
+  const start =
+    serviceId && input.start && instant.safeParse(input.start).success ? new Date(input.start).toISOString() : null;
   return { serviceId, zoneId, startsAt: start };
 }

@@ -24,16 +24,25 @@ export interface DraftService {
   taxCategory: TaxCategory;
 }
 
-export const emptyLine = (key: string, serviceId = "", quantity = "1"): DraftLine => ({ key, serviceId, description: "", quantity, unitPriceCents: 0 });
+export const emptyLine = (key: string, serviceId = "", quantity = "1"): DraftLine => ({
+  key,
+  serviceId,
+  description: "",
+  quantity,
+  unitPriceCents: 0,
+});
 
 /** A line the server would accept: a service, or words, and a quantity to the hundredth (never zero). */
-const complete = (l: DraftLine) => parseQuantity(l.quantity) !== null && (l.serviceId !== "" || l.description.trim() !== "");
+const complete = (l: DraftLine) =>
+  parseQuantity(l.quantity) !== null && (l.serviceId !== "" || l.description.trim() !== "");
 
 /** What « Émettre la facture » sends: a service by its id, a free line by its words and its price (`invoiceInputSchema`). */
 export function draftRequestLines(lines: readonly DraftLine[]): Record<string, unknown>[] {
   return lines.filter(complete).map((l) => {
     const quantity = parseQuantity(l.quantity)!;
-    return l.serviceId ? { serviceId: l.serviceId, quantity } : { description: l.description.trim(), quantity, unitPriceCents: l.unitPriceCents };
+    return l.serviceId
+      ? { serviceId: l.serviceId, quantity }
+      : { description: l.description.trim(), quantity, unitPriceCents: l.unitPriceCents };
   });
 }
 
@@ -41,12 +50,21 @@ export function draftRequestLines(lines: readonly DraftLine[]): Record<string, u
  * The total in view: the very computation the server runs at issue (`invoiceTotals` of @folioviv/core — GST 5 % and QST
  * 9,975 % once on the taxable total, half away from zero), on the service's price and tax category. Null without a complete line.
  */
-export function draftPreview(lines: readonly DraftLine[], services: readonly DraftService[], shop: { registrant: boolean }): InvoiceTotals | null {
+export function draftPreview(
+  lines: readonly DraftLine[],
+  services: readonly DraftService[],
+  shop: { registrant: boolean },
+): InvoiceTotals | null {
   const inputs: LineInput[] = [];
   for (const l of lines.filter(complete)) {
     const service = l.serviceId ? services.find((s) => s.id === l.serviceId) : undefined;
     if (l.serviceId && !service) continue;
-    inputs.push({ description: service ? service.nameFr : l.description.trim(), quantity: parseQuantity(l.quantity)!, unitPriceCents: service ? service.priceCents : l.unitPriceCents, category: service ? service.taxCategory : "standard" });
+    inputs.push({
+      description: service ? service.nameFr : l.description.trim(),
+      quantity: parseQuantity(l.quantity)!,
+      unitPriceCents: service ? service.priceCents : l.unitPriceCents,
+      category: service ? service.taxCategory : "standard",
+    });
   }
   return inputs.length ? invoiceTotals(inputs, shop) : null;
 }
@@ -64,5 +82,10 @@ export function prefillDraft(
   const quantity = query.quantity && parseQuantity(query.quantity) !== null ? query.quantity : "1";
   // The appointment it bills: checked at issue (another shop's is refused there, AK_APPOINTMENT_UNKNOWN).
   const appointmentId = query.appointment && /^[0-9a-f-]{36}$/i.test(query.appointment) ? query.appointment : null;
-  return { found: true, clientId: query.client ?? "", appointmentId, lines: [emptyLine("l0", query.service ?? choices.services[0]?.id ?? "", quantity)] };
+  return {
+    found: true,
+    clientId: query.client ?? "",
+    appointmentId,
+    lines: [emptyLine("l0", query.service ?? choices.services[0]?.id ?? "", quantity)],
+  };
 }

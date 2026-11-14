@@ -13,7 +13,10 @@ import { SubscriptionPanel } from "./SubscriptionPanel";
 
 const en = bindProduct(enRaw);
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: () => undefined, replace: () => undefined, push: () => undefined }), usePathname: () => "/en/app/profile" }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: () => undefined, replace: () => undefined, push: () => undefined }),
+  usePathname: () => "/en/app/profile",
+}));
 
 const around = (node: React.ReactNode) =>
   renderToStaticMarkup(
@@ -49,9 +52,24 @@ describe("the account's other sections", () => {
   });
 
   it.each([
-    ["an active subscription with its page", { active: true, periodEnd: "2026-11-22T00:00:00.000Z", hasCustomer: true, offer: null }, ["Active", "Open the payment page"], ["Choose this offer"]],
-    ["the founder offer on sale", { active: false, periodEnd: null, hasCustomer: false, offer: { price: "$39", cardRate: "0%" } }, ["No subscription", "Choose this offer", "$39 a month plus taxes, 0% on cards"], ["Open the payment page"]],
-    ["nothing on sale", { active: false, periodEnd: null, hasCustomer: false, offer: null }, ["No plan is on sale yet."], ["Choose this offer", "Open the payment page"]],
+    [
+      "an active subscription with its page",
+      { active: true, periodEnd: "2026-11-22T00:00:00.000Z", hasCustomer: true, offer: null },
+      ["Active", "Open the payment page"],
+      ["Choose this offer"],
+    ],
+    [
+      "the founder offer on sale",
+      { active: false, periodEnd: null, hasCustomer: false, offer: { price: "$39", cardRate: "0%" } },
+      ["No subscription", "Choose this offer", "$39 a month plus taxes, 0% on cards"],
+      ["Open the payment page"],
+    ],
+    [
+      "nothing on sale",
+      { active: false, periodEnd: null, hasCustomer: false, offer: null },
+      ["No plan is on sale yet."],
+      ["Choose this offer", "Open the payment page"],
+    ],
   ] as const)("%s", (_name, subscription, shown, hidden) => {
     const page = text(around(<SubscriptionPanel subscription={subscription} />));
     for (const word of shown) expect(page).toContain(word);
@@ -60,9 +78,24 @@ describe("the account's other sections", () => {
 });
 
 describe("the profile (docs/ux/2026-10-full-review.md K6): picture, name, e-mail ✓, member since, role", () => {
-  const base: ProfileView = { id: "a-1", email: "lea@example.test", name: "Léa Tremblay", avatarSeed: "3", emailVerified: true, pendingEmail: null, memberSince: "Member since October 2026", role: "Owner at Pattes de Saint-Henri" };
+  const base: ProfileView = {
+    id: "a-1",
+    email: "lea@example.test",
+    name: "Léa Tremblay",
+    avatarSeed: "3",
+    emailVerified: true,
+    pendingEmail: null,
+    memberSince: "Member since October 2026",
+    role: "Owner at Pattes de Saint-Henri",
+  };
   /** The text of each h2–h4: its text nodes joined (no tag stripping). */
-  const heading = (html: string) => html.match(/<h[2-4][^>]*>[\s\S]*?<\/h[2-4]>/g)?.map((h) => (h.match(/>([^<]*)</g) ?? []).map((n) => n.slice(1, -1)).join("").trim()) ?? [];
+  const heading = (html: string) =>
+    html.match(/<h[2-4][^>]*>[\s\S]*?<\/h[2-4]>/g)?.map((h) =>
+      (h.match(/>([^<]*)</g) ?? [])
+        .map((n) => n.slice(1, -1))
+        .join("")
+        .trim(),
+    ) ?? [];
 
   it("heads the identity card with the name, the verified e-mail on its own line, since when, and a name field and the picture choice", () => {
     const html = around(<ProfileSettings profile={base} />);

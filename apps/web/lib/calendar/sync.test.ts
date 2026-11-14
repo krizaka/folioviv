@@ -9,12 +9,29 @@ import { syncConnection } from "./sync";
 vi.mock("@/lib/audit", () => ({ audit: vi.fn() }));
 vi.mock("@/lib/db", () => ({ db: vi.fn(() => ({})) }));
 vi.mock("@/lib/settings", () => ({ appSettings: vi.fn() }));
-vi.mock("@folioviv/db", async (original) => ({ ...(await original<typeof import("@folioviv/db")>()), openField: vi.fn(() => "https://calendar.example.com/me.ics"), recordSyncOk: vi.fn(), recordSyncFailure: vi.fn(), claimDueConnections: vi.fn() }));
+vi.mock("@folioviv/db", async (original) => ({
+  ...(await original<typeof import("@folioviv/db")>()),
+  openField: vi.fn(() => "https://calendar.example.com/me.ics"),
+  recordSyncOk: vi.fn(),
+  recordSyncFailure: vi.fn(),
+  claimDueConnections: vi.fn(),
+}));
 
 const KEY = Buffer.alloc(32, 1);
 const NOW = new Date("2026-10-26T12:00:00Z");
 const settings = { intervalMinutes: 30, windowDays: 60 };
-const conn = (over: Partial<DueConnection> = {}): DueConnection => ({ id: "c1", shopId: "s1", staffId: null, kind: "ics", secretEnc: "v1.x", validators: { etag: '"v1"', lastModified: null }, failures: 0, timezone: "America/Toronto", stale: false, ...over });
+const conn = (over: Partial<DueConnection> = {}): DueConnection => ({
+  id: "c1",
+  shopId: "s1",
+  staffId: null,
+  kind: "ics",
+  secretEnc: "v1.x",
+  validators: { etag: '"v1"', lastModified: null },
+  failures: 0,
+  timezone: "America/Toronto",
+  stale: false,
+  ...over,
+});
 const source = (busy: CalendarSource["busy"]): CalendarSource => ({ kind: "ics", busy });
 
 describe("syncing a connected calendar (ADR-004)", () => {
@@ -22,14 +39,26 @@ describe("syncing a connected calendar (ADR-004)", () => {
   afterEach(() => vi.clearAllMocks());
 
   it("records the busy times and the validators of a good read", async () => {
-    const busy = vi.fn<CalendarSource["busy"]>(async () => ({ changed: true as const, busy: [{ startsAt: NOW, endsAt: new Date("2026-10-26T13:00:00Z") }], validators: { etag: '"v2"', lastModified: null } }));
+    const busy = vi.fn<CalendarSource["busy"]>(async () => ({
+      changed: true as const,
+      busy: [{ startsAt: NOW, endsAt: new Date("2026-10-26T13:00:00Z") }],
+      validators: { etag: '"v2"', lastModified: null },
+    }));
     expect(await syncConnection(conn(), NOW, settings, KEY, () => source(busy))).toBe("ok");
     expect(busy.mock.calls[0]![1]).toEqual({ etag: '"v1"', lastModified: null }); // recent: the validators are sent
-    expect(recordSyncOk).toHaveBeenCalledWith(expect.anything(), expect.anything(), expect.objectContaining({ validators: { etag: '"v2"', lastModified: null } }), NOW, 30);
+    expect(recordSyncOk).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.objectContaining({ validators: { etag: '"v2"', lastModified: null } }),
+      NOW,
+      30,
+    );
   });
 
   it("keeps the busy times when nothing changed", async () => {
-    expect(await syncConnection(conn(), NOW, settings, KEY, () => source(async () => ({ changed: false })))).toBe("unchanged");
+    expect(await syncConnection(conn(), NOW, settings, KEY, () => source(async () => ({ changed: false })))).toBe(
+      "unchanged",
+    );
     expect(recordSyncOk).toHaveBeenCalledWith(expect.anything(), expect.anything(), null, NOW, 30);
   });
 
@@ -44,7 +73,13 @@ describe("syncing a connected calendar (ADR-004)", () => {
       throw new CalendarSourceError("AK_CAL_REFUSED", false);
     });
     expect(await syncConnection(conn(), NOW, settings, KEY, () => fail)).toBe("error");
-    expect(recordSyncFailure).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ id: "c1" }), "AK_CAL_REFUSED", NOW, 30);
+    expect(recordSyncFailure).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ id: "c1" }),
+      "AK_CAL_REFUSED",
+      NOW,
+      30,
+    );
     expect(audit).toHaveBeenCalledTimes(1);
     await syncConnection(conn({ failures: 1 }), NOW, settings, KEY, () => fail);
     expect(audit).toHaveBeenCalledTimes(1);

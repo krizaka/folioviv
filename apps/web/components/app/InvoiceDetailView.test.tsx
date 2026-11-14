@@ -15,7 +15,10 @@ import type { InvoiceView } from "./InvoiceDocument";
 const en = bindProduct(enRaw);
 const fr = bindProduct(frRaw);
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: () => undefined, replace: () => undefined, push: () => undefined }), usePathname: () => "/fr/app/s1/invoices/i1" }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: () => undefined, replace: () => undefined, push: () => undefined }),
+  usePathname: () => "/fr/app/s1/invoices/i1",
+}));
 
 const MESSAGES = { en: { console: en.console }, fr: { console: fr.console } } as const;
 const base: InvoiceDetailViewProps = {
@@ -35,7 +38,11 @@ const render = (props: Partial<InvoiceDetailViewProps> = {}) => {
     </I18nProvider>,
   );
 };
-const readable = (html: string) => html.replace(/<[^>]*>/g, " ").replace(/&[a-z#0-9]+;/gi, " ").replace(/\s+/g, " ");
+const readable = (html: string) =>
+  html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&[a-z#0-9]+;/gi, " ")
+    .replace(/\s+/g, " ");
 
 describe("an invoice on DetailLayout (D2, review K3)", () => {
   it("has one h1, the invoice's number", () => {

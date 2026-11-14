@@ -7,7 +7,10 @@ import { I18nProvider } from "@/i18n";
 import { SessionBoundary } from "@/session-boundary";
 import { AppHeader } from "@/ui/AppHeader";
 
-jest.mock("expo-router", () => ({ useRouter: () => ({ navigate: jest.fn(), replace: jest.fn() }), usePathname: () => "/fr/app" }));
+jest.mock("expo-router", () => ({
+  useRouter: () => ({ navigate: jest.fn(), replace: jest.fn() }),
+  usePathname: () => "/fr/app",
+}));
 // The account the server answers, read through the real query client: what the header shows is what the cache holds.
 jest.mock("@/config", () => {
   const fetchMe = jest.fn();
@@ -52,7 +55,12 @@ describe("one account's data never shows to the next", () => {
 
   it("drops the previous account from the header when the session changes, even when the next account's refresh fails", async () => {
     // The root layout's client: errors stay in the query (`throwOnError={false}`), nothing is retried here, nothing is fresh.
-    const client = createQueryClient({ staleTime: 0, maxRetries: 0, throwOnError: false, defaultOptions: { queries: { gcTime: Infinity } } });
+    const client = createQueryClient({
+      staleTime: 0,
+      maxRetries: 0,
+      throwOnError: false,
+      defaultOptions: { queries: { gcTime: Infinity } },
+    });
     clients.push(client);
     const session = fakeSession();
     // Mira's identity is cached; every refresh fails (the phone is offline): Query keeps her beside the error.

@@ -6,7 +6,12 @@ const read = (p: string) => readFileSync(new URL(`../../${p}`, import.meta.url),
 
 describe("the domain and the routes know no vendor", () => {
   it("billing.ts and the routes import the port/config, never the adapter or a vendor name", () => {
-    for (const f of ["lib/billing.ts", "app/api/billing/checkout/route.ts", "app/api/billing/portal/route.ts", "app/api/webhooks/payments/route.ts"]) {
+    for (const f of [
+      "lib/billing.ts",
+      "app/api/billing/checkout/route.ts",
+      "app/api/billing/portal/route.ts",
+      "app/api/webhooks/payments/route.ts",
+    ]) {
       const src = read(f);
       expect(src, f).not.toMatch(/stripe/i);
     }

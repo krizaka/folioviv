@@ -9,13 +9,54 @@ import { ShopPageView } from "./ShopPageView";
 
 const NOW = new Date("2026-10-19T10:30:00-04:00");
 
-const photo = (n: number) => ({ id: `g${n}`, url: `https://cdn.test/g${n}.webp`, webmUrl: null, mp4Url: null, altFr: `Photo ${n}`, altEn: `Picture ${n}`, captionFr: null, captionEn: null, wide: false });
+const photo = (n: number) => ({
+  id: `g${n}`,
+  url: `https://cdn.test/g${n}.webp`,
+  webmUrl: null,
+  mp4Url: null,
+  altFr: `Photo ${n}`,
+  altEn: `Picture ${n}`,
+  captionFr: null,
+  captionEn: null,
+  wide: false,
+});
 
 /** A shop with `count` photos of its own in the gallery (the default composition draws it as a mosaic). */
 const shop = (count: number): PublicShop => ({
-  shop: { id: "w", name: "Pattes de Saint-Henri", slug: "pattes", timezone: "America/Toronto", registrant: true, taglineFr: "Des promenades.", taglineEn: "Dog walks.", area: null, bioFr: null, bioEn: null, publicPhone: null, publicEmail: null, seatUnitFr: null, seatUnitEn: null, businessType: "pets", ownerName: "Léa" },
+  shop: {
+    id: "w",
+    name: "Pattes de Saint-Henri",
+    slug: "pattes",
+    timezone: "America/Toronto",
+    registrant: true,
+    taglineFr: "Des promenades.",
+    taglineEn: "Dog walks.",
+    area: null,
+    bioFr: null,
+    bioEn: null,
+    publicPhone: null,
+    publicEmail: null,
+    seatUnitFr: null,
+    seatUnitEn: null,
+    businessType: "pets",
+    ownerName: "Léa",
+  },
   zones: [],
-  services: [{ id: "solo", nameFr: "Solo", nameEn: "Solo", durationMinutes: 30, priceCents: 2_200, capacity: 1, descriptionFr: null, descriptionEn: null, includedFr: [], includedEn: [], priceVaries: false }],
+  services: [
+    {
+      id: "solo",
+      nameFr: "Solo",
+      nameEn: "Solo",
+      durationMinutes: 30,
+      priceCents: 2_200,
+      capacity: 1,
+      descriptionFr: null,
+      descriptionEn: null,
+      includedFr: [],
+      includedEn: [],
+      priceVaries: false,
+    },
+  ],
   windows: [1, 2, 3, 4, 5].map((weekday) => ({ weekday, startsAt: "08:00", endsAt: "17:00" })),
   daysOff: [],
   rules: { cancellationHours: 24, bookingHorizonDays: 60 },

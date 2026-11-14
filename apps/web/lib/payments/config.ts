@@ -20,11 +20,14 @@ export const SCALE_PLAN = PROCESSOR_PLANS[SCALE].kind;
 export const ASSOCIATION_PLAN = PROCESSOR_PLANS[ASSOCIATION].kind;
 
 /** Whether the processor key is a live-mode one: a free trial is a test-mode feature until it is proven (the founder, 2026-10-30), so live refuses it. */
-export const isLiveMode = (e: Pick<PaymentsSettings, "PAYMENTS_STRIPE_SECRET_KEY">): boolean => e.PAYMENTS_STRIPE_SECRET_KEY?.startsWith("sk_live_") === true;
+export const isLiveMode = (e: Pick<PaymentsSettings, "PAYMENTS_STRIPE_SECRET_KEY">): boolean =>
+  e.PAYMENTS_STRIPE_SECRET_KEY?.startsWith("sk_live_") === true;
 
 /** The only place a payments vendor is chosen (the adapter itself is @krizaka/payments). Null = payments are off. */
 export function paymentsFrom(e: PaymentsSettings): PaymentsPort | null {
-  if (e.PAYMENTS_PROVIDER !== "stripe" || !e.PAYMENTS_STRIPE_SECRET_KEY || !e.PAYMENTS_STRIPE_WEBHOOK_SECRET) {return null;}
+  if (e.PAYMENTS_PROVIDER !== "stripe" || !e.PAYMENTS_STRIPE_SECRET_KEY || !e.PAYMENTS_STRIPE_WEBHOOK_SECRET) {
+    return null;
+  }
   return stripeAdapter({
     secretKey: e.PAYMENTS_STRIPE_SECRET_KEY,
     webhookSecret: e.PAYMENTS_STRIPE_WEBHOOK_SECRET,

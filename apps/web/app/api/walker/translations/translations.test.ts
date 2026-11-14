@@ -11,14 +11,35 @@ vi.mock("@/lib/access", () => ({ requireOwner: vi.fn() }));
 vi.mock("@/lib/audit", () => ({ audit: vi.fn() }));
 vi.mock("@/lib/db", () => ({ db: vi.fn(() => ({})) }));
 vi.mock("@/lib/translation-settings", () => ({ translationRules: vi.fn() }));
-vi.mock("@folioviv/db", async (original) => ({ ...(await original<typeof import("@folioviv/db")>()), translateShop: vi.fn(), saveShopLanguages: vi.fn() }));
+vi.mock("@folioviv/db", async (original) => ({
+  ...(await original<typeof import("@folioviv/db")>()),
+  translateShop: vi.fn(),
+  saveShopLanguages: vi.fn(),
+}));
 
-const post = (route: (req: Request) => Promise<Response>, body: unknown) => route(new Request("http://localhost/api/walker/translations", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }));
-const put = (body: unknown) => languages(new Request("http://localhost/api/walker/translations", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }));
+const post = (route: (req: Request) => Promise<Response>, body: unknown) =>
+  route(
+    new Request("http://localhost/api/walker/translations", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+  );
+const put = (body: unknown) =>
+  languages(
+    new Request("http://localhost/api/walker/translations", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+  );
 
 describe("the shop page's translation routes (#258)", () => {
   beforeEach(() => {
-    vi.mocked(requireOwner).mockResolvedValue({ session: { account: { id: "a", email: "o@example.com" } }, shop: { id: "s1" } } as never);
+    vi.mocked(requireOwner).mockResolvedValue({
+      session: { account: { id: "a", email: "o@example.com" } },
+      shop: { id: "s1" },
+    } as never);
     vi.mocked(translationRules).mockResolvedValue({ enabled: true, allowed: ["fr", "en"], dailyLimit: 5 });
   });
   afterEach(() => vi.clearAllMocks());

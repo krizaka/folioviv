@@ -136,20 +136,20 @@ The org code rules (addendum 2026-10-15) are lint rules, not review comments. [`
 is a **pinned devDependency** (no global install, CI reproduces local): `sgconfig.yml` + `rules/*.yml` (one rule per file,
 with a message and, where safe, a `fix:`; written for Tsx and `.ts` is parsed as Tsx too, so each rule covers `.ts` and `.tsx`), `rule-tests/` (valid/invalid cases of each rule).
 
-| Rule | What it refuses |
-| :--- | :--- |
-| `no-hand-ms-*`, `no-get-time-difference`, `no-get-time-arithmetic` | hand-written time arithmetic (`n * 60 * 1000`, `a.getTime() - b.getTime()`): date-fns, or a duration read from the settings |
-| `no-env-in-domain` | an `env` import in domain code (`packages/*/src`, `src/`): the value arrives as a parameter |
-| `no-db-in-service-or-rules` | a db client / schema import in `*.service.ts`, `*-service.ts`, `*.rules.ts`, `*-rules.ts` |
-| `no-ts-enum` | the TypeScript `enum` keyword (`as const` object + derived type, or a Postgres enum) |
-| `no-enum-string-compare` | `x.status === "OPEN"` (field named status/kind/role/reason/state/direction compared to a string literal) |
-| `no-ambient-clock` | `new Date()` / `Date.now()` in domain code: the clock is injected |
-| `no-types-at-package-root` | `types.ts` at a package root (`<feature>/<feature>.types.ts`) |
-| `no-unjustified-numeric-export` | a numeric (or `…ToMilliseconds(n)`) `export const` in feature code without `// @fixed: <reason>` just above |
-| `no-locale-ternary` | a text chosen with a locale ternary (`locale === "fr" ? a.nameFr : a.nameEn`, `isFr ? …`): a message (`say`) or the pair indexed by the locale, `{ fr, en }[locale]`; a choice between two locale tags (`"fr-CA" : "en-CA"`) is allowed |
-| `no-hand-made-nav`, `no-hand-made-language-switch` | a navigation bar that is not `NavBar` of @krizaka/ui (own Radix NavigationMenu, a local `NavBar`/`TopNav`), a hand-made language switch (`hrefLang` in a component, a row of `aria-pressed={locale === …}` buttons): use `NavBar` and `NavBar.Language` (« Navigation in the family », ui.krizaka.com) |
-| `no-status-move` | `ws.status.move(…)`: Folioviv has no editable status set; an invoice's state is derived from the ledger, so a « bulk paid » must not exist (folioviv#337) |
-| `no-utc-day-slice` | `x.toISOString().slice(0, 10)`: that is the UTC day, not the shop's (in Montréal after 19:00 it is tomorrow). `localDay(instant, timeZone)` of `@krizaka/intl` (`shopDay` on the server) |
+| Rule                                                               | What it refuses                                                                                                                                                                                                                                                                                        |
+| :----------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `no-hand-ms-*`, `no-get-time-difference`, `no-get-time-arithmetic` | hand-written time arithmetic (`n * 60 * 1000`, `a.getTime() - b.getTime()`): date-fns, or a duration read from the settings                                                                                                                                                                            |
+| `no-env-in-domain`                                                 | an `env` import in domain code (`packages/*/src`, `src/`): the value arrives as a parameter                                                                                                                                                                                                            |
+| `no-db-in-service-or-rules`                                        | a db client / schema import in `*.service.ts`, `*-service.ts`, `*.rules.ts`, `*-rules.ts`                                                                                                                                                                                                              |
+| `no-ts-enum`                                                       | the TypeScript `enum` keyword (`as const` object + derived type, or a Postgres enum)                                                                                                                                                                                                                   |
+| `no-enum-string-compare`                                           | `x.status === "OPEN"` (field named status/kind/role/reason/state/direction compared to a string literal)                                                                                                                                                                                               |
+| `no-ambient-clock`                                                 | `new Date()` / `Date.now()` in domain code: the clock is injected                                                                                                                                                                                                                                      |
+| `no-types-at-package-root`                                         | `types.ts` at a package root (`<feature>/<feature>.types.ts`)                                                                                                                                                                                                                                          |
+| `no-unjustified-numeric-export`                                    | a numeric (or `…ToMilliseconds(n)`) `export const` in feature code without `// @fixed: <reason>` just above                                                                                                                                                                                            |
+| `no-locale-ternary`                                                | a text chosen with a locale ternary (`locale === "fr" ? a.nameFr : a.nameEn`, `isFr ? …`): a message (`say`) or the pair indexed by the locale, `{ fr, en }[locale]`; a choice between two locale tags (`"fr-CA" : "en-CA"`) is allowed                                                                |
+| `no-hand-made-nav`, `no-hand-made-language-switch`                 | a navigation bar that is not `NavBar` of @krizaka/ui (own Radix NavigationMenu, a local `NavBar`/`TopNav`), a hand-made language switch (`hrefLang` in a component, a row of `aria-pressed={locale === …}` buttons): use `NavBar` and `NavBar.Language` (« Navigation in the family », ui.krizaka.com) |
+| `no-status-move`                                                   | `ws.status.move(…)`: Folioviv has no editable status set; an invoice's state is derived from the ledger, so a « bulk paid » must not exist (folioviv#337)                                                                                                                                              |
+| `no-utc-day-slice`                                                 | `x.toISOString().slice(0, 10)`: that is the UTC day, not the shop's (in Montréal after 19:00 it is tomorrow). `localDay(instant, timeZone)` of `@krizaka/intl` (`shopDay` on the server)                                                                                                               |
 
 - **Run**: `npm run lint` runs everything (it includes `ast-grep test` and the ratchet). `npx ast-grep scan` lists the
   violations with their message; `npm run lint:sg:test` runs the rule tests.
@@ -166,6 +166,7 @@ with a message and, where safe, a `fix:`; written for Tsx and `.ts` is parsed as
 ## Before you open or update a pull request (coding agents)
 
 These are the defects code review found most often on 2026-10-23. Check them yourself before you open or update a pull request:
+
 1. **Checks:** run the repository's full check (lint, typecheck, tests, build) and fix it. Never push a red check.
 2. **Concurrency:** any « count then insert » or « check then write » runs in one transaction with a lock, and has a concurrency test.
 3. **One gate:** a rule (limit, permission, validation) is enforced in the service, so no route can skip it. Test every route.

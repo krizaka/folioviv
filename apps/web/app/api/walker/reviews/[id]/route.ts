@@ -13,9 +13,16 @@ export function PATCH(req: Request, { params }: { params: Promise<{ id: string }
   return handle(async () => {
     const { shop } = await requireShop(req, "catalogue");
     const id = idParam((await params).id);
-    const body = await readJson(req, z.object({ reply: z.string().max(1000).optional(), state: z.enum(["published", "hidden_by_owner"]).optional() }).refine((b) => b.reply !== undefined || b.state !== undefined));
-    if (body.reply !== undefined && !(await replyToReview(db(), shop.id, id, body.reply))) throw refuse(404, "NOT_FOUND", "Not found");
-    if (body.state !== undefined && !(await setReviewState(db(), shop.id, id, body.state))) throw refuse(404, "NOT_FOUND", "Not found");
+    const body = await readJson(
+      req,
+      z
+        .object({ reply: z.string().max(1000).optional(), state: z.enum(["published", "hidden_by_owner"]).optional() })
+        .refine((b) => b.reply !== undefined || b.state !== undefined),
+    );
+    if (body.reply !== undefined && !(await replyToReview(db(), shop.id, id, body.reply)))
+      throw refuse(404, "NOT_FOUND", "Not found");
+    if (body.state !== undefined && !(await setReviewState(db(), shop.id, id, body.state)))
+      throw refuse(404, "NOT_FOUND", "Not found");
     await announcePage(shop.id);
     return Response.json({ ok: true });
   });

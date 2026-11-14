@@ -1,7 +1,14 @@
 import type { Template } from "@folioviv/core";
 
 /** Today's page without a template, after the hero: the order the storefront has always drawn (`trust` right before the photos). */
-export const PLAIN_PAGE_SECTIONS: readonly { id: string; variant: string; visible: boolean }[] = ["services", "team", "hours", "zones", "trust", "gallery"].map((id) => ({ id, variant: "default", visible: true }));
+export const PLAIN_PAGE_SECTIONS: readonly { id: string; variant: string; visible: boolean }[] = [
+  "services",
+  "team",
+  "hours",
+  "zones",
+  "trust",
+  "gallery",
+].map((id) => ({ id, variant: "default", visible: true }));
 
 /** The small shapes that stand for a section's variant: a grid of cards, a list, photos (straight or taped), a story, a plain band. */
 function Glyph({ id, variant }: Readonly<{ id: string; variant: string }>) {
@@ -57,11 +64,22 @@ function Glyph({ id, variant }: Readonly<{ id: string; variant: string }>) {
  * A template at a glance (#261, step 4): a tiny page in the template's hue and paper — the hero band, then its sections in its order, each with the shape of its
  * variant and its name. Decorative (the tile's name carries the meaning); `template` null draws today's plain page.
  */
-export function TemplatePreview({ template, labels }: Readonly<{ template: Template | null; /** The sections' names, by id (`shopSetup.layout.sections.*`). */ labels: Record<string, string> }>) {
+export function TemplatePreview({
+  template,
+  labels,
+}: Readonly<{
+  template: Template | null;
+  /** The sections' names, by id (`shopSetup.layout.sections.*`). */ labels: Record<string, string>;
+}>) {
   const sections = (template ? template.sections : PLAIN_PAGE_SECTIONS).filter((s) => s.visible);
   const hue = template && template.hue !== "brand-folioviv" ? template.hue : undefined;
   return (
-    <div aria-hidden="true" data-hue={hue} data-paper={template?.paper ?? "plain"} className="kz-tpl-preview flex w-full flex-col gap-[5px] rounded-md border border-border-default bg-surface-1 p-2 text-[9px] leading-none text-fg-secondary">
+    <div
+      aria-hidden="true"
+      data-hue={hue}
+      data-paper={template?.paper ?? "plain"}
+      className="kz-tpl-preview flex w-full flex-col gap-[5px] rounded-md border border-border-default bg-surface-1 p-2 text-[9px] leading-none text-fg-secondary"
+    >
       <div className="kz-tpl-preview-hero flex h-7 flex-col justify-end gap-[3px] rounded-sm p-[5px]">
         <span className="kz-tpl-preview-title block h-[6px] w-1/2 rounded-[2px]" />
         <span className="block h-[3px] w-1/3 rounded-[2px] bg-border-default" />

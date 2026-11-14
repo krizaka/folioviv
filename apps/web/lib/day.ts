@@ -25,7 +25,9 @@ export function shiftDay(day: string, days: number): string {
 export function stripWindow(day: string, today: string): { start: string; days: number } {
   const anchor = shiftDay(today, -DAYS_BEFORE);
   const last = shiftDay(anchor, STRIP_DAYS - 1);
-  return day >= anchor && day <= last ? { start: anchor, days: STRIP_DAYS } : { start: shiftDay(day, -DAYS_BEFORE), days: STRIP_DAYS };
+  return day >= anchor && day <= last
+    ? { start: anchor, days: STRIP_DAYS }
+    : { start: shiftDay(day, -DAYS_BEFORE), days: STRIP_DAYS };
 }
 
 export interface PricedAppointment {
@@ -47,7 +49,9 @@ export interface DaySummary {
 }
 
 export function daySummary(appointments: readonly PricedAppointment[], registrant: boolean, now: Date): DaySummary {
-  const counting = appointments.filter((a) => a.status === AppointmentStatus.Booked || a.status === AppointmentStatus.Done);
+  const counting = appointments.filter(
+    (a) => a.status === AppointmentStatus.Booked || a.status === AppointmentStatus.Done,
+  );
   const totals = invoiceTotals(
     counting.map((a) => ({ description: a.id, quantity: 1, unitPriceCents: a.priceCents, category: a.category })),
     { registrant },
@@ -55,7 +59,11 @@ export function daySummary(appointments: readonly PricedAppointment[], registran
   const next = counting
     .filter((a) => a.status === AppointmentStatus.Booked && Date.parse(a.startsAt) > now.getTime())
     .sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt))[0];
-  return { count: counting.length, expectedCents: totals.totalCents, next: next ? { id: next.id, client: next.client, startsAt: next.startsAt } : null };
+  return {
+    count: counting.length,
+    expectedCents: totals.totalCents,
+    next: next ? { id: next.id, client: next.client, startsAt: next.startsAt } : null,
+  };
 }
 
 /** The words an appointment is read in: « booked » with a visit begun reads « in progress », the one status the database does not name. */
@@ -67,13 +75,20 @@ export function statusWord(a: { status: AppointmentStatus; checkedInAt?: string 
 }
 
 /** The tone of a status chip and of the agenda's dot. The word carries the meaning, the colour only repeats it. */
-export const STATUS_TONE = { booked: "neutral", inProgress: "accent", done: "success", cancelled: "neutral", noShow: "warning" } as const satisfies Record<StatusWord, string>;
+export const STATUS_TONE = {
+  booked: "neutral",
+  inProgress: "accent",
+  done: "success",
+  cancelled: "neutral",
+  noShow: "warning",
+} as const satisfies Record<StatusWord, string>;
 
 /**
  * How a role reads the day (docs/ux/2026-10-full-review.md B1, decided on #289): the owner and a manager read the agenda in every
  * trade; a staff member of a trade with dependants (a dog walker) keeps the card view built for a phone in the street.
  */
-export const dayView = (role: "owner" | "manager" | "staff", dependants: boolean): "agenda" | "cards" => (role === "staff" && dependants ? "cards" : "agenda");
+export const dayView = (role: "owner" | "manager" | "staff", dependants: boolean): "agenda" | "cards" =>
+  role === "staff" && dependants ? "cards" : "agenda";
 
 /** What the headline of Aujourd'hui reads from an appointment (`TodayAppointment` fits). */
 export interface HeadlineAppointment {
@@ -98,7 +113,9 @@ export type DayHeadline =
  * — or free. Another day only counts what is booked. Cancelled and missed appointments never count. Pure: `now` is the server's.
  */
 export function dayHeadline(appointments: readonly HeadlineAppointment[], now: Date, isToday: boolean): DayHeadline {
-  const counting = appointments.filter((a) => a.status === AppointmentStatus.Booked || a.status === AppointmentStatus.Done);
+  const counting = appointments.filter(
+    (a) => a.status === AppointmentStatus.Booked || a.status === AppointmentStatus.Done,
+  );
   if (!isToday) return { kind: "otherDay", count: counting.length };
   if (counting.length === 0) return { kind: "empty" };
   const byStart = [...counting].sort((x, y) => Date.parse(x.startsAt) - Date.parse(y.startsAt));
@@ -113,12 +130,17 @@ export function dayHeadline(appointments: readonly HeadlineAppointment[], now: D
  * The headline's message key and its values (the times as instants, formatted by the page in the shop's zone). A trade with
  * dependants (a dog walker) reads its walks by their service, never by the owner's name; a walk-in is said as such.
  */
-export function headlineMessage(h: DayHeadline, vocabulary: { dependants: boolean }): { key: string; vars: Record<string, unknown> } {
+export function headlineMessage(
+  h: DayHeadline,
+  vocabulary: { dependants: boolean },
+): { key: string; vars: Record<string, unknown> } {
   switch (h.kind) {
     case "empty":
       return { key: "today.headline.empty", vars: {} };
     case "otherDay":
-      return h.count ? { key: "today.headline.otherDay", vars: { count: h.count } } : { key: "today.headline.otherDayEmpty", vars: {} };
+      return h.count
+        ? { key: "today.headline.otherDay", vars: { count: h.count } }
+        : { key: "today.headline.otherDayEmpty", vars: {} };
     case "done":
       return { key: "today.headline.done", vars: { count: h.count } };
     case "inProgress":

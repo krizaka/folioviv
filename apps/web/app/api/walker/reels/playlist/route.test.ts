@@ -14,11 +14,22 @@ vi.mock("@folioviv/db", () => ({ reorderReels: vi.fn(), setReelTransition: vi.fn
 
 const A = "11111111-1111-4111-8111-111111111111";
 const B = "22222222-2222-4222-8222-222222222222";
-const put = (json: unknown) => PUT(new Request("http://localhost/api/walker/reels/playlist", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(json) }));
+const put = (json: unknown) =>
+  PUT(
+    new Request("http://localhost/api/walker/reels/playlist", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(json),
+    }),
+  );
 
 describe("the television's playlist (#469)", () => {
   beforeEach(() => {
-    vi.mocked(requireShop).mockResolvedValue({ session: { account: { id: "a", email: "o@example.com" } }, shop: { id: "s1" }, role: "owner" } as never);
+    vi.mocked(requireShop).mockResolvedValue({
+      session: { account: { id: "a", email: "o@example.com" } },
+      shop: { id: "s1" },
+      role: "owner",
+    } as never);
     vi.mocked(reorderReels).mockReset().mockResolvedValue(true);
     vi.mocked(setReelTransition).mockReset().mockResolvedValue(undefined);
   });

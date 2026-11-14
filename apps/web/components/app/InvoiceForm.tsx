@@ -32,21 +32,35 @@ export interface InvoiceFormProps {
   data: InvoiceFormData;
   locale: "fr" | "en";
   /** Where the form starts: the client and the lines of its address (« Facturer ce client », a finished appointment). */
-  start: { clientId: string; lines: DraftLine[]; /** The finished appointment it bills, from the address (D4: « À facturer » stops counting it). */ appointmentId?: string | null };
+  start: {
+    clientId: string;
+    lines: DraftLine[];
+    /** The finished appointment it bills, from the address (D4: « À facturer » stops counting it). */ appointmentId?:
+      string | null;
+  };
 }
 
 /**
  * The phone's tab bar is 3.5 rem plus the safe area (`RailNav`); the sticky total sits above it, never under it, until
  * krizaka-ui#630 gives the rail a task mode that yields. From `lg` the total is beside the form.
  */
-export const STICKY_CLEARS_TAB_BAR = "bottom-[calc(3.5rem+env(safe-area-inset-bottom))] md:bottom-0 pb-3 md:block lg:hidden";
+export const STICKY_CLEARS_TAB_BAR =
+  "bottom-[calc(3.5rem+env(safe-area-inset-bottom))] md:bottom-0 pb-3 md:block lg:hidden";
 
 const invoiceForm = createKrizakaForm({
   schema: z.object({
     clientId: z.string(),
     termsDays: z.string(),
     lines: z
-      .array(z.object({ key: z.string(), serviceId: z.string(), description: z.string().trim().max(200), quantity: QUANTITY_FIELD, unitPriceCents: z.number().int().min(0) }))
+      .array(
+        z.object({
+          key: z.string(),
+          serviceId: z.string(),
+          description: z.string().trim().max(200),
+          quantity: QUANTITY_FIELD,
+          unitPriceCents: z.number().int().min(0),
+        }),
+      )
       .min(1)
       .max(40),
   }),
@@ -75,7 +89,11 @@ function DueLine({ today }: Readonly<{ today: string }>) {
   if (!Number.isInteger(days)) {
     return null;
   }
-  return <p className="text-sm text-fg-secondary">{say("invoices.new.paymentTermsDue", { date: formatLongDay(dueOn(today, days), locale) })}</p>;
+  return (
+    <p className="text-sm text-fg-secondary">
+      {say("invoices.new.paymentTermsDue", { date: formatLongDay(dueOn(today, days), locale) })}
+    </p>
+  );
 }
 
 /** The total of the lines being typed, as the server will compute it. */
@@ -98,7 +116,9 @@ function Totals({ data }: Readonly<{ data: InvoiceFormData }>) {
         </div>
       ))}
       <dt className="border-t border-border-default pt-1 font-semibold text-fg">{say("invoiceDoc.total")}</dt>
-      <dd className="border-t border-border-default pt-1 text-right text-base font-bold tabular-nums text-fg">{formatMoney(totals.totalCents, locale)}</dd>
+      <dd className="border-t border-border-default pt-1 text-right text-base font-bold tabular-nums text-fg">
+        {formatMoney(totals.totalCents, locale)}
+      </dd>
     </dl>
   );
 }
@@ -125,7 +145,20 @@ export function InvoiceForm({ data, locale: base, start }: Readonly<InvoiceFormP
       if (lines.length === 0) return;
       // The invoice is in the client's language (the shop's page language without a client), dated today, under the shop's terms.
       const language = data.clients.find((c) => c.id === values.clientId)?.language ?? base;
-      const done = await call.run<{ id: string }>("/api/walker/invoices", { json: { clientId: values.clientId || null, appointmentId: start.appointmentId ?? null, language, issuedOn: data.today, termsDays: Number(values.termsDays), lines } }, { refresh: false });
+      const done = await call.run<{ id: string }>(
+        "/api/walker/invoices",
+        {
+          json: {
+            clientId: values.clientId || null,
+            appointmentId: start.appointmentId ?? null,
+            language,
+            issuedOn: data.today,
+            termsDays: Number(values.termsDays),
+            lines,
+          },
+        },
+        { refresh: false },
+      );
       if (done !== null) router.push(`${routes.invoice(done.id)}?issued=1`);
     },
   });
@@ -137,17 +170,30 @@ export function InvoiceForm({ data, locale: base, start }: Readonly<InvoiceFormP
     return days === 1 ? say("invoiceDoc.termsNetOne") : say("invoiceDoc.termsNet", { days });
   };
   const termsOptions = termsChoices(data.termsDays).map((days) => ({ value: String(days), label: termsLabel(days) }));
-  const serviceOptions = [...data.services.map((s) => ({ value: s.id, label: `${name(s)} · ${formatMoney(s.priceCents, locale)}` })), { value: "", label: say("invoices.new.freeLine") }];
+  const serviceOptions = [
+    ...data.services.map((s) => ({ value: s.id, label: `${name(s)} · ${formatMoney(s.priceCents, locale)}` })),
+    { value: "", label: say("invoices.new.freeLine") },
+  ];
   const submit = (
     <form.Submit size="lg" variant="primary" className="w-full font-bold" data-primary>
       {say("invoices.new.submit")}
     </form.Submit>
   );
   return (
-    <form.Form aria-label={say("invoices.new.title")} className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+    <form.Form
+      aria-label={say("invoices.new.title")}
+      className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start"
+    >
       <div className="flex min-w-0 flex-col gap-8">
         <Step n="01" title={say("invoices.new.steps.who")}>
-          <form.Select name="clientId" label={say("invoices.new.client")} options={[{ value: "", label: say("invoices.new.noClient") }, ...data.clients.map((c) => ({ value: c.id, label: c.fullName }))]} />
+          <form.Select
+            name="clientId"
+            label={say("invoices.new.client")}
+            options={[
+              { value: "", label: say("invoices.new.noClient") },
+              ...data.clients.map((c) => ({ value: c.id, label: c.fullName })),
+            ]}
+          />
         </Step>
         <Step n="02" title={say("invoices.new.steps.what")}>
           <form.FieldArray name="lines">
@@ -155,23 +201,53 @@ export function InvoiceForm({ data, locale: base, start }: Readonly<InvoiceFormP
               <div className="flex flex-col gap-4">
                 <ol className="flex flex-col gap-4">
                   {(array.items as DraftLine[]).map((line, i) => (
-                    <li key={line.key} className="grid gap-3 border-b border-border-subtle pb-4 sm:grid-cols-[minmax(0,1fr)_7rem_auto] sm:items-end" aria-label={say("invoices.new.line", { n: i + 1 })}>
-                      <form.Select name={array.fieldName(i, "serviceId") as Field} label={say("invoices.new.service")} options={serviceOptions} />
-                      <form.TextField name={array.fieldName(i, "quantity") as Field} label={say("invoices.new.quantity")} inputMode="decimal" />
-                      <IconButton type="button" variant="ghost" label={say("invoices.new.removeLine", { n: i + 1 })} disabled={array.items.length === 1} onClick={() => array.remove(i)}>
+                    <li
+                      key={line.key}
+                      className="grid gap-3 border-b border-border-subtle pb-4 sm:grid-cols-[minmax(0,1fr)_7rem_auto] sm:items-end"
+                      aria-label={say("invoices.new.line", { n: i + 1 })}
+                    >
+                      <form.Select
+                        name={array.fieldName(i, "serviceId") as Field}
+                        label={say("invoices.new.service")}
+                        options={serviceOptions}
+                      />
+                      <form.TextField
+                        name={array.fieldName(i, "quantity") as Field}
+                        label={say("invoices.new.quantity")}
+                        inputMode="decimal"
+                      />
+                      <IconButton
+                        type="button"
+                        variant="ghost"
+                        label={say("invoices.new.removeLine", { n: i + 1 })}
+                        disabled={array.items.length === 1}
+                        onClick={() => array.remove(i)}
+                      >
                         <TrashIcon size={18} aria-hidden />
                       </IconButton>
                       {line.serviceId === "" ? (
                         <div className="grid gap-3 sm:col-span-3 sm:grid-cols-[minmax(0,1fr)_10rem]">
-                          <form.TextField name={array.fieldName(i, "description") as Field} label={say("invoices.new.description")} />
-                          <form.Money name={array.fieldName(i, "unitPriceCents") as Field} label={say("invoices.new.unitPrice")} currency="CAD" />
+                          <form.TextField
+                            name={array.fieldName(i, "description") as Field}
+                            label={say("invoices.new.description")}
+                          />
+                          <form.Money
+                            name={array.fieldName(i, "unitPriceCents") as Field}
+                            label={say("invoices.new.unitPrice")}
+                            currency="CAD"
+                          />
                         </div>
                       ) : null}
                     </li>
                   ))}
                 </ol>
                 <div>
-                  <Button type="button" variant="secondary" size="md" onClick={() => array.push(emptyLine(`l${keys.current++}`, data.services[0]?.id ?? ""))}>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="md"
+                    onClick={() => array.push(emptyLine(`l${keys.current++}`, data.services[0]?.id ?? ""))}
+                  >
                     <PlusIcon size={16} aria-hidden />
                     {say("invoices.new.addLine")}
                   </Button>
@@ -181,14 +257,20 @@ export function InvoiceForm({ data, locale: base, start }: Readonly<InvoiceFormP
           </form.FieldArray>
         </Step>
         <Step n="03" title={say("invoices.new.steps.when")}>
-          <p className="max-w-prose text-fg-secondary">{say("invoices.new.when", { date: formatLongDay(data.today, locale) })}</p>
+          <p className="max-w-prose text-fg-secondary">
+            {say("invoices.new.when", { date: formatLongDay(data.today, locale) })}
+          </p>
           <form.Select name="termsDays" label={say("invoices.new.paymentTerms")} options={termsOptions} />
           <DueLine today={data.today} />
         </Step>
         {needLine ? <Alert tone="danger">{say("invoices.new.needLine")}</Alert> : null}
         {call.problem ? <Alert tone="danger">{call.problem}</Alert> : null}
       </div>
-      <aside className="hidden flex-col gap-4 rounded-lg border border-border-default bg-surface-1 p-5 lg:sticky lg:top-20 lg:flex" aria-label={say("invoices.new.totals")} data-testid="invoice-aside">
+      <aside
+        className="hidden flex-col gap-4 rounded-lg border border-border-default bg-surface-1 p-5 lg:sticky lg:top-20 lg:flex"
+        aria-label={say("invoices.new.totals")}
+        data-testid="invoice-aside"
+      >
         <h2 className="text-base font-semibold text-fg">{say("invoices.new.totals")}</h2>
         <Totals data={data} />
         {submit}

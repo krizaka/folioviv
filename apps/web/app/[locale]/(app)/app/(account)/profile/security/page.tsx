@@ -24,7 +24,15 @@ export default async function Security({ params }: Readonly<{ params: Promise<{ 
       <SettingsSection variant="flat" title={t.passwordTitle}>
         <ChangePasswordForm />
       </SettingsSection>
-      <SessionsPanel sessions={sessions.map((s) => ({ id: s.id, createdAt: new Date(s.createdAt).toISOString(), ip: s.ip, userAgent: s.userAgent, current: s.current }))} />
+      <SessionsPanel
+        sessions={sessions.map((s) => ({
+          id: s.id,
+          createdAt: new Date(s.createdAt).toISOString(),
+          ip: s.ip,
+          userAgent: s.userAgent,
+          current: s.current,
+        }))}
+      />
     </ProfileFrame>
   );
 }

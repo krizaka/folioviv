@@ -13,6 +13,11 @@ export const POST = (req: Request) =>
   accountAct(req, "email", async (s) => {
     const input = await readJson(req, z.object({ newEmail: z.string().max(320), password: z.string().max(256) }));
     await accounts().requestEmailChange(s.account.id, input, systemClock.now());
-    await audit({ action: "account.email_change_requested", actorId: s.account.id, actorLabel: s.account.email, headers: req.headers });
+    await audit({
+      action: "account.email_change_requested",
+      actorId: s.account.id,
+      actorLabel: s.account.email,
+      headers: req.headers,
+    });
     return { ok: true };
   });

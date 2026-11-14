@@ -11,8 +11,30 @@ vi.mock("@/lib/db", () => ({ db: () => ({}) }));
 vi.mock("@/lib/settings", () => ({ shopSectionFeatures: vi.fn() }));
 
 const rows = [
-  { id: "a", textFr: "Portes ouvertes", textEn: "Open day", photoUrl: null, photoAlt: "", endsOn: null, createdAt: new Date(), shopName: "Atelier", shopSlug: "atelier", area: "Saint-Henri, Montréal" },
-  { id: "b", textFr: "Nouveau", textEn: "New", photoUrl: null, photoAlt: "", endsOn: null, createdAt: new Date(), shopName: "Salon", shopSlug: "salon", area: "Villeray, Montréal" },
+  {
+    id: "a",
+    textFr: "Portes ouvertes",
+    textEn: "Open day",
+    photoUrl: null,
+    photoAlt: "",
+    endsOn: null,
+    createdAt: new Date(),
+    shopName: "Atelier",
+    shopSlug: "atelier",
+    area: "Saint-Henri, Montréal",
+  },
+  {
+    id: "b",
+    textFr: "Nouveau",
+    textEn: "New",
+    photoUrl: null,
+    photoAlt: "",
+    endsOn: null,
+    createdAt: new Date(),
+    shopName: "Salon",
+    shopSlug: "salon",
+    area: "Villeray, Montréal",
+  },
 ];
 const get = (query = "") => GET(new Request(`http://localhost/api/feed${query}`));
 

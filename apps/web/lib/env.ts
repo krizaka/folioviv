@@ -15,7 +15,12 @@ const flag = z
 const list = z
   .string()
   .optional()
-  .transform((v) => (v ?? "").split(",").map((s) => s.trim()).filter(Boolean));
+  .transform((v) =>
+    (v ?? "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean),
+  );
 
 export const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
@@ -111,19 +116,33 @@ export function readEnv(source: Record<string, string | undefined> = process.env
 
 /** What a production server cannot run without — named, never shown. */
 export function productionProblems(env: Env): string[] {
-  if (env.NODE_ENV !== "production") {return [];}
+  if (env.NODE_ENV !== "production") {
+    return [];
+  }
   const problems: string[] = [];
-  if (!env.DATABASE_URL) {problems.push("DATABASE_URL is not set");}
-  if (!env.AUTH_SESSION_SECRET || env.AUTH_SESSION_SECRET.length < 32) {problems.push("AUTH_SESSION_SECRET must be at least 32 characters");}
-  if (!validDataKey(env.APP_DATA_ENCRYPTION_KEY)) {problems.push("APP_DATA_ENCRYPTION_KEY must be 32 random bytes, base64-encoded");}
-  if (env.MAIL_PROVIDER === "mailgun" && !(env.MAIL_API_KEY && env.MAIL_DOMAIN)) {problems.push("MAIL_PROVIDER=mailgun needs MAIL_API_KEY and MAIL_DOMAIN");}
-  if (env.DATABASE_URL && /sslmode=(require|verify)/.test(env.DATABASE_URL) && !env.DATABASE_CA_CERT) {problems.push("DATABASE_CA_CERT is required for a TLS database");}
+  if (!env.DATABASE_URL) {
+    problems.push("DATABASE_URL is not set");
+  }
+  if (!env.AUTH_SESSION_SECRET || env.AUTH_SESSION_SECRET.length < 32) {
+    problems.push("AUTH_SESSION_SECRET must be at least 32 characters");
+  }
+  if (!validDataKey(env.APP_DATA_ENCRYPTION_KEY)) {
+    problems.push("APP_DATA_ENCRYPTION_KEY must be 32 random bytes, base64-encoded");
+  }
+  if (env.MAIL_PROVIDER === "mailgun" && !(env.MAIL_API_KEY && env.MAIL_DOMAIN)) {
+    problems.push("MAIL_PROVIDER=mailgun needs MAIL_API_KEY and MAIL_DOMAIN");
+  }
+  if (env.DATABASE_URL && /sslmode=(require|verify)/.test(env.DATABASE_URL) && !env.DATABASE_CA_CERT) {
+    problems.push("DATABASE_CA_CERT is required for a TLS database");
+  }
   return problems;
 }
 
 export function assertProductionEnv(source: Record<string, string | undefined> = process.env): void {
   const problems = productionProblems(readEnv(source));
-  if (problems.length) {throw new Error(`Folioviv refuses to start: ${problems.join("; ")}`);}
+  if (problems.length) {
+    throw new Error(`Folioviv refuses to start: ${problems.join("; ")}`);
+  }
 }
 
 export const env = () => readEnv();
@@ -133,20 +152,31 @@ export const signupEnabled = () => env().AUTH_SIGNUP_ENABLED;
 /** The settings `salesOpen` reads: whether plans are really on sale (sign-up open and a payment provider wired). */
 export const salesSettings = () => {
   const e = env();
-  return { signupEnabled: e.AUTH_SIGNUP_ENABLED, paymentsProvider: e.PAYMENTS_PROVIDER, paymentsSecretKey: e.PAYMENTS_STRIPE_SECRET_KEY, paymentsWebhookSecret: e.PAYMENTS_STRIPE_WEBHOOK_SECRET };
+  return {
+    signupEnabled: e.AUTH_SIGNUP_ENABLED,
+    paymentsProvider: e.PAYMENTS_PROVIDER,
+    paymentsSecretKey: e.PAYMENTS_STRIPE_SECRET_KEY,
+    paymentsWebhookSecret: e.PAYMENTS_STRIPE_WEBHOOK_SECRET,
+  };
 };
 /** The administration's allow-list; `null` = no restriction (development only). */
 export function consoleAllowedIps(source: Record<string, string | undefined> = process.env): string[] | null {
   const e = readEnv(source);
-  if (e.AUTH_ALLOWED_IPS.length) {return e.AUTH_ALLOWED_IPS;}
+  if (e.AUTH_ALLOWED_IPS.length) {
+    return e.AUTH_ALLOWED_IPS;
+  }
   return e.NODE_ENV === "production" ? [] : null;
 }
 
 const DEV_SECRET = "development-only-session-secret-not-for-production";
 export function sessionSecret(): string {
   const e = env();
-  if (e.AUTH_SESSION_SECRET) {return e.AUTH_SESSION_SECRET;}
-  if (e.NODE_ENV === "production") {throw new Error("AUTH_SESSION_SECRET is not set");}
+  if (e.AUTH_SESSION_SECRET) {
+    return e.AUTH_SESSION_SECRET;
+  }
+  if (e.NODE_ENV === "production") {
+    throw new Error("AUTH_SESSION_SECRET is not set");
+  }
   return DEV_SECRET;
 }
 
@@ -161,17 +191,25 @@ const DEV_DATA_KEY = Buffer.alloc(32, "folioviv-development-only-data-key").toSt
 export function dataKey(source: Record<string, string | undefined> = process.env): Buffer {
   const e = readEnv(source);
   if (e.APP_DATA_ENCRYPTION_KEY) {
-    if (!validDataKey(e.APP_DATA_ENCRYPTION_KEY)) {throw new Error("APP_DATA_ENCRYPTION_KEY must be 32 random bytes, base64-encoded");}
+    if (!validDataKey(e.APP_DATA_ENCRYPTION_KEY)) {
+      throw new Error("APP_DATA_ENCRYPTION_KEY must be 32 random bytes, base64-encoded");
+    }
     return Buffer.from(e.APP_DATA_ENCRYPTION_KEY, "base64");
   }
-  if (e.NODE_ENV === "production") {throw new Error("APP_DATA_ENCRYPTION_KEY is not set");}
+  if (e.NODE_ENV === "production") {
+    throw new Error("APP_DATA_ENCRYPTION_KEY is not set");
+  }
   return Buffer.from(DEV_DATA_KEY, "base64");
 }
 
 /** The OAuth clients configured for the calendar providers (a provider needs both its id and its secret). */
-export function calendarOAuthApps(source: Record<string, string | undefined> = process.env): { google?: { clientId: string; clientSecret: string }; outlook?: { clientId: string; clientSecret: string } } {
+export function calendarOAuthApps(source: Record<string, string | undefined> = process.env): {
+  google?: { clientId: string; clientSecret: string };
+  outlook?: { clientId: string; clientSecret: string };
+} {
   const e = readEnv(source);
-  const pair = (clientId?: string, clientSecret?: string) => (clientId && clientSecret ? { clientId, clientSecret } : undefined);
+  const pair = (clientId?: string, clientSecret?: string) =>
+    clientId && clientSecret ? { clientId, clientSecret } : undefined;
   const google = pair(e.AUTH_CALENDAR_GOOGLE_CLIENT_ID, e.AUTH_CALENDAR_GOOGLE_CLIENT_SECRET);
   const outlook = pair(e.AUTH_CALENDAR_OUTLOOK_CLIENT_ID, e.AUTH_CALENDAR_OUTLOOK_CLIENT_SECRET);
   return { ...(google ? { google } : {}), ...(outlook ? { outlook } : {}) };
@@ -179,5 +217,12 @@ export function calendarOAuthApps(source: Record<string, string | undefined> = p
 
 export function mailSettings(source: Record<string, string | undefined> = process.env): MailSettings {
   const e = readEnv(source);
-  return { provider: e.MAIL_PROVIDER, apiKey: e.MAIL_API_KEY, domain: e.MAIL_DOMAIN, from: e.MAIL_FROM, apiUrl: e.MAIL_API_URL, appUrl: e.APP_PUBLIC_URL };
+  return {
+    provider: e.MAIL_PROVIDER,
+    apiKey: e.MAIL_API_KEY,
+    domain: e.MAIL_DOMAIN,
+    from: e.MAIL_FROM,
+    apiUrl: e.MAIL_API_URL,
+    appUrl: e.APP_PUBLIC_URL,
+  };
 }

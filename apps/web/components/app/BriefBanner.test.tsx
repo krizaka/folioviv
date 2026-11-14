@@ -3,7 +3,13 @@ import { describe, expect, it, vi } from "vitest";
 
 import { BriefBanner } from "./BriefBanner";
 
-vi.mock("@/lib/i18n-client", () => ({ useSay: () => ({ say: (key: string, vars?: Record<string, string | number>) => (vars ? `${key} ${Object.values(vars).join(" ")}` : key), locale: "fr" }) }));
+vi.mock("@/lib/i18n-client", () => ({
+  useSay: () => ({
+    say: (key: string, vars?: Record<string, string | number>) =>
+      vars ? `${key} ${Object.values(vars).join(" ")}` : key,
+    locale: "fr",
+  }),
+}));
 
 describe("« Le point du lundi » on Today (docs/ux/2026-10-full-review.md B2)", () => {
   it("says nothing when the brief has nothing to say: the day comes first", () => {

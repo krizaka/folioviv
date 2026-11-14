@@ -18,17 +18,65 @@ const label = (fr: string, en: string): Label => ({ fr, en });
 
 /** Presets by trade: [French name, English name, marker]. Demo trades only: never a restaurant, a bar or a café. */
 const CLIENT_PRESETS: Record<string, readonly (readonly [string, string, Marker])[]> = {
-  default: [["Fidèle", "Regular", "green"], ["Nouveau", "New", "blue"], ["À rappeler", "To call back", "amber"], ["Entreprise", "Business", "violet"], ["Référé", "Referred", "gray"]],
-  salon: [["Fidèle", "Regular", "green"], ["Coloration", "Colour", "violet"], ["Nouveau", "New", "blue"], ["À rappeler", "To call back", "amber"], ["Événement", "Event", "red"]],
-  coaching: [["Programme en cours", "Programme running", "green"], ["En pause", "On pause", "gray"], ["Entreprise", "Business", "violet"], ["À rappeler", "To call back", "amber"], ["Référé", "Referred", "blue"]],
-  workshop: [["Soumission envoyée", "Quote sent", "amber"], ["Récurrent", "Recurring", "green"], ["Entreprise", "Business", "violet"], ["Urgent", "Urgent", "red"], ["Référé", "Referred", "blue"]],
-  cleaning: [["Résidentiel", "Residential", "blue"], ["Commercial", "Commercial", "violet"], ["Hebdomadaire", "Weekly", "green"], ["Clés remises", "Keys handed over", "amber"], ["À rappeler", "To call back", "gray"]],
-  pets: [["Chien", "Dog", "amber"], ["Chat", "Cat", "violet"], ["Fidèle", "Regular", "green"], ["Première visite", "First visit", "blue"], ["À rappeler", "To call back", "gray"]],
-  consulting: [["Mandat en cours", "Engagement running", "green"], ["Entreprise", "Business", "violet"], ["Référé", "Referred", "blue"], ["À rappeler", "To call back", "amber"], ["Inactif", "Inactive", "gray"]],
+  default: [
+    ["Fidèle", "Regular", "green"],
+    ["Nouveau", "New", "blue"],
+    ["À rappeler", "To call back", "amber"],
+    ["Entreprise", "Business", "violet"],
+    ["Référé", "Referred", "gray"],
+  ],
+  salon: [
+    ["Fidèle", "Regular", "green"],
+    ["Coloration", "Colour", "violet"],
+    ["Nouveau", "New", "blue"],
+    ["À rappeler", "To call back", "amber"],
+    ["Événement", "Event", "red"],
+  ],
+  coaching: [
+    ["Programme en cours", "Programme running", "green"],
+    ["En pause", "On pause", "gray"],
+    ["Entreprise", "Business", "violet"],
+    ["À rappeler", "To call back", "amber"],
+    ["Référé", "Referred", "blue"],
+  ],
+  workshop: [
+    ["Soumission envoyée", "Quote sent", "amber"],
+    ["Récurrent", "Recurring", "green"],
+    ["Entreprise", "Business", "violet"],
+    ["Urgent", "Urgent", "red"],
+    ["Référé", "Referred", "blue"],
+  ],
+  cleaning: [
+    ["Résidentiel", "Residential", "blue"],
+    ["Commercial", "Commercial", "violet"],
+    ["Hebdomadaire", "Weekly", "green"],
+    ["Clés remises", "Keys handed over", "amber"],
+    ["À rappeler", "To call back", "gray"],
+  ],
+  pets: [
+    ["Chien", "Dog", "amber"],
+    ["Chat", "Cat", "violet"],
+    ["Fidèle", "Regular", "green"],
+    ["Première visite", "First visit", "blue"],
+    ["À rappeler", "To call back", "gray"],
+  ],
+  consulting: [
+    ["Mandat en cours", "Engagement running", "green"],
+    ["Entreprise", "Business", "violet"],
+    ["Référé", "Referred", "blue"],
+    ["À rappeler", "To call back", "amber"],
+    ["Inactif", "Inactive", "gray"],
+  ],
 };
 
 /** What an invoice may be tagged with, whatever the trade. */
-const INVOICE_PRESETS: readonly (readonly [string, string, Marker])[] = [["À relancer", "To chase", "amber"], ["Remis au comptable", "With the accountant", "blue"], ["Récurrent", "Recurring", "violet"], ["Litige", "Disputed", "red"], ["Entente de paiement", "Payment plan", "green"]];
+const INVOICE_PRESETS: readonly (readonly [string, string, Marker])[] = [
+  ["À relancer", "To chase", "amber"],
+  ["Remis au comptable", "With the accountant", "blue"],
+  ["Récurrent", "Recurring", "violet"],
+  ["Litige", "Disputed", "red"],
+  ["Entente de paiement", "Payment plan", "green"],
+];
 
 /** The variants of a set: `<trade>` in French, `<trade>_en` in English. */
 export const presetVariant = (trade: string, locale: "fr" | "en", has: (variant: string) => boolean): string => {
@@ -37,7 +85,9 @@ export const presetVariant = (trade: string, locale: "fr" | "en", has: (variant:
   return locale === "en" ? "default_en" : "default";
 };
 
-function presetsOf(source: Record<string, readonly (readonly [string, string, Marker])[]>): Record<string, TagPreset[]> {
+function presetsOf(
+  source: Record<string, readonly (readonly [string, string, Marker])[]>,
+): Record<string, TagPreset[]> {
   const out: Record<string, TagPreset[]> = {};
   for (const [trade, rows] of Object.entries(source)) {
     out[trade] = rows.map(([fr, , marker]) => tag(fr, marker));
@@ -74,7 +124,11 @@ export const INVOICE_KIND: KindConfig = {
   tags: { writers: [...TAG_WRITERS], userTags: true, max: 50, presets: presetsOf({ default: INVOICE_PRESETS }) },
   status: INVOICE_STATUS_SET,
   views: [
-    { key: "to_collect", label: label("À encaisser", "To collect"), filters: { status: [INVOICE_STATE.due, INVOICE_STATE.partial, INVOICE_STATE.overdue] } },
+    {
+      key: "to_collect",
+      label: label("À encaisser", "To collect"),
+      filters: { status: [INVOICE_STATE.due, INVOICE_STATE.partial, INVOICE_STATE.overdue] },
+    },
     { key: "overdue", label: label("En retard", "Overdue"), filters: { status: [INVOICE_STATE.overdue] } },
     { key: "paid", label: label("Payées", "Paid"), filters: { status: [INVOICE_STATE.paid] } },
   ],

@@ -21,7 +21,15 @@ export function POST(req: Request) {
     const admin = await requireAdmin(req);
     const { apply } = await readJson(req, body);
     const report = await rejudgeAndNotify(db(), { apply, now: systemClock.now(), settings: mailSettings() });
-    if (apply) {await audit({ action: "shop.slug_rejudged", actorId: admin.account.id, actorLabel: admin.account.email, detail: { held: report.shops.length, notified: report.notified }, headers: req.headers });}
+    if (apply) {
+      await audit({
+        action: "shop.slug_rejudged",
+        actorId: admin.account.id,
+        actorLabel: admin.account.email,
+        detail: { held: report.shops.length, notified: report.notified },
+        headers: req.headers,
+      });
+    }
     return Response.json({ apply, ...report }, { headers: { "Cache-Control": "private, no-store" } });
   });
 }

@@ -1,7 +1,14 @@
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { feedByTokenHash, feedEntries, feedEntriesAround, liveFeeds, revokeFeedToken, rotateFeedToken } from "./feed-tokens";
+import {
+  feedByTokenHash,
+  feedEntries,
+  feedEntriesAround,
+  liveFeeds,
+  revokeFeedToken,
+  rotateFeedToken,
+} from "./feed-tokens";
 import { appointments, feedTokens } from "./schema";
 import { book } from "./shop-ops";
 import { freshDatabase } from "./test/db";
@@ -73,22 +80,56 @@ describe("the private calendar feeds (#282, ADR-004), on a real PostgreSQL", () 
   it("lists the appointments with first names and the service only, the staff feed with its own", async () => {
     const s = await salon(t.db);
     const other = await salon(t.db);
-    const mine = await book(t.db, { shopId: s.shop.id, staffId: s.staff.julie.id, serviceId: s.services.cut.id, clientId: s.client.id, startsAt: new Date("2026-10-27T14:00:00Z") });
-    const marc = await book(t.db, { shopId: s.shop.id, staffId: s.staff.marc.id, serviceId: s.services.colour.id, startsAt: new Date("2026-10-27T16:00:00Z") });
-    const gone = await book(t.db, { shopId: s.shop.id, staffId: s.staff.julie.id, serviceId: s.services.cut.id, startsAt: new Date("2026-10-28T14:00:00Z") });
+    const mine = await book(t.db, {
+      shopId: s.shop.id,
+      staffId: s.staff.julie.id,
+      serviceId: s.services.cut.id,
+      clientId: s.client.id,
+      startsAt: new Date("2026-10-27T14:00:00Z"),
+    });
+    const marc = await book(t.db, {
+      shopId: s.shop.id,
+      staffId: s.staff.marc.id,
+      serviceId: s.services.colour.id,
+      startsAt: new Date("2026-10-27T16:00:00Z"),
+    });
+    const gone = await book(t.db, {
+      shopId: s.shop.id,
+      staffId: s.staff.julie.id,
+      serviceId: s.services.cut.id,
+      startsAt: new Date("2026-10-28T14:00:00Z"),
+    });
     await t.db.update(appointments).set({ status: "cancelled" }).where(eq(appointments.id, gone.id));
-    await book(t.db, { shopId: other.shop.id, staffId: other.staff.julie.id, serviceId: other.services.cut.id, startsAt: new Date("2026-10-27T15:00:00Z") });
+    await book(t.db, {
+      shopId: other.shop.id,
+      staffId: other.staff.julie.id,
+      serviceId: other.services.cut.id,
+      startsAt: new Date("2026-10-27T15:00:00Z"),
+    });
     const from = new Date("2026-10-26T00:00:00Z");
     const to = new Date("2026-11-30T00:00:00Z");
     const all = await feedEntries(t.db, { shopId: s.shop.id, staffId: null }, from, to);
     expect(all.map((e) => e.appointmentId)).toEqual([mine.id, marc.id]);
-    expect(all[0]).toMatchObject({ firstNames: ["Camille"], service: { fr: "Coupe", en: "Haircut" }, status: "booked" });
+    expect(all[0]).toMatchObject({
+      firstNames: ["Camille"],
+      service: { fr: "Coupe", en: "Haircut" },
+      status: "booked",
+    });
     expect(JSON.stringify(all)).not.toMatch(/Tremblay|514-555|example\.test/);
-    expect((await feedEntries(t.db, { shopId: s.shop.id, staffId: s.staff.marc.id }, from, to)).map((e) => e.appointmentId)).toEqual([marc.id]);
+    expect(
+      (await feedEntries(t.db, { shopId: s.shop.id, staffId: s.staff.marc.id }, from, to)).map((e) => e.appointmentId),
+    ).toEqual([marc.id]);
     // Around an instant: a fortnight behind and four months ahead are counted by the database; an appointment outside is left out.
     const around = await feedEntriesAround(t.db, { shopId: s.shop.id, staffId: null }, NOW, 14, 120);
     expect(around.map((e) => e.appointmentId)).toEqual([mine.id, marc.id]);
     expect(await feedEntriesAround(t.db, { shopId: s.shop.id, staffId: null }, NOW, 14, 0)).toEqual([]);
-    expect(await feedEntries(t.db, { shopId: s.shop.id, staffId: null }, new Date("2027-01-01T00:00:00Z"), new Date("2027-02-01T00:00:00Z"))).toEqual([]);
+    expect(
+      await feedEntries(
+        t.db,
+        { shopId: s.shop.id, staffId: null },
+        new Date("2027-01-01T00:00:00Z"),
+        new Date("2027-02-01T00:00:00Z"),
+      ),
+    ).toEqual([]);
   });
 });
