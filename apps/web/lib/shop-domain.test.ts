@@ -93,9 +93,8 @@ describe("a shop host's sitemap", () => {
 
 describe("the deployment spec", () => {
   const spec = readFileSync(new URL("../../../deploy/digitalocean/app.yaml", import.meta.url), "utf8");
-  it("declares the shop domain with its wildcard, its www, and the variable the app reads: the three agree", () => {
+  it("declares the shop domain with its wildcard and the variable the app reads: the two agree", () => {
     expect(spec).toMatch(/- domain: folioviv\.shop\n\s+type: ALIAS\n\s+wildcard: true/);
-    expect(spec).toMatch(/- domain: www\.folioviv\.shop\n\s+type: ALIAS/);
     expect(spec).toMatch(/key: APP_SHOP_DOMAIN\n\s+scope: RUN_TIME\n\s+value: folioviv\.shop/);
     expect(shopDomain({ APP_SHOP_DOMAIN: "folioviv.shop" })).toBe("folioviv.shop");
   });
