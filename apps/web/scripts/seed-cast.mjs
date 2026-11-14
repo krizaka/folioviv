@@ -40,6 +40,34 @@ export const ADMIN = persona("folioviv", "mira");
 export const KRIZAKA = { id: "krizaka", displayName: "Krizaka", locale: "fr", avatar: "krizaka" };
 export const KRIZAKA_EMAIL = "folioviv@krizaka.com";
 
+/**
+ * The address of a cast persona that signs in on a shared host: from the environment (`QA_*_EMAIL`, or `APP_QA_*_EMAIL` as the secrets name them),
+ * never a built-in one (krizaka-internal#2716). Only a database on this machine falls back to the persona's own fictional `.test` address.
+ */
+export function castAddress(env, name, p) {
+  const given = env[name] ?? env[`APP_${name}`];
+  const email = (given ?? (isLocalHost(env.DATABASE_URL ?? "") ? `${p.id}@demo.folioviv.test` : ""))
+    .trim()
+    .toLowerCase();
+  if (!email) {
+    throw new Error(`${name} (or APP_${name}) is required on a host that is not this machine: no built-in address`);
+  }
+  if (!/^[^@\s]+@[^@\s]+$/.test(email)) {
+    throw new Error(`${name} is invalid`);
+  }
+  return email;
+}
+
+/** The e-mails of the cast, passwords not needed: what a users check compares a database with. */
+export function castEmails(env) {
+  return [
+    ...SAINT_HENRI_EMAILS,
+    castAddress(env, "QA_USER_EMAIL", ERIC),
+    (env.QA_KRIZAKA_EMAIL ?? env.APP_QA_KRIZAKA_EMAIL ?? KRIZAKA_EMAIL).trim().toLowerCase(),
+    castAddress(env, "QA_ADMIN_EMAIL", ADMIN),
+  ].map((e) => e.toLowerCase());
+}
+
 /** The accounts of the cast: the walker, the five clients (same order as the seed) and the administrator. */
 export function castAccounts(env) {
   const local = isLocalHost(env.DATABASE_URL ?? "");
@@ -52,13 +80,7 @@ export function castAccounts(env) {
   };
   const walkerSecret = need("QA_WALKER_PASSWORD", LOCAL_SECRET);
   const clientsSecret = need("QA_CLIENTS_PASSWORD", LOCAL_SECRET);
-  const addressOf = (name, p) => {
-    const email = (env[name] ?? `${p.id}@demo.folioviv.test`).trim().toLowerCase();
-    if (!/^[^@\s]+@[^@\s]+$/.test(email)) {
-      throw new Error(`${name} is invalid`);
-    }
-    return email;
-  };
+  const addressOf = (name, p) => castAddress(env, name, p);
   const clientPersonas = castOf("folioviv").filter((p) => p.role === "client");
   return [
     { persona: WALKER, email: SAINT_HENRI_EMAILS[0], role: "USER", secret: walkerSecret },
@@ -76,7 +98,7 @@ export function castAccounts(env) {
     },
     {
       persona: KRIZAKA,
-      email: (env.QA_KRIZAKA_EMAIL ?? KRIZAKA_EMAIL).trim().toLowerCase(),
+      email: (env.QA_KRIZAKA_EMAIL ?? env.APP_QA_KRIZAKA_EMAIL ?? KRIZAKA_EMAIL).trim().toLowerCase(),
       role: "USER",
       secret: need("QA_KRIZAKA_PASSWORD", LOCAL_SECRET),
     },

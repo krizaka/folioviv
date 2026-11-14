@@ -23,7 +23,7 @@ jobs:
     with:
       setup-command: "bash scripts/ci-journeys-start.sh"
       personas: "camille.tremblay@demo"
-      command: "PLAYWRIGHT_JSON_OUTPUT_NAME=$PWD/journeys-report.json pnpm exec playwright test -c apps/web/e2e/journeys/playwright.config.mjs --project=critical"
+      command: "DATABASE_URL=postgresql://ci:ci-only-password@localhost:5432/ci APP_ENVIRONMENT=dev PLAYWRIGHT_JSON_OUTPUT_NAME=$PWD/journeys-report.json bash scripts/ci-journeys-run.sh --project=critical"
 
   # The required check is `journeys / gate`, a name only the called workflow produces. A caller skipped by `if:` reports as « journeys »,
   # so this literal-named job reports `journeys / gate` (green) while the switch is on, and is skipped otherwise.

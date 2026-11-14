@@ -1,9 +1,10 @@
 // Journey: the guest booking (krizaka-internal#1934). An anonymous visitor opens a shop, picks a service and a free time, gives their details,
 // receives the 6-digit code by e-mail, types it and lands on the receipt. Behind a CAPTCHA: the server runs with Cloudflare's always-pass
 // TEST key (public, documented, refused when APP_ENVIRONMENT=prod: lib/captcha.ts); a second server with the always-fail test key proves
-// the refusal (nothing is mailed, nothing is booked). Demo data only, under @folioviv.test addresses.
+// the refusal (nothing is mailed, nothing is booked). Demo data only, under e2e-… @folioviv.test addresses, each deleted when the file ends (own-users.mjs).
 import { expect, test } from "@playwright/test";
 
+import { ownUsers } from "./own-users.mjs";
 import { testMailbox } from "./test-mailbox.mjs";
 
 const SLUG = "pattes-saint-henri";
@@ -37,7 +38,11 @@ const W = {
 const mailbox = testMailbox(MAIL_PORT);
 const { mails, codeFor } = mailbox;
 test.beforeAll(() => mailbox.start());
-test.afterAll(() => mailbox.stop());
+const users = ownUsers();
+test.afterAll(() => {
+  mailbox.stop();
+  users.cleanup(); // the visitors this file made are deleted: no junk user stays in the database
+});
 
 /** Shop → service → time → the guest step; returns once the details form is shown. */
 async function reachGuestStep(page, base, locale) {
@@ -81,7 +86,7 @@ for (const locale of ["en", "fr"]) {
     baseURL,
   }) => {
     const w = W[locale];
-    const email = `e2e-guest-${locale}-${Date.now()}@folioviv.test`;
+    const email = users.address(`guest-${locale}`);
     await reachGuestStep(page, baseURL, locale);
     expect(page.url()).not.toContain("/sign-in");
     await expect(page.locator("[data-guest-cancel-rule]")).toHaveCount(1);
@@ -101,7 +106,7 @@ for (const locale of ["en", "fr"]) {
 }
 
 test("guest booking, security check refused: nothing is mailed, no code step", async ({ page }) => {
-  const email = `e2e-guest-refused-${Date.now()}@folioviv.test`;
+  const email = users.address("guest-refused");
   await reachGuestStep(page, FAIL_BASE, "en");
   await fillDetails(page, "en", email);
   await captchaSolved(page);

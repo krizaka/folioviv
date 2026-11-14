@@ -10,7 +10,9 @@
 //
 //   E2E_BASE=http://localhost:3210 E2E_SLUG=<a published shop> [E2E_LOCALE=fr] [E2E_OUT=<dir>] [E2E_MAIL_PORT=3299] pnpm run e2e:guest
 //
-// Needs a Chromium for playwright-core. It adds one client file and one booking at that shop under an `@folioviv.test` address: demo data only.
+// Needs a Chromium for playwright-core. It adds one client file and one booking at that shop under an `e2e-…@folioviv.test` address: demo data only. The visitor is deleted when the run ends
+// (apps/web/scripts/journey-users.mjs, with DATABASE_URL of the database under test; krizaka-internal#2716): without it the run leaves a user and says so.
+import { execFileSync } from "node:child_process";
 import { mkdirSync, renameSync, readdirSync } from "node:fs";
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
@@ -24,6 +26,18 @@ const SLUG = process.env.E2E_SLUG ?? "pattes-saint-henri";
 const OUT = process.env.E2E_OUT;
 const MAIL_PORT = Number(process.env.E2E_MAIL_PORT ?? 3299);
 const EMAIL = `e2e-guest-${Date.now()}@folioviv.test`;
+/** No junk user: the visitor this run made is deleted, or the run says how to. */
+function deleteVisitor() {
+  const run = ["exec", "tsx", "scripts/journey-users.mjs", "delete", EMAIL];
+  if (!process.env.DATABASE_URL) {
+    console.error(
+      `this run left the user ${EMAIL}: delete it with DATABASE_URL=… pnpm --filter @folioviv/web ${run.join(" ")}`,
+    );
+    process.exitCode = 1;
+    return;
+  }
+  execFileSync("pnpm", ["--filter", "@folioviv/web", ...run], { stdio: "inherit" });
+}
 if (OUT) mkdirSync(OUT, { recursive: true });
 
 // The words of the interface, in the language of the run (messages/<locale>.json, `console.guest` and `console.journey`).
@@ -148,6 +162,7 @@ try {
   await context.close();
   await browser.close();
   mailbox.close();
+  deleteVisitor();
 }
 
 if (OUT) {
