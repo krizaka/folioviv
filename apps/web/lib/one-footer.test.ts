@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-// One footer, one band (Oussama, 2026-10-21): the family's SiteFooter in product mode, rendered once per public page, after
+// One footer, one band (the founder, 2026-10-21): the family's SiteFooter in product mode, rendered once per public page, after
 // its <main>; the signed-in spaces ((app), (admin)) have their shell and no footer; no dev strip under it.
 const ROOT = join(__dirname, "..");
 const read = (path: string) => readFileSync(join(ROOT, path), "utf8");

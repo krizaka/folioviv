@@ -31,7 +31,7 @@ const html = renderToStaticMarkup(
 );
 const header = html.slice(html.indexOf("<header"), html.indexOf("</header>"));
 
-/** One decision for every Krizaka product (Oussama, 2026-10-23): the account menu is in the header at every width, never at the bottom of the rail. */
+/** One decision for every Krizaka product (the founder, 2026-10-23): the account menu is in the header at every width, never at the bottom of the rail. */
 describe("the account menu of the administration's frame (the shared AppFrame, variant admin)", () => {
   it("is in the header, once, with no width on which it disappears", () => {
     expect(html.match(/aria-label="Account"/g)).toHaveLength(1);
