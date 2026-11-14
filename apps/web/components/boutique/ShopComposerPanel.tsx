@@ -2,6 +2,7 @@
 
 import { isKrizakaApiError, krizakaFetch, useMutation, useQuery, useQueryClient } from "@krizaka/query";
 import { Button } from "@krizaka/ui/button";
+import { Checkbox } from "@krizaka/ui/checkbox";
 import { postToPreview, type ShopPage as DocumentPage } from "@krizaka/ui/shop";
 import { ShopComposer, type ShopComposerMessages, type ShopComposerPreset } from "@krizaka/ui/shop-composer";
 import { useCallback, useRef, useState } from "react";
@@ -233,10 +234,13 @@ export function ShopComposerPanel({
           {say("composerPanel.versions")}
         </summary>
         <p className="mb-2 mt-2 text-sm text-fg-secondary">{say("composerPanel.versionsLead")}</p>
-        <label className="mb-2 flex items-center gap-2 text-sm text-fg-secondary">
-          <input type="checkbox" checked={keepDraft} onChange={(e) => setKeepDraft(e.target.checked)} />
+        <Checkbox
+          className="mb-2 text-sm text-fg-secondary"
+          checked={keepDraft}
+          onCheckedChange={(checked) => setKeepDraft(checked === true)}
+        >
           {say("composerPanel.keepDraft")}
-        </label>
+        </Checkbox>
         {history.data.length === 0 ? (
           <p className="m-0 text-sm text-fg-secondary">{say("composerPanel.noVersions")}</p>
         ) : (

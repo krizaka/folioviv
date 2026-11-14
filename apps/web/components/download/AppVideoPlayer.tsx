@@ -36,6 +36,7 @@ export function AppVideoPlayer({ poster, webm, mp4, width, height, play, label }
           <source src={mp4} type="video/mp4" />
         </video>
       ) : (
+        // ui-allow: a poster that fills the whole box and swaps for the player on click: a full-bleed overlay, not a button look
         <button
           type="button"
           onClick={() => setOn(true)}

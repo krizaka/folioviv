@@ -203,6 +203,7 @@ function RequestFiles({
           </Button>
         </span>
       ))}
+      {/* ui-allow: a visually hidden file picker opened by the Button next to it (a native file input cannot be styled) */}
       <input
         ref={input}
         type="file"

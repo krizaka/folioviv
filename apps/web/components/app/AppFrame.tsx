@@ -33,6 +33,7 @@ export type AdminPlace = keyof typeof ICONS;
  * rail, header and account menu as the shop's space (`ShopFrame`), with a chip saying where you are. The first five sections are the
  * tab bar on a phone; the others sit at the rail's foot.
  */
+// ui-allow: the administration's frame: it feeds the library AppFrame (KrizakaAppFrame) with this product's data, no copy of it
 export function AppFrame({
   locale,
   email,

@@ -3,6 +3,7 @@
 import { Alert } from "@krizaka/ui/alert";
 import { Button } from "@krizaka/ui/button";
 import { Chip } from "@krizaka/ui/chip";
+import { Input } from "@krizaka/ui/field";
 import { useState } from "react";
 
 import { useCall } from "@/components/app/useCall";
@@ -80,8 +81,7 @@ export function StorageRegion({ saved }: Readonly<{ saved: SavedStorage }>) {
       {group("elsewhere", say("admin.storage.elsewhere"), OTHER_CHOICES)}
       <label className="flex max-w-sm flex-col gap-1 text-sm text-fg">
         {say("admin.storage.bucket")}
-        <input
-          className="rounded-md border border-line bg-surface px-3 py-2 text-fg"
+        <Input
           value={bucket}
           onChange={(e) => setBucket(e.target.value)}
           maxLength={63}
