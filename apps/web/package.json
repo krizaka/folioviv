@@ -25,7 +25,7 @@
     "@krizaka/i18n": "^0.2.7",
     "@krizaka/icons": "^0.10.0",
     "@krizaka/intl": "0.4.1",
-    "@krizaka/org": "^1.6.0",
+    "@krizaka/org": "^1.2.0",
     "@krizaka/organize": "0.5.1",
     "@krizaka/payments": "0.7.2",
     "@krizaka/privacy": "0.2.4",

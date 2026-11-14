@@ -31,7 +31,7 @@ importers:
         specifier: ^0.2.7
         version: 0.2.7(react@19.3.1)(typescript@6.0.3)
       '@krizaka/org':
-        specifier: ^1.6.0
+        specifier: ^1.2.0
         version: 1.6.0
       '@krizaka/page-audit':
         specifier: ^0.8.1
@@ -206,7 +206,7 @@ importers:
         specifier: 0.4.1
         version: 0.4.1
       '@krizaka/org':
-        specifier: ^1.6.0
+        specifier: ^1.2.0
         version: 1.6.0
       '@krizaka/organize':
         specifier: 0.5.1
@@ -358,7 +358,7 @@ importers:
         specifier: 0.4.1
         version: 0.4.1
       '@krizaka/org':
-        specifier: ^1.6.0
+        specifier: ^1.2.0
         version: 1.6.0
       '@krizaka/tokens':
         specifier: ^4.5.0
@@ -413,7 +413,7 @@ importers:
         specifier: 0.4.1
         version: 0.4.1
       '@krizaka/org':
-        specifier: ^1.6.0
+        specifier: ^1.2.0
         version: 1.6.0
       '@krizaka/organize':
         specifier: 0.5.1
