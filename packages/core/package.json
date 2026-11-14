@@ -17,8 +17,8 @@
     "@krizaka/brief": "0.1.1",
     "@krizaka/intl": "0.4.1",
     "@krizaka/org": "^1.2.0",
-    "@krizaka/tokens": "^4.4.0",
-    "@krizaka/ui": "^4.4.0",
+    "@krizaka/tokens": "^4.5.0",
+    "@krizaka/ui": "^4.5.0",
     "date-fns": "^4.4.0",
     "safe-regex2": "^5.1.2",
     "zod": "^4.6.5"
