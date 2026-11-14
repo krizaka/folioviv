@@ -11,7 +11,7 @@ import { useI18n } from "@/i18n";
 import { useLocale } from "@/use-locale";
 
 /**
- * A tab's header: its title, and the signed-in account on the right at every size (Oussama's decision, 2026-10-23) — the
+ * A tab's header: its title, and the signed-in account on the right at every size (the founder's decision, 2026-10-23) — the
  * avatar opens the account and the settings.
  */
 // ui-allow: a tab's header: it composes the library native Header with the account avatar, no copy of it
