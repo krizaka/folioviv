@@ -9,7 +9,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 
 import { createDb, pg, poolConfig } from "@folioviv/db";
-import { assertNoJunkUsers, deleteJourneyUsers, usersOutsideCast } from "@folioviv/db/journey-users";
+import { assertNoJunkUsers, deleteJourneyUsers, usersOutsideCast } from "@folioviv/db/demo-clean";
 
 import { assertNotProduction, castEmails, DEMO_CAST } from "./seed-cast.mjs";
 

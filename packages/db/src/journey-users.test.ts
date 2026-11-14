@@ -1,7 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import type { DemoCast } from "./demo-clean";
-import { assertNoJunkUsers, deleteJourneyUsers, isJourneyAddress, usersOutsideCast } from "./journey-users";
+import { assertNoJunkUsers, type DemoCast, deleteJourneyUsers, isJourneyAddress, usersOutsideCast } from "./demo-clean";
 import { joinShop } from "./service-shop";
 import { freshDatabase } from "./test/db";
 import { account, walkerShop } from "./test/fixtures";
