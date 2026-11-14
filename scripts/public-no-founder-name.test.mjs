@@ -1,4 +1,4 @@
-import { test } from "node:test";
+import { test } from "vitest";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
