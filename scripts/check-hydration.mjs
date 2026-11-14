@@ -142,12 +142,30 @@ export function externalRequest(url, base) {
   return LOCAL_HOSTS.has(hostname) || host === new URL(base).host ? null : url;
 }
 
-/** Every request of the context: the tiles come from the local fixture, any other host fails the run (with its URL) and is aborted. */
+/** What a page may load from another host as content (the org JSON's default avatars, fonts, media): served by a local stub. */
+const STUBBED_TYPES = new Set(["image", "font", "media"]);
+/** A 1×1 transparent PNG: the stub of an external image, so a CDN outage can never turn the check red. */
+const EMPTY_PNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+  "base64",
+);
+
+/**
+ * Every request of the context, so the check never reaches another host (folioviv#3640): the tiles come from the local fixture;
+ * an external image, font or media file is answered by a local stub (the page legitimately shows the org's default avatars from
+ * the CDN, krizaka-internal#3640); any other external request (fetch, script, document) fails the run with its URL and is aborted.
+ */
 export async function guardExternal(context, { base, problems }) {
   const tiles = readFileSync(TILE_FIXTURE);
   await context.route("**/*", async (route) => {
-    const url = route.request().url();
+    const request = route.request();
+    const url = request.url();
     const external = externalRequest(url, base);
+    if (external && STUBBED_TYPES.has(request.resourceType())) {
+      return request.resourceType() === "image"
+        ? route.fulfill({ status: 200, contentType: "image/png", body: EMPTY_PNG })
+        : route.fulfill({ status: 204, body: "" });
+    }
     if (external) {
       problems.push(`external request to ${external} (the check talks to ${new URL(base).host} only)`);
       return route.abort();

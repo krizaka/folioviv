@@ -201,17 +201,43 @@ describe("the check makes no external request (folioviv#3640)", () => {
     await guardExternal(context, { base, problems });
     const url = "https://krizaka-assets.b-cdn.net/org/v1/maps/tiles/quebec-20261012.pmtiles";
     const calls = [];
-    const route = (u) => ({
-      request: () => ({ url: () => u }),
+    const route = (u, type = "fetch") => ({
+      request: () => ({ url: () => u, resourceType: () => type }),
       abort: async () => calls.push(`abort ${u}`),
       continue: async () => calls.push(`continue ${u}`),
+      fulfill: async ({ status }) => calls.push(`fulfill ${status} ${u}`),
     });
     await handler(route(url));
-    await handler(route(`${base}/fr`));
+    await handler(route(`${base}/fr`, "document"));
     expect(problems).toHaveLength(1);
     expect(problems[0]).toContain(url);
     expect(problems[0]).toMatch(/external request/);
     expect(calls).toEqual([`abort ${url}`, `continue ${base}/fr`]);
+  });
+
+  // A bug means a missing guard: the first version aborted the org's default avatars (CDN images the page is meant to show) and
+  // turned the PR red (run 43623598441). An external image, font or media file is stubbed locally, never fetched, never a problem.
+  it("answers an external image, font or media file with a local stub, and still fails an external fetch or script", async () => {
+    let handler;
+    const context = { route: async (_pattern, fn) => (handler = fn) };
+    const problems = [];
+    await guardExternal(context, { base, problems });
+    const calls = [];
+    const route = (u, type) => ({
+      request: () => ({ url: () => u, resourceType: () => type }),
+      abort: async () => calls.push(`abort ${u}`),
+      continue: async () => calls.push(`continue ${u}`),
+      fulfill: async ({ status }) => calls.push(`fulfill ${status} ${u}`),
+    });
+    const avatar = "https://krizaka-assets.b-cdn.net/defaults/v1/person/digital-creator-256.webp";
+    const font = "https://fonts.example.org/a.woff2";
+    const script = "https://cdn.example.org/tracker.js";
+    await handler(route(avatar, "image"));
+    await handler(route(font, "font"));
+    await handler(route(script, "script"));
+    expect(calls).toEqual([`fulfill 200 ${avatar}`, `fulfill 204 ${font}`, `abort ${script}`]);
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toContain(script);
   });
 
   it("serves the map's tiles from a local fixture, so the basemap still draws", () => {
