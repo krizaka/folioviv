@@ -42,7 +42,8 @@ function declared(): Map<string, { secret: boolean; value: string | undefined }>
 const NOT_DECLARED: Record<string, string> = {
   APP_FIXED_NOW:
     "visual and e2e runs only (a fixed clock); honoured on dev stage, so it must never sit in the live spec",
-  APP_ALLOWED_HOSTS: "optional: extra preview hosts; unset, only the spec's domains are answered",
+  APP_DEV_HOST:
+    "optional: the dev spec's primary is dev.folioviv.com itself, so no host is redirected to www (ADR-037 §1)",
   APP_EDGE_PROVIDER: "optional: merchant custom domains (ADR-005 §3); unset = the option cannot be used",
   APP_EDGE_API_TOKEN: "optional: only with APP_EDGE_PROVIDER, which is off on dev",
   APP_EDGE_ZONE_ID: "optional: only with APP_EDGE_PROVIDER, which is off on dev",
