@@ -45,6 +45,6 @@ export async function assertPublicHost(url: URL, resolve: Resolver = resolveAll)
   } catch {
     throw new CalendarSourceError("AK_CAL_UNREACHABLE", true, "the name does not resolve");
   }
-  if (addresses.length === 0 || addresses.some(isPrivateAddress))
+  if (addresses.length === 0 || addresses.some((address) => isPrivateAddress(address)))
     throw new CalendarSourceError("AK_CAL_INVALID", false, "not a public address");
 }
