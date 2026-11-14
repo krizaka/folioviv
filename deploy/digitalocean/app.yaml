@@ -6,35 +6,18 @@
 name: folioviv-dev
 region: tor
 domains:
-  # The public address (epic krizaka/.github#119): www is primary and indexed, the apex answers 308 with www (ingress below).
-  - domain: www.folioviv.com
-    type: PRIMARY
-  - domain: folioviv.com
-    type: ALIAS
-    # And every <slug>.folioviv.com: a shop's own address (#77, level 2; lib/host.ts shopOfHost). Certificate by TXT tokens on Porkbun.
-    wildcard: true
-  # The shops' own domain (ADR-005 slice 5, #538): <slug>.folioviv.shop is a shop and nothing of the app, in another site than www. The apex and www lead to
-  # www.folioviv.com (the app, lib/shop-domain.ts). Apply AFTER the DNS of krizaka-infra (stacks/dns/zone_folioviv_shop.tf) answers, else App Platform cannot validate it.
-  - domain: folioviv.shop
-    type: ALIAS
-    wildcard: true
-  - domain: www.folioviv.shop
-    type: ALIAS
-  # The development address: every page goes to www (308); the API, .well-known and healthz keep serving, noindex (APP_DEV_HOST).
+  # ADR-037 §1: a dev app carries no commercial name. dev.folioviv.com is the primary; www.folioviv.com and the apex belong to folioviv-coming-soon (krizaka-prod).
   - domain: dev.folioviv.com
-    type: ALIAS
+    type: PRIMARY
   # The administration console: the same app, host-routed (lib/host.ts); session + ADMIN role + AUTH_ALLOWED_IPS.
   - domain: admin.folioviv.com
     type: ALIAS
-# The apex leads to www (308); the other hosts are the app's (dev's page redirect and noindex are the app's own: lib/indexing.ts).
+  # The shops' own domain (ADR-005 slice 5, #538): <slug>.folioviv.shop is a shop and nothing of the app, in another site than the app.
+  - domain: folioviv.shop
+    type: ALIAS
+    wildcard: true
 ingress:
   rules:
-    - match:
-        authority:
-          exact: folioviv.com
-      redirect:
-        authority: www.folioviv.com
-        redirect_code: 308
     - match:
         path:
           prefix: /
@@ -59,14 +42,16 @@ services:
       failure_threshold: 3
     envs:
       - key: NODE_ENV
+        scope: RUN_AND_BUILD_TIME
         value: production
       - key: APP_PUBLIC_URL
         scope: RUN_TIME
-        value: https://www.folioviv.com
-      - key: APP_DEV_HOST
+        value: https://dev.folioviv.com
+      # Extra hosts the app answers besides the spec's domains: the administration console.
+      - key: APP_ALLOWED_HOSTS
         scope: RUN_TIME
-        value: dev.folioviv.com
-      # The shops' domain: <slug>.folioviv.shop serves a shop; <slug>.folioviv.com and /<locale>/s/<slug> answer 308 to it (lib/shop-domain.ts).
+        value: admin.folioviv.com
+      # The shops' domain: <slug>.folioviv.shop serves a shop; /<locale>/s/<slug> answers 308 to it (lib/shop-domain.ts).
       - key: APP_SHOP_DOMAIN
         scope: RUN_TIME
         value: folioviv.shop

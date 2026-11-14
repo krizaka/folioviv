@@ -30,4 +30,12 @@ describe("the stage of the deployment (folioviv#440)", () => {
   it("no production spec exists yet: the day one does, it must say prod, which hides the notice", () => {
     expect(readdirSync(dir).filter((f) => f.startsWith("prod"))).toEqual([]);
   });
+
+  it("refuses a commercial www host on the dev app (ADR-037 §1, krizaka-internal#3503)", () => {
+    // Only the declarations count (a domain, an ingress authority, a URL or a host list value), not the comments.
+    const code = spec.split("\n").filter((l) => !l.trim().startsWith("#"));
+    const commercial = code.filter((l) => /(^|[\s/"'=,:])www\.[a-z0-9-]+\.com\b/i.test(l));
+    expect(commercial, "a dev app must not declare a www.<brand>.com host").toEqual([]);
+    expect(code.join("\n")).toMatch(/- domain: dev\.folioviv\.com\n\s+type: PRIMARY/);
+  });
 });
