@@ -77,7 +77,10 @@ export const retiredAddresses = [
 ];
 
 /** Where the basemap's tiles and glyphs come from (`APP_MAPS_UPSTREAM`, read once; the media CDN by default). */
-const mapsUpstream = (process.env.APP_MAPS_UPSTREAM ?? "https://krizaka-assets.b-cdn.net/org/v1/maps").replace(/\/$/, "");
+const mapsUpstream = (process.env.APP_MAPS_UPSTREAM ?? "https://krizaka-assets.b-cdn.net/org/v1/maps").replace(
+  /\/$/,
+  "",
+);
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
