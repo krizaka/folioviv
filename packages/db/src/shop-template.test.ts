@@ -151,7 +151,7 @@ describe("applying a template", () => {
         shop.shopId,
       ]),
     ).rejects.toThrow();
-    expect((await t.db.select().from(shopPage).where(eq(shopPage.shopId, shop.shopId))).length).toBe(0);
+    expect(await t.db.select().from(shopPage).where(eq(shopPage.shopId, shop.shopId))).toHaveLength(0);
   });
 });
 

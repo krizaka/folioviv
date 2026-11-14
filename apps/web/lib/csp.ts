@@ -94,5 +94,5 @@ export function contentSecurityPolicy({ nonce, production, upgradeInsecure, appO
 
 /** What a JSON-LD script holds: `<` escaped, so no value (a shop's name) can close the script element. */
 export function jsonLdHtml(value: unknown): string {
-  return JSON.stringify(value).replaceAll("<", "\\u003c");
+  return JSON.stringify(value).replaceAll("<", String.raw`\u003c`);
 }

@@ -655,7 +655,7 @@ function mergeWindows(
   const sorted = [...rows].sort((a, b) => a.weekday - b.weekday || a.startsAt.localeCompare(b.startsAt));
   const out: { weekday: number; startsAt: string; endsAt: string }[] = [];
   for (const w of sorted) {
-    const last = out[out.length - 1];
+    const last = out.at(-1);
     if (last?.weekday === w.weekday && w.startsAt <= last.endsAt)
       last.endsAt = w.endsAt > last.endsAt ? w.endsAt : last.endsAt;
     else out.push({ weekday: w.weekday, startsAt: w.startsAt, endsAt: w.endsAt });

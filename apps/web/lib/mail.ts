@@ -174,7 +174,7 @@ export async function sendInvoiceMail(
 ) {
   const { shopId, invoiceId, toEmail, message, maxPerShopPerDay } = request;
   const [invoice, config] = await Promise.all([invoiceDetail(db, shopId, invoiceId), invoiceMailSettings(db, shopId)]);
-  if (!invoice || !invoice.clientId || invoice.creditOf || !config) throw new Error("AK_INVOICE_UNKNOWN");
+  if (!invoice?.clientId || invoice.creditOf || !config) throw new Error("AK_INVOICE_UNKNOWN");
   if (!invoice.client?.email && !toEmail) throw new Error("AK_INVOICE_RECIPIENT");
   const token = `iv1.${randomBytes(32).toString("base64url")}`;
   const appUrl = settings.appUrl;

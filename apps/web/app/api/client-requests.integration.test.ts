@@ -153,7 +153,7 @@ describe.runIf(enabled)("a client's requests at a shop", () => {
         })
       ).status,
     ).toBe(200);
-    expect((await query("SELECT 1 FROM client_request_files WHERE request_id = $1", [id])).length).toBe(0);
+    expect(await query("SELECT 1 FROM client_request_files WHERE request_id = $1", [id])).toHaveLength(0);
   });
 
   it("erasing the client removes every request and answers the files to delete from the storage (Loi 25)", async () => {
@@ -169,6 +169,6 @@ describe.runIf(enabled)("a client's requests at a shop", () => {
       bytes: 10,
     });
     expect(await eraseClientRequests(db(), client)).toContain("https://cdn.example/user/folioviv/r/erase.pdf");
-    expect((await query("SELECT 1 FROM client_requests WHERE client_id = $1", [client])).length).toBe(0);
+    expect(await query("SELECT 1 FROM client_requests WHERE client_id = $1", [client])).toHaveLength(0);
   });
 });

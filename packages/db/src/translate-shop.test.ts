@@ -106,7 +106,7 @@ describe("« Traduire » through the port", () => {
     });
     const before = calls.length;
     await translateShop(t.db, port, run(s.shop.id, "es"));
-    expect(calls.length).toBe(before); // nothing auto is stale, the edited one waits for the owner
+    expect(calls).toHaveLength(before); // nothing auto is stale, the edited one waits for the owner
     expect((await translationsOf(t.db, s.shop.id)).find((x) => x.key === key && x.locale === "es")).toMatchObject({
       text: "Peluquería del barrio",
       status: "edited",

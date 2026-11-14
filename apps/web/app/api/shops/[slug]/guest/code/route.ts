@@ -35,7 +35,7 @@ export function POST(req: Request, { params }: { params: Promise<{ slug: string 
     }
     const slug = slugSchema.parse((await params).slug);
     const page = await publicShop(db(), slug);
-    if (!page || !page.services.some((s) => s.id === input.serviceId)) {
+    if (!page?.services.some((s) => s.id === input.serviceId)) {
       throw refuse(404, "NOT_FOUND", "Not found");
     }
     const hold: GuestHold = { ...input, shopSlug: slug };

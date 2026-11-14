@@ -128,8 +128,8 @@ describe("the right of access holds every module's data, and the erasure leaves 
     // what the tax rule keeps: the invoice, its lines, the ledger; the person on them is blanked on the file
     const kept = RETENTION_RULES.filter((r) => r.keep === "tax").flatMap((r) => r.tables);
     expect(kept).toEqual(["invoices", "invoice_lines", "payments", "tax_ledger"]);
-    expect((await t.db.select().from(invoices).where(eq(invoices.id, invoice.id))).length).toBe(1);
-    expect((await t.db.select().from(taxLedger).where(eq(taxLedger.shopId, s.shop.id))).length).toBe(ledgerBefore);
+    expect(await t.db.select().from(invoices).where(eq(invoices.id, invoice.id))).toHaveLength(1);
+    expect(await t.db.select().from(taxLedger).where(eq(taxLedger.shopId, s.shop.id))).toHaveLength(ledgerBefore);
     const lines = await t.db.execute(
       sql`SELECT count(*)::int AS n FROM invoice_lines WHERE invoice_id = ${invoice.id}`,
     );
