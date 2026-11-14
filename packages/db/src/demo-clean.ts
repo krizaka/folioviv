@@ -155,6 +155,18 @@ export async function usersOutsideCast(db: Db, castEmails: readonly string[]): P
   return rows.map((r) => r.email);
 }
 
+/**
+ * The owners of the demo directory's shops (`seed:demos`): one account per shop, `<shop slug>@folioviv.test`, made so the directory has owners.
+ * They are the seed's own fixtures, not people of the cast, so `list` reports them apart from the strays.
+ */
+export async function directoryOwners(db: Db): Promise<string[]> {
+  const { rows } = (await db.execute(
+    sql`SELECT lower(a.email) AS email FROM accounts a JOIN shops s ON s.owner_id = a.id
+         WHERE lower(a.email) = s.slug || '@folioviv.test' ORDER BY 1`,
+  )) as unknown as { rows: { email: string }[] };
+  return rows.map((r) => r.email);
+}
+
 /** The teardown check: throws, naming them, when the run left an account behind that the cast does not hold. */
 export function assertNoJunkUsers(before: readonly string[], after: readonly string[]): void {
   const had = new Set(before);

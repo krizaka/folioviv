@@ -9,9 +9,9 @@
 import { readFileSync, writeFileSync } from "node:fs";
 
 import { createDb, pg, poolConfig } from "@folioviv/db";
-import { assertNoJunkUsers, deleteJourneyUsers, usersOutsideCast } from "@folioviv/db/demo-clean";
+import { assertNoJunkUsers, deleteJourneyUsers, directoryOwners, usersOutsideCast } from "@folioviv/db/demo-clean";
 
-import { assertNotProduction, castEmails, DEMO_CAST } from "./seed-cast.mjs";
+import { assertNotProduction, castEmails, DEMO_CAST, isCastAddress } from "./seed-cast.mjs";
 
 /** What each command does with the database; `args` are the words after the command. */
 export const COMMANDS = {
@@ -29,9 +29,14 @@ export const COMMANDS = {
     return "journey-users: no user left behind";
   },
   async list(db) {
-    const stray = await usersOutsideCast(db, castEmails(process.env));
+    const directory = new Set(await directoryOwners(db));
+    const exact = castEmails(process.env);
+    const stray = (await usersOutsideCast(db, [])).filter((e) => !directory.has(e) && !isCastAddress(e, exact));
     const names = stray.length ? `: ${stray.join(", ")}` : "";
-    return `journey-users: ${stray.length} user(s) outside the cast${names}`;
+    const apart = directory.size
+      ? ` (besides ${directory.size} demo-directory shop owner(s), <slug>@folioviv.test)`
+      : "";
+    return `journey-users: ${stray.length} user(s) outside the cast${names}${apart}`;
   },
 };
 

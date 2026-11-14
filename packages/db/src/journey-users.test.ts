@@ -1,6 +1,14 @@
+import { sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { assertNoJunkUsers, type DemoCast, deleteJourneyUsers, isJourneyAddress, usersOutsideCast } from "./demo-clean";
+import {
+  assertNoJunkUsers,
+  type DemoCast,
+  deleteJourneyUsers,
+  directoryOwners,
+  isJourneyAddress,
+  usersOutsideCast,
+} from "./demo-clean";
 import { joinShop } from "./service-shop";
 import { freshDatabase } from "./test/db";
 import { account, walkerShop } from "./test/fixtures";
@@ -50,5 +58,15 @@ describe("the teardown check: no junk user in the database (real PostgreSQL 16)"
     expect(isJourneyAddress("e2e-honest-12@folioviv.test")).toBe(true);
     expect(isJourneyAddress("ines.debut@folioviv.test")).toBe(false);
     expect(isJourneyAddress("e2e-x@example.com")).toBe(false);
+  });
+
+  it("tells the demo directory's shop owners (<slug>@folioviv.test) from the strays", async () => {
+    const s = await walkerShop(t.db, "dir");
+    expect(await directoryOwners(t.db)).toEqual([]);
+    await t.db.execute(
+      sql`UPDATE accounts SET email = ${"directory-x@folioviv.test"} WHERE id = (SELECT owner_id FROM shops WHERE id = ${s.shopId})`,
+    );
+    await t.db.execute(sql`UPDATE shops SET slug = 'directory-x' WHERE id = ${s.shopId}`);
+    expect(await directoryOwners(t.db)).toEqual(["directory-x@folioviv.test"]);
   });
 });

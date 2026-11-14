@@ -33,7 +33,7 @@
     "@krizaka/db": "0.3.1",
     "@krizaka/email-verification": "^0.1.1",
     "@krizaka/intl": "0.4.1",
-    "@krizaka/org": "^1.2.0",
+    "@krizaka/org": "^1.6.0",
     "@krizaka/organize": "0.5.1",
     "@krizaka/privacy": "0.2.4",
     "@krizaka/settings": "0.7.0",
