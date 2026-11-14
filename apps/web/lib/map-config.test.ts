@@ -9,7 +9,8 @@ const config = readFileSync(new URL("../next.config.mjs", import.meta.url), "utf
 describe("the map of a shop page", () => {
   it("reads its tiles and glyphs through this origin: the media CDN sends no CORS headers", () => {
     expect(config).toContain('source: "/maps/v1/:path*"');
-    expect(config).toContain("https://krizaka-assets.b-cdn.net/org/v1/maps/:path*");
+    expect(config).toContain("https://krizaka-assets.b-cdn.net/org/v1/maps");
+    expect(config).toContain("destination: `${mapsUpstream}/:path*`");
   });
   it("lets its engine run its worker from a blob, and nothing else", () => {
     for (const nonce of [undefined, "bm9uY2U="]) {
