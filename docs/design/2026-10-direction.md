@@ -22,7 +22,7 @@ Captures and mockups are on Bunny, never in the repository:
 
 ## 0. The direction in six decisions
 
-> **Chosen (Oussama, 2026-10-24): direction B, refined as B2 (§ 4c).** The six decisions below stand; B2 changes how the screens look and are built.
+> **Chosen (the founder, 2026-10-24): direction B, refined as B2 (§ 4c).** The six decisions below stand; B2 changes how the screens look and are built.
 
 1. **One product register, two places for art.** The owner app, the staff's phone, the client space, the account, the sign-in, the
    phone app and the Mac app are plain Krizaka UI in Folioviv's forest green. The artistic notebook lives on the shop's public
@@ -262,7 +262,7 @@ for a three-figure list (accepted for now, revisit with #397).
 
 ## 4b. The key screens: direction B, bolder (mockups)
 
-Asked in the CTO's review of #325: the same four screens, bolder, so that Oussama chooses on pictures. They use the same rule:
+Asked in the CTO's review of #325: the same four screens, bolder, so that the founder chooses on pictures. They use the same rule:
 **only published @krizaka/ui 3.53 blocks and the tokens**. The copper is `--kz-accent-2` through the preset's `text-accent-2` and
 `border-accent-2`. The type uses the `display-lg` and `display-xl` roles. The motion is `@krizaka/ui/motion.css`. There is no
 paper, no grid, no serif, no stamp and no tape.
@@ -318,7 +318,7 @@ Both stay plain Krizaka UI by the 2026-10-22 decision. B brings the Cahier's org
 
 ## 4c. Direction B2: the chosen direction, refined (mockups)
 
-**Decision by Oussama (2026-10-24, on #325): direction B, with refinements.** B2 is the direction this document now
+**Decision by the founder (2026-10-24, on #325): direction B, with refinements.** B2 is the direction this document now
 proposes; A and B stay above as the record of the choice. Same rule: published @krizaka/ui 3.53 and @krizaka/charts 0.6
 blocks and the tokens only, and what a block lacks is a filed krizaka-ui issue (the list below), never a copy.
 
@@ -420,7 +420,7 @@ the bricks it names.
 
 ---
 
-## 8. Questions only Oussama can decide
+## 8. Questions only the founder can decide
 
 1. **Q1. One map on every device**: the web's five places as the phone's tabs, with Calendar folded into Aujourd'hui and Settings
    under the avatar? *Default: yes.*

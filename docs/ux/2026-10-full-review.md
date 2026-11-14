@@ -1,6 +1,6 @@
 # Folioviv — full UX review and target design (October 2026)
 
-Status: **proposal, phase 1 (docs only)** — the CTO validates before any implementation. Oussama (2026-10-23): the app is
+Status: **proposal, phase 1 (docs only)** — the CTO validates before any implementation. the founder (2026-10-23): the app is
 « trop moche actuellement »; he wants a complete review, not patches, with Sovkora's web client as the reference for
 app quality (« le menu, la navigation, la gestion du profil utilisateur, des icônes par défaut »).
 
@@ -168,7 +168,7 @@ of the appendix; `signed-in-walker/` is the owner, `signed-in/` the client space
 | G3 | B | **« Apparence » lists eleven sections, five « en préparation »**, all checked, with up/down arrows that have no accessible name (11 unnamed buttons); the logo drop zone has a second « Téléverser le logo » button outside it. | [shop-editor-look](#captures) | only live sections in the list (the prepared ones appear when their feature lands), named arrows (« Monter Services »), one upload control |
 | G4 | B | **Seven tabs in a row** (Identité · Votre page · Contact et lieu · Ce que vous offrez · Photos et vidéo · Apparence · Publier) scroll sideways on a phone; the header's lead, the public link and « Ajouter une boutique » repeat on every tab. | [shop-editor](#captures), [shop-editor phone](#captures) | `SettingsLayout` grouped (sections on the side, one menu on a phone), the status and the public link in its identity header |
 | G5 | B | **« Langues de votre page » is one column of 3 900 px**: the languages card, an alert, then every text as source + textarea + hint, services not grouped, no visible save per block. | [shop-languages](#captures) | a source → translation table grouped by section (Accroche · Histoire · Services), a state chip per row, « Traduire automatiquement » as the one primary when available |
-| G6 | B | The storefront is the plain Krizaka UI page (CoverHero, services grid, team, hours, « Qui vous accueille », gallery, CtaPanel, a sticky « Réserver » on a phone): correct, readable, but not yet the **Cahier** look Oussama decided for the public shop pages; the team shows « Camille » twice; the cover's status chip reads « Ouvert maintenant · ferme à 19 h » on a page that hydrates with #418. | [shop-salon](#captures), [shop-salon phone first screen](#captures) | #261 phase 2 (templates, validated), #267 defaults by trade, A6 |
+| G6 | B | The storefront is the plain Krizaka UI page (CoverHero, services grid, team, hours, « Qui vous accueille », gallery, CtaPanel, a sticky « Réserver » on a phone): correct, readable, but not yet the **Cahier** look the founder decided for the public shop pages; the team shows « Camille » twice; the cover's status chip reads « Ouvert maintenant · ferme à 19 h » on a page that hydrates with #418. | [shop-salon](#captures), [shop-salon phone first screen](#captures) | #261 phase 2 (templates, validated), #267 defaults by trade, A6 |
 | G7 | C | The service page is good (« Avec qui ? » chips, what is included, the price with its taxes, one primary « Voir les heures »). | [shop-service](#captures) | kept |
 
 ### H. Account and the client space
@@ -407,7 +407,7 @@ Bunny (this review's pictures are the « before »).
 | K9 | **storefront** | #261 phase 2 (templates) and #267 defaults by trade — their own plans; from this review: the language switch offers the shop's languages only, « Camille » once in the team, the cover chip after K0 | their tests + I6 | shop-* |
 | K10 | **books: explained figures** (#260) | `KpiExplained`, « Que faire maintenant », the lexique, PDF for the accountant — after krizaka-ui#558 | #260's tests | books |
 
-Order rationale: K0 is a defect on every page; K1 is what Oussama named first and what every other screen sits in;
+Order rationale: K0 is a defect on every page; K1 is what the founder named first and what every other screen sits in;
 K2–K3 are the owner's daily loop; K4–K5 gather the shop's configuration; K6–K8 finish the map; K9–K10 ride their own
 issues.
 
@@ -471,7 +471,7 @@ and fixes what the pictures showed. No AI word enters the product (§ 2).
 
 ---
 
-## 6. Questions only Oussama can decide
+## 6. Questions only the founder can decide
 
 1. **One list for the web and the phone** — the web's five (Aujourd'hui · Clients · Factures · Livres · Boutique) or the
    phone app's five (Today · Calendar · Invoices · Clients · Settings, PR #277)? Default: the web's five on both; the

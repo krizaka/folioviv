@@ -2,7 +2,7 @@
 
 Issue: krizaka/folioviv#261. Part of epic #236 (the shops platform). Status: **validé** (CTO review: option C, with the corrections below). No code changes in this PR.
 
-Oussama (2026-10-23): « proposer aussi quelques templates pour chaque boutique ». A shop owner starts from a finished storefront that suits
+the founder (2026-10-23): « proposer aussi quelques templates pour chaque boutique ». A shop owner starts from a finished storefront that suits
 their trade, not from a blank page. The public pages follow the Cahier (artistic notebook) style; the owner's back office stays plain Krizaka UI.
 Folioviv serves service businesses and never restaurants or bars (AGENTS section 2).
 

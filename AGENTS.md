@@ -85,7 +85,7 @@
 - Passwords scrypt; sessions random tokens kept as keyed hashes; rate limits on sign-in; CSP same-origin, HSTS.
 - Environment variables by bounded context (`APP_`, `DATABASE_`, `AUTH_`, `ABUSE_`, `REALTIME_`), declared once in
   `apps/web/lib/env.ts`. Secrets never in the repository, never printed (`~/.krizaka-worktrees/tools/secret.sh`).
-- **Not deployed.** No DigitalOcean app, no DNS: hosting is Oussama's decision.
+- **Not deployed.** No DigitalOcean app, no DNS: hosting is the founder's decision.
 - **A spec declares every key the app reads.** `deploy/digitalocean/app.yaml` declares each variable of `envSchema` (`apps/web/lib/env.ts`), secrets as `type: SECRET` with a `__NAME__` placeholder (never a value in git); a key left out goes in `NOT_DECLARED` of `apps/web/lib/env-spec.test.ts` with its reason, or the test fails (krizaka-internal#3249).
 
 ## 4b. The workspace, organised
