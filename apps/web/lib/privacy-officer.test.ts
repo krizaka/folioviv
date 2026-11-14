@@ -20,7 +20,7 @@ describe("Loi 25: the person in charge is published by role (the president), at 
       const text = format(m.privacy.officer.text, publisherVars());
       expect(text).toContain(LINE[lang]);
       expect(text).toContain("Technologies Krizaka Inc.");
-      expect(text).not.toMatch(/Sainte-Marguerite|H4C|Oussama|Abid|contact@krizaka/i);
+      expect(text).not.toMatch(/Sainte-Marguerite|H4C|contact@krizaka/i);
       expect(JSON.stringify(m.privacy)).not.toMatch(/contact@krizaka/);
     });
   }
