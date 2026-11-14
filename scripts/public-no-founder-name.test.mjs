@@ -11,14 +11,17 @@ const NAME_WORD_HASHES = new Set([
   "a954e93925dca619a33955a410991a9ba133bd5ea18075caf0d6849455c6537e",
 ]);
 
-const PUBLIC = /^(README|LICENSE|NOTICE|SECURITY|CONTRIBUTING)[^/]*$|(^|\/)package\.json$|^apps\/web\/(messages|content|public|app|components)\//;
+const PUBLIC =
+  /^(README|LICENSE|NOTICE|SECURITY|CONTRIBUTING)[^/]*$|(^|\/)package\.json$|^apps\/web\/(messages|content|public|app|components)\//;
 const TEXT = /\.(md|mdx|txt|json|ts|tsx|mjs|js|html|yml|yaml)$|^[A-Z]+$/;
 
 const sha = (word) => createHash("sha256").update(word).digest("hex");
 const namesFounder = (text) => (text.toLowerCase().match(/[\p{L}]+/gu) ?? []).some((w) => NAME_WORD_HASHES.has(sha(w)));
 
 test("a public surface names the founder nowhere", () => {
-  const files = execFileSync("git", ["ls-files"], { encoding: "utf8" }).split("\n").filter((f) => PUBLIC.test(f) && TEXT.test(f));
+  const files = execFileSync("git", ["ls-files"], { encoding: "utf8" })
+    .split("\n")
+    .filter((f) => PUBLIC.test(f) && TEXT.test(f));
   assert.ok(files.length > 5, "the scan finds the public files");
   const offenders = files.filter((f) => !/\.test\.[cm]?[jt]sx?$/.test(f) && namesFounder(readFileSync(f, "utf8")));
   assert.deepEqual(offenders, []);
