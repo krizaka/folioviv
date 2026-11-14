@@ -300,7 +300,7 @@ export async function deleteAccount(
 
 // ── Audit ────────────────────────────────────────────────────────────────────────────────────────
 
-export interface AuditEntry {
+export interface ConsoleAuditEntry {
   id: string;
   at: string;
   actor: string;
@@ -309,7 +309,7 @@ export interface AuditEntry {
   ip: string | null;
 }
 
-export async function auditLog(limit = 300, targetId?: string): Promise<AuditEntry[]> {
+export async function auditLog(limit = 300, targetId?: string): Promise<ConsoleAuditEntry[]> {
   const rows = await query<{
     id: string;
     at: Date;

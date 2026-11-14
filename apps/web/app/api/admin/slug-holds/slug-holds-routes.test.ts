@@ -45,7 +45,7 @@ vi.mock("@folioviv/db", async (original) => ({
 vi.mock("@/lib/db", () => ({ db: () => ({}) }));
 vi.mock("@/lib/audit", () => ({ audit: async (entry: unknown) => void calls.audited.push(entry) }));
 
-vi.mock("@/lib/env", () => ({ mailSettings: () => ({ provider: "none", apiUrl: "http://x", appUrl: "http://x" }) }));
+vi.mock("@/lib/env", () => ({ mailConfig: () => ({ provider: "none", apiUrl: "http://x", appUrl: "http://x" }) }));
 vi.mock("@/lib/slug-rejudge", () => ({
   rejudgeAndNotify: async (_db: unknown, o: { apply: boolean }) => (
     calls.rejudged.push(o.apply),

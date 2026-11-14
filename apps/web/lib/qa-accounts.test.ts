@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 // A plain ES module script (scripts/qa-accounts.mjs), tested here so its hashes stay readable by the app.
 import { accountsFromEnv, hashPassword } from "../scripts/qa-accounts.mjs";
-import { verifyPassword } from "./password";
+import { verifyPassword } from "@krizaka/auth";
 
 describe("the QA accounts script", () => {
   it("hashes passwords the app verifies", async () => {

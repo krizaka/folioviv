@@ -11,7 +11,7 @@ import {
 import Link from "next/link";
 import { useMemo } from "react";
 
-import type { AdminUser, AuditEntry } from "@/lib/admin";
+import type { AdminUser, ConsoleAuditEntry } from "@/lib/admin";
 import type { AdminInvoice, AdminShop, LedgerCheck } from "@/lib/admin-content";
 import { type Say, type SayLocale, useSay } from "@/lib/i18n-client";
 
@@ -185,7 +185,7 @@ const ledgerCheckColumns = (say: Say, locale: SayLocale): DataTableColumn<Ledger
   },
 ];
 
-const auditEntryColumns = (say: Say, locale: SayLocale): DataTableColumn<AuditEntry>[] => [
+const auditEntryColumns = (say: Say, locale: SayLocale): DataTableColumn<ConsoleAuditEntry>[] => [
   { id: "at", header: say("admin.columns.when"), sortable: true, cell: (e) => formatDate(e.at, locale, true) },
   { id: "actor", header: say("admin.columns.actor"), filter: "text" },
   {
@@ -272,7 +272,7 @@ export function LedgerTable({ checks }: Readonly<{ checks: LedgerCheck[] }>) {
 }
 
 /** The audit log: sortable, filterable by action, exportable. */
-export function AuditTable({ entries }: Readonly<{ entries: AuditEntry[] }>) {
+export function AuditTable({ entries }: Readonly<{ entries: ConsoleAuditEntry[] }>) {
   const { say, locale } = useSay();
   const columns = useMemo(() => auditEntryColumns(say, locale), [say, locale]);
   return (

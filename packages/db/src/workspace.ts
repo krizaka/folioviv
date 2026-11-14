@@ -73,13 +73,13 @@ export const auditTrailOf = (shopId: string): AuditTrail => ({
   },
 });
 
-export interface WorkspaceDeps {
+export interface ShopWorkspaceDeps {
   transaction: Transaction;
   clock: Clock;
 }
 
 /** The workspace layer over the app's transactions, its trail carrying the shop it speaks for. */
-export const workspaceOf = (deps: WorkspaceDeps, shopId: string) =>
+export const workspaceOf = (deps: ShopWorkspaceDeps, shopId: string) =>
   createWorkspace({
     transaction: deps.transaction,
     storeFor: (tx) => dbWorkspaceStore(tx, WORKSPACE),
@@ -99,7 +99,7 @@ export const actorOf = (account: { id: string; email: string }, role: string): A
  * shop receives its default tag set for its trade and the owner's language, once (`shops.organized_at`; a tag the owner deletes is not
  * brought back). Idempotent and cheap once done: one read.
  */
-export async function ensureShopWorkspace(deps: WorkspaceDeps, shopId: string): Promise<void> {
+export async function ensureShopWorkspace(deps: ShopWorkspaceDeps, shopId: string): Promise<void> {
   const [shop] = await deps.transaction((tx) =>
     tx<{ organized: boolean; business_type: "professional" | "pets"; shop_type: string | null; locale: string | null }>(
       `SELECT s.organized_at IS NOT NULL AS organized, s.business_type, p.shop_type, a.locale

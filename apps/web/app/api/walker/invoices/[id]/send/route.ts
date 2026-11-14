@@ -5,7 +5,7 @@ import { systemClock } from "@/app/system-clock";
 import { requireShop } from "@/lib/access";
 import { audit } from "@/lib/audit";
 import { db } from "@/lib/db";
-import { mailSettings } from "@/lib/env";
+import { mailConfig } from "@/lib/env";
 import { handle, idParam, readJson, refuse } from "@/lib/http";
 import { sendInvoiceMail } from "@/lib/mail";
 import { limit } from "@/lib/rate-limit";
@@ -34,7 +34,7 @@ export function POST(req: Request, { params }: { params: Promise<{ id: string }>
       db(),
       { shopId: shop.id, invoiceId, toEmail: input.toEmail, message: input.message, maxPerShopPerDay },
       systemClock.now(),
-      mailSettings(),
+      mailConfig(),
     );
     await audit({
       action: "invoice.sent",

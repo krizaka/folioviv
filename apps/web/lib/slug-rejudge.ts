@@ -2,7 +2,7 @@ import { type Db, enqueueMail, mailById, rejudgeShops } from "@folioviv/db";
 
 import { productName } from "./brand-name";
 import { deliver } from "./mail";
-import type { MailSettings } from "./mail-settings";
+import type { MailConfig } from "./mail-settings";
 import { renderMailTemplate } from "./mail-templates";
 import { shopRoutes } from "./routes";
 import { slugPolicy } from "./slug-policy";
@@ -19,7 +19,7 @@ type Rejudged = Awaited<ReturnType<typeof rejudgeShops>>[number];
 async function notifyOwner(
   db: Db,
   shop: Rejudged,
-  options: { now: Date; settings: MailSettings; send?: typeof fetch },
+  options: { now: Date; settings: MailConfig; send?: typeof fetch },
 ): Promise<boolean> {
   if (!shop.ownerEmail) {
     return false;
@@ -53,7 +53,7 @@ async function notifyOwner(
  */
 export async function rejudgeAndNotify(
   db: Db,
-  options: { apply: boolean; now: Date; settings: MailSettings; send?: typeof fetch },
+  options: { apply: boolean; now: Date; settings: MailConfig; send?: typeof fetch },
 ): Promise<RejudgeReport> {
   const { terms } = await slugPolicy();
   const found = await rejudgeShops(db, terms ?? [], { apply: options.apply });

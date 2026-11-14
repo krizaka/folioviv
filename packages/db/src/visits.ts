@@ -578,7 +578,7 @@ export async function shopClients(db: Db, shopId: string) {
   }));
 }
 
-export interface OutgoingMail {
+export interface VisitMail {
   to: string;
   locale: "fr" | "en";
   template: string;
@@ -589,7 +589,7 @@ export interface OutgoingMail {
   relatedId?: string;
 }
 
-export async function enqueueMail(db: Db, mail: OutgoingMail): Promise<string> {
+export async function enqueueMail(db: Db, mail: VisitMail): Promise<string> {
   const [row] = await db
     .insert(mailOutbox)
     .values({

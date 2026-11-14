@@ -1,7 +1,7 @@
 import { audit } from "./audit";
 import { query } from "./db";
 import { refuse } from "./http";
-import { decoyHash, verifyPassword } from "./password";
+import { decoyHash, verifyPassword } from "@krizaka/auth";
 
 /**
  * Accounts are provisioned by an operator (scripts/qa-accounts.mjs): nobody signs up while AUTH_SIGNUP_ENABLED is not

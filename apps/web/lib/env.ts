@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import type { MailSettings } from "./mail-settings";
+import type { MailConfig } from "./mail-settings";
 import { ASSOCIATION, FOUNDER, PROCESSOR_PLANS, SCALE, STARTER } from "./pricing";
 
 /**
@@ -215,7 +215,7 @@ export function calendarOAuthApps(source: Record<string, string | undefined> = p
   return { ...(google ? { google } : {}), ...(outlook ? { outlook } : {}) };
 }
 
-export function mailSettings(source: Record<string, string | undefined> = process.env): MailSettings {
+export function mailConfig(source: Record<string, string | undefined> = process.env): MailConfig {
   const e = readEnv(source);
   return {
     provider: e.MAIL_PROVIDER,

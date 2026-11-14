@@ -6,7 +6,7 @@ import { systemClock } from "@/app/system-clock";
 import { captchaMissing, verifyCaptcha } from "@/lib/captcha";
 import { clientIp } from "@/lib/client-ip";
 import { db } from "@/lib/db";
-import { mailSettings, sessionSecret } from "@/lib/env";
+import { mailConfig, sessionSecret } from "@/lib/env";
 import { type GuestHold, guestStart, guestVerification } from "@/lib/guest-booking";
 import { handle, readJson, refuse } from "@/lib/http";
 import { mailConfigured, sendCodeMail } from "@/lib/mail";
@@ -29,7 +29,7 @@ export function POST(req: Request, { params }: { params: Promise<{ slug: string 
     if (!(await verifyCaptcha(captchaToken, clientIp(req.headers) ?? "unknown", process.env, now))) {
       throw refuse(400, "CAPTCHA_FAILED", "The security check failed");
     }
-    const settings = mailSettings();
+    const settings = mailConfig();
     if (!mailConfigured(settings)) {
       throw refuse(503, "MAIL_UNAVAILABLE", "The code cannot be mailed right now");
     }

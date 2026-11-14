@@ -1,5 +1,5 @@
 /** What the mail module needs, as plain values — it never reads the environment itself. */
-export interface MailSettings {
+export interface MailConfig {
   provider: "mailgun" | "none";
   apiKey?: string;
   domain?: string;

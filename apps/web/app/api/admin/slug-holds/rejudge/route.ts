@@ -4,7 +4,7 @@ import { systemClock } from "@/app/system-clock";
 import { requireAdmin } from "@/lib/access";
 import { audit } from "@/lib/audit";
 import { db } from "@/lib/db";
-import { mailSettings } from "@/lib/env";
+import { mailConfig } from "@/lib/env";
 import { handle, readJson } from "@/lib/http";
 import { rejudgeAndNotify } from "@/lib/slug-rejudge";
 
@@ -20,7 +20,7 @@ export function POST(req: Request) {
   return handle(async () => {
     const admin = await requireAdmin(req);
     const { apply } = await readJson(req, body);
-    const report = await rejudgeAndNotify(db(), { apply, now: systemClock.now(), settings: mailSettings() });
+    const report = await rejudgeAndNotify(db(), { apply, now: systemClock.now(), settings: mailConfig() });
     if (apply) {
       await audit({
         action: "shop.slug_rejudged",

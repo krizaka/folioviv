@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { migrate, pool, query } from "@/lib/db";
-import { hashPassword } from "@/lib/password";
+import { hashPassword } from "@krizaka/auth";
 import { resetRateLimits } from "@/lib/rate-limit";
 import { createSession, SESSION_COOKIE } from "@/lib/session";
 import { appSettings } from "@/lib/settings";
