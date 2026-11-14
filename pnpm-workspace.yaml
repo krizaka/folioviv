@@ -1,6 +1,8 @@
 packages:
   - "apps/*"
   - "packages/*"
+# `precheck` is the pre-push chain's script, not the pre-hook of `check` (pnpm would run it before every `pnpm run check`, and it runs `check`).
+enablePrePostScripts: false
 onlyBuiltDependencies:
   - esbuild
   - sharp
