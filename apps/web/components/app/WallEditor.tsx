@@ -152,6 +152,7 @@ export function WallEditor({ wall, limits }: Readonly<WallEditorProps>) {
         </p>
       </div>
       <div className="flex flex-wrap gap-2">
+        {/* ui-allow: a visually hidden file picker opened by the Button next to it */}
         <input
           ref={file}
           type="file"
@@ -178,6 +179,7 @@ export function WallEditor({ wall, limits }: Readonly<WallEditorProps>) {
         className="relative m-0 aspect-video w-full min-w-0 overflow-hidden rounded-lg border border-border-default bg-surface-2 p-0"
       >
         {drawnOrder.map((item) => (
+          // ui-allow: a piece on the wall canvas: positioned by percent, dragged and nudged with the keyboard, a canvas target rather than a command button
           <button
             key={item.id}
             type="button"

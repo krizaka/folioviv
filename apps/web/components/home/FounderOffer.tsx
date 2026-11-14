@@ -47,6 +47,7 @@ export async function FounderOffer({ locale }: Readonly<{ locale: Locale }>) {
         ))}
       </ul>
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+        {/* ui-allow: a plain HTML POST in a server component, no script and no client state: the checkout redirect needs the native form */}
         <form method="post" action={`/api/billing/checkout?redirect=1&locale=${locale}`}>
           <Button type="submit" variant="primary" size="lg" className="w-full sm:w-auto">
             {t.cta}

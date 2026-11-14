@@ -53,6 +53,7 @@ function EmailChange({ pending }: Readonly<{ pending: string | null }>) {
     );
   }
   return (
+    // ui-allow: a controlled two-field form sent through useMutation (not a schema form); the fields are @krizaka/ui Field and Input
     <form
       className="flex w-full flex-col gap-3 sm:max-w-sm"
       noValidate

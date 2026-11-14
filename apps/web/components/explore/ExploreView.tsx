@@ -152,6 +152,7 @@ function SearchBar({
   const locatable = useCanLocate();
   return (
     <>
+      {/* ui-allow: a role=search form driven by the address (URL state), not a schema form: one field, submit moves the camera */}
       <form
         role="search"
         aria-label={words.search.label}

@@ -62,6 +62,7 @@ export interface ShopFrameProps {
  * where the page holds its own (`screenPrimary`); the page's `h1` is in the content (`PageHeader`), never here. The administration
  * is `AppFrame.tsx`.
  */
+// ui-allow: the shop space's frame: it feeds the library AppFrame with this product's data, no copy of it
 export function ShopFrame({
   locale,
   account,
