@@ -9,7 +9,7 @@ import { handle, readJson } from "@/lib/http";
 
 export const dynamic = "force-dynamic";
 
-const settingsSchema = z.object({
+const invoiceSettingsSchema = z.object({
   message: z.string().trim().max(500),
   fromName: z
     .string()
@@ -37,7 +37,7 @@ export function GET(req: Request) {
 export function PUT(req: Request) {
   return handle(async () => {
     const { session, shop } = await requireOwner(req);
-    const input = await readJson(req, settingsSchema);
+    const input = await readJson(req, invoiceSettingsSchema);
     const before = {
       message: shop.invoiceMailMessage,
       fromName: shop.invoiceMailFromName,

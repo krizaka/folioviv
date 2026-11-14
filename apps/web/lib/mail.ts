@@ -17,7 +17,7 @@ import {
 import { addDays } from "date-fns";
 
 import { productName } from "./brand-name";
-import type { MailSettings } from "./mail-settings";
+import type { MailConfig } from "./mail-settings";
 import { type MailLocale, renderMailTemplate } from "./mail-templates";
 
 /**
@@ -30,7 +30,7 @@ const MAX_ATTEMPTS = 5;
 
 type Pending = NonNullable<Awaited<ReturnType<typeof mailById>>>;
 
-export const mailConfigured = (settings: MailSettings): boolean =>
+export const mailConfigured = (settings: MailConfig): boolean =>
   settings.provider === "mailgun" && !!settings.apiKey && !!settings.domain;
 
 /** One delivery attempt through the provider: `sent`, or `pending`/`failed` with the reason (never a secret). */
@@ -38,7 +38,7 @@ export async function deliver(
   db: Db,
   mail: Pending,
   now: Date,
-  settings: MailSettings,
+  settings: MailConfig,
   send: typeof fetch = fetch,
 ): Promise<"sent" | "pending" | "failed"> {
   if (!mailConfigured(settings)) {
@@ -80,7 +80,7 @@ export async function deliver(
 export async function flushOutbox(
   db: Db,
   now: Date,
-  settings: MailSettings,
+  settings: MailConfig,
   send: typeof fetch = fetch,
   scope: { ids?: readonly string[] } = {},
 ) {
@@ -111,7 +111,7 @@ export async function sendWalkReport(
   shopId: string,
   bookingId: string,
   now: Date,
-  settings: MailSettings,
+  settings: MailConfig,
   send: typeof fetch = fetch,
 ) {
   const ctx = await issueReportLink(db, shopId, bookingId, now);
@@ -169,7 +169,7 @@ export async function sendInvoiceMail(
     maxPerShopPerDay: number;
   },
   now: Date,
-  settings: MailSettings,
+  settings: MailConfig,
   send: typeof fetch = fetch,
 ) {
   const { shopId, invoiceId, toEmail, message, maxPerShopPerDay } = request;
@@ -229,7 +229,7 @@ export async function sendCodeMail(
   mail: { subject: string; text: string; html: string },
   locale: MailLocale,
   now: Date,
-  settings: MailSettings,
+  settings: MailConfig,
   send: typeof fetch = fetch,
 ): Promise<boolean> {
   const id = await enqueueMail(db, {

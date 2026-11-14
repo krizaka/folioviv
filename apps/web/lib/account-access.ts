@@ -1,11 +1,10 @@
 import { enqueueMail, exportClient } from "@folioviv/db";
-import { AccountError, postgresAccounts } from "@krizaka/auth";
+import { AccountError, hashPassword, postgresAccounts, verifyPassword } from "@krizaka/auth";
 
 import { requireSession } from "./access";
 import { PRODUCT_NAME } from "./brand";
 import { db, query, transaction } from "./db";
 import { handle, refuse } from "./http";
-import { hashPassword, verifyPassword } from "./password";
 import { limit } from "./rate-limit";
 import { type Session, tokenHash } from "./session";
 

@@ -6,6 +6,7 @@ export const INTL_LOCALE = { en: "en-CA", fr: "fr-CA" } as const;
 export type FormatLocale = keyof typeof INTL_LOCALE;
 
 /** Integer cents in Canadian dollars, in the language's habit (« 123,45 $ », « $123.45 »); a float throws (@krizaka/intl). */
+// lib-allow: binds CAD and the shop's locale tags to the @krizaka/intl function; the formatting is not copied
 export function formatMoney(cents: number, locale: FormatLocale): string {
   return intlMoney(cents, { currency: "CAD", locale: INTL_LOCALE[locale] });
 }

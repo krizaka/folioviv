@@ -8,7 +8,4 @@ export function formatDate(iso: string, locale: "en" | "fr", time = false): stri
   );
 }
 
-/** Integer cents as dollars for the locale ($1,234.56 · 1 234,56 $). Display only: the arithmetic is always in cents. */
-export function formatMoney(cents: number, locale: "en" | "fr"): string {
-  return new Intl.NumberFormat(INTL[locale], { style: "currency", currency: "CAD" }).format(cents / 100);
-}
+export { formatMoney } from "@/lib/format";

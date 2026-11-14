@@ -1,5 +1,5 @@
 import { ownClient, SHOP_ROLES, shopClient, shopOfMember, type ShopPermission, type ShopRole } from "@folioviv/db";
-import { can } from "@krizaka/auth";
+import { can, ipAllowed as ipListAllows, requireAdmin as adminVerdict, sessionTokenOf as tokenOf } from "@krizaka/auth";
 import { cookies, headers } from "next/headers";
 
 import { clientIp } from "./client-ip";
@@ -14,11 +14,9 @@ import { resolveSession, type Session, SESSION_COOKIE } from "./session";
  * session, the ADMIN role, and an address on AUTH_ALLOWED_IPS (empty in production = nobody). A failed lock answers 404
  * on pages (the administration does not announce itself) and 403 on the API.
  */
+// lib-allow: binds AUTH_ALLOWED_IPS and the trusted client address to the @krizaka/auth address lock; the rule is not copied
 export function ipAllowed(requestHeaders: Headers, env: Record<string, string | undefined> = process.env): boolean {
-  const allowed = consoleAllowedIps(env);
-  if (allowed === null) return true;
-  const ip = clientIp(requestHeaders, env);
-  return !!ip && allowed.includes(ip);
+  return ipListAllows(clientIp(requestHeaders, env), consoleAllowedIps(env));
 }
 
 /** admin.folioviv.com answers only addresses of AUTH_ALLOWED_IPS, its sign-in page and sign-in call included; the product host is open. */
@@ -26,18 +24,10 @@ export function hostAllowed(requestHeaders: Headers, env: Record<string, string 
   return !isAdminHost(requestHeaders.get("host")) || ipAllowed(requestHeaders, env);
 }
 
-const cookieToken = (header: string | null) =>
-  header
-    ?.split(";")
-    .map((c) => c.trim())
-    .find((c) => c.startsWith(`${SESSION_COOKIE}=`))
-    ?.slice(SESSION_COOKIE.length + 1);
-
-const bearerToken = (header: string | null) => /^bearer (\S+)$/i.exec(header ?? "")?.[1];
-
 /** The session token of a request: the native apps' `Authorization: Bearer` (which wins: an app never replays a stale cookie), else the web's cookie. */
+// lib-allow: binds the app's cookie name to the @krizaka/auth reader; the reading rule is not copied
 export const sessionTokenOf = (requestHeaders: Headers): string | undefined =>
-  bearerToken(requestHeaders.get("authorization")) ?? cookieToken(requestHeaders.get("cookie"));
+  tokenOf(requestHeaders, { cookie: SESSION_COOKIE });
 
 /** The API's caller, from the bearer or the session cookie — or 401. */
 export async function requireSession(req: Request): Promise<Session> {
@@ -51,11 +41,16 @@ export async function optionalSession(req: Request): Promise<Session | null> {
   return resolveSession(sessionTokenOf(req.headers));
 }
 
+// lib-allow: the API's answer (status, code, wording) around the @krizaka/auth administration lock; the three locks are not copied
 export async function requireAdmin(req: Request): Promise<Session> {
   const session = await requireSession(req);
-  if (session.account.role !== "ADMIN") throw refuse(403, "FORBIDDEN", "Administrators only");
-  if (!ipAllowed(req.headers)) throw refuse(403, "IP_NOT_ALLOWED", "This address may not use the administration");
-  return session;
+  const verdict = adminVerdict({ session, ip: clientIp(req.headers), allowedIps: consoleAllowedIps() });
+  if (verdict.ok) return session;
+  throw refuse(
+    verdict.status,
+    verdict.code,
+    verdict.code === "IP_NOT_ALLOWED" ? "This address may not use the administration" : "Administrators only",
+  );
 }
 
 /** The session of the page being rendered (a Server Component), or null. */

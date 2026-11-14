@@ -19,7 +19,7 @@ import { db } from "./db";
 import { formatMoney } from "./format";
 import { format, getDictionary, type Locale } from "./i18n";
 import { deliver } from "./mail";
-import type { MailSettings } from "./mail-settings";
+import type { MailConfig } from "./mail-settings";
 import { renderMailTemplate } from "./mail-templates";
 import { shopRoutes } from "./routes";
 
@@ -87,7 +87,7 @@ export async function inviteRegulars(
   shop: BriefShop,
   recommendationId: string,
   now: Date,
-  settings: MailSettings,
+  settings: MailConfig,
   send: typeof fetch = fetch,
 ) {
   const brief = await loadShopBrief(shop, now);
@@ -165,7 +165,7 @@ export function briefLines(
  * tick was missed): claimed once per shop and week (several instances never send twice), nothing sent for an empty week,
  * a one-click way to stop it. The ticker (`instrumentation.ts`) calls it with the wall clock.
  */
-export async function sendDueBriefs(now: Date, settings: MailSettings, send: typeof fetch = fetch) {
+export async function sendDueBriefs(now: Date, settings: MailConfig, send: typeof fetch = fetch) {
   const counts = { sent: 0, pending: 0, failed: 0, empty: 0 };
   for (const shop of await briefMailShops(db())) {
     if (!isBriefDue(now, shop.timezone, shop.lastWeek)) continue;

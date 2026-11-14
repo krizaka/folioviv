@@ -1,8 +1,9 @@
 import crypto from "node:crypto";
 
+import { sessionCookie as sessionCookieOf } from "@krizaka/auth";
+
 import { systemClock } from "@/app/system-clock";
 
-import { ownCookie } from "./cookie";
 import { query } from "./db";
 import { sessionSecret } from "./env";
 import { SESSION_COOKIE } from "./session-cookie";
@@ -73,6 +74,7 @@ export async function revokeSession(token: string | undefined): Promise<void> {
   await query("DELETE FROM sessions WHERE token_hash = $1", [tokenHash(token)]);
 }
 
+// lib-allow: binds the app's cookie name and its production flag to the @krizaka/auth cookie; the attributes are not copied
 export function sessionCookie(token: string, expires: Date) {
-  return ownCookie(SESSION_COOKIE, token, { expires });
+  return sessionCookieOf(token, expires, { name: SESSION_COOKIE, secure: process.env.NODE_ENV === "production" });
 }

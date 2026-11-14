@@ -7,7 +7,7 @@ import { db } from "@/lib/db";
 import type { Locale } from "@/lib/i18n";
 import { confirmationStep } from "@/lib/journey";
 import { deliver } from "@/lib/mail";
-import type { MailSettings } from "@/lib/mail-settings";
+import type { MailConfig } from "@/lib/mail-settings";
 import { SITE_URL } from "@/lib/site";
 
 /** The link in the mail is https (the template refuses anything else): the deployment's own address, else the public site's (a local run is http). */
@@ -19,7 +19,7 @@ export interface ReceiptRecipient {
   email: string;
   locale: Locale;
   /** The mail settings, read by the route (the domain never reads the environment). */
-  settings: MailSettings;
+  settings: MailConfig;
 }
 
 /**

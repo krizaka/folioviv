@@ -7,7 +7,7 @@ import { audit } from "@/lib/audit";
 import { bookAndAnnounce } from "@/lib/book-visit";
 import { clientIp } from "@/lib/client-ip";
 import { db } from "@/lib/db";
-import { mailSettings, sessionSecret } from "@/lib/env";
+import { mailConfig, sessionSecret } from "@/lib/env";
 import { codeRefusal, guestConfirm, type GuestHold, guestVerification } from "@/lib/guest-booking";
 import { handle, readJson, refuse } from "@/lib/http";
 import { asLocale } from "@/lib/i18n";
@@ -84,7 +84,7 @@ export function POST(req: Request, { params }: { params: Promise<{ slug: string 
         accountId: account.id,
         email: account.email,
         locale: asLocale(hold.language),
-        settings: mailSettings(),
+        settings: mailConfig(),
       },
     });
     const { token, expires } = await createSession(account.id, {

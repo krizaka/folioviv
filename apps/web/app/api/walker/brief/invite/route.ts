@@ -4,7 +4,7 @@ import { requestNow } from "@/app/request-now";
 import { requireShop } from "@/lib/access";
 import { audit } from "@/lib/audit";
 import { BriefActionError, inviteRegulars } from "@/lib/brief";
-import { mailSettings } from "@/lib/env";
+import { mailConfig } from "@/lib/env";
 import { handle, readJson, refuse } from "@/lib/http";
 import { limit } from "@/lib/rate-limit";
 
@@ -19,7 +19,7 @@ export function POST(req: Request) {
     limit("walker-brief-invite", req, session.account.id, [10, 600]);
     const { id } = await readJson(req, z.object({ id: z.string().regex(/^\d{4}-W\d{2}:[a-z]+:[A-Za-z0-9-]+$/) }));
     try {
-      const result = await inviteRegulars(shop, id, requestNow(), mailSettings());
+      const result = await inviteRegulars(shop, id, requestNow(), mailConfig());
       await audit({
         action: "brief.invited",
         actorId: session.account.id,

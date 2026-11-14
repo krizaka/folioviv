@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { decoyHash, hashPassword, passwordProblem, verifyPassword } from "./password";
+import { decoyHash, hashPassword, passwordProblem, verifyPassword } from "@krizaka/auth";
 import { hit, limit, resetRateLimits } from "./rate-limit";
 
 describe("passwords", () => {

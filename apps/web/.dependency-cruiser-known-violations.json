@@ -74,5 +74,16 @@
         "dependencyTypes": ["aliased", "aliased-tsconfig", "aliased-tsconfig-base-url", "local", "import"]
       }
     ]
+  },
+  {
+    "type": "dependency",
+    "from": "scripts/showcase-web.mjs",
+    "to": "../../node_modules/.pnpm/playwright-core@1.64.0/node_modules/playwright-core/index.mjs",
+    "unresolvedTo": "playwright-core",
+    "dependencyTypes": ["npm", "import"],
+    "rule": {
+      "severity": "error",
+      "name": "krizaka-first-page-audit"
+    }
   }
 ]
