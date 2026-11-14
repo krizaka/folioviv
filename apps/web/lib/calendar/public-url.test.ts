@@ -1,7 +1,8 @@
 import { CalendarSourceError } from "@folioviv/core";
+import { isPrivateAddress } from "@krizaka/storage";
 import { describe, expect, it } from "vitest";
 
-import { assertPublicHost, isPrivateAddress, parseCalendarUrl } from "./public-url";
+import { assertPublicHost, parseCalendarUrl } from "./public-url";
 
 describe("an address the server may fetch (no SSRF)", () => {
   it.each([
@@ -20,6 +21,10 @@ describe("an address the server may fetch (no SSRF)", () => {
     "fd12:3456::1",
     "::ffff:10.0.0.1",
     "not-an-ip",
+    "ff02::1",
+    "64:ff9b::7f00:1",
+    "192.0.2.1",
+    "240.0.0.1",
   ])("%s is not public", (ip) => {
     expect(isPrivateAddress(ip)).toBe(true);
   });
