@@ -97,7 +97,7 @@ describe("several people work at the shop", () => {
     expect(await hoursOf(s.lea)).toEqual(["13:00", "13:30", "14:00", "14:30", "15:00"]); // 09:00–12:00 Montréal = 13:00–16:00 UTC, every 30 minutes
     expect((await hoursOf(s.samuel))[0]).toBe("17:00");
     const anyone = await listSlots(t.db, base);
-    expect(anyone.length).toBe((await hoursOf(s.lea)).length + (await hoursOf(s.samuel)).length);
+    expect(anyone).toHaveLength((await hoursOf(s.lea)).length + (await hoursOf(s.samuel)).length);
     expect(new Set(anyone.map((x) => x.staffId))).toEqual(new Set([s.lea, s.samuel]));
   });
 
@@ -105,7 +105,7 @@ describe("several people work at the shop", () => {
     const s = await salon("off");
     await addDayOff(t.db, s.shopId, "2026-10-20", "Vacances", s.samuel);
     const base = { shopId: s.shopId, serviceId: s.cut, zoneId: null, now: NOW, fromDay: "2026-10-20", days: 1 };
-    expect((await listSlots(t.db, { ...base, staffId: s.samuel })).length).toBe(0);
+    expect(await listSlots(t.db, { ...base, staffId: s.samuel })).toHaveLength(0);
     expect((await listSlots(t.db, { ...base, staffId: s.lea })).length).toBeGreaterThan(0);
   });
 

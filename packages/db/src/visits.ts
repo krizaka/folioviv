@@ -9,11 +9,10 @@ import {
   visitMinutes,
 } from "@folioviv/core";
 import { addDays } from "date-fns";
-import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import type { Db } from "./client";
 import { agendaConflicts } from "./calendar-connections";
-import { openField } from "./crypto";
 import {
   appointments,
   bookings,

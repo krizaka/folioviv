@@ -10,7 +10,7 @@ import {
   type SlotEvent,
   termsDaysSchema,
 } from "@folioviv/core";
-import { and, desc, eq, gte, inArray, isNull, lte, sql } from "drizzle-orm";
+import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import type { Db, Tx } from "./client";

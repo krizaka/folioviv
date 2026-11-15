@@ -8,7 +8,7 @@ import { useSay } from "@/lib/i18n-client";
 export function PrintInvoiceButton({ label }: { label?: string } = {}) {
   const { say } = useSay();
   return (
-    <Button variant="secondary" onClick={() => window.print()}>
+    <Button variant="secondary" onClick={() => globalThis.print()}>
       {label ?? say("invoicePublic.print")}
     </Button>
   );

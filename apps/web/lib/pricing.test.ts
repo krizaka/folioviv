@@ -244,7 +244,7 @@ describe("every price shown says « plus taxes », and none is typed in a messag
       );
     }
     const priced = texts.filter((t) => t.includes("{price}"));
-    expect(priced.length).toBe(10);
+    expect(priced).toHaveLength(10);
     for (const t of priced) {
       expect(t, t).toMatch(SAYS_TAXES);
     }

@@ -66,7 +66,7 @@ export function SubscriptionPanel({ subscription }: Readonly<{ subscription: Sub
         kind === "portal" ? "/api/billing/portal" : `/api/billing/checkout?locale=${locale}&plan=${kind}`,
         { method: "POST" },
       )) as { url: string };
-      window.location.assign(url);
+      globalThis.location.assign(url);
     },
     onError: (error) => setProblem(say(`errors.${errorKey(error)}`)),
     onMutate: () => setProblem(null),

@@ -23,7 +23,7 @@ let browserClient: QueryClient | undefined;
 function barClient(): QueryClient {
   const make = () =>
     new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: false, refetchOnWindowFocus: true } } });
-  if (typeof window === "undefined") return make();
+  if (typeof window === "undefined") return make(); // NOSONAR S7764: `typeof globalThis.window` adds 36 B to the shop page JS (perf budget)
   return (browserClient ??= make());
 }
 

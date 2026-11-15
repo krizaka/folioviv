@@ -112,7 +112,7 @@ describe("Krizaka, a software studio, as Folioviv's first client (demo data, cle
     const before = (await t.db.select().from(invoices).where(eq(invoices.shopId, shop!.id))).length;
     const again = await seedKrizaka(t.db, NOW);
     expect(again.created).toBe(false);
-    expect((await t.db.select().from(invoices).where(eq(invoices.shopId, shop!.id))).length).toBe(before);
+    expect(await t.db.select().from(invoices).where(eq(invoices.shopId, shop!.id))).toHaveLength(before);
   });
   it("renames a former demo client in place: same account, same client file, same invoices and numbers (#326)", async () => {
     const [shop] = await t.db.select().from(shops).where(eq(shops.slug, "krizaka-demo"));

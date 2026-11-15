@@ -1,6 +1,5 @@
 import { localDay } from "@folioviv/core";
-import { invoiceDetail } from "@folioviv/db";
-import { invoiceDeliveryHistory, invoiceMailSettings } from "@folioviv/db";
+import { invoiceDeliveryHistory, invoiceDetail, invoiceMailSettings } from "@folioviv/db";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 

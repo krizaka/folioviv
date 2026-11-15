@@ -49,8 +49,8 @@ export function ShopSearch({
       e.preventDefault();
       onOpenChange(!open);
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    globalThis.addEventListener("keydown", onKey);
+    return () => globalThis.removeEventListener("keydown", onKey);
   }, [open, onOpenChange]);
   const items = paletteItems(q.length >= MIN_QUERY ? found.data : undefined, routes, actions, q);
   const go = (href: string) => {

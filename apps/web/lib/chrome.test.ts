@@ -26,6 +26,6 @@ describe("the bar's composition (NavBar of @krizaka/ui, 3.30)", () => {
     // One list feeds the bar's links and the phone panel's: the entry is in both, never hand-made in one.
     expect(chrome).toMatch(/<NavBar\.Items>[\s\S]*items\.map[\s\S]*<NavBar\.Link/);
     expect(chrome).toMatch(/<NavBar\.Mobile[\s\S]*items\.map[\s\S]*<NavBar\.MobileLink/);
-    expect([...chrome.matchAll(/id: "/g)].length).toBe(1);
+    expect([...chrome.matchAll(/id: "/g)]).toHaveLength(1);
   });
 });

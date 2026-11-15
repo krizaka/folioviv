@@ -229,7 +229,7 @@ describe("the phone app's five tabs, each with its three states (D8)", () => {
     await show(<Figures />);
     expect(await screen.findByText("Comment c'est calculé")).toBeTruthy();
     expect(screen.getByText(/3 factures/)).toBeTruthy();
-    expect(screen.getAllByText("Marge").length).toBe(2);
+    expect(screen.getAllByText("Marge")).toHaveLength(2);
     expect(screen.getByText(/Peut être périmé/)).toBeTruthy();
     expect(screen.getByText("À valider par votre comptable.")).toBeTruthy();
     await fireEvent.press(screen.getByRole("button", { name: "Vos chiffres" }));
