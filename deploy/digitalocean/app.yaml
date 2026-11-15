@@ -94,10 +94,10 @@ services:
         scope: RUN_TIME
         type: SECRET
         value: __PAYMENTS_STRIPE_SECRET_KEY__
+      # Public by design (sent to the browser): a plain value, never a secret (krizaka-internal#3900).
       - key: PAYMENTS_STRIPE_PUBLISHABLE_KEY
         scope: RUN_TIME
-        type: SECRET
-        value: __PAYMENTS_STRIPE_PUBLISHABLE_KEY__
+        value: pk_test_51USpHyPPUbcCVCNvKbntEe7n1hh5JiPJi5g8rBuIEPLKCVeXkI8QQ3owlQ0ikqMVmcxyFSYS1pGpUwBH4HE7K2HF004yy6tAFV
       - key: PAYMENTS_STRIPE_WEBHOOK_SECRET
         scope: RUN_TIME
         type: SECRET
