@@ -23,6 +23,7 @@ const SLEEPS = [
 const AWAKE = [
   "bump-krizaka.yml",
   "dependabot-automerge.yml",
+  "deploy-verify.yml",
   "docs-map.yml",
   "merge-resolution.yml",
   "release-notes.yml",
