@@ -1,0 +1,74 @@
+#!/usr/bin/env node
+// What a stranger reads on a demo shop is the product's showcase (krizaka-internal#3743): no page may still carry a retired product name.
+// The check reads the rendered HTML of every demo page, in both languages, and refuses a retired name in what a visitor reads or hears
+// (the text, an alt, a title, an aria-label, a meta content). An address (src, href, srcset) is not read: a media key keeps its old folder until
+// the photos are replaced (krizaka-internal#3742, T8).
+//
+//   node scripts/check-retired-names.mjs --base https://dev.folioviv.com [--shop-host folioviv.shop]
+//
+// Exits 1 listing every page × retired name. Nothing else is printed.
+import { fileURLToPath } from "node:url";
+
+/** The product's old name; a name joins this list the day it is retired. */
+// @fixed: a list of names, not a business parameter
+export const RETIRED_NAMES = ["Akinaza"];
+
+/** The demo shops the showcase shows (`packages/db/src/demo-shops.ts`, Saint-Henri). */
+export const DEMO_SHOPS = ["pattes-saint-henri", "cedre-ciseaux", "encre-vive", "ferland-conseil"];
+export const LOCALES = ["fr", "en"];
+
+const READ_ATTRIBUTES = ["alt", "title", "aria-label", "content", "placeholder"];
+
+/** What a visitor reads in a page: its text and the words of its attributes, never a script, a style or an address. */
+export function readableText(html) {
+  const parts = [];
+  const body = html.replaceAll(/<(script|style)\b[\s\S]*?<\/\1>/gi, " ").replaceAll(/<!--[\s\S]*?-->/g, " ");
+  for (const tag of body.matchAll(/<[a-z][^>]*>/gi)) {
+    for (const name of READ_ATTRIBUTES) {
+      const found = new RegExp(String.raw`\s${name}\s*=\s*(?:"([^"]*)"|'([^']*)')`, "i").exec(tag[0]);
+      if (found) {
+        parts.push(found[1] ?? found[2] ?? "");
+      }
+    }
+  }
+  parts.push(body.replaceAll(/<[^>]*>/g, " "));
+  return parts.join(" ");
+}
+
+/** The retired names a page's rendered HTML carries (case-insensitive), each once. */
+export function retiredNamesIn(html, names = RETIRED_NAMES) {
+  const text = readableText(html).toLowerCase();
+  return names.filter((name) => text.includes(name.toLowerCase()));
+}
+
+/** A demo shop's address on a shop host (`https://<slug>.<host>/<locale>`). */
+export const shopUrl = (slug, locale, shopHost) => `https://${slug}.${shopHost}/${locale}`;
+
+export async function crawl({ shopHost, fetcher = fetch }) {
+  const problems = [];
+  for (const slug of DEMO_SHOPS) {
+    for (const locale of LOCALES) {
+      const url = shopUrl(slug, locale, shopHost);
+      const res = await fetcher(url);
+      if (!res.ok) {
+        problems.push(`${url}: HTTP ${res.status}`);
+        continue;
+      }
+      for (const name of retiredNamesIn(await res.text())) {
+        problems.push(`${url}: carries « ${name} »`);
+      }
+    }
+  }
+  return problems;
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const flag = (name) => process.argv[process.argv.indexOf(name) + 1];
+  const shopHost = process.argv.includes("--shop-host") ? flag("--shop-host") : "folioviv.shop";
+  const problems = await crawl({ shopHost });
+  if (problems.length > 0) {
+    console.error(problems.join("\n"));
+    process.exit(1);
+  }
+  console.log(`${DEMO_SHOPS.length * LOCALES.length} demo pages: no retired name`);
+}
