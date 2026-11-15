@@ -29,11 +29,11 @@ export function formulaText(figure: FigureAnswer, say: Say, locale: Locale): str
   return say("figures.formulaHere", { formula: say(`figures.${figure.id}.formula`), terms });
 }
 
-const RATE_KEYS = ["collected", "toCollect", "margin", "noShows"];
+const RATE_KEYS = new Set(["collected", "toCollect", "margin", "noShows"]);
 /** The meaning, then the second reading of the figure (its rate) when it has one. */
 export function meaningText(figure: FigureAnswer, say: Say): string {
   const base = say(`figures.${figure.id}.meaning`);
-  if (figure.rate === null || !RATE_KEYS.includes(figure.id)) return base;
+  if (figure.rate === null || !RATE_KEYS.has(figure.id)) return base;
   const rateText = say(`figures.rateOf.${figure.id}`, { rate: figure.rate });
   return `${base} ${rateText}`;
 }

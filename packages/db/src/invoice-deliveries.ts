@@ -123,7 +123,7 @@ export async function invoiceByToken(db: Db, token: string, now: Date) {
 /** A delivery link may also open only the replacement explicitly named by the invoice it was issued for. */
 export async function invoiceReplacementByToken(db: Db, token: string, replacementId: string, now: Date) {
   const original = await invoiceByToken(db, token, now);
-  if (!original?.replacedBy || original.replacedBy.id !== replacementId) return null;
+  if (original?.replacedBy?.id !== replacementId) return null;
   const [owner] = await db.select({ shopId: invoices.shopId }).from(invoices).where(eq(invoices.id, original.id));
   if (!owner) return null;
   const replacement = await invoiceDetail(db, owner.shopId, replacementId);

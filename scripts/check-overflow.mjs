@@ -96,7 +96,7 @@ export function ownerSession(owner) {
     },
     async routes(page, { base }) {
       await page.goto(`${base}/fr/app`, { waitUntil: "load" });
-      const shopRoot = new URL(page.url()).pathname.replace(/^\/(fr|en)/, "").match(/^\/app\/[^/]+/)?.[0];
+      const shopRoot = /^\/app\/[^/]+/.exec(new URL(page.url()).pathname.replace(/^\/(fr|en)/, ""))?.[0];
       if (!shopRoot) throw new Error(`the owner's /app did not lead to a shop (${page.url()})`);
       return FRAME_LOCALES.flatMap((l) => FRAME_PAGES.map((f) => `/${l}${shopRoot}${f}`));
     },

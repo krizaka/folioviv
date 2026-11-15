@@ -87,7 +87,7 @@ const mailbox = createServer((req, res) => {
 await new Promise((resolve) => mailbox.listen(MAIL_PORT, "127.0.0.1", resolve));
 const codeFor = async (to) => {
   for (let i = 0; i < 60; i += 1) {
-    const code = /\b(\d{6})\b/.exec(mails.filter((m) => m.to === to).at(-1)?.text ?? "")?.[1];
+    const code = /\b(\d{6})\b/.exec(mails.findLast((m) => m.to === to)?.text ?? "")?.[1];
     if (code) return code;
     await new Promise((resolve) => setTimeout(resolve, 250));
   }

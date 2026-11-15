@@ -191,7 +191,7 @@ export function renderMailTemplate<Id extends MailTemplateId>(
       layoutText: readFile(dir, "_layout/layout.txt"),
       footer: readFile(dir, `_layout/${locale}/footer.txt`),
     };
-    if (Object.values(files).some((v) => v === null)) continue;
+    if (Object.values(files).includes(null)) continue;
     const f = files as Record<keyof typeof files, string>;
     const name = `${id}/${locale}`;
     const subject = fill(f.subject, values, { html: false, allowed, name: `${name}/subject.txt` })

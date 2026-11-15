@@ -50,7 +50,7 @@ page.on("response", (r) => {
 async function shopId() {
   if (flag("shop")) return flag("shop");
   await page.goto(`${BASE}/en/app`, { waitUntil: "load" });
-  const existing = new URL(page.url()).pathname.match(/\/app\/([0-9a-f-]{36})/)?.[1];
+  const existing = /\/app\/([0-9a-f-]{36})/.exec(new URL(page.url()).pathname)?.[1];
   if (existing) return existing;
   await page.goto(`${BASE}/en/app/open-shop`, { waitUntil: "load" });
   await page.getByLabel("Shop name").fill(SHOP.name);
@@ -61,7 +61,7 @@ async function shopId() {
   await page.getByLabel("Page address").fill(slug);
   await page.getByRole("button", { name: "Create the shop" }).click();
   await page.waitForURL(/\/app\/[0-9a-f-]{36}\//, { timeout: 30_000 });
-  return new URL(page.url()).pathname.match(/\/app\/([0-9a-f-]{36})/)[1];
+  return /\/app\/([0-9a-f-]{36})/.exec(new URL(page.url()).pathname)[1];
 }
 
 const id = await shopId();

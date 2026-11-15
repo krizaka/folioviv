@@ -48,7 +48,8 @@ async function main() {
     `check-cookies: ${seen} Set-Cookie line(s) on ${paths.length} page(s)${arg("--email") ? " and the sign-in" : ""}`,
   );
   if (problems.length) {
-    console.error(`${problems.length} problem(s):\n${problems.map((p) => `  ${p}`).join("\n")}`);
+    const lines = problems.map((p) => `  ${p}`).join("\n");
+    console.error(`${problems.length} problem(s):\n${lines}`);
     process.exit(1);
   }
 }

@@ -35,21 +35,21 @@ export const SIGN_IN_LINK = '[data-site-bar] a[href$="/sign-in"]';
  */
 export const watchSignInLink = () => {
   globalThis.__signInProblems = [];
-  window.__sawSignIn = false;
+  globalThis.__sawSignIn = false;
   let painted = false;
   const flag = (why) => {
     if (!globalThis.__signInProblems.includes(why)) globalThis.__signInProblems.push(why);
   };
   const inspect = () => {
     const links = document.querySelectorAll('[data-site-bar] a[href$="/sign-in"]');
-    if (links.length) window.__sawSignIn = true;
+    if (links.length) globalThis.__sawSignIn = true;
     const hinted = "session" in document.documentElement.dataset;
     for (const link of links) {
       if (!hinted)
         flag(
           "a sign-in link is in the bar and html has no data-session (the head script did not run, or the hint cookie is missing)",
         );
-      else if (!link.hasAttribute("data-signed-out-only")) flag("a sign-in link of the bar lacks data-signed-out-only");
+      else if (!("signedOutOnly" in link.dataset)) flag("a sign-in link of the bar lacks data-signed-out-only");
       else if (painted && getComputedStyle(link).display !== "none")
         flag("a sign-in link of the bar is visible under html[data-session] (computed display is not none)");
     }
