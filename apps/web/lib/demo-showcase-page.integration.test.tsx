@@ -30,7 +30,10 @@ describe.runIf(enabled)("Encre Vive's rendered page", () => {
     const defaults = await proposedDefaults(page);
     const view = buildStorefront({ page, locale, now: new Date("2026-11-15T15:00:00Z"), defaults });
     const { page: document } = await publishedShopPage(db(), page.shop.id);
-    return { defaults, html: renderToStaticMarkup(<ShopPageView page={document} view={view} locale={locale} today="2026-11-15" />) };
+    return {
+      defaults,
+      html: renderToStaticMarkup(<ShopPageView page={document} view={view} locale={locale} today="2026-11-15" />),
+    };
   };
 
   it("offers no proposed image, shows no « Images du métier » and none of the workshop default URLs", async () => {
