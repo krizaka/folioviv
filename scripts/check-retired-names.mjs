@@ -46,10 +46,12 @@ export function readableText(html) {
     "-->",
   );
   for (const tag of body.matchAll(/<[a-z][^>]*>/gi)) {
-    for (const name of READ_ATTRIBUTES) {
-      const found = new RegExp(String.raw`\s${name}\s*=\s*(?:"([^"]*)"|'([^']*)')`, "i").exec(tag[0]);
-      if (found) {
-        parts.push(found[1] ?? found[2] ?? "");
+    // The server renders double-quoted values: the pieces between quotes alternate name-side, value, name-side, value…
+    const pieces = tag[0].split('"');
+    for (let i = 1; i < pieces.length; i += 2) {
+      const before = pieces[i - 1].trimEnd().toLowerCase();
+      if (READ_ATTRIBUTES.some((name) => before.endsWith(`${name}=`))) {
+        parts.push(pieces[i]);
       }
     }
   }
