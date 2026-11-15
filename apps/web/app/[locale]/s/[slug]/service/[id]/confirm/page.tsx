@@ -42,7 +42,7 @@ export default async function ConfirmPage({
   const here = backToHere(`/${locale}/s/${slug}/service/${id}/confirm`, query);
   const parsed = slugSchema.safeParse(slug);
   const page = parsed.success ? await publicShop(db(), parsed.data) : null;
-  if (!page || !page.services.some((service) => service.id === id)) notFound();
+  if (!page?.services.some((service) => service.id === id)) notFound();
   if (!session) {
     return guestView({ locale, slug, id, page, query, here });
   }

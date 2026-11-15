@@ -22,7 +22,7 @@ export async function checkPassword(
     password_hash: string | null;
   }>("SELECT id, email, status, locale, password_hash FROM accounts WHERE email = $1", [address]);
   const right = await verifyPassword(password, row?.password_hash ?? (await decoyHash()));
-  if (!row || !row.password_hash || !right) {
+  if (!row?.password_hash || !right) {
     if (row)
       await audit({
         action: "auth.sign_in_refused",

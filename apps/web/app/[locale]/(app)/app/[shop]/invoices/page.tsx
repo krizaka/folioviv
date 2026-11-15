@@ -1,7 +1,6 @@
 // @template: app-list-detail
 import { localDay } from "@folioviv/core";
-import { listInvoices } from "@folioviv/db";
-import { invoiceMailSettings } from "@folioviv/db";
+import { invoiceMailSettings, listInvoices } from "@folioviv/db";
 import { EmptyState } from "@krizaka/ui/empty-state";
 import { Mascot } from "@krizaka/ui/mascots";
 import { PageHeader } from "@krizaka/ui/page-header";

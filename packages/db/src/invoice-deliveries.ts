@@ -40,7 +40,7 @@ export async function enqueueInvoiceDelivery(
       .from(invoices)
       .leftJoin(clients, eq(clients.id, invoices.clientId))
       .where(and(eq(invoices.id, invoiceId), eq(invoices.shopId, shopId)));
-    if (!invoice || !invoice.clientId) throw new ShopError("AK_INVOICE_UNKNOWN", `AK_INVOICE_UNKNOWN: ${invoiceId}`);
+    if (!invoice?.clientId) throw new ShopError("AK_INVOICE_UNKNOWN", `AK_INVOICE_UNKNOWN: ${invoiceId}`);
     if (invoice.erasedAt) throw new ShopError("AK_CLIENT_UNREACHABLE", "AK_CLIENT_UNREACHABLE");
     if (!mail.toEmail.trim()) throw new ShopError("AK_INVOICE_RECIPIENT", "AK_INVOICE_RECIPIENT");
 

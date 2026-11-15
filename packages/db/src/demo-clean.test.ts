@@ -61,10 +61,10 @@ describe("demo-clean (real PostgreSQL 16)", () => {
     expect(done).toMatchObject({ clients: 1, dogs: 1, bookings: 2, visits: 2 });
     expect(await demoLeftovers(t.db, cast)).toEqual({ clients: [], dogs: [] });
     // The cast is untouched, and the visitor's sign-in (used by nothing else) is gone with the file.
-    expect((await t.db.select().from(dependants).where(eq(dependants.id, s.camille.dogId))).length).toBe(1);
-    expect((await t.db.select().from(clients).where(eq(clients.id, s.jordan.clientId))).length).toBe(1);
-    expect((await t.db.select().from(accounts).where(eq(accounts.id, stranger.id))).length).toBe(0);
-    expect((await t.db.select().from(appointments).where(eq(appointments.id, visit.appointmentId))).length).toBe(0);
+    expect(await t.db.select().from(dependants).where(eq(dependants.id, s.camille.dogId))).toHaveLength(1);
+    expect(await t.db.select().from(clients).where(eq(clients.id, s.jordan.clientId))).toHaveLength(1);
+    expect(await t.db.select().from(accounts).where(eq(accounts.id, stranger.id))).toHaveLength(0);
+    expect(await t.db.select().from(appointments).where(eq(appointments.id, visit.appointmentId))).toHaveLength(0);
   });
 
   it("is idempotent: a second run removes nothing", async () => {

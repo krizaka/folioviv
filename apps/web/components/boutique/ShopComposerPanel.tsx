@@ -77,7 +77,10 @@ export function ShopComposerPanel({
 
   const refreshPreview = useCallback(() => {
     const frame = root.current?.querySelector("iframe");
-    postToPreview(frame?.contentWindow, window.location.origin, { source: "krizaka-shop-composer", type: "refresh" });
+    postToPreview(frame?.contentWindow, globalThis.location.origin, {
+      source: "krizaka-shop-composer",
+      type: "refresh",
+    });
   }, []);
 
   const history = useQuery({

@@ -73,7 +73,7 @@ export function readHostname(input: string, shopDomain?: string | null): Hostnam
   if (!raw) return { ok: false, reason: "empty" };
   if (IPV4.test(raw) || raw.includes(":") || raw.startsWith("[")) return { ok: false, reason: "ip" };
   const labels = raw.split(".");
-  const tld = labels[labels.length - 1] ?? "";
+  const tld = labels.at(-1) ?? "";
   if (raw.length > MAX_HOSTNAME || labels.length < 2 || !labels.every((l) => LABEL.test(l)) || !TLD.test(tld))
     return { ok: false, reason: "invalid" };
   if (isOwnName(raw, shopDomain?.trim().toLowerCase())) return { ok: false, reason: "platform" };

@@ -52,11 +52,11 @@ describe("the three fictional demo shops", () => {
     expect(colour.durationMinutes).toBeGreaterThanOrEqual(120);
     expect(colour.priceVaries).toBe(true);
     const studio = (await publicShop(t.db, "encre-vive"))!;
-    expect(studio.team.length).toBe(3);
+    expect(studio.team).toHaveLength(3);
     expect(studio.services.find((s) => s.nameEn === "Free consultation")?.priceCents).toBe(0);
     expect(studio.rules.cancellationHours).toBe(48);
     const consultant = (await publicShop(t.db, "ferland-conseil"))!;
-    expect(consultant.team.length).toBe(1);
+    expect(consultant.team).toHaveLength(1);
     expect(consultant.services.map((s) => s.nameEn)).toEqual(
       expect.arrayContaining(["Discovery call (20 min)", "Working session (1 h)", "3-hour block"]),
     );

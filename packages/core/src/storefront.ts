@@ -21,7 +21,7 @@ function runsOf(windows: readonly WeeklyWindow[], weekday: number): { startsAt: 
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
   const runs: { startsAt: string; endsAt: string }[] = [];
   for (const w of sorted) {
-    const last = runs[runs.length - 1];
+    const last = runs.at(-1);
     if (last && minutesOf(w.startsAt) <= minutesOf(last.endsAt))
       last.endsAt = minutesOf(w.endsAt) > minutesOf(last.endsAt) ? w.endsAt : last.endsAt;
     else runs.push({ ...w });
@@ -190,7 +190,7 @@ export function popularServiceId(
   const sorted = [...counts].sort((a, b) => b.bookings - a.bookings);
   const [first, second] = sorted;
   if (!first || first.bookings < minBookings) return null;
-  if (second && second.bookings === first.bookings) return null;
+  if (second?.bookings === first.bookings) return null;
   return first.serviceId;
 }
 

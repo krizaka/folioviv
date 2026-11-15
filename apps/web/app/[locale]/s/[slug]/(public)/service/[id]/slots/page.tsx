@@ -22,7 +22,7 @@ export default async function TimesPage(props: ServiceRouteProps) {
   const { locale, slug, id, query } = await readServiceRoute(props);
   const t = translator(locale);
   const page = await loadPublicShopOrMove(locale, slug, `/service/${id}/slots${queryString(query)}`);
-  if (!page || !page.services.some((s) => s.id === id)) notFound();
+  if (!page?.services.some((s) => s.id === id)) notFound();
   const now = requestNow();
   const choice = resolveChoice(page, { staff: searchValue(query.staff), zone: searchValue(query.zone) });
   const slots = await listSlots(db(), {

@@ -34,7 +34,7 @@ export function ShopSlots({
   footer,
 }: Readonly<{ days: DayView[]; labels: ShopSlotsLabels; locale: string; footer?: string }>) {
   const first = days[0] ? mondayOf(days[0].id) : undefined;
-  const last = days.length ? mondayOf(days[days.length - 1]!.id) : first;
+  const last = days.length ? mondayOf(days.at(-1)!.id) : first;
   const [week, setWeek] = useState(first);
   const shown = useMemo(() => {
     const inWeek = new Set(week ? weekDays(week) : []);

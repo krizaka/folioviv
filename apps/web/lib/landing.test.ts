@@ -53,7 +53,7 @@ describe("the home is short and concrete", () => {
   });
 
   it("has exactly one primary action: the way in", () => {
-    expect((home.match(/variant="primary"/g) ?? []).length).toBe(1);
+    expect(home.match(/variant="primary"/g) ?? []).toHaveLength(1);
   });
 
   it("each screen is a real capture with its text and alt in both languages, on the CDN", () => {
