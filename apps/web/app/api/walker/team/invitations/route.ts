@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 /** `a@b.c`: no space, one `@`, something before it, and a dot inside what follows. Linear, unlike the pattern that says the same. */
 const looksLikeEmail = (value: string) => {
   const at = value.indexOf("@");
-  if (at < 1 || /\s/.test(value) || value.indexOf("@", at + 1) !== -1) {
+  if (at < 1 || /\s/.test(value) || value.includes("@", at + 1)) {
     return false;
   }
   return value.slice(at + 2, -1).includes(".");

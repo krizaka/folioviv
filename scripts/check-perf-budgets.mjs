@@ -102,17 +102,17 @@ function observe(heroSelector) {
       typeof n.className === "string" && n.className ? "." + n.className.trim().split(/\s+/).slice(0, 2).join(".") : "";
     return n.nodeName.toLowerCase() + id + classes;
   };
-  window.__perf = { lcp: 0, hero: false, cls: 0, attribution: null, shifts: [] };
+  globalThis.__perf = { lcp: 0, hero: false, cls: 0, attribution: null, shifts: [] };
   new PerformanceObserver((list) => {
     const e = list.getEntries().at(-1);
-    window.__perf.lcp = e.startTime;
-    window.__perf.hero = !!(e.element && e.element.closest(heroSelector));
+    globalThis.__perf.lcp = e.startTime;
+    globalThis.__perf.hero = !!e.element?.closest(heroSelector);
     const nav = performance.getEntriesByType("navigation")[0];
     const res = e.url ? performance.getEntriesByName(e.url).at(-1) : null;
     const ttfb = nav ? nav.responseStart : 0;
     const loadStart = res ? Math.max(ttfb, res.requestStart) : ttfb;
     const loadEnd = res ? res.responseEnd : loadStart;
-    window.__perf.attribution = {
+    globalThis.__perf.attribution = {
       element: describe(e.element),
       url: e.url || null,
       size: e.size,
@@ -129,7 +129,7 @@ function observe(heroSelector) {
   new PerformanceObserver((list) => {
     for (const e of list.getEntries()) {
       if (e.hadRecentInput) continue;
-      window.__perf.cls += e.value;
+      globalThis.__perf.cls += e.value;
       globalThis.__perf.shifts.push({
         value: Math.round(e.value * 1000) / 1000,
         at: Math.round(e.startTime),
@@ -181,7 +181,7 @@ async function sample(browser, url) {
   await page.waitForTimeout(1500);
   const height = await page.evaluate(() => document.documentElement.scrollHeight);
   await Promise.all(pending);
-  const perf = await page.evaluate(() => window.__perf);
+  const perf = await page.evaluate(() => globalThis.__perf);
   // The LCP resource's response headers (format, size, cache) as the CDN serves them.
   let headers = null;
   if (perf.attribution?.url) {

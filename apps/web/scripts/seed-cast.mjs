@@ -118,7 +118,9 @@ export async function nameFixtureAccounts(query, env) {
   for (const { id, where, key } of [...byLocalPart, ...byAddress]) {
     const p = persona("folioviv", id);
     const match =
-      where === "local" ? "split_part(lower(email), '@', 1) = $1 AND email ~* '@[^@]+\\.test$'" : "lower(email) = $1";
+      where === "local"
+        ? String.raw`split_part(lower(email), '@', 1) = $1 AND email ~* '@[^@]+\.test$'`
+        : "lower(email) = $1";
     const { rowCount } = await query(
       `UPDATE accounts SET name = $2, locale = $3, avatar_seed = $4 WHERE ${match} AND name IS NULL`,
       [key, p.displayName, p.locale, p.avatar],

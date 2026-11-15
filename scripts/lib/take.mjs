@@ -79,7 +79,8 @@ export function vtt(beats, words, locale, endAt) {
   const cues = beats
     .map((b, i) => ({ text: words[b.id]?.[locale], start: b.at, end: Math.min(beats[i + 1]?.at ?? endAt, endAt) }))
     .filter((c) => c.text && c.end > c.start + 0.2);
-  return `WEBVTT\n\n${cues.map((c, i) => `${i + 1}\n${vttTime(c.start)} --> ${vttTime(c.end - 0.1)}\n${c.text}\n`).join("\n")}`;
+  const blocks = cues.map((c, i) => `${i + 1}\n${vttTime(c.start)} --> ${vttTime(c.end - 0.1)}\n${c.text}\n`);
+  return `WEBVTT\n\n${blocks.join("\n")}`;
 }
 
 /** Output time of a capture time, with the spans `[from, to, speed]` played faster. */
@@ -90,7 +91,6 @@ export function retime(t, spans) {
     if (t <= from) break;
     out += from - cursor;
     out += (Math.min(t, to) - from) / speed;
-    cursor = Math.min(t, to);
     if (t <= to) return out;
     cursor = to;
   }
@@ -228,7 +228,8 @@ export async function createTake({
         const dt = retime(next, spans) - retime(f.t, spans) || 1 / 120;
         list += `file '${file}'\nduration ${Math.max(dt, 1 / 120).toFixed(5)}\n`;
       });
-      list += `file '${path.join(frameDir, `${pad(frames.length - 1, 5)}.jpg`)}'\n`;
+      const frameFile = path.join(frameDir, `${pad(frames.length - 1, 5)}.jpg`);
+      list += `file '${frameFile}'\n`;
       writeFileSync(path.join(frameDir, "list.txt"), list);
       const outEnd = retime(end, spans);
       const outBeats = beats.map((b) => ({ id: b.id, at: Number(retime(b.at, spans).toFixed(3)) }));

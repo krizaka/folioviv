@@ -39,7 +39,7 @@ export function shopPageProblems(answer, { origin, appOrigin }) {
     problems.push(`script-src is not the strict one: ${scripts}`);
   if (!csp.includes(`frame-ancestors ${appOrigin}`)) problems.push("frame-ancestors is not the app");
   if (!csp.includes(`form-action 'self' ${appOrigin}`)) problems.push("form-action does not name the app");
-  const set = [].concat(answer.headers["set-cookie"] ?? []);
+  const set = [answer.headers["set-cookie"] ?? []].flat();
   for (const line of set) {
     if (/session/i.test(line)) problems.push(`a session cookie is set on the shop host: ${line.split("=")[0]}`);
     if (/;\s*domain=/i.test(line)) problems.push(`a cookie has a Domain: ${line.split("=")[0]}`);
@@ -121,7 +121,7 @@ async function main() {
 
   console.log(`check-shop-host: ${printable(slug)} on ${printable(shopHost)}, 9 requests`);
   if (problems.length) {
-    console.error(`${problems.length} problem(s):\n${problems.map((p) => `  ${printable(p)}`).join("\n")}`);
+    console.error([`${problems.length} problem(s):`, ...problems.map((p) => `  ${printable(p)}`)].join("\n"));
     process.exit(1);
   }
 }

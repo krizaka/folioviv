@@ -199,7 +199,7 @@ async function crawl(browser, { base, paths, theme, account, problems, visited, 
   let expected404 = false;
   const report = (kind, text) => {
     // A page meant to be a 404 answers 404 (and its home link's prefetch is redirected): the browser logs that, not a defect.
-    if (expected404 && /^Failed to load resource/.test(text)) return;
+    if (expected404 && text.startsWith("Failed to load resource")) return;
     const key = `${current} ${kind} ${text.slice(0, 80)}`;
     if (seen.has(key)) return;
     seen.add(key);
@@ -218,7 +218,8 @@ async function crawl(browser, { base, paths, theme, account, problems, visited, 
   for (const viewport of VIEWPORTS) {
     await page.setViewportSize(viewport);
     for (const path of paths) {
-      current = `${account ? `${account.role} ` : ""}${path} @${viewport.width} ${theme}`;
+      const who = account ? `${account.role} ` : "";
+      current = `${who}${path} @${viewport.width} ${theme}`;
       expected404 = path.endsWith("/nope");
       const response = await page.goto(`${base}${path}`, { waitUntil: "load" });
       await page.waitForTimeout(SETTLE_MS);
@@ -311,7 +312,8 @@ if (process.argv[1] && import.meta.url.endsWith(process.argv[1].replace(/^.*\//,
   const details = [...new Set(visited.filter((v) => v.from).map((v) => v.path.replace(/^.*\/app\/[^/]+/, "")))];
   if (details.length) process.stdout.write(`check-hydration: detail pages found ${details.join(", ")}\n`);
   if (problems.length) {
-    process.stdout.write(`${problems.length} problem(s):\n${problems.map((p) => `  ${p}`).join("\n")}\n`);
+    const lines = problems.map((p) => `  ${p}`).join("\n");
+    process.stdout.write(`${problems.length} problem(s):\n${lines}\n`);
     process.exit(1);
   }
   process.stdout.write("ok: the server and the browser rendered the same pages\n");

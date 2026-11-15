@@ -24,7 +24,7 @@ const flag = (name, fallback) => (args.includes(`--${name}`) ? args[args.indexOf
 const out = path.resolve(args[0] ?? "record-out");
 const device = flag("device", "desktop");
 const locale = flag("locale", "en") === "fr" ? "fr" : "en";
-const wanted = flag("clips", "onboarding,invoice,books,return").split(",");
+const wanted = new Set(flag("clips", "onboarding,invoice,books,return").split(","));
 const voice = args.includes("--voice");
 const BASE = (process.env.APP_BASE_URL ?? "https://www.folioviv.com").replace(/\/$/, "");
 const need = (n) => {
@@ -156,7 +156,7 @@ const storageState = await (async () => {
 })();
 
 async function clip(id, run) {
-  if (!wanted.includes(id)) return;
+  if (!wanted.has(id)) return;
   const take = await createTake({
     chromium,
     base: BASE,
@@ -192,10 +192,11 @@ async function clip(id, run) {
   const go = async (p) => {
     if (p.startsWith("app") && p !== "app" && !shopBase) {
       await page.goto(`${BASE}/${locale}/app`, { waitUntil: "networkidle" });
-      shopBase = new URL(page.url()).pathname.match(/\/app\/[0-9a-f-]{36}/)?.[0];
+      shopBase = /\/app\/[0-9a-f-]{36}/.exec(new URL(page.url()).pathname)?.[0];
       if (!shopBase) throw new Error(`/app did not land on a shop: ${new URL(page.url()).pathname}`);
     }
-    const target = p.startsWith("app/") ? `${shopBase}/${p.slice(4)}` : p === "app" ? "app" : p;
+    let target = p;
+    if (p.startsWith("app/")) target = `${shopBase}/${p.slice(4)}`;
     return page.goto(`${BASE}/${locale}/${target.replace(/^\//, "")}`, { waitUntil: "networkidle" });
   };
   await run({ take, page, go, glide });
