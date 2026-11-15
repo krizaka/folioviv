@@ -1,6 +1,6 @@
-import { createOrganize, OrganizeError, type OrganizeSchema } from "@krizaka/organize";
+import { createOrganize, type OrganizeSchema } from "@krizaka/organize";
 
-export { OrganizeError };
+export { OrganizeError } from "@krizaka/organize";
 
 /**
  * « organize » for Folioviv (ADR-006, `@krizaka/organize`): a shop is an item. Its name, description, avatar and tags, and its place in

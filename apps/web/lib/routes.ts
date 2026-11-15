@@ -2,9 +2,8 @@
  * Every address of the signed-in space, from one place. The shop a person works in is in the path (`/app/<shop>/…`), so a link
  * can be shared, opened in another tab on another shop, and read in the history; nothing builds an `/app/…` string by hand.
  */
-import { isShopId } from "./shop-id";
 
-export { isShopId };
+export { isShopId } from "./shop-id";
 
 export type RouteLocale = "en" | "fr";
 

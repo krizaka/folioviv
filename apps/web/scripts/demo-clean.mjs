@@ -26,7 +26,9 @@ async function main() {
   }
 }
 
-main().catch((error) => {
+try {
+  await main();
+} catch (error) {
   console.error(`demo-clean: ${error.message}`);
   process.exit(1);
-});
+}

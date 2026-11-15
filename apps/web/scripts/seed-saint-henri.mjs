@@ -43,7 +43,9 @@ async function main() {
   }
 }
 
-main().catch((error) => {
+try {
+  await main();
+} catch (error) {
   console.error(`seed-saint-henri: ${error.message}`);
   process.exit(1);
-});
+}

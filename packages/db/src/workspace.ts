@@ -6,18 +6,16 @@ import {
   createWorkspace,
   dbWorkspaceStore,
   filterSql,
-  type KindConfig,
   type Query,
   type StatusSet,
   type Transaction,
   type ViewFilters,
   type WorkspaceDecl,
-  workspaceMigration,
 } from "@krizaka/organize";
 
 import { INVOICE_STATUS_SET, KIND_DEFAULTS, presetVariant } from "./workspace-defaults";
 
-export { workspaceMigration };
+export { workspaceMigration } from "@krizaka/organize";
 
 /**
  * « The workspace, organised » for Folioviv (krizaka-ts ADR-003, folioviv#337): the SHOP is the scope, so tags and saved views belong to
@@ -149,4 +147,4 @@ export async function tagCounts(query: Query, kind: WorkspaceKind, shopId: strin
   return new Map(rows.map((r) => [r.tag_id, r.n]));
 }
 
-export type { KindConfig };
+export type { KindConfig } from "@krizaka/organize";

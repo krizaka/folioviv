@@ -20,7 +20,9 @@ async function main() {
   }
 }
 
-main().catch((error) => {
+try {
+  await main();
+} catch (error) {
   console.error(`seed-today-visit: ${error.message}`);
   process.exit(1);
-});
+}

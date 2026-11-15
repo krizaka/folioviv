@@ -178,6 +178,8 @@ export async function settleAvailability(db: Db, now: Date, batch: number = SETT
 export function exploreStatement(query: ExploreQuery, now: Date): { statement: SQL; fetched: number } {
   const { conditions, distance } = compileExplore(query, now);
   const fetched = query.limit;
+  const innerOrder = distance ? sql`distance_m NULLS LAST,` : sql``;
+  const outerOrder = distance ? sql`s.distance_m NULLS LAST,` : sql``;
   // The page is chosen first (filters, order, limit on the indexed read model); only its few shops get the per-row fact (open now).
   const statement = sql`
     SELECT s.shop_id, s.slug, s.name, s.kind, s.area, s.tagline_fr, s.tagline_en, s.timezone, s.quartiers, s.lat, s.lng, s.distance_m, s.next_free_at, ${freeTodaySql(now)} AS free_today,
@@ -187,9 +189,9 @@ export function exploreStatement(query: ExploreQuery, now: Date): { statement: S
              ${distance ?? sql`NULL::float8`} AS distance_m
       FROM shop_search s
       WHERE ${and(...conditions)}
-      ORDER BY ${distance ? sql`distance_m NULLS LAST,` : sql``} s.name, s.shop_id
+      ORDER BY ${innerOrder} s.name, s.shop_id
       LIMIT ${fetched + 1} OFFSET ${query.offset}) s
-    ORDER BY ${distance ? sql`s.distance_m NULLS LAST,` : sql``} s.name, s.shop_id`;
+    ORDER BY ${outerOrder} s.name, s.shop_id`;
   return { statement, fetched };
 }
 

@@ -44,7 +44,9 @@ async function main() {
   }
 }
 
-main().catch((error) => {
+try {
+  await main();
+} catch (error) {
   console.error(`seed-krizaka: ${error.message}`);
   process.exit(1);
-});
+}

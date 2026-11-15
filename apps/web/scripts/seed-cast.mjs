@@ -322,8 +322,10 @@ async function main() {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  main().catch((error) => {
+  try {
+    await main();
+  } catch (error) {
     console.error(`seed-cast: ${error.message}`);
     process.exit(1);
-  });
+  }
 }
