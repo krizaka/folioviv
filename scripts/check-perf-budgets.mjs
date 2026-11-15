@@ -106,7 +106,7 @@ function observe(heroSelector) {
   new PerformanceObserver((list) => {
     const e = list.getEntries().at(-1);
     globalThis.__perf.lcp = e.startTime;
-    globalThis.__perf.hero = !!(e.element?.closest(heroSelector));
+    globalThis.__perf.hero = !!e.element?.closest(heroSelector);
     const nav = performance.getEntriesByType("navigation")[0];
     const res = e.url ? performance.getEntriesByName(e.url).at(-1) : null;
     const ttfb = nav ? nav.responseStart : 0;
