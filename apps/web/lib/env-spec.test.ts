@@ -104,18 +104,17 @@ describe("the dev app spec declares every variable the app reads (krizaka-intern
     }
   });
 
-  it("holds no secret value in git: a SECRET is a __NAME__ placeholder, and the payments keys are SECRETs", () => {
+  it("holds no secret value in git: a SECRET is a __NAME__ placeholder; the publishable key is a plain pk_ value", () => {
     for (const [key, { secret, value }] of specKeys) {
       if (secret) {
         expect(value, `${key} is a SECRET: its value is the placeholder`).toBe(`__${key}__`);
       }
     }
-    for (const key of [
-      "PAYMENTS_STRIPE_SECRET_KEY",
-      "PAYMENTS_STRIPE_PUBLISHABLE_KEY",
-      "PAYMENTS_STRIPE_WEBHOOK_SECRET",
-    ]) {
+    for (const key of ["PAYMENTS_STRIPE_SECRET_KEY", "PAYMENTS_STRIPE_WEBHOOK_SECRET"]) {
       expect(specKeys.get(key)?.secret, `${key} is type: SECRET`).toBe(true);
     }
+    const publishable = specKeys.get("PAYMENTS_STRIPE_PUBLISHABLE_KEY");
+    expect(publishable?.secret, "the publishable key is public, a plain value (krizaka-internal#3900)").toBe(false);
+    expect(publishable?.value, "the publishable key looks like pk_, never sk_ or rk_").toMatch(/^pk_(test|live)_/);
   });
 });
