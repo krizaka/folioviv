@@ -33,6 +33,8 @@ describe("the Saint-Henri walker persona", () => {
     expect(
       (await t.db.select({ s: shops.showcase }).from(shops).where(eq(shops.slug, "pattes-saint-henri")))[0]?.s,
     ).toBe(true); // Pattes is one of Explorer's four showcase shops (krizaka-internal#3743)
+    const { shopPageConfigOf } = await import("./shop-page");
+    expect((await shopPageConfigOf(t.db, first.shopId)).useDefaults).toBe(false); // krizaka-internal#3743
     expect(page?.shop.area).toBe("Saint-Henri, Montréal");
     expect(page?.zones.every((z) => z.lat !== null && z.lng !== null)).toBe(true);
     expect(page?.services.every((s) => s.includedFr.length > 0 && s.descriptionFr)).toBe(true);
