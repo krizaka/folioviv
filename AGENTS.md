@@ -40,6 +40,8 @@
 
 - **No junk user in the dev database (krizaka-internal#2716).** One persona cast (`castOf` in `@krizaka/org`) and one seed (`seed-cast.mjs`) serve local and deployed, with the same data. A journey signs in as a persona of the cast, or creates its user at an `e2e-…@folioviv.test` address (`ownUsers()` in `apps/web/e2e/journeys/own-users.mjs`) and deletes it in `afterAll`. `scripts/ci-journeys-run.sh` is the teardown check: the users before the run = the users after (`journey-users.mjs snapshot` / `check`), so a journey that leaves a user fails the suite. A seed on a shared host takes the cast e-mails from the environment (`QA_*_EMAIL`, from the `APP_QA_*` secrets), never a built-in address.
 
+- **A QA persona that cannot sign in fails the seed (krizaka-internal#3827).** The demo owner (WALKER) is seeded at `QA_WALKER_EMAIL` (the `APP_QA_FOLIOVIV_WALKER_EMAIL` secret; a database on this machine keeps `lea.beaulieu@folioviv.test`; an account already holding the shop at the seed's address is moved, shop kept), CAMILLE's sign-in at `QA_STAFF_EMAIL`. After seeding, `qa-sign-in-guard.mjs` signs in ERIC, CAMILLE (when given), MIRA and WALKER with the environment's address and password and throws naming the persona (never the address or password). `seed-dev.sh` must hand the `@qa` values down.
+
 - **No mobile app in the dev preview.** `apps/mobile` is an unbuilt skeleton, outside the workspace until the mobile phase (A5,
   krizaka/.github#52); the walker's phone is served by the phone-first web app. The Dev preview criteria `mobile.*` are `na` for that
   reason (`dev-preview.json`); the day a mobile build exists, they become real criteria again.

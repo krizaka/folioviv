@@ -19,6 +19,7 @@ import { SAINT_HENRI, SAINT_HENRI_EMAILS, seedSaintHenri } from "@folioviv/db/se
 import { castOf, persona, seedFingerprint } from "@krizaka/org";
 
 import { hashPassword } from "./qa-accounts.mjs";
+import { assertQaPersonasSignIn } from "./qa-sign-in-guard.mjs";
 import { ensureOwnerStates } from "./seed-owner-states.mjs";
 
 /** What a LOCAL database gets when nothing is given. Never used on a host that is not this machine. */
@@ -56,6 +57,36 @@ export function castAddress(env, name, p) {
     throw new Error(`${name} is invalid`);
   }
   return email;
+}
+
+/**
+ * The demo owner's address (Léa, owner of « Pattes de Saint-Henri »): the QA one from the environment (`QA_WALKER_EMAIL`, or `APP_QA_WALKER_EMAIL`), so the
+ * tester signs in with the secret's address (krizaka-internal#3827: dev held the seed's own `lea.beaulieu@folioviv.test`, the secret named another, and the
+ * owner was refused). A database on this machine keeps the seed's own address; a shared host never guesses it.
+ */
+export function walkerAddress(env) {
+  const given = (env.QA_WALKER_EMAIL ?? env.APP_QA_WALKER_EMAIL ?? "").trim().toLowerCase();
+  if (!given) {
+    if (isLocalHost(env.DATABASE_URL ?? "")) return SAINT_HENRI_EMAILS[0];
+    throw new Error(
+      "QA_WALKER_EMAIL (or APP_QA_WALKER_EMAIL) is required on a host that is not this machine: no built-in address",
+    );
+  }
+  if (!/^[^@\s]+@[^@\s]+$/.test(given)) throw new Error("QA_WALKER_EMAIL is invalid");
+  return given;
+}
+
+/**
+ * Moves the owner of the demo shop to the QA address when the shop is still held by the seed's own address: the account, its shop and its sessions stay,
+ * only the address changes. Nothing happens when the addresses are the same or when an account already holds the QA address. Returns whether it moved.
+ */
+export async function moveWalkerToQaAddress(query, email) {
+  if (email === SAINT_HENRI_EMAILS[0]) return false;
+  const { rowCount } = await query(
+    `UPDATE accounts SET email = $1 WHERE lower(email) = $2 AND NOT EXISTS (SELECT 1 FROM accounts WHERE lower(email) = $1)`,
+    [email, SAINT_HENRI_EMAILS[0]],
+  );
+  return (rowCount ?? 0) > 0;
 }
 
 /**
@@ -133,7 +164,8 @@ export async function nameFixtureAccounts(query, env) {
 /** The e-mails of the cast, passwords not needed: what a users check compares a database with. */
 export function castEmails(env) {
   return [
-    ...SAINT_HENRI_EMAILS,
+    walkerAddress(env),
+    ...SAINT_HENRI_EMAILS.slice(1),
     ...Object.keys(personaEmails(env)),
     castAddress(env, "QA_USER_EMAIL", ERIC),
     (env.QA_KRIZAKA_EMAIL ?? env.APP_QA_KRIZAKA_EMAIL ?? KRIZAKA_EMAIL).trim().toLowerCase(),
@@ -159,7 +191,7 @@ export function castAccounts(env) {
     .filter((p) => p.role === "client")
     .slice(0, SAINT_HENRI_EMAILS.length - 1);
   return [
-    { persona: WALKER, email: SAINT_HENRI_EMAILS[0], role: "USER", secret: walkerSecret },
+    { persona: WALKER, email: walkerAddress(env), role: "USER", secret: walkerSecret },
     ...clientPersonas.map((persona, i) => ({
       persona,
       email: SAINT_HENRI_EMAILS[i + 1],
@@ -233,6 +265,24 @@ export const DEMO_CAST = {
   clients: SAINT_HENRI.clients.map((c) => ({ email: c.email, dogs: c.dogs.map((d) => d.name) })),
 };
 
+/**
+ * CAMILLE, the staff member of the demo salon (`QA_STAFF_EMAIL`, `QA_STAFF_PASSWORD`): her sign-in is made here when the environment gives it, outside the
+ * fingerprint (she is not the walker's cast); her place in the salon's team stays `seed-staff.mjs`'s. Returns whether the environment named her.
+ */
+export async function ensureStaffAccount(query, env) {
+  const email = (env.QA_STAFF_EMAIL ?? env.APP_QA_STAFF_EMAIL ?? "").trim().toLowerCase();
+  const password = env.QA_STAFF_PASSWORD ?? env.APP_QA_STAFF_PASSWORD ?? "";
+  if (!email || !password) return false;
+  if (password.length < 12) throw new Error("QA_STAFF_PASSWORD is shorter than 12 characters");
+  const p = persona("folioviv", "camille-staff");
+  await query(
+    `INSERT INTO accounts (email, role, locale, name, avatar_seed, email_verified_at, password_hash) VALUES ($1, 'USER', $2, $3, $4, now(), $5)
+     ON CONFLICT (email) DO UPDATE SET status = 'ACTIVE', password_hash = EXCLUDED.password_hash, name = coalesce(accounts.name, EXCLUDED.name)`,
+    [email, p.locale, p.displayName, p.avatar, await hashPassword(password)],
+  );
+  return true;
+}
+
 /** The seed works on dev and local only. */
 export function assertNotProduction(env) {
   const environment = env.APP_ENVIRONMENT ?? "dev";
@@ -277,6 +327,8 @@ async function main() {
   try {
     await migrate(pool, fileURLToPath(new URL("../../../packages/db/drizzle", import.meta.url))); // idempotent: the app does the same at start
     const ids = [];
+    if (await moveWalkerToQaAddress((sql, values) => pool.query(sql, values), accounts[0].email))
+      console.log(`seed-cast: ${WALKER.displayName}'s account moved to the QA address`);
     // The visual run fixes the instant the pages are drawn at (APP_FIXED_NOW, dev only): the cast is seeded around the same one.
     const fixedNow = process.env.APP_FIXED_NOW;
     for (const a of accounts) {
@@ -290,7 +342,12 @@ async function main() {
       ).rows;
       ids.push(row.id);
     }
-    const result = await seedSaintHenri(createDb(pool), key, fixedNow ? new Date(fixedNow) : new Date());
+    const result = await seedSaintHenri(
+      createDb(pool),
+      key,
+      fixedNow ? new Date(fixedNow) : new Date(),
+      accounts[0].email,
+    );
     console.log(
       `seed-cast: ${WALKER.displayName} (${SAINT_HENRI.shop.name}), ${accounts.length - 4} clients, ${ERIC.displayName}, ${ADMIN.displayName} (administrator); shop ${result.created ? "created" : "already there"}`,
     );
@@ -299,9 +356,27 @@ async function main() {
     // The fixture accounts the other seeds create (owners of the demo shops, the studio's contacts, the staff) carry their persona's name.
     const named = await nameFixtureAccounts((sql, values) => pool.query(sql, values), env);
     console.log(`seed-cast: ${named} fixture account(s) named after their persona`);
+    await ensureStaffAccount((sql, values) => pool.query(sql, values), env);
     const { fingerprint, counts } = await fingerprintOf((sql, values) => pool.query(sql, values), ids, ids[0]);
     console.log(`fingerprint: ${fingerprint}`);
     await cleanAndCheckLeftovers(createDb(pool), process.argv);
+    // The guard (krizaka-internal#3827): each QA persona signs in, or the seed fails with the persona's name.
+    await assertQaPersonasSignIn(
+      env,
+      async (email) => {
+        const [r] = (await pool.query("SELECT status, password_hash FROM accounts WHERE lower(email) = $1", [email]))
+          .rows;
+        return r && { status: r.status, passwordHash: r.password_hash };
+      },
+      isLocalHost(url)
+        ? Object.fromEntries(
+            [ERIC, ADMIN, WALKER].map((p) => {
+              const a = accounts.find((x) => x.persona === p);
+              return [{ eric: "ERIC", mira: "MIRA", lea: "WALKER" }[p.id], { email: a.email, password: a.secret }];
+            }),
+          )
+        : {},
+    );
     if (process.argv.includes("--check")) {
       const expected = JSON.parse(
         readFileSync(new URL("./cast-fingerprint.json", import.meta.url), "utf8"),
