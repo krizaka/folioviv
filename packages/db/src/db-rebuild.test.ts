@@ -33,9 +33,11 @@ it("builds from zero to the expected schema with its configuration, and a second
   expect(rows[0]?.n).toBe(3);
 });
 
-it("lists exactly one migration, the baseline, in the journal", () => {
+it("starts the journal at the baseline, then one numbered migration per change (krizaka-internal#3743)", () => {
   const journal = JSON.parse(readFileSync(new URL("../drizzle/meta/_journal.json", import.meta.url), "utf8")) as {
     entries: { tag: string }[];
   };
-  expect(journal.entries.map((e) => e.tag)).toEqual(["0000_baseline"]);
+  const tags = journal.entries.map((e) => e.tag);
+  expect(tags[0]).toBe("0000_baseline");
+  expect(tags).toEqual(tags.map((tag, i) => `${String(i).padStart(4, "0")}_${tag.slice(5)}`));
 });

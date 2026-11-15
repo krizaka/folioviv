@@ -68,6 +68,8 @@ export function compileExplore(query: ExploreQuery, now: Date): CompiledExplore 
   const conditions: SQL[] = [
     sql`EXISTS (SELECT 1 FROM shop_rules r WHERE r.shop_id = s.shop_id)`,
     sql`EXISTS (SELECT 1 FROM staff st WHERE st.shop_id = s.shop_id AND st.active)`,
+    // Explorer lists the showcase shops only (krizaka-internal#3743); the others stay reachable by their address.
+    sql`EXISTS (SELECT 1 FROM shops sh WHERE sh.id = s.shop_id AND sh.showcase)`,
   ];
   if (query.q) {
     const words = searchTokens(query.q);

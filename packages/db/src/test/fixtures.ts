@@ -1,3 +1,5 @@
+import { eq } from "drizzle-orm";
+
 import type { Db } from "../client";
 import { accounts, clients, services, shops, staff } from "../schema";
 import { addDependant, addWindow, addZone, joinShop, saveService, saveShopPage } from "../service-shop";
@@ -99,6 +101,8 @@ export async function walkerShop(db: Db, tag = "a") {
     businessType: "pets",
     published: true,
   });
+  // The fixtures are Explorer's showcase shops; a test of the rule turns the flag off itself.
+  await db.update(shops).set({ showcase: true }).where(eq(shops.id, shopId));
   const joined = async (email: string, name: string, dog: string) => {
     const acc = await account(db, email);
     const { clientId } = await joinShop(db, acc.id, acc.email, shopId, {
@@ -141,6 +145,7 @@ export async function studioShop(db: Db, tag = "a") {
   });
   for (const weekday of [1, 2, 3, 4, 5]) await addWindow(db, shopId, { weekday, startsAt: "09:00", endsAt: "17:00" });
   await saveShopPage(db, owner.id, { ...page, published: true });
+  await db.update(shops).set({ showcase: true }).where(eq(shops.id, shopId));
   const acc = await account(db, `contact-${tag}@example.test`);
   const { clientId } = await joinShop(db, acc.id, acc.email, shopId, {
     fullName: "Studio Lumen inc.",
