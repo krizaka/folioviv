@@ -24,14 +24,14 @@
     "routeStateSelection": 2,
     "cognitiveComplexity": 0,
     "sonar": 5,
-    "codeRules": 848,
-    "code/curly": 833,
+    "codeRules": 845,
+    "code/curly": 830,
     "code/max-depth": 7,
     "sonarjs/no-nested-assignment": 1,
-    "sonarjs/todo-tag": 1,
     "code/no-console": 8,
-    "sonarjs/no-os-command-from-path": 1,
+    "sonarjs/todo-tag": 1,
     "sonarjs/no-redundant-optional": 2,
+    "sonarjs/no-os-command-from-path": 1,
     "pageTemplate": 38
   }
 }

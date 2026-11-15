@@ -348,9 +348,11 @@ export async function seedSaintHenri(
   db: Db,
   key: Buffer,
   now: Date,
+  /** The demo owner's address: the seed's own, or the QA one a deployment's secrets name (krizaka-internal#3827). */
+  ownerEmail: string = SAINT_HENRI_EMAILS[0],
 ): Promise<{ shopId: string; created: boolean; clientIds: Record<string, string> }> {
-  const [owner] = await db.select().from(accounts).where(eq(accounts.email, SAINT_HENRI_EMAILS[0]));
-  if (!owner) throw new Error(`no account ${SAINT_HENRI_EMAILS[0]}: create the accounts first`);
+  const [owner] = await db.select().from(accounts).where(eq(accounts.email, ownerEmail));
+  if (!owner) throw new Error(`no account for the demo owner: create the accounts first`);
   const existing = await shopOfOwner(db, owner.id);
   if (existing) {
     await db.update(shops).set({ showcase: true }).where(eq(shops.id, existing.id)); // Pattes: Explorer's fourth showcase shop (krizaka-internal#3743)
