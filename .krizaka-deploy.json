@@ -3,6 +3,7 @@
   "url": "https://dev.folioviv.com",
   "health": "/api/healthz",
   "indexing": "off",
+  "liveIndexing": "dev",
   "spec": "deploy/digitalocean/app.yaml",
   "product": "folioviv",
   "waitMinutes": 25
