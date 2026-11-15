@@ -1,6 +1,6 @@
 # The deploy guard (krizaka-internal#3780): a merge to main is green only when the App Platform deployment caused by that
 # commit reaches ACTIVE; an automatic rollback after an ERROR is red. Needs the read-only DIGITALOCEAN_ACCESS_TOKEN as a
-# secret of this repository (without it the job warns and passes). 
+# secret of this repository (without it the job warns and passes).
 name: Deploy verify
 
 on:
