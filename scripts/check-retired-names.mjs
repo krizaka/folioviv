@@ -37,6 +37,23 @@ function withoutBlocks(html, open, close) {
   }
 }
 
+/** The tags of a page and its text between them, found by position. */
+function splitTags(html) {
+  const tags = [];
+  let text = "";
+  let rest = html;
+  for (;;) {
+    const open = rest.indexOf("<");
+    const close = open === -1 ? -1 : rest.indexOf(">", open);
+    if (close === -1) {
+      return { tags, text: text + rest };
+    }
+    text += `${rest.slice(0, open)} `;
+    tags.push(rest.slice(open, close + 1));
+    rest = rest.slice(close + 1);
+  }
+}
+
 /** What a visitor reads in a page: its text and the words of its attributes, never a script, a style, a comment or an address. */
 export function readableText(html) {
   const parts = [];
@@ -45,9 +62,10 @@ export function readableText(html) {
     "<!--",
     "-->",
   );
-  for (const tag of body.matchAll(/<[a-z][^>]*>/gi)) {
+  const { tags, text } = splitTags(body);
+  for (const tag of tags) {
     // The server renders double-quoted values: the pieces between quotes alternate name-side, value, name-side, value…
-    const pieces = tag[0].split('"');
+    const pieces = tag.split('"');
     for (let i = 1; i < pieces.length; i += 2) {
       const before = pieces[i - 1].trimEnd().toLowerCase();
       if (READ_ATTRIBUTES.some((name) => before.endsWith(`${name}=`))) {
@@ -55,7 +73,7 @@ export function readableText(html) {
       }
     }
   }
-  parts.push(body.replaceAll(/<[^>]*>/g, " "));
+  parts.push(text);
   return parts.join(" ");
 }
 
