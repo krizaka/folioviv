@@ -58,10 +58,81 @@ export function castAddress(env, name, p) {
   return email;
 }
 
+/**
+ * The other fixture accounts of the seeds, each mapped to its persona of the cast (`@krizaka/org`, krizaka-internal#2716). The key is the local part:
+ * the seeds make it on `folioviv.test`, a deployment keeps the same people on its own reserved test domain (`akinaza.test` on dev), so an address
+ * is a persona's when its local part is here AND its domain is a `.test` one. The cast holds no e-mail; this map is where an address meets a person.
+ * A fixture account no one named is junk.
+ */
+export const FIXTURE_PERSONAS = {
+  "maelle.cedre": "maelle", // owner of the demo shop Cèdre & Ciseaux (demo-shops)
+  "ines.encrevive": "ines-encrevive", // owner of Encre Vive Studio
+  "camille.ferland": "camille-ferland", // owner of Ferland Conseil
+  "ines.debut": "ines-debut", // owner of the empty-shop state (seed-owner-states)
+  "yan.seul": "yan", // owner of the one-item-per-list state
+  "eric.krizaka": "eric-krizaka", // owner of the Krizaka studio demo (seed-krizaka)
+  "contact.studiolumen": "marie-eve", // the studio demo's clients, in the seed's order
+  "contact.cafedupark": "marie-eve", // the same client before the rename (the account kept its address)
+  "contact.atelierboreal": "olivier",
+  "contact.nordstudio": "annie",
+  "contact.uniqueclient": "hugo", // the client of the one-item shop
+  "camille.staff": "camille-staff", // the staff member of seed-staff-day
+};
+
+const localPart = (email) => email.trim().toLowerCase().split("@")[0];
+const onTestDomain = (email) => /@[^@]+\.test$/.test(email.trim().toLowerCase());
+
+/** Whether an address is a person of the cast: one of its exact addresses, or a fixture / walker address on a `.test` domain (a deployment's own). */
+export function isCastAddress(email, exact) {
+  const e = email.trim().toLowerCase();
+  const walkers = SAINT_HENRI_EMAILS.map(localPart);
+  return exact.includes(e) || fixturePersona(e) !== undefined || (onTestDomain(e) && walkers.includes(localPart(e)));
+}
+
+/** The persona id of a fixture address (a local part of the map on a `.test` domain), or undefined. */
+export function fixturePersona(email) {
+  return onTestDomain(email) ? FIXTURE_PERSONAS[localPart(email)] : undefined;
+}
+
+/** The accounts of people whose address lives in the secrets, not in the seed: `QA_<NAME>_EMAIL` (or `APP_QA_<NAME>_EMAIL`), when set. */
+const SECRET_PERSONAS = { QA_PHILIPPE_EMAIL: "philippe", QA_MYRIAM_EMAIL: "myriam" };
+
+/** The addresses given by the environment for the cast's own people kept in the secrets → persona id. */
+export function personaEmails(env) {
+  return Object.fromEntries(
+    Object.entries(SECRET_PERSONAS).flatMap(([name, id]) => {
+      const given = (env[name] ?? env[`APP_${name}`] ?? "").trim().toLowerCase();
+      return given ? [[given, id]] : [];
+    }),
+  );
+}
+
+/**
+ * Gives each fixture account that exists its persona's name, language and avatar, where it has no name yet (a name an owner chose is theirs).
+ * `query` is `(sql, values) => Promise`; returns how many accounts were named.
+ */
+export async function nameFixtureAccounts(query, env) {
+  let named = 0;
+  const byLocalPart = Object.entries(FIXTURE_PERSONAS).map(([local, id]) => ({ id, where: "local", key: local }));
+  const byAddress = Object.entries(personaEmails(env)).map(([email, id]) => ({ id, where: "email", key: email }));
+  for (const { id, where, key } of [...byLocalPart, ...byAddress]) {
+    const p = persona("folioviv", id);
+    const match =
+      where === "local" ? "split_part(lower(email), '@', 1) = $1 AND email ~* '@[^@]+\\.test$'" : "lower(email) = $1";
+    const { rowCount } = await query(
+      `UPDATE accounts SET name = $2, locale = $3, avatar_seed = $4 WHERE ${match} AND name IS NULL`,
+      [key, p.displayName, p.locale, p.avatar],
+    );
+    named += rowCount ?? 0;
+  }
+  return named;
+}
+
 /** The e-mails of the cast, passwords not needed: what a users check compares a database with. */
 export function castEmails(env) {
   return [
     ...SAINT_HENRI_EMAILS,
+    ...Object.keys(personaEmails(env)),
     castAddress(env, "QA_USER_EMAIL", ERIC),
     (env.QA_KRIZAKA_EMAIL ?? env.APP_QA_KRIZAKA_EMAIL ?? KRIZAKA_EMAIL).trim().toLowerCase(),
     castAddress(env, "QA_ADMIN_EMAIL", ADMIN),
@@ -81,7 +152,10 @@ export function castAccounts(env) {
   const walkerSecret = need("QA_WALKER_PASSWORD", LOCAL_SECRET);
   const clientsSecret = need("QA_CLIENTS_PASSWORD", LOCAL_SECRET);
   const addressOf = (name, p) => castAddress(env, name, p);
-  const clientPersonas = castOf("folioviv").filter((p) => p.role === "client");
+  // The walker's clients are the cast's first client personas, one per address of the seed; the later ones (the studio's contacts, the one-item shop's) get their account from their own seed.
+  const clientPersonas = castOf("folioviv")
+    .filter((p) => p.role === "client")
+    .slice(0, SAINT_HENRI_EMAILS.length - 1);
   return [
     { persona: WALKER, email: SAINT_HENRI_EMAILS[0], role: "USER", secret: walkerSecret },
     ...clientPersonas.map((persona, i) => ({
@@ -220,6 +294,9 @@ async function main() {
     );
     // The two owner states of the page audit (#405: an empty shop, a shop with one item per list): outside the fingerprint, which counts the cast alone.
     await ensureOwnerStates(pool, accounts[0].secret);
+    // The fixture accounts the other seeds create (owners of the demo shops, the studio's contacts, the staff) carry their persona's name.
+    const named = await nameFixtureAccounts((sql, values) => pool.query(sql, values), env);
+    console.log(`seed-cast: ${named} fixture account(s) named after their persona`);
     const { fingerprint, counts } = await fingerprintOf((sql, values) => pool.query(sql, values), ids, ids[0]);
     console.log(`fingerprint: ${fingerprint}`);
     await cleanAndCheckLeftovers(createDb(pool), process.argv);

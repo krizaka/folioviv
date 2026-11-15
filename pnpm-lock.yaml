@@ -32,7 +32,7 @@ importers:
         version: 0.2.7(react@19.3.1)(typescript@6.0.3)
       '@krizaka/org':
         specifier: ^1.2.0
-        version: 1.2.0
+        version: 1.6.0
       '@krizaka/page-audit':
         specifier: ^0.8.1
         version: 0.8.1(@krizaka/a11y-audit@0.2.0)(playwright-core@1.64.0)
@@ -207,7 +207,7 @@ importers:
         version: 0.4.1
       '@krizaka/org':
         specifier: ^1.2.0
-        version: 1.2.0
+        version: 1.6.0
       '@krizaka/organize':
         specifier: 0.5.1
         version: 0.5.1(vitest@4.1.12)
@@ -359,7 +359,7 @@ importers:
         version: 0.4.1
       '@krizaka/org':
         specifier: ^1.2.0
-        version: 1.2.0
+        version: 1.6.0
       '@krizaka/tokens':
         specifier: ^4.6.0
         version: 4.6.0
@@ -414,7 +414,7 @@ importers:
         version: 0.4.1
       '@krizaka/org':
         specifier: ^1.2.0
-        version: 1.2.0
+        version: 1.6.0
       '@krizaka/organize':
         specifier: 0.5.1
         version: 0.5.1(vitest@4.1.12)
@@ -2173,8 +2173,8 @@ packages:
     resolution: {integrity: sha512-mxk3T8OBwdHYC2nJMUDqNzts3mu2gcvdcqZ7qBFRq64D8cfxqR1d3hTy6lYpMjyCnxmsuBBZ6ACrc1+tlnjB8g==}
     engines: {node: '>=22'}
 
-  '@krizaka/org@1.2.0':
-    resolution: {integrity: sha512-kqM2Y2iF832YYAjJ+14spjXQ7GTnMQcxfVDHieqvyq7IhZuTAbgHwy+wv2TwsP4XNQrpv4aMRntaHTKfINKSvg==}
+  '@krizaka/org@1.6.0':
+    resolution: {integrity: sha512-bTMhJIOdsdmHnVXUkOTCeMUWJk/F5muDJX0D3H1yJ5X1gMCIec9cbsaxcdUYF1MURiSS7ZkiylAOK+Pv+Fb6mg==}
     engines: {node: '>=22'}
     hasBin: true
 
@@ -10781,7 +10781,7 @@ snapshots:
 
   '@krizaka/intl@0.4.1': {}
 
-  '@krizaka/org@1.2.0': {}
+  '@krizaka/org@1.6.0': {}
 
   '@krizaka/organize@0.4.0(vitest@4.1.12)':
     optionalDependencies:
@@ -10882,7 +10882,7 @@ snapshots:
   '@krizaka/settings@0.7.0(zod@4.6.7)':
     dependencies:
       '@krizaka/db': 0.3.1
-      '@krizaka/org': 1.2.0
+      '@krizaka/org': 1.6.0
       zod: 4.6.7
 
   '@krizaka/storage@0.11.4(opendal@0.49.13)(vitest@4.1.12)(zod@4.6.7)':
