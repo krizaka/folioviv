@@ -48,10 +48,8 @@ async function main() {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  try {
-    await main();
-  } catch (error) {
+  main().catch((error) => {
     console.error(`seed-staff: ${error.message}`);
     process.exit(1);
-  }
+  });
 }
