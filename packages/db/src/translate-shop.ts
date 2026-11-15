@@ -4,7 +4,6 @@ import type { Db } from "./client";
 import { ShopError } from "./errors";
 import { services, shops } from "./schema";
 import {
-  fieldKey,
   type PageLocale,
   releaseTranslationRun,
   reserveTranslationRun,
@@ -147,4 +146,4 @@ export async function translateShop(
   return { runId: result.runId, ...out, nothingToDo: false };
 }
 
-export { fieldKey };
+export { fieldKey } from "./shop-translations";

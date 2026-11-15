@@ -1,4 +1,4 @@
-import { actorOf, ensureShopWorkspace, workspaceOf } from "@folioviv/db";
+import { ensureShopWorkspace, workspaceOf } from "@folioviv/db";
 import type { Query } from "@krizaka/organize";
 
 import { systemClock } from "@/app/system-clock";
@@ -13,7 +13,7 @@ export const workspace = (shopId: string) => workspaceOf(deps, shopId);
 /** The first visit seeds the administrator's defaults and the shop's default tag set (idempotent, one read once done). */
 export const ensureWorkspace = (shopId: string) => ensureShopWorkspace(deps, shopId);
 
-export { actorOf };
+export { actorOf } from "@folioviv/db";
 
 /** The app's pool as the layer's SQL runner (for the list queries: the ids a filter keeps, the tags' counts). */
 export const rows: Query = (text, params) => query(text, params) as never;

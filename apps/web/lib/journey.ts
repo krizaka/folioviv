@@ -2,12 +2,13 @@ import { addLocalDays, canCancel, groupSlotsByDay, invoiceTotals, localDay } fro
 import type { BookingDetail, PublicShop, StaffSlot } from "@folioviv/db";
 
 import { type Locale, translator } from "@/lib/i18n";
-import { type Choice, confirmHref, journeyBase, serviceHref, timesHref } from "@/lib/journey-paths";
+import { confirmHref, journeyBase, serviceHref, timesHref } from "@/lib/journey-paths";
 import { isOnQuote } from "@/lib/service-price";
 import { groupByPart, hourIn } from "@/lib/slot-weeks";
 import { clockLabel } from "@/lib/storefront";
 
-export { type Choice, journeyBase, serviceHref, timesHref };
+export { type Choice } from "@/lib/journey-paths";
+export { journeyBase, serviceHref, timesHref };
 
 /**
  * The public booking journey, one route per step (the URL is the state): the shop → a service → its times → the confirmation.
