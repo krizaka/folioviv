@@ -29,6 +29,7 @@
     "check:overflow": "node scripts/check-overflow.mjs",
     "check:maps": "node scripts/check-maps.mjs",
     "check:hydration": "node scripts/check-hydration.mjs",
+    "check:retired-names": "node scripts/check-retired-names.mjs",
     "seo:check": "krizaka-seo-family --base http://localhost:3000 --host https://www.folioviv.com --types WebSite,SoftwareApplication",
     "e2e:admin": "node scripts/e2e-admin.mjs",
     "lint:sg": "krizaka-sg-ratchet",
