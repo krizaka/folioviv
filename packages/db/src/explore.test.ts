@@ -3,6 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { exploreShops as read, settleAvailability } from "./explore";
 import { shopRules, shopZones, shops } from "./schema";
+import { publicShop } from "./service-shop";
 import { freshDatabase } from "./test/db";
 import { NOW, walkerShop } from "./test/fixtures";
 
@@ -46,6 +47,14 @@ describe("Explorer's shops (real PostgreSQL 16)", () => {
     await t.db.update(shops).set({ published: true }).where(eq(shops.id, w.shopId));
     const json = JSON.stringify(await exploreShops(t.db, NOW));
     expect(json).not.toMatch(/Notre-Dame|legalName|ownerId|gstNumber|qstNumber|address/);
+  });
+
+  it("lists only the showcase shops, and a shop that is not still answers on its address (krizaka-internal#3743)", async () => {
+    expect((await exploreShops(t.db, NOW)).map((s) => s.slug)).toContain("pattes-x");
+    await t.db.update(shops).set({ showcase: false }).where(eq(shops.id, w.shopId));
+    expect((await exploreShops(t.db, NOW)).map((s) => s.slug)).not.toContain("pattes-x");
+    expect(await publicShop(t.db, "pattes-x")).not.toBeNull();
+    await t.db.update(shops).set({ showcase: true }).where(eq(shops.id, w.shopId));
   });
 
   it("leaves out a published shop whose page cannot be read yet (no booking rules): one shop never fails the whole list (a 400 on /api/explore/shops)", async () => {

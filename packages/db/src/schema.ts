@@ -195,6 +195,8 @@ export const shops = pgTable(
     invoiceMailCopy: boolean("invoice_mail_copy").notNull().default(false),
     invoiceLinkDays: integer("invoice_link_days").notNull().default(30),
     published: boolean("published").notNull().default(false),
+    /** Listed in Explorer (krizaka-internal#3743): only the showcase shops are; any other published shop still answers on its own address. Set by the seed or by support, never by the owner. */
+    showcase: boolean("showcase").notNull().default(false),
     /** The slug wears a protected term (ADR-005 slice 4, #537): the shop is saved but NOT public until the administrator clears it (0045). `slugHeldTerm` is the term that matched. */
     slugHeld: boolean("slug_held").notNull().default(false),
     slugHeldTerm: text("slug_held_term"),

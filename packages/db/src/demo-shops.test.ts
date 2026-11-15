@@ -1,9 +1,10 @@
+import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { CAHIER_VERSION, framePaperOf, TEMPLATES_V2 } from "@folioviv/core";
 
 import { demoCounts, DEMO_SHOPS, seedDemoShops, ST_HENRI_DEMO_SHOPS } from "./demo-shops";
-import { shopZones } from "./schema";
+import { shops, shopZones } from "./schema";
 import { shopPageConfigOf } from "./shop-page";
 import { shopPaperOf } from "./shop-page-versions";
 import { listSlots, publicShop } from "./service-shop";
@@ -24,6 +25,14 @@ describe("the three fictional demo shops", () => {
     const second = await seedDemoShops(t.db);
     expect(second.every((s) => !s.created)).toBe(true);
     expect(second.map((s) => s.shopId)).toEqual(first.map((s) => s.shopId));
+  });
+
+  it("are Explorer's showcase shops, a Saint-Henri directory shop is not (krizaka-internal#3743)", async () => {
+    const seeded = await seedDemoShops(t.db);
+    for (const s of seeded) {
+      const [row] = await t.db.select({ showcase: shops.showcase }).from(shops).where(eq(shops.id, s.shopId));
+      expect(row!.showcase, s.slug).toBe(true);
+    }
   });
 
   it("wear the notebook's template of their trade, and its paper is stored (folioviv#316: the demos show the @2 paper once features.cahierStorefront is on)", async () => {
@@ -188,6 +197,10 @@ describe("the Saint-Henri demo set on the Explorer map (krizaka-internal#1660)",
     const first = await seedDemoShops(t.db, ST_HENRI_DEMO_SHOPS);
     expect(first).toHaveLength(ST_HENRI_DEMO_SHOPS.length);
     expect(first.every((s) => s.created)).toBe(true);
+    for (const s of first) {
+      const [row] = await t.db.select({ showcase: shops.showcase }).from(shops).where(eq(shops.id, s.shopId));
+      expect(row!.showcase, s.slug).toBe(false); // listed by address only, not in Explorer (krizaka-internal#3743)
+    }
     const second = await seedDemoShops(t.db, ST_HENRI_DEMO_SHOPS);
     expect(second.every((s) => !s.created)).toBe(true);
     const zones = await t.db.select().from(shopZones);

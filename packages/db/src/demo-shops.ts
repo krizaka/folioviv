@@ -356,6 +356,11 @@ async function keepZone(db: Db, shopId: string, zone: DemoShop["zone"]): Promise
   if (!held) await addZone(db, shopId, zone.name, { lat: zone.lat, lng: zone.lng });
 }
 
+/** Explorer lists the showcase shops only (krizaka-internal#3743): the three hand-made demo shops are; the Saint-Henri directory is not. */
+async function keepShowcase(db: Db, shopId: string, showcase: boolean) {
+  await db.update(shops).set({ showcase }).where(eq(shops.id, shopId));
+}
+
 async function shopOfSlug(db: Db, slug: string): Promise<{ id: string } | null> {
   const [found] = await db.select({ id: shops.id }).from(shops).where(eq(shops.slug, slug));
   return found ?? null;
@@ -377,6 +382,7 @@ export async function seedDemo(db: Db, demo: DemoShop): Promise<{ shopId: string
     await keepType(db, existing.id, demo.shopType);
     await keepTemplate(db, existing.id, demo.template);
     await keepZone(db, existing.id, demo.zone);
+    await keepShowcase(db, existing.id, DEMO_SHOPS.includes(demo));
     await seedDemoCommunity(db, existing.id, demo.shop.slug);
     return { shopId: existing.id, created: false };
   }
@@ -408,6 +414,7 @@ export async function seedDemo(db: Db, demo: DemoShop): Promise<{ shopId: string
   await keepType(db, shopId, demo.shopType);
   await keepTemplate(db, shopId, demo.template);
   await keepZone(db, shopId, demo.zone);
+  await keepShowcase(db, shopId, DEMO_SHOPS.includes(demo));
   await seedDemoCommunity(db, shopId, demo.shop.slug);
   return { shopId, created: true };
 }

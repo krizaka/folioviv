@@ -4,7 +4,7 @@ import { eq, sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { prepareShopReturn } from "./shop-ops";
-import { accounts } from "./schema";
+import { accounts, shops } from "./schema";
 import { localDay } from "@folioviv/core";
 import { SAINT_HENRI, SAINT_HENRI_EMAILS, seedSaintHenri, seedTodayVisit } from "./seed-walker";
 import { shopPageConfigOf } from "./shop-page";
@@ -30,6 +30,9 @@ describe("the Saint-Henri walker persona", () => {
     expect(page?.zones.map((z) => z.name)).toEqual(["Saint-Henri", "Griffintown", "Pointe-Saint-Charles"]);
     expect(page?.services.map((s) => s.capacity).sort((a, b) => a - b)).toEqual([1, 1, 1, 5]);
     expect(page?.shop.bioEn).toMatch(/fictional/);
+    expect(
+      (await t.db.select({ s: shops.showcase }).from(shops).where(eq(shops.slug, "pattes-saint-henri")))[0]?.s,
+    ).toBe(true); // Pattes is one of Explorer's four showcase shops (krizaka-internal#3743)
     expect(page?.shop.area).toBe("Saint-Henri, Montréal");
     expect(page?.zones.every((z) => z.lat !== null && z.lng !== null)).toBe(true);
     expect(page?.services.every((s) => s.includedFr.length > 0 && s.descriptionFr)).toBe(true);

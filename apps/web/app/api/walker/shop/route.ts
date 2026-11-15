@@ -58,7 +58,7 @@ export function GET(req: Request) {
   return handle(async () => {
     const { shop } = await requireShop(req, "invoices");
     const setup = await loadShop(db(), shop);
-    const { name, registrant, timezone, paymentTermsDays } = setup.shop;
+    const { name, registrant, timezone, paymentTermsDays, showcase } = setup.shop;
     const services = setup.services.map((s) => ({
       id: s.id,
       nameFr: s.nameFr,
@@ -67,7 +67,7 @@ export function GET(req: Request) {
       taxCategory: s.taxCategory,
     }));
     return Response.json(
-      { shop: { id: shop.id, name, registrant, timezone, paymentTermsDays }, services },
+      { shop: { id: shop.id, name, registrant, timezone, paymentTermsDays, showcase }, services },
       { headers: { "Cache-Control": "private, no-store" } },
     );
   });

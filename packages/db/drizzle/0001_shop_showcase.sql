@@ -1,0 +1,1 @@
+ALTER TABLE "shops" ADD COLUMN "showcase" boolean DEFAULT false NOT NULL;
