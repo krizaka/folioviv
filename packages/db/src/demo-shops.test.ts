@@ -126,14 +126,23 @@ describe("a demo shop always has its own trade, so it never wears another trade'
   });
 });
 
-describe("the demo shops use the proposed images (#267)", () => {
-  it("each demo has its trade, the salon no cover of its own, so the page shows the defaults of its type", async () => {
+describe("the showcase demo shops never fall back to the proposed images (#267, krizaka-internal#3743)", () => {
+  // Reverses the old assertion (use_defaults true): Encre Vive rendered « Images du métier » and the default workshop pictures on the
+  // public demo. A showcase shop shows its own photos; the seed switches the proposals off, on every run, so a reseed cannot bring them back.
+  it("each demo has its trade and use_defaults off, on a first run and after a reseed that turned it back on", async () => {
     const { shopPageConfigOf } = await import("./shop-page");
     expect(DEMO_SHOPS.map((d) => d.shopType)).toEqual(["salon", "workshop", "consulting"]);
     for (const demo of DEMO_SHOPS) {
       const page = (await publicShop(t.db, demo.shop.slug))!;
       expect(page.pageConfig?.shopType).toBe(demo.shopType);
-      expect((await shopPageConfigOf(t.db, page.shop.id)).useDefaults).toBe(true);
+      expect((await shopPageConfigOf(t.db, page.shop.id)).useDefaults).toBe(false);
+      const { saveShopPageConfig } = await import("./shop-page");
+      await saveShopPageConfig(t.db, page.shop.id, { useDefaults: true });
+    }
+    await seedDemoShops(t.db);
+    for (const demo of DEMO_SHOPS) {
+      const page = (await publicShop(t.db, demo.shop.slug))!;
+      expect((await shopPageConfigOf(t.db, page.shop.id)).useDefaults, demo.shop.slug).toBe(false);
     }
     expect(DEMO_SHOPS[0]!.cover).toBeUndefined();
   });

@@ -361,6 +361,15 @@ async function keepShowcase(db: Db, shopId: string, showcase: boolean) {
   await db.update(shops).set({ showcase }).where(eq(shops.id, shopId));
 }
 
+/**
+ * A showcase shop shows its own photos, never the trade's proposed images (krizaka-internal#3743): `use_defaults` is off, on every run,
+ * so a reseed cannot turn « Images du métier » back on. It is the seed's data, not a hand edit.
+ */
+export async function keepOwnImages(db: Db, shopId: string): Promise<void> {
+  const config = await shopPageConfigOf(db, shopId);
+  if (config.useDefaults !== false) await saveShopPageConfig(db, shopId, { useDefaults: false });
+}
+
 async function shopOfSlug(db: Db, slug: string): Promise<{ id: string } | null> {
   const [found] = await db.select({ id: shops.id }).from(shops).where(eq(shops.slug, slug));
   return found ?? null;
@@ -383,6 +392,7 @@ export async function seedDemo(db: Db, demo: DemoShop): Promise<{ shopId: string
     await keepTemplate(db, existing.id, demo.template);
     await keepZone(db, existing.id, demo.zone);
     await keepShowcase(db, existing.id, DEMO_SHOPS.includes(demo));
+    if (DEMO_SHOPS.includes(demo)) await keepOwnImages(db, existing.id);
     await seedDemoCommunity(db, existing.id, demo.shop.slug);
     return { shopId: existing.id, created: false };
   }
@@ -415,6 +425,7 @@ export async function seedDemo(db: Db, demo: DemoShop): Promise<{ shopId: string
   await keepTemplate(db, shopId, demo.template);
   await keepZone(db, shopId, demo.zone);
   await keepShowcase(db, shopId, DEMO_SHOPS.includes(demo));
+  if (DEMO_SHOPS.includes(demo)) await keepOwnImages(db, shopId);
   await seedDemoCommunity(db, shopId, demo.shop.slug);
   return { shopId, created: true };
 }

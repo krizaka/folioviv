@@ -31,6 +31,7 @@ import {
   shopOfOwner,
 } from "./service-shop";
 import { seedDemoCommunity } from "./demo-community";
+import { keepOwnImages } from "./demo-shops";
 import { applyTemplate, shopPageConfigOf } from "./shop-page";
 import { checkIn, checkOut, saveReport } from "./visits";
 
@@ -353,6 +354,7 @@ export async function seedSaintHenri(
   const existing = await shopOfOwner(db, owner.id);
   if (existing) {
     await db.update(shops).set({ showcase: true }).where(eq(shops.id, existing.id)); // Pattes: Explorer's fourth showcase shop (krizaka-internal#3743)
+    await keepOwnImages(db, existing.id);
     await enrichSaintHenri(db, owner.id, existing.id);
     const known = Object.fromEntries(
       (await db.select({ id: clients.id, email: clients.email }).from(clients).where(eq(clients.shopId, existing.id)))
@@ -371,6 +373,7 @@ export async function seedSaintHenri(
   for (const w of SAINT_HENRI.hours) await addWindow(db, shopId, w);
   await saveShopPage(db, owner.id, { ...page, published: true });
   await db.update(shops).set({ showcase: true }).where(eq(shops.id, shopId));
+  await keepOwnImages(db, shopId);
 
   const { clientIds, dogIds } = await joinSaintHenriClients(db, key, shopId);
 
