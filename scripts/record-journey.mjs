@@ -301,5 +301,5 @@ log(
   calls.every((c) => c.status < 500),
   "no API call answered with a server error",
 );
-const beatList = beats.map((b) => `${b.name}@${b.at}`).join(" ");
-process.stdout.write(`take: ${full}\nbeats: ${beatList}\n`);
+const beatLabel = (b) => `${b.name}@${b.at}`;
+process.stdout.write(`take: ${full}\nbeats: ${beats.map(beatLabel).join(" ")}\n`);

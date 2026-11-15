@@ -121,8 +121,7 @@ async function main() {
 
   console.log(`check-shop-host: ${printable(slug)} on ${printable(shopHost)}, 9 requests`);
   if (problems.length) {
-    const lines = problems.map((p) => `  ${printable(p)}`).join("\n");
-    console.error(`${problems.length} problem(s):\n${lines}`);
+    console.error([`${problems.length} problem(s):`, ...problems.map((p) => `  ${printable(p)}`)].join("\n"));
     process.exit(1);
   }
 }
