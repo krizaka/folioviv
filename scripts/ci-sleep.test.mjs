@@ -23,6 +23,7 @@ const SLEEPS = [
 const AWAKE = [
   "bump-krizaka.yml",
   "dependabot-automerge.yml",
+  "deploy-spec-apply.yml", // a merged spec must reach the dev app even while the CI sleeps (krizaka-internal#3879)
   "docs-map.yml",
   "merge-resolution.yml",
   "release-notes.yml",
