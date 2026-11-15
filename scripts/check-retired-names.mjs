@@ -19,10 +19,32 @@ export const LOCALES = ["fr", "en"];
 
 const READ_ATTRIBUTES = ["alt", "title", "aria-label", "content", "placeholder"];
 
-/** What a visitor reads in a page: its text and the words of its attributes, never a script, a style or an address. */
+/** The page without the stretches between `open` and `close` (a script, a style, a comment), found by position: no backtracking. */
+function withoutBlocks(html, open, close) {
+  let rest = html;
+  let kept = "";
+  for (;;) {
+    const start = rest.toLowerCase().indexOf(open);
+    if (start === -1) {
+      return kept + rest;
+    }
+    const end = rest.toLowerCase().indexOf(close, start);
+    kept += rest.slice(0, start) + " ";
+    if (end === -1) {
+      return kept;
+    }
+    rest = rest.slice(end + close.length);
+  }
+}
+
+/** What a visitor reads in a page: its text and the words of its attributes, never a script, a style, a comment or an address. */
 export function readableText(html) {
   const parts = [];
-  const body = html.replaceAll(/<(script|style)\b[\s\S]*?<\/\1>/gi, " ").replaceAll(/<!--[\s\S]*?-->/g, " ");
+  const body = withoutBlocks(
+    withoutBlocks(withoutBlocks(html, "<script", "</script>"), "<style", "</style>"),
+    "<!--",
+    "-->",
+  );
   for (const tag of body.matchAll(/<[a-z][^>]*>/gi)) {
     for (const name of READ_ATTRIBUTES) {
       const found = new RegExp(String.raw`\s${name}\s*=\s*(?:"([^"]*)"|'([^']*)')`, "i").exec(tag[0]);
