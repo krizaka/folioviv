@@ -2331,7 +2331,8 @@
     "client": {
       "title": "Mes réservations",
       "emptyTitle": "Aucune réservation pour l'instant",
-      "emptyLead": "Ouvrez la page d'une boutique et réservez à partir de là : vos réservations, vos factures et vos dossiers s'affichent ici.",
+      "emptyLead": "Trouvez une boutique et réservez depuis sa page : vos réservations, vos factures et vos dossiers s'affichent ici.",
+      "findShop": "Trouvez une boutique",
       "openShop": "Ouvrir une boutique",
       "upcoming": "À venir",
       "past": "Passées",
