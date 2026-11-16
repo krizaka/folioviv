@@ -81,6 +81,11 @@ export function ClientHome({ files }: Readonly<{ files: ClientFileView[] }>) {
           icon={<Mascot bird="beaver" mood="empty" size={120} />}
           title={say("client.emptyTitle")}
           description={say("client.emptyLead")}
+          action={
+            <Button asChild size="md" variant="secondary" className="w-full sm:w-auto">
+              <Link href={`/${locale}/explore`}>{say("client.findShop")}</Link>
+            </Button>
+          }
         />
       ) : null}
       {files.map((f, at) => (
