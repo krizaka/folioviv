@@ -45,9 +45,9 @@ describe("the three fictional demo shops", () => {
       const template = TEMPLATES_V2.find((x) => x.id === demo.template)!;
       expect(await shopPaperOf(t.db, shopId), demo.shop.slug).toBe(framePaperOf(template.paper));
     }
-    // At least one demo draws a paper that is visible (the studio's kraft); « plain » is the frame's own and draws none, by design.
+    // At least one demo draws a paper that is visible (the studio's ruled paper, now that its trade is the salon's); « plain » is the frame's own and draws none, by design.
     const studio = shops.find((s) => s.slug === "encre-vive")!;
-    expect(await shopPaperOf(t.db, studio.shopId)).toBe("kraft");
+    expect(await shopPaperOf(t.db, studio.shopId)).toBe("seyes");
   });
 
   it("are registered for the GST and the QST, so the tax shown is exact", async () => {
@@ -131,7 +131,7 @@ describe("the showcase demo shops never fall back to the proposed images (#267, 
   // public demo. A showcase shop shows its own photos; the seed switches the proposals off, on every run, so a reseed cannot bring them back.
   it("each demo has its trade and use_defaults off, on a first run and after a reseed that turned it back on", async () => {
     const { shopPageConfigOf } = await import("./shop-page");
-    expect(DEMO_SHOPS.map((d) => d.shopType)).toEqual(["salon", "workshop", "consulting"]);
+    expect(DEMO_SHOPS.map((d) => d.shopType)).toEqual(["salon", "salon", "consulting"]);
     for (const demo of DEMO_SHOPS) {
       const page = (await publicShop(t.db, demo.shop.slug))!;
       expect(page.pageConfig?.shopType).toBe(demo.shopType);
@@ -152,7 +152,7 @@ describe("the demo shops each wear a template of their trade (#261, step 6)", ()
   it("has the template applied at its latest version, in the template's order, and a second run keeps it", async () => {
     const { latestTemplate, TEMPLATES, TEMPLATES_V2 } = await import("@folioviv/core");
     const { sectionsFromTemplate, shopPageConfigOf } = await import("./shop-page");
-    expect(DEMO_SHOPS.map((d) => d.template)).toEqual(["salon-vitrine", "workshop-histoire", "consulting-carte"]);
+    expect(DEMO_SHOPS.map((d) => d.template)).toEqual(["salon-vitrine", "salon-carte", "consulting-carte"]);
     for (const demo of DEMO_SHOPS) {
       const template = latestTemplate(demo.template, [...TEMPLATES, ...TEMPLATES_V2])!;
       expect(template.shopTypes, demo.template).toContain(demo.shopType);
