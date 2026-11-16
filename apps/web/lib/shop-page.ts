@@ -1,10 +1,19 @@
 import { slugSchema } from "@folioviv/core";
-import { currentSlugOf, publicShop } from "@folioviv/db";
+import {
+  communityOf,
+  currentSlugOf,
+  ownerOfShop,
+  publicShop,
+  publishedShopPage,
+  shopAccentOf,
+  shopPaperOf,
+} from "@folioviv/db";
 import { permanentRedirect } from "next/navigation";
 import { cache } from "react";
 
 import { db } from "@/lib/db";
 import { asLocale } from "@/lib/i18n";
+import { cachedForShop } from "@/lib/shop-cache";
 
 /**
  * A published shop by its address; null when the address is malformed or there is none (the page answers 404). Read once per
@@ -12,8 +21,29 @@ import { asLocale } from "@/lib/i18n";
  */
 export const loadPublicShop = cache(async (slug: string) => {
   const parsed = slugSchema.safeParse(slug);
-  return parsed.success ? publicShop(db(), parsed.data) : null;
+  if (!parsed.success) {
+    return null;
+  }
+  const address = parsed.data;
+  return cachedForShop(`shop:${address}`, (p) => p?.shop.id ?? null, () => publicShop(db(), address));
 });
+
+/** The published rows of the page that are not about the instant, read together and kept for a few seconds with the shop (see `shop-cache`). */
+export const loadPublishedPageData = (shopId: string) =>
+  cachedForShop(
+    `page:${shopId}`,
+    () => shopId,
+    async () => {
+      const [community, document, accent, paper, owner] = await Promise.all([
+        communityOf(db(), shopId),
+        publishedShopPage(db(), shopId),
+        shopAccentOf(db(), shopId),
+        shopPaperOf(db(), shopId),
+        ownerOfShop(db(), shopId),
+      ]);
+      return { community, document, accent, paper, owner };
+    },
+  );
 
 /** The current slug a former address leads to, or null; once per request like `loadPublicShop`. */
 const currentSlugOfFormer = cache(async (slug: string) => {

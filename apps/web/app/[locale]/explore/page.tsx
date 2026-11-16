@@ -5,7 +5,9 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { jsonLdHtml } from "@/lib/csp";
 import { asLocale, getDictionary } from "@/lib/i18n";
+import { DEMO_SHOP } from "@/lib/landing";
 import { pageMetadata, siteJsonLd } from "@/lib/seo";
+import { preconnectShop, shopHrefPattern } from "@/lib/shop-links";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   return pageMetadata(asLocale((await params).locale), "explore");
@@ -19,6 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function Explore({ params }: Readonly<{ params: Promise<{ locale: string }> }>) {
   const locale = asLocale((await params).locale);
   const d = getDictionary(locale).explore;
+  preconnectShop(DEMO_SHOP);
   const words: ExploreWords = {
     search: {
       label: d.search.label,
@@ -67,7 +70,7 @@ export default async function Explore({ params }: Readonly<{ params: Promise<{ l
           <h1 className="m-0 font-display text-3xl font-bold text-fg">{d.title}</h1>
           <p className="m-0 max-w-prose text-fg-secondary">{d.lead}</p>
         </header>
-        <ExploreView locale={locale} words={words} />
+        <ExploreView locale={locale} shopHref={shopHrefPattern(locale)} words={words} />
       </main>
       <SiteFooter locale={locale} />
     </>

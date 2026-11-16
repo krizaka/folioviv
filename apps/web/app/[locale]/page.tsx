@@ -11,6 +11,7 @@ import { NeighbourhoodFeed } from "@/components/home/NeighbourhoodFeed";
 import { BookPreview } from "@/components/home/previews/BookPreview";
 import { BooksPreview } from "@/components/home/previews/BooksPreview";
 import { InvoicePreview } from "@/components/home/previews/InvoicePreview";
+import { ShopLink } from "@/components/ShopLink";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { pageSession } from "@/lib/access";
@@ -19,6 +20,7 @@ import { homeFeed } from "@/lib/home-feed";
 import { asLocale, getDictionary } from "@/lib/i18n";
 import { DEMO_SHOP, heroActions, productStatus, SCREENS } from "@/lib/landing";
 import { pageMetadata, siteJsonLd } from "@/lib/seo";
+import { preconnectShop, shopHref } from "@/lib/shop-links";
 import { heroTake, MEDIA_CDN } from "@/lib/tour";
 
 import preview from "../../../../dev-preview.json";
@@ -37,6 +39,7 @@ export default async function Home({ params }: Readonly<{ params: Promise<{ loca
   const status = productStatus(preview);
   // The storefront still is the page's LCP: open the CDN's connection now and fetch it at once (React hoists the link into <head>).
   preconnect(MEDIA_CDN);
+  preconnectShop(DEMO_SHOP);
   // The hero's action follows the session, rendered on the server: no flash of the signed-out action.
   const feed = await homeFeed(locale);
   const hero = heroActions(locale, Boolean(await pageSession().catch(() => null)));
@@ -95,7 +98,7 @@ export default async function Home({ params }: Readonly<{ params: Promise<{ loca
               lead={d.feed.lead}
               actions={
                 <Button asChild variant="secondary" size="md">
-                  <Link href={`/${locale}/s/${DEMO_SHOP}`}>{d.feed.demo}</Link>
+                  <ShopLink href={shopHref(DEMO_SHOP, locale)}>{d.feed.demo}</ShopLink>
                 </Button>
               }
             >

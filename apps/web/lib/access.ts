@@ -1,12 +1,14 @@
 import { ownClient, SHOP_ROLES, shopClient, shopOfMember, type ShopPermission, type ShopRole } from "@folioviv/db";
 import { can, ipAllowed as ipListAllows, requireAdmin as adminVerdict, sessionTokenOf as tokenOf } from "@krizaka/auth";
 import { cookies, headers } from "next/headers";
+import { after } from "next/server";
 
 import { clientIp } from "./client-ip";
 import { db } from "./db";
 import { consoleAllowedIps } from "./env";
 import { isAdminHost } from "./host";
 import { idParam, refuse } from "./http";
+import { invalidateShop } from "./shop-cache";
 import { resolveSession, type Session, SESSION_COOKIE } from "./session";
 
 /**
@@ -77,7 +79,22 @@ export async function requireShop(req: Request, permission: ShopPermission) {
   if (!member) throw asked ? refuse(404, "NOT_FOUND", "Not found") : refuse(403, "NO_SHOP", "You do not run a shop");
   if (!can(SHOP_ROLES, member.role, permission))
     throw refuse(403, "FORBIDDEN", "Your role does not allow this", { permission });
+  if (!SAFE_METHODS.has(req.method)) {
+    dropShopCache(member.shop.id);
+  }
   return { session, shop: member.shop, role: member.role };
+}
+
+const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+
+/** A write by a member of the shop: its public page's kept rows are dropped now and once more after the response, when the write has landed. */
+function dropShopCache(shopId: string): void {
+  invalidateShop(shopId);
+  try {
+    after(() => invalidateShop(shopId));
+  } catch {
+    // Outside a request scope (a test, a script): the immediate drop is all there is.
+  }
 }
 
 /**

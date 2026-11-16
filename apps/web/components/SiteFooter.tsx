@@ -1,6 +1,7 @@
 import { SiteFooter as FamilyFooter, SiteFooterColumn, SiteFooterLink } from "@krizaka/ui/site-footer";
 import Link from "next/link";
 
+import { ShopLink } from "@/components/ShopLink";
 import { BRAND_ID } from "@/lib/brand-id";
 import { downloadPageOpen } from "@/lib/downloads";
 import { productFooterLabels } from "@/lib/footer-labels";
@@ -8,6 +9,7 @@ import { format, getDictionary, type Locale, translator } from "@/lib/i18n";
 import { indexable } from "@/lib/indexing";
 import { DEMO_SHOP } from "@/lib/landing";
 import { uiVersion } from "@/lib/platform";
+import { shopHref } from "@/lib/shop-links";
 import { APP_VERSION, contactHref, pagePath, REPO_URL } from "@/lib/site";
 
 /**
@@ -38,7 +40,7 @@ export function SiteFooter({ locale }: Readonly<{ locale: Locale }>) {
     >
       <SiteFooterColumn title={t("chrome.footerColumns.product")}>
         <SiteFooterLink asChild>
-          <Link href={`/${locale}/s/${DEMO_SHOP}`}>{t("chrome.menu.shop.title")}</Link>
+          <ShopLink href={shopHref(DEMO_SHOP, locale)}>{t("chrome.menu.shop.title")}</ShopLink>
         </SiteFooterLink>
         <SiteFooterLink asChild>
           <Link href={pagePath(locale, "pricing")}>{t("chrome.menu.pricing.title")}</Link>

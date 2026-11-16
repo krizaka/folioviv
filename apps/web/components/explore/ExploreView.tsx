@@ -9,7 +9,7 @@ import { Input } from "@krizaka/ui/field";
 import dynamic from "next/dynamic";
 import { useState, useSyncExternalStore } from "react";
 
-import { ButtonLink } from "@/components/ButtonLink";
+import { ShopLink } from "@/components/ShopLink";
 import { canLocate, distanceLabel, mapCenter, type Origin } from "@/lib/explore";
 import type { GeoAttribution, GeoPlace } from "@/lib/geocoding";
 
@@ -89,10 +89,18 @@ function geoNotice(
 function ShopCard({
   shop,
   locale,
+  shopHref,
   words,
   selected,
   onShowOnMap,
-}: Readonly<{ shop: RankedShop; locale: string; words: ExploreWords; selected: boolean; onShowOnMap: () => void }>) {
+}: Readonly<{
+  shop: RankedShop;
+  locale: string;
+  shopHref: string;
+  words: ExploreWords;
+  selected: boolean;
+  onShowOnMap: () => void;
+}>) {
   const line = [shop.area, { fr: shop.taglineFr, en: shop.taglineEn }[locale as "fr" | "en"]]
     .filter(Boolean)
     .join(" · ");
@@ -117,9 +125,9 @@ function ShopCard({
         {shop.point ? null : <span>{words.list.notOnMap}</span>}
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
-        <ButtonLink href={`/${locale}/s/${shop.slug}`} variant="primary" size="sm" shape="cut">
-          {words.list.visit}
-        </ButtonLink>
+        <Button asChild variant="primary" size="sm" shape="cut">
+          <ShopLink href={shopHref.replace("{slug}", shop.slug)}>{words.list.visit}</ShopLink>
+        </Button>
         {shop.point ? (
           <Button type="button" variant="ghost" size="sm" aria-pressed={selected} onClick={onShowOnMap}>
             {words.view.map}
@@ -249,6 +257,7 @@ function ShopList({
   filtersOn,
   onReset,
   locale,
+  shopHref,
   words,
   selected,
   onShowOnMap,
@@ -259,6 +268,7 @@ function ShopList({
   filtersOn: boolean;
   onReset: () => void;
   locale: string;
+  shopHref: string;
   words: ExploreWords;
   selected: string | null;
   onShowOnMap: (slug: string) => void;
@@ -290,6 +300,7 @@ function ShopList({
             key={s.slug}
             shop={s}
             locale={locale}
+            shopHref={shopHref}
             words={words}
             selected={s.slug === selected}
             onShowOnMap={() => onShowOnMap(s.slug)}
@@ -325,7 +336,7 @@ function countLine(shown: readonly RankedShop[], words: ExploreWords): string {
   return quartiers.length ? `${base} · ${quartiers.join(", ")}` : base;
 }
 
-function Explorer({ locale, words }: Readonly<{ locale: string; words: ExploreWords }>) {
+function Explorer({ locale, shopHref, words }: Readonly<{ locale: string; shopHref: string; words: ExploreWords }>) {
   const { state, apply, camera, setCamera } = useExploreUrl();
   const [placeLabel, setPlaceLabel] = useState<string | null>(null);
   const [typed, setTyped] = useState("");
@@ -462,6 +473,7 @@ function Explorer({ locale, words }: Readonly<{ locale: string; words: ExploreWo
             filtersOn={hasExploreFilters(state)}
             onReset={() => void apply(clearExplore())}
             locale={locale}
+            shopHref={shopHref}
             words={words}
             selected={selected}
             onShowOnMap={showOnMap}
@@ -493,7 +505,7 @@ function Explorer({ locale, words }: Readonly<{ locale: string; words: ExploreWo
 }
 
 /** Explorer: shops by quartier on a map and in a list, searched by address or postal code, ranked by distance (data through @krizaka/query, the filters and the camera in the address through @krizaka/query/url, never an effect). */
-export function ExploreView(props: Readonly<{ locale: string; words: ExploreWords }>) {
+export function ExploreView(props: Readonly<{ locale: string; shopHref: string; words: ExploreWords }>) {
   return (
     <NuqsAdapter>
       <KrizakaQueryProvider>
