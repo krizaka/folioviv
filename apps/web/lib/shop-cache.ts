@@ -13,7 +13,14 @@ interface Entry {
   value: Promise<unknown>;
 }
 
-const entries = new Map<string, Entry>();
+/**
+ * The entries, kept on `globalThis`: a route handler (the save that calls `invalidateShop`) and the page that reads are separate bundles, one module graph
+ * and so one copy of this module each; a module-level map would drop the route's copy and leave the page's (the same reason as `shop-directory`).
+ */
+const SHARED = Symbol.for("folioviv.shop-cache");
+const holder = globalThis as unknown as Record<symbol, Map<string, Entry> | undefined>;
+const entries: Map<string, Entry> = holder[SHARED] ?? new Map();
+holder[SHARED] = entries;
 
 /** The value for `key` (a shop's address or id, per kind), read at most once per TTL; `shopIdOf` names the shop it belongs to so a save can drop it. */
 export async function cachedForShop<T>(

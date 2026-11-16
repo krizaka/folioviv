@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { cachedForShop, clearShopCache, invalidateShop } from "./shop-cache";
 
@@ -53,5 +53,21 @@ describe("shop page cache", () => {
       ),
     ).rejects.toThrow("down");
     expect((await cachedForShop("b", shopOf, async () => ({ id: "s1" }), now)).id).toBe("s1");
+  });
+});
+
+describe("shop page cache across bundles", () => {
+  it("a save in a route handler drops what the page holds: two copies of the module share one cache", async () => {
+    // Next builds a route handler and a page into separate module graphs: each gets its own copy of this module (#760, e2e:composer).
+    vi.resetModules();
+    const page = await import("./shop-cache");
+    vi.resetModules();
+    const route = await import("./shop-cache");
+    expect(route).not.toBe(page);
+    let reads = 0;
+    const read = async () => ({ id: "s1", n: ++reads });
+    await page.cachedForShop("p", shopOf, read, now);
+    route.invalidateShop("s1");
+    expect((await page.cachedForShop("p", shopOf, read, now)).n).toBe(2);
   });
 });
