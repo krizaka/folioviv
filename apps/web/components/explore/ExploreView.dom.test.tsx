@@ -115,7 +115,9 @@ async function mount(opts: { address?: string; payload?: unknown; ok?: boolean; 
   host = document.createElement("div");
   document.body.append(host);
   root = createRoot(host);
-  await act(async () => root!.render(<ExploreView locale="en" words={words} />));
+  await act(async () =>
+    root!.render(<ExploreView locale="en" shopHref="https://{slug}.folioviv.shop/en" words={words} />),
+  );
   await act(async () => new Promise((r) => setTimeout(r, 30)));
   return host;
 }
@@ -220,7 +222,9 @@ describe("Explorer (the list on a phone, jsdom)", () => {
 
   it("renders the same first markup on the server and in the browser: « Near me » appears only after hydration (React #418)", async () => {
     // The server has no navigator.geolocation; the browser has. A markup that reads it while rendering differs, and React reports #418.
-    expect(renderToString(<ExploreView locale="en" words={words} />)).not.toContain(">Near me</button>");
+    expect(
+      renderToString(<ExploreView locale="en" shopHref="https://{slug}.folioviv.shop/en" words={words} />),
+    ).not.toContain(">Near me</button>");
     await mount();
     expect(button("Near me")).toBeTruthy();
   });

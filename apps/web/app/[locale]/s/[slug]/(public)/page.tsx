@@ -1,5 +1,5 @@
 import { demoLookDocument, demoLooksOf, localDay } from "@folioviv/core";
-import { communityOf, ownerOfShop, publishedShopPage, shopAccentOf, shopPaperOf, teamDay } from "@folioviv/db";
+import { teamDay } from "@folioviv/db";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
@@ -19,7 +19,7 @@ import { asLocale, asPageLocale, getDictionary, uiLocaleOf } from "@/lib/i18n";
 import { SESSION_COOKIE } from "@/lib/session";
 import { appSettings, shopPaperShown, shopSectionFeatures } from "@/lib/settings";
 import { shopPageUrl } from "@/lib/shop-domain";
-import { loadPublicShop, loadPublicShopOrMove } from "@/lib/shop-page";
+import { loadPublicShop, loadPublicShopOrMove, loadPublishedPageData } from "@/lib/shop-page";
 import { buildStorefront } from "@/lib/storefront";
 
 export const dynamic = "force-dynamic";
@@ -66,15 +66,15 @@ export default async function ShopPage({
   const anonymous = !(await cookies()).has(SESSION_COOKIE);
   const live = await appSettings().get("realtime.storefront.enabled");
   // Who is here today, computed on the server from bare time ranges: the page receives a state per first name, nothing else.
-  const [team, enabledUpcomingSections, community, rules, document] = await Promise.all([
+  const [team, enabledUpcomingSections, rules, published] = await Promise.all([
     teamDay(db(), page.shop.id, now),
     shopSectionFeatures(),
-    communityOf(db(), page.shop.id),
     reviewRules(),
-    publishedShopPage(db(), page.shop.id),
+    loadPublishedPageData(page.shop.id),
   ]);
-  const accent = (await shopAccentOf(db(), page.shop.id)) ?? undefined;
-  const paper = await shopPaperShown(await shopPaperOf(db(), page.shop.id), await ownerOfShop(db(), page.shop.id));
+  const { community, document } = published;
+  const accent = published.accent ?? undefined;
+  const paper = await shopPaperShown(published.paper, published.owner);
   const placed = buildCommunity({
     community,
     locale,
