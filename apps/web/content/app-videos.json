@@ -5,34 +5,34 @@
     {
       "platform": "android",
       "flow": "today-books",
-      "seconds": 9,
-      "capturedAt": "2026-11-15T12:58:45.933Z",
+      "seconds": 9.7,
+      "capturedAt": "2026-11-16T13:53:29.887Z",
       "files": {
-        "webm": "sites/folioviv/download/android-today-books.9e6d290fb9.webm",
-        "mp4": "sites/folioviv/download/android-today-books.50a406714c.mp4",
-        "poster": "sites/folioviv/download/android-today-books.09ebcf0eab.jpg"
+        "webm": "sites/folioviv/download/android-today-books.efeef24274.webm",
+        "mp4": "sites/folioviv/download/android-today-books.5439d74d6f.mp4",
+        "poster": "sites/folioviv/download/android-today-books.bb40c633d4.jpg"
       }
     },
     {
       "platform": "web",
       "flow": "composer",
-      "seconds": 10.6,
-      "capturedAt": "2026-11-15T12:58:25.808Z",
+      "seconds": 10.1,
+      "capturedAt": "2026-11-16T13:53:04.640Z",
       "files": {
-        "webm": "sites/folioviv/download/web-composer.1d2b458de2.webm",
-        "mp4": "sites/folioviv/download/web-composer.745d1f2aa9.mp4",
-        "poster": "sites/folioviv/download/web-composer.96f3daf7c9.jpg"
+        "webm": "sites/folioviv/download/web-composer.4d8a9c6b07.webm",
+        "mp4": "sites/folioviv/download/web-composer.f39662f3f6.mp4",
+        "poster": "sites/folioviv/download/web-composer.0cb82ae48b.jpg"
       }
     },
     {
       "platform": "web",
       "flow": "storefront",
-      "seconds": 15.9,
-      "capturedAt": "2026-11-15T12:58:36.567Z",
+      "seconds": 15,
+      "capturedAt": "2026-11-16T13:53:17.302Z",
       "files": {
-        "webm": "sites/folioviv/download/web-storefront.7bf436e35c.webm",
-        "mp4": "sites/folioviv/download/web-storefront.405069a46b.mp4",
-        "poster": "sites/folioviv/download/web-storefront.13c3846a20.jpg"
+        "webm": "sites/folioviv/download/web-storefront.268060d649.webm",
+        "mp4": "sites/folioviv/download/web-storefront.fafe259f9e.mp4",
+        "poster": "sites/folioviv/download/web-storefront.738c42217b.jpg"
       }
     }
   ]
