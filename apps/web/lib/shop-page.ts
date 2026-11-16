@@ -25,7 +25,11 @@ export const loadPublicShop = cache(async (slug: string) => {
     return null;
   }
   const address = parsed.data;
-  return cachedForShop(`shop:${address}`, (p) => p?.shop.id ?? null, () => publicShop(db(), address));
+  return cachedForShop(
+    `shop:${address}`,
+    (p) => p?.shop.id ?? null,
+    () => publicShop(db(), address),
+  );
 });
 
 /** The published rows of the page that are not about the instant, read together and kept for a few seconds with the shop (see `shop-cache`). */

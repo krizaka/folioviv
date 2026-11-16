@@ -18,8 +18,8 @@ describe("our own shop links skip the redirect hop", () => {
     });
   }
   it("builds the shop's own origin once the shop domain is declared", () => {
-    expect(shopPageUrl("pattes", "fr", { APP_SHOP_DOMAIN: "folioviv.shop", APP_PUBLIC_URL: "https://www.folioviv.com" })).toBe(
-      "https://pattes.folioviv.shop/fr",
-    );
+    expect(
+      shopPageUrl("pattes", "fr", { APP_SHOP_DOMAIN: "folioviv.shop", APP_PUBLIC_URL: "https://www.folioviv.com" }),
+    ).toBe("https://pattes.folioviv.shop/fr");
   });
 });
