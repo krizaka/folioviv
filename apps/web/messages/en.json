@@ -2329,7 +2329,8 @@
     "client": {
       "title": "My bookings",
       "emptyTitle": "No booking yet",
-      "emptyLead": "Open the page of a shop and book from there: your bookings, your invoices and your files show here.",
+      "emptyLead": "Find a shop and book from its page: your bookings, your invoices and your files show here.",
+      "findShop": "Find a shop",
       "openShop": "Open a shop",
       "upcoming": "Upcoming",
       "past": "Past",

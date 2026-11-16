@@ -88,7 +88,26 @@ describe("the client space (K7, docs/ux/2026-10-full-review.md H2)", () => {
       expect(text(html)).toContain(t.emptyTitle);
       expect(text(html)).toContain(t.emptyLead);
       expect(html).toContain(`href="/${locale}/app/open-shop"`);
-      expect(buttons(html)).toEqual([{ variant: "secondary", label: t.openShop }]);
+      expect(buttons(html)).toContainEqual({ variant: "secondary", label: t.openShop });
+    }
+  });
+
+  it("empty: the sentence and its button say the same thing — the sentence sends to a shop's page, the button goes to the shops (krizaka-internal#3973), never to the owner's own shop", () => {
+    const verb = { en: /find/i, fr: /trouv/i } as const;
+    for (const locale of ["fr", "en"] as const) {
+      const html = render([], locale);
+      const t = MESSAGES[locale].console.client;
+      // The same verb and the same object in the sentence and on the button.
+      expect(t.emptyLead).toMatch(verb[locale]);
+      expect(t.findShop).toMatch(verb[locale]);
+      expect(t.emptyLead.toLowerCase()).toContain(t.findShop.toLowerCase());
+      // The button inside the empty state goes to the shops, not to « open my own shop ».
+      const empty = html.slice(html.indexOf('width="120"'));
+      const links = [...empty.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*>(.*?)<\/a>/g)].map((m) => ({
+        href: m[1]!,
+        label: text(m[2]!).trim(),
+      }));
+      expect(links).toEqual([{ href: `/${locale}/explore`, label: t.findShop }]);
     }
   });
 
