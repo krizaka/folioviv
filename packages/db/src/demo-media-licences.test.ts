@@ -7,7 +7,12 @@ const root = join(__dirname, "..", "..", "..");
 const rows = readFileSync(join(root, "docs", "demo-media-licences.md"), "utf8")
   .split("\n")
   .filter((l) => l.startsWith("| ") && !l.startsWith("| Shop") && !l.startsWith("| :--"))
-  .map((l) => l.split("|").slice(1, -1).map((c) => c.trim()));
+  .map((l) =>
+    l
+      .split("|")
+      .slice(1, -1)
+      .map((c) => c.trim()),
+  );
 
 describe("the demo media licence register (krizaka-internal#3751)", () => {
   it("gives every photo its URL, author, licence, date, face and status", () => {
