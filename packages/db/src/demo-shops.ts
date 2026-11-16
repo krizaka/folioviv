@@ -215,8 +215,8 @@ export const DEMO_SHOPS: DemoShop[] = [
         includedEn: ["Studio session", "10 retouched photos", "Online gallery"],
       },
     ],
-    shopType: "workshop",
-    template: "workshop-histoire",
+    shopType: "salon",
+    template: "salon-carte",
     rules: { cancellationHours: 48, bookingHorizonDays: 90, slotStepMinutes: 30, minNoticeMinutes: 1_440 },
   },
   {
