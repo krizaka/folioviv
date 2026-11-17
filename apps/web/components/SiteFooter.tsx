@@ -10,7 +10,7 @@ import { indexable } from "@/lib/indexing";
 import { DEMO_SHOP } from "@/lib/landing";
 import { uiVersion } from "@/lib/platform";
 import { shopHref } from "@/lib/shop-links";
-import { APP_VERSION, contactHref, pagePath, REPO_URL } from "@/lib/site";
+import { APP_VERSION, contactHref, LICENSE_URL, pagePath, REPO_URL } from "@/lib/site";
 
 /**
  * The footer is @krizaka/ui's SiteFooter in product mode (`family={false}`): the product's pages, its source and contact,
@@ -64,6 +64,7 @@ export function SiteFooter({ locale }: Readonly<{ locale: Locale }>) {
       </SiteFooterColumn>
       <SiteFooterColumn title="Krizaka">
         <SiteFooterLink href={REPO_URL}>{t("chrome.sourceCode")}</SiteFooterLink>
+        <SiteFooterLink href={LICENSE_URL}>{t("chrome.license")}</SiteFooterLink>
         <SiteFooterLink href={contactHref("dev-folioviv-footer", locale)}>{t("chrome.contact")}</SiteFooterLink>
       </SiteFooterColumn>
     </FamilyFooter>
