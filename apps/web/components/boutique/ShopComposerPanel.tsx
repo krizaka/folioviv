@@ -44,7 +44,7 @@ const issuesOf = (error: unknown): string | null => {
   return issues?.length ? issues.map((i) => `${i.path}: ${i.message}`).join("; ") : null;
 };
 
-const accentLabel = (name: string) => name.split(":").join(" · ");
+const accentLabel = (name: string) => name.replaceAll(":", " · ");
 
 /**
  * Boutique › Page › Layout (folioviv#402): the shop page composer of @krizaka/ui, its draft saved by itself, published after a diff, with the history

@@ -116,7 +116,7 @@ const minutesOfClock = (clock: string) => Number(clock.slice(0, 2)) * 60 + Numbe
 /** A wall-clock time of a local day, as an instant in the shop's zone. */
 export function localInstant(day: string, minutes: number, timezone: string): Date {
   const [y, m, d] = day.split("-").map(Number) as [number, number, number];
-  return new Date(new TZDate(y, m - 1, d, Math.floor(minutes / 60), minutes % 60, 0, timezone).getTime());
+  return new Date(new TZDate(y, m - 1, d, Math.floor(minutes / 60), minutes % 60, 0, timezone));
 }
 
 /** The local day (`YYYY-MM-DD`) an instant falls in, in the shop's zone. */

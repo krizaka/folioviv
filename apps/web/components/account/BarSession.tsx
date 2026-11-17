@@ -23,8 +23,9 @@ let browserClient: QueryClient | undefined;
 function barClient(): QueryClient {
   const make = () =>
     new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: false, refetchOnWindowFocus: true } } });
-  if (typeof globalThis.window === "undefined") return make();
-  return (browserClient ??= make());
+  if (globalThis.window === undefined) return make();
+  browserClient ??= make();
+  return browserClient;
 }
 
 export interface BarWords extends AccountMenuWords {

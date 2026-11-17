@@ -29,8 +29,8 @@ export function UserCard({ initial, self }: Readonly<{ initial: UserDetail; self
     setNote(null);
     setProblem(say(`errors.${errorKey(error)}`));
   };
-  const post = (path: string, init: { method: string; json?: unknown } = { method: "POST" }) =>
-    krizakaFetch(`/api/admin/users/${user.id}${path}`, init) as Promise<{ user?: UserDetail; revoked?: number }>;
+  const post = (path: string, init?: { method: string; json?: unknown }) =>
+    krizakaFetch(`/api/admin/users/${user.id}${path}`, init ?? { method: "POST" }) as Promise<{ user?: UserDetail; revoked?: number }>;
   const apply = (r: { user?: UserDetail }) => {
     if (r.user) setUser(r.user);
     setProblem(null);

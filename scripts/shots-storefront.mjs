@@ -404,8 +404,10 @@ async function main() {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  main().catch((error) => {
+  try {
+    await main();
+  } catch (error) {
     console.error(`shots: ${error.message}`);
     process.exit(1);
-  });
+  }
 }

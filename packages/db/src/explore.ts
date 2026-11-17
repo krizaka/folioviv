@@ -99,8 +99,10 @@ export function compileExplore(query: ExploreQuery, now: Date): CompiledExplore 
     const dLat = query.within / KM_PER_DEGREE;
     const dLng = query.within / (KM_PER_DEGREE * Math.max(0.01, Math.cos((lat * Math.PI) / 180)));
     // The box lets the GiST index choose the few shops; the exact distance decides.
-    conditions.push(sql`s.pt <@ box(point(${lng - dLng}, ${lat - dLat}), point(${lng + dLng}, ${lat + dLat}))`);
-    conditions.push(sql`${distance} <= ${query.within * 1000}`);
+    conditions.push(
+      sql`s.pt <@ box(point(${lng - dLng}, ${lat - dLat}), point(${lng + dLng}, ${lat + dLat}))`,
+      sql`${distance} <= ${query.within * 1000}`,
+    );
   }
   return { conditions, distance };
 }
