@@ -2,16 +2,10 @@
 // not on Team and not under the page's decoration settings. Demo data only (the seeded cast).
 import { expect, test } from "@playwright/test";
 
-import { DEMO_OWNER_EMAIL as EMAIL, DEMO_OWNER_PASSWORD as CAST_WORD } from "./demo-owner.mjs";
+import { signInAsDemoOwner } from "./demo-owner.mjs";
 
 test("owner opens the hours: Boutique lists Hours and days off, and the section holds the week", async ({ page }) => {
-  await page.goto("/fr/sign-in");
-  await page.locator("input[type=email]").first().fill(EMAIL);
-  await page.locator("input[type=password]").first().fill(CAST_WORD);
-  await page.locator("form button[type=submit]").first().click();
-  // `/app` alone redirects to the shop's own address: wait for that one.
-  await page.waitForURL(/\/fr\/app\/[^/?]+/, { timeout: 60_000 });
-  const shopBase = new URL(page.url()).pathname.match(/^\/fr\/app\/[^/]+/)?.[0];
+  const shopBase = await signInAsDemoOwner(page);
   expect(shopBase, "the app lives under the shop's address").toBeTruthy();
   await page.goto(`${shopBase}/settings/hours`);
   await page.waitForLoadState("load");

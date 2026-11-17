@@ -2,7 +2,7 @@
 // (served from the shop's own origin): the app's CSP `frame-src` must allow it, so the frame is not empty. Demo data only.
 import { expect, test } from "@playwright/test";
 
-import { DEMO_OWNER_EMAIL as EMAIL, DEMO_OWNER_PASSWORD as CAST_WORD } from "./demo-owner.mjs";
+import { signInAsDemoOwner } from "./demo-owner.mjs";
 
 test("the preview on the Look tab shows the shop page, not a blocked frame", async ({ page }) => {
   const blocked = [];
@@ -11,12 +11,7 @@ test("the preview on the Look tab shows the shop page, not a blocked frame", asy
       blocked.push(m.text());
     }
   });
-  await page.goto("/fr/sign-in");
-  await page.locator("input[type=email]").first().fill(EMAIL);
-  await page.locator("input[type=password]").first().fill(CAST_WORD);
-  await page.locator("form button[type=submit]").first().click();
-  await page.waitForURL(/\/fr\/app\/[^/?]+/, { timeout: 60_000 });
-  const shopBase = new URL(page.url()).pathname.match(/^\/fr\/app\/[^/]+/)?.[0];
+  const shopBase = await signInAsDemoOwner(page);
   await page.goto(`${shopBase}/settings/page?tab=look`);
   // On a phone the preview sits behind a button.
   const show = page.locator("aside button[aria-controls]").first();
