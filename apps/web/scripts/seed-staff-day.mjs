@@ -6,6 +6,7 @@
 //
 //   DATABASE_URL=… DATABASE_CA_CERT=… [QA_STAFF_EMAIL=…] [QA_STAFF_SHOP=cedre-ciseaux] [QA_STAFF_HOUR=16] node scripts/seed-staff-day.mjs
 import { connectFromEnv } from "./qa-accounts.mjs";
+import { runMain } from "./run-main.mjs";
 
 const CLIENT = { fullName: "Léa Fictive (démo)", email: "lea.fictive@folioviv.test" };
 const DEFAULT_HOUR = 16;
@@ -83,11 +84,4 @@ async function main() {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
-  try {
-    await main();
-  } catch (error) {
-    console.error(`seed-staff-day: ${error.message}`);
-    process.exit(1);
-  }
-}
+await runMain(import.meta.url, "seed-staff-day", main);

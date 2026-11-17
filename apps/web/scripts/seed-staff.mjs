@@ -7,6 +7,7 @@
 //   DATABASE_URL=… DATABASE_CA_CERT=… QA_STAFF_EMAIL=… QA_STAFF_PASSWORD=… [QA_STAFF_SHOP=cedre-ciseaux] [QA_STAFF_ROLE=staff] \
 //     node scripts/seed-staff.mjs
 import { connectFromEnv, hashPassword } from "./qa-accounts.mjs";
+import { runMain } from "./run-main.mjs";
 
 const ROLES = ["owner", "manager", "staff"];
 
@@ -47,11 +48,4 @@ async function main() {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
-  try {
-    await main();
-  } catch (error) {
-    console.error(`seed-staff: ${error.message}`);
-    process.exit(1);
-  }
-}
+await runMain(import.meta.url, "seed-staff", main);
