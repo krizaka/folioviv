@@ -2,6 +2,7 @@ import { describePrices } from "@krizaka/settings";
 
 import { systemClock } from "@/app/system-clock";
 import { PriceEntryAdmin } from "@/components/admin/PriceEntryAdmin";
+import { guardAdminPage } from "@/lib/access";
 import { asLocale, translator } from "@/lib/i18n";
 import { appPrices } from "@/lib/price-catalogue";
 
@@ -9,6 +10,7 @@ export const dynamic = "force-dynamic";
 
 /** The administrator's catalogue of prices (folioviv#371, ADR-009): each entry in force, a change from a date, the history. */
 export default async function AdminPrices({ params }: Readonly<{ params: Promise<{ locale: string }> }>) {
+  await guardAdminPage();
   const t = translator(asLocale((await params).locale));
   const catalogue = appPrices();
   const described = await describePrices(catalogue, systemClock.now());

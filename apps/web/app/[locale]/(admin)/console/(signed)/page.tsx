@@ -2,6 +2,7 @@ import { Badge } from "@krizaka/ui/badge";
 import { Card } from "@krizaka/ui/card";
 import { DescriptionList } from "@krizaka/ui/description-list";
 
+import { guardAdminPage } from "@/lib/access";
 import { overview } from "@/lib/admin";
 import { query } from "@/lib/db";
 import { asLocale, getDictionary } from "@/lib/i18n";
@@ -19,6 +20,7 @@ async function reachable(run: () => Promise<unknown>): Promise<boolean> {
 
 /** Health (version, database, realtime) and the counts — read on the server at each visit. */
 export default async function AdminOverview({ params }: Readonly<{ params: Promise<{ locale: string }> }>) {
+  await guardAdminPage();
   const locale = asLocale((await params).locale);
   const t = getDictionary(locale).console.admin;
   const [o, db] = await Promise.all([overview(), reachable(() => query("SELECT 1"))]);

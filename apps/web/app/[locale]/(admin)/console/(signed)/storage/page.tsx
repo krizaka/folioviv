@@ -1,6 +1,7 @@
 import { readStorageSettings } from "@krizaka/storage/settings";
 
 import { StorageRegion } from "@/components/admin/StorageRegion";
+import { guardAdminPage } from "@/lib/access";
 import { asLocale, translator } from "@/lib/i18n";
 import { appSettings } from "@/lib/settings";
 
@@ -8,6 +9,7 @@ export const dynamic = "force-dynamic";
 
 /** Where the files are kept (folioviv#397): the provider and region the administrator saved, and the residency it means. */
 export default async function AdminStorage({ params }: Readonly<{ params: Promise<{ locale: string }> }>) {
+  await guardAdminPage();
   const t = translator(asLocale((await params).locale));
   const saved = await readStorageSettings((key) => appSettings().get(key) as Promise<string | number>);
   return (
