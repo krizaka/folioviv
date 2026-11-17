@@ -5,6 +5,10 @@
 # on the direct URL.
 name: folioviv-dev
 region: tor
+# Alerts as krizaka-com's, kridoc's and verikora-dev's (krizaka-internal#4151): DigitalOcean mails the team owners; monitoring lives in DigitalOcean.
+alerts:
+  - rule: DEPLOYMENT_FAILED
+  - rule: DOMAIN_FAILED
 domains:
   # ADR-037 §1: a dev app carries no commercial name. dev.folioviv.com is the primary; www.folioviv.com and the apex belong to folioviv-coming-soon (krizaka-prod).
   - domain: dev.folioviv.com
@@ -34,6 +38,16 @@ services:
     http_port: 3000
     instance_count: 1
     instance_size_slug: basic-xxs
+    # Memory above 85 % for five minutes, or more than two restarts in five minutes: the same sober values as krizaka-com and verikora-dev.
+    alerts:
+      - rule: MEM_UTILIZATION
+        operator: GREATER_THAN
+        value: 85
+        window: FIVE_MINUTES
+      - rule: RESTART_COUNT
+        operator: GREATER_THAN
+        value: 2
+        window: FIVE_MINUTES
     health_check:
       http_path: /api/healthz
       initial_delay_seconds: 20
