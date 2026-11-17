@@ -25,6 +25,7 @@ const PATTERN_LINE = /^\/(.+)\/$/;
 /** A word a slug can contain (letters, digits, hyphens): anything else could never match. */
 const REPEATED_ALTERNATION = /\([^()]*\|[^()]*\)[*+{]/;
 const WORD = /^[a-z0-9-]+$/i;
+const wordIssue = (line: string) => (WORD.test(line) ? undefined : "word");
 
 export type TermIssueReason = "invalid" | "unsafe" | "too-long" | "word";
 export interface TermIssue {
@@ -56,7 +57,7 @@ export function protectedTermsIssues(text: string): TermIssue[] {
     const line = raw.trim();
     if (!line || line.startsWith("#")) return;
     const source = PATTERN_LINE.exec(line)?.[1];
-    const reason = source === undefined ? (WORD.test(line) ? undefined : "word") : patternIssue(source);
+    const reason = source === undefined ? wordIssue(line) : patternIssue(source);
     if (reason) issues.push({ line: index + 1, text: line, reason });
   });
   return issues;
@@ -71,7 +72,7 @@ export function parseProtectedTerms(text: string): { terms: ProtectedTerm[]; inv
     if (!line || line.startsWith("#")) continue;
     const source = PATTERN_LINE.exec(line)?.[1];
     if (source === undefined) {
-      terms.push({ source: foldLookalikes(line).replace(/-/g, "") });
+      terms.push({ source: foldLookalikes(line).replaceAll("-", "") });
     } else if (patternIssue(source)) {
       invalid.push(line);
     } else {
@@ -86,7 +87,7 @@ export type SlugVerdict = { held: false } | { held: true; matched: string };
 /** Held when the folded slug (as written, or with its hyphens removed: `pay-pal`) contains a listed word or matches a listed pattern. */
 export function holdSlug(slug: string, terms: readonly ProtectedTerm[]): SlugVerdict {
   const folded = foldLookalikes(slug);
-  const compact = folded.replace(/-/g, "");
+  const compact = folded.replaceAll("-", "");
   for (const term of terms) {
     const hit = term.pattern ? term.pattern.test(folded) || term.pattern.test(compact) : compact.includes(term.source);
     if (hit) return { held: true, matched: term.source };

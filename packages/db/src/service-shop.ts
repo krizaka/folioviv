@@ -291,11 +291,7 @@ export async function saveShopPage(
         if (recent!.n >= renames.max) refuse("AK_SLUG_RATE_LIMIT");
       }
       const verdict = slugChanged && policy.terms ? holdSlug(input.slug, policy.terms) : undefined;
-      const hold = verdict
-        ? verdict.held
-          ? { slugHeld: true, slugHeldTerm: verdict.matched, slugHeldAt: sql`now()` }
-          : { slugHeld: false, slugHeldTerm: null, slugHeldAt: null }
-        : {};
+      const hold = slugHold(verdict);
       const values = {
         name: input.name,
         legalName: input.legalName,
@@ -1426,4 +1422,11 @@ export async function bookingDetail(
     cancellationHours: r.cancellation_hours,
     cancellable: !r.cancelled && !r.checked_in_at && canCancel(startsAt, now, r.cancellation_hours),
   };
+}
+
+/** What a slug verdict writes on the shop: held, released, or (no verdict) nothing. */
+function slugHold(verdict: ReturnType<typeof holdSlug> | undefined) {
+  if (!verdict) return {};
+  if (verdict.held) return { slugHeld: true, slugHeldTerm: verdict.matched, slugHeldAt: sql`now()` };
+  return { slugHeld: false, slugHeldTerm: null, slugHeldAt: null };
 }

@@ -42,12 +42,10 @@ function run() {
   const root = process.cwd();
   const bin = localBin(root);
   const paths = process.argv.slice(2);
-  const before = spawnSync("git", ["diff", "--name-only"], { cwd: root, encoding: "utf8" }).stdout.split("\n");
   const scan = spawnSync(bin, ["scan", "--update-all", ...paths], { cwd: root, encoding: "utf8" });
   if (scan.error) throw scan.error;
   const after = spawnSync("git", ["diff", "--name-only"], { cwd: root, encoding: "utf8" }).stdout.split("\n");
   const files = after.filter((f) => /\.(ts|tsx|mts)$/.test(f));
-  void before;
   let touched = 0;
   for (const file of files) {
     const path = resolve(root, file);

@@ -4,7 +4,7 @@ import { searchValue } from "@/lib/booking-defaults";
 export function safeNext(wanted: string | undefined, locale: string): string {
   const fallback = `/${locale}/app`;
   if (!wanted || wanted.includes("//") || wanted.includes("..")) return fallback;
-  return new RegExp(`^/${locale}/[A-Za-z0-9/_.-]*(\\?[A-Za-z0-9=&%_.:-]*)?$`).test(wanted) ? wanted : fallback;
+  return new RegExp(String.raw`^/${locale}/[A-Za-z0-9/_.-]*(\?[A-Za-z0-9=&%_.:-]*)?$`).test(wanted) ? wanted : fallback;
 }
 
 /** The address of a page with its query, to come back to after sign-in (empty values left out, the first of a repeated one). */
