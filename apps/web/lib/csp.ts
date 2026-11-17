@@ -29,6 +29,8 @@ export type CspOptions = {
    * (the studio's preview). Unset: the page's own origin, as before.
    */
   appOrigin?: string;
+  /** The shops' origins the app may frame (the studio's live preview: `shopFrameSource`). Unset: no shop frame. */
+  frameShops?: string;
   /** The guest booking step carries a Cloudflare Turnstile check (`@krizaka/ui/captcha`): its script, frame and verification call, on that one page. */
   captcha?: boolean;
 };
@@ -63,8 +65,16 @@ export function isShopPath(pathname: string): boolean {
   return /^\/(?:en|fr|es)\/s\//.test(pathname);
 }
 
-export function contentSecurityPolicy({ nonce, production, upgradeInsecure, appOrigin, captcha }: CspOptions): string {
+export function contentSecurityPolicy({
+  nonce,
+  production,
+  upgradeInsecure,
+  appOrigin,
+  captcha,
+  frameShops,
+}: CspOptions): string {
   const check = captcha ? ` ${CAPTCHA_HOST}` : "";
+  const shops = frameShops ? ` ${frameShops}` : "";
   const strict = nonce !== undefined;
   const dev = production ? "" : " 'unsafe-eval'";
   const script = strict
@@ -82,7 +92,7 @@ export function contentSecurityPolicy({ nonce, production, upgradeInsecure, appO
     "worker-src 'self' blob:",
     `connect-src 'self'${check}${production ? "" : DEV_CONNECT}`,
     // The studio previews the page in a frame of its own origin; the three video platforms may fill a frame only after a visitor pressed a facade's button (nothing is framed before the click).
-    `frame-src 'self'${check} ${EMBED_FRAME_HOSTS.join(" ")}`,
+    `frame-src 'self'${check}${shops} ${EMBED_FRAME_HOSTS.join(" ")}`,
     ...(strict ? ["manifest-src 'self'"] : []),
     "object-src 'none'",
     strict ? "base-uri 'none'" : "base-uri 'self'",
