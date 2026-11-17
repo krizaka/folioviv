@@ -3,7 +3,7 @@
 import type { Metadata } from "next";
 
 import { getDictionary, type Locale } from "./i18n";
-import { DOC_IDS, type DocId, KRIZAKA_URL, type PageId, pagePath, REPO_URL, SITE_URL } from "./site";
+import { DOC_IDS, type DocId, KRIZAKA_URL, LICENSE_URL, type PageId, pagePath, REPO_URL, SITE_URL } from "./site";
 
 export const ORG_ID = `${KRIZAKA_URL}/#organization`;
 const ORG = { "@type": "Organization", "@id": ORG_ID, name: "Krizaka", url: KRIZAKA_URL };
@@ -90,7 +90,7 @@ export function siteJsonLd(locale: Locale) {
         applicationCategory: "BusinessApplication",
         operatingSystem: "Web",
         isAccessibleForFree: true,
-        license: "https://www.apache.org/licenses/LICENSE-2.0",
+        license: LICENSE_URL,
         codeRepository: REPO_URL,
         publisher: ORG,
         isPartOf: { "@id": `${SITE_URL}/#website` },
@@ -119,11 +119,11 @@ ${DOC_IDS.map((id) => `  - [${en.docs.pages[id].title}](${SITE_URL}/en/docs/${id
 
 ## Source
 
-- [${en.meta.siteName} repository](${REPO_URL}): the app, its BFF and its schema (Apache-2.0)
+- [${en.meta.siteName} repository](${REPO_URL}): the app, its BFF and its schema (FSL-1.1-ALv2, [licence](${LICENSE_URL}))
 
 ## Publisher
 
-- [Krizaka](${KRIZAKA_URL}): the company, an open-source software studio in Montréal
+- [Krizaka](${KRIZAKA_URL}): the company, a software studio in Montréal
 
 Languages: English and French. Sitemap: ${SITE_URL}/sitemap.xml
 `;

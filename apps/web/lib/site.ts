@@ -1,6 +1,8 @@
 /** Addresses of the site — structure, not words (the words are in messages/). */
 export const SITE_URL = "https://www.folioviv.com";
 export const REPO_URL = "https://github.com/krizaka/folioviv";
+/** The product's own licence (FSL-1.1-ALv2), the file in its repository. */
+export const LICENSE_URL = `${REPO_URL}/blob/main/LICENSE.md`;
 /** Krizaka, the publisher: named only in the footer and the legal mentions (the products are independent). */
 export const KRIZAKA_URL = "https://www.krizaka.com";
 export const PRIVACY_UPDATED = "2026-11-05";
