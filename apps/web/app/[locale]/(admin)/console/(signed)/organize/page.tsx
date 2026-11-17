@@ -1,6 +1,7 @@
 import { WORKSPACE_KINDS } from "@folioviv/db";
 
 import { OrganizeConfig, type StoredKind } from "@/components/admin/OrganizeConfig";
+import { guardAdminPage } from "@/lib/access";
 import { asLocale, translator } from "@/lib/i18n";
 import { workspace } from "@/lib/workspace";
 
@@ -8,6 +9,7 @@ export const dynamic = "force-dynamic";
 
 /** The administrator's defaults of « the workspace, organised » (folioviv#337): tag sets by trade, who writes them, the invoice's states. */
 export default async function AdminOrganize({ params }: Readonly<{ params: Promise<{ locale: string }> }>) {
+  await guardAdminPage();
   const t = translator(asLocale((await params).locale));
   const stored: StoredKind[] = [];
   for (const kind of WORKSPACE_KINDS) {

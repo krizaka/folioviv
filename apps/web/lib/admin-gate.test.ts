@@ -45,6 +45,9 @@ describe("every console page is behind the signed layout (or is the sign-in, whi
         expect(read(file)).toMatch(/ipAllowed\(.*\)[^\n]*notFound\(\)|!ipAllowed\(/));
     } else {
       it(`${rel} lives under (signed)`, () => expect(rel.startsWith("(signed)")).toBe(true));
+      // A page segment can be rendered without its layout (RSC / prefetch request): each page locks itself.
+      it(`${rel} calls its own guard before reading anything`, () =>
+        expect(read(file)).toMatch(/await guardAdminPage\(\)|await pageAdmin\(\)/));
     }
   }
 });

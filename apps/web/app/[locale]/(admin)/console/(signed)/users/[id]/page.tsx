@@ -2,19 +2,19 @@ import { notFound } from "next/navigation";
 
 import { AuditTable } from "@/components/admin/AdminTables";
 import { UserCard } from "@/components/admin/UserCard";
-import { pageAdmin } from "@/lib/access";
+import { guardAdminPage } from "@/lib/access";
 import { auditLog, userDetail } from "@/lib/admin";
 import { HttpError } from "@/lib/http";
 
 /** One account: its facts, what an administrator does to it, its history. */
 export default async function AdminUser({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
   const { id } = await params;
-  const admin = await pageAdmin();
+  const admin = await guardAdminPage();
   const user = await userDetail(id).catch((error: unknown) => {
     if (error instanceof HttpError && error.status === 404) return null;
     throw error;
   });
-  if (!user || !admin) notFound();
+  if (!user) notFound();
   return (
     <div className="flex flex-col gap-6">
       <UserCard initial={user} self={admin.account.id === user.id} />

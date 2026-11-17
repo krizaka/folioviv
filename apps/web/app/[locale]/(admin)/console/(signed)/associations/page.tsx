@@ -1,12 +1,14 @@
 import { pendingAssociations } from "@folioviv/db";
 
 import { AssociationQueue } from "@/components/admin/AssociationQueue";
+import { guardAdminPage } from "@/lib/access";
 import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
 /** The association proofs waiting for a decision (ADR-003 addendum 2026-10-30): the administrator checks the register, then approves or refuses; audited. */
 export default async function AdminAssociations() {
+  await guardAdminPage();
   const pending = await pendingAssociations(db());
   return (
     <AssociationQueue
