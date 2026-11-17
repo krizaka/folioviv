@@ -46,6 +46,20 @@ export function shopOriginOf(slug: string, vars: Vars): string {
   return `${app.protocol}//${slug}.${domain}${port}`;
 }
 
+/**
+ * The CSP source that lets the app frame its shops' pages (the studio's live preview uses `shopPageUrl`): every `<slug>` of the declared shop domain, same
+ * scheme and port as `shopOriginOf`. Null when no shop domain is declared (the preview is then a path on the app, `'self'`).
+ */
+export function shopFrameSource(vars: Vars): string | null {
+  const domain = shopDomain(vars);
+  if (!domain) {
+    return null;
+  }
+  const app = new URL(vars.APP_PUBLIC_URL ?? APP_DEFAULT);
+  const port = app.port ? ":" + app.port : "";
+  return `${app.protocol}//*.${domain}${port}`;
+}
+
 /** The app's own origin: where the booking hop and every non-shop address lead. */
 export const appOriginOf = (vars: Vars): string => new URL(vars.APP_PUBLIC_URL ?? APP_DEFAULT).origin;
 

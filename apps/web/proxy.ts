@@ -11,7 +11,7 @@ import { CLOSED_ROBOTS, closedRobots, devRedirect, indexableOn, isDevHost, NOIND
 import { LOCALE_HEADER, negotiateLocale, pageLocaleOf, PATH_HEADER } from "./lib/locale-negotiation";
 import { SESSION_COOKIE } from "./lib/session-cookie";
 import { customHostVerdict, SHOP_SITEMAP_PATH, shopVerdict, Verdict } from "./lib/shop-directory";
-import { appOriginOf, shopDomain, shopHostOf, shopOriginOf } from "./lib/shop-domain";
+import { appOriginOf, shopDomain, shopFrameSource, shopHostOf, shopOriginOf } from "./lib/shop-domain";
 import { SITE_URL } from "./lib/site";
 
 /** krizaka-ui#827: a signed-in person never sees the public landing page; the cookie is a hint, the app and the API still resolve the session. */
@@ -39,7 +39,7 @@ function crossSiteWrite(request: NextRequest): NextResponse | null {
 }
 
 /** The policy of a response (lib/csp.ts), read per request: the nonce of a shop page is this response's own, the declared origin is the runtime's. */
-function policy(nonce?: string, appOrigin?: string, captcha = false): string {
+function policy(nonce?: string, appOrigin?: string, captcha = false, frameShops?: string): string {
   const production = process.env.NODE_ENV === "production";
   return contentSecurityPolicy({
     nonce,
@@ -47,6 +47,7 @@ function policy(nonce?: string, appOrigin?: string, captcha = false): string {
     upgradeInsecure: upgradesInsecure(production, process.env.APP_PUBLIC_URL),
     appOrigin,
     captcha,
+    frameShops,
   });
 }
 
@@ -57,7 +58,7 @@ function policy(nonce?: string, appOrigin?: string, captcha = false): string {
 function stampPolicy(forwarded: Headers, route: HostRoute, pathname: string, appOrigin?: string): string {
   const path = route.kind === "rewrite" ? route.path : pathname;
   if (!isShopPath(path)) {
-    return policy();
+    return policy(undefined, undefined, false, shopFrameSource(process.env) ?? undefined);
   }
   const nonce = newNonce();
   const csp = policy(nonce, appOrigin, allowsCaptcha(path, process.env.NEXT_PUBLIC_ABUSE_CAPTCHA_SITE_KEY));

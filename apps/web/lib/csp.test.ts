@@ -11,6 +11,7 @@ import {
   newNonce,
   upgradesInsecure,
 } from "./csp";
+import { shopFrameSource } from "./shop-domain";
 
 const directive = (csp: string, name: string) =>
   csp
@@ -160,5 +161,28 @@ describe("the guest booking step's bot check", () => {
     expect(allowsCaptcha("/en/s/pattes", undefined)).toBe(false);
     expect(allowsCaptcha("/en/s/pattes", "")).toBe(false);
     expect(allowsCaptcha("/en/sign-in", "key")).toBe(false);
+  });
+});
+
+/** krizaka-internal#4136: the studio's preview frames `<slug>.<shop domain>`; the app's policy must name it, and only it. */
+describe("the app's frame-src for the shop preview", () => {
+  const shops = "https://*.folioviv.shop";
+  it("adds the shops' origin to frame-src and changes nothing else", () => {
+    const base = contentSecurityPolicy(opts).split("; ");
+    const withShops = contentSecurityPolicy({ ...opts, frameShops: shops }).split("; ");
+    expect(directive(withShops.join("; "), "frame-src")).toContain(shops);
+    expect(withShops.filter((d) => !d.startsWith("frame-src "))).toEqual(
+      base.filter((d) => !d.startsWith("frame-src ")),
+    );
+    expect(directive(withShops.join("; "), "frame-src").some((s) => s === "*" || s === "https:")).toBe(false);
+  });
+  it("is built from the same configuration as the preview address", () => {
+    expect(shopFrameSource({ APP_SHOP_DOMAIN: "folioviv.shop", APP_PUBLIC_URL: "https://www.folioviv.com" })).toBe(
+      shops,
+    );
+    expect(shopFrameSource({ APP_SHOP_DOMAIN: "shops.test", APP_PUBLIC_URL: "http://localhost:3100" })).toBe(
+      "http://*.shops.test:3100",
+    );
+    expect(shopFrameSource({})).toBeNull();
   });
 });
