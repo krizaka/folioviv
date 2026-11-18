@@ -62,3 +62,24 @@ jobs:
       after-build: ${{ vars.CI_SLEEP != 'true' && 'scripts/ci-after-build.sh' || '' }}
       # Files no test or build reads skip the heavy jobs (docs/, policy text, templates, the README's images). Fails open.
       ignore: '^docs/|^\.changeset/|^(LICENSE|SECURITY|CODE_OF_CONDUCT|SUPPORT)(\.md)?$|^\.github/(ISSUE_TEMPLATE/|assets/|pull_request_template\.md$|FUNDING\.yml$|dependabot\.yml$)'
+
+  # Rule public-no-founder-name (krizaka-restricted#375): no public file names the founder, compared by keyed HMAC. This job is the
+  # only one that receives the secret FOUNDER_NAME_GUARD, in its last step; without it the job fails, except on a fork's pull request.
+  founder-name:
+    name: Founder name guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+      - name: No public file names the founder (keyed HMAC)
+        env:
+          FOUNDER_NAME_GUARD: ${{ secrets.FOUNDER_NAME_GUARD }}
+          FOUNDER_NAME_GUARD_REQUIRED: ${{ !(github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork) }}
+        run: node scripts/check-founder-name.mjs
