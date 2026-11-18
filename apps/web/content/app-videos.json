@@ -5,34 +5,34 @@
     {
       "platform": "android",
       "flow": "today-books",
-      "seconds": 13.9,
-      "capturedAt": "2026-11-17T14:45:58.819Z",
+      "seconds": 14.9,
+      "capturedAt": "2026-11-18T14:15:26.401Z",
       "files": {
-        "webm": "sites/folioviv/download/android-today-books.dee2d3db38.webm",
-        "mp4": "sites/folioviv/download/android-today-books.90528473bf.mp4",
-        "poster": "sites/folioviv/download/android-today-books.4af0d5f33b.jpg"
+        "webm": "sites/folioviv/download/android-today-books.aecc1c1a72.webm",
+        "mp4": "sites/folioviv/download/android-today-books.305ff3f3d6.mp4",
+        "poster": "sites/folioviv/download/android-today-books.e6df7420f6.jpg"
       }
     },
     {
       "platform": "web",
       "flow": "composer",
-      "seconds": 10.8,
-      "capturedAt": "2026-11-17T14:45:15.319Z",
+      "seconds": 10.4,
+      "capturedAt": "2026-11-18T14:14:54.367Z",
       "files": {
-        "webm": "sites/folioviv/download/web-composer.fb214eb5c3.webm",
-        "mp4": "sites/folioviv/download/web-composer.174cae2bc9.mp4",
-        "poster": "sites/folioviv/download/web-composer.c6975008f5.jpg"
+        "webm": "sites/folioviv/download/web-composer.562a7d5236.webm",
+        "mp4": "sites/folioviv/download/web-composer.59115664bb.mp4",
+        "poster": "sites/folioviv/download/web-composer.6737faf32e.jpg"
       }
     },
     {
       "platform": "web",
       "flow": "storefront",
-      "seconds": 15.6,
-      "capturedAt": "2026-11-17T14:45:40.934Z",
+      "seconds": 14.8,
+      "capturedAt": "2026-11-18T14:15:08.603Z",
       "files": {
-        "webm": "sites/folioviv/download/web-storefront.9301dbbf65.webm",
-        "mp4": "sites/folioviv/download/web-storefront.bfc779278d.mp4",
-        "poster": "sites/folioviv/download/web-storefront.6fd2652969.jpg"
+        "webm": "sites/folioviv/download/web-storefront.d16e551beb.webm",
+        "mp4": "sites/folioviv/download/web-storefront.526b190205.mp4",
+        "poster": "sites/folioviv/download/web-storefront.fccc14610d.jpg"
       }
     }
   ]
