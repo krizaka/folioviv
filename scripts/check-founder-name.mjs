@@ -18,6 +18,6 @@ try {
     if (offenders.length > 0) process.exitCode = 1;
   }
 } catch (error) {
-  console.error(error.message);
+  console.error(`::error::${error.message}`);
   process.exitCode = 1;
 }
