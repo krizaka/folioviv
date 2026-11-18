@@ -82,8 +82,8 @@ importers:
         specifier: ^0.2.9
         version: 0.2.9(react@19.3.1)(typescript@6.0.3)
       '@krizaka/icons':
-        specifier: ^0.10.1
-        version: 0.10.1(react-native-svg@15.16.0(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.3.1))(react@19.3.1))(react@19.3.1)
+        specifier: ^0.11.0
+        version: 0.11.0(react-native-svg@15.16.0(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.3.1))(react@19.3.1))(react@19.3.1)
       '@krizaka/intl':
         specifier: 0.4.1
         version: 0.4.1
@@ -200,8 +200,8 @@ importers:
         specifier: ^0.2.9
         version: 0.2.9(react@19.3.1)(typescript@5.9.3)
       '@krizaka/icons':
-        specifier: ^0.10.1
-        version: 0.10.1(react-native-svg@15.16.0(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.3.1))(react@19.3.1))(react@19.3.1)
+        specifier: ^0.11.0
+        version: 0.11.0(react-native-svg@15.16.0(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.3.1))(react@19.3.1))(react@19.3.1)
       '@krizaka/intl':
         specifier: 0.4.1
         version: 0.4.1
@@ -2161,6 +2161,16 @@ packages:
 
   '@krizaka/icons@0.10.1':
     resolution: {integrity: sha512-zFQXM/BiT3BWnaPoDDze1aJ/VBhqfkVnLwDeQomF91FOErG2kBASTPK2MxhyRQMXDOtM5tJ7QVEEwXYUjl+2rQ==}
+    engines: {node: '>=22'}
+    peerDependencies:
+      react: '>=18'
+      react-native-svg: '>=15'
+    peerDependenciesMeta:
+      react-native-svg:
+        optional: true
+
+  '@krizaka/icons@0.11.0':
+    resolution: {integrity: sha512-Og3mB9C1x20ikSHVnAsNcwOWGb/ieRMRNVTHM6ZqIoVYPzzidl2UALEiXx0Yd5/A2jKJvVAUPLC0K2plCLs3yg==}
     engines: {node: '>=22'}
     peerDependencies:
       react: '>=18'
@@ -10789,6 +10799,12 @@ snapshots:
       typescript: 6.0.3
 
   '@krizaka/icons@0.10.1(react-native-svg@15.16.0(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.3.1))(react@19.3.1))(react@19.3.1)':
+    dependencies:
+      react: 19.3.1
+    optionalDependencies:
+      react-native-svg: 15.16.0(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.3.1))(react@19.3.1)
+
+  '@krizaka/icons@0.11.0(react-native-svg@15.16.0(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.3.1))(react@19.3.1))(react@19.3.1)':
     dependencies:
       react: 19.3.1
     optionalDependencies:
