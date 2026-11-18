@@ -32,7 +32,7 @@ export function ProposedImages({ data }: Readonly<{ data: ProposedImagesData }>)
   const [saved, setSaved] = useState(false);
   // The media as last saved from here, valid until the server sends a fresh snapshot (after its refresh): a second adoption never starts from what the first one replaced.
   const [local, setLocal] = useState<{ base: MediaState; media: MediaState } | null>(null);
-  const media = local && local.base === data.media ? local.media : data.media;
+  const media = local?.base === data.media ? local.media : data.media;
   const t = (key: string) => say(`shopSetup.defaults.${key}`);
   const offered = Object.keys(data.proposals) as ShopType[];
   const current = data.proposals[type];

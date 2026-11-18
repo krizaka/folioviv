@@ -26,8 +26,8 @@ export async function transactionOn<T>(
   } catch (error) {
     try {
       await client.query("ROLLBACK");
-    } catch (rollback) {
-      throw new AggregateError([error, rollback], "The transaction failed and could not be rolled back");
+    } catch (error_) {
+      throw new AggregateError([error, error_], "The transaction failed and could not be rolled back");
     }
     throw error;
   } finally {

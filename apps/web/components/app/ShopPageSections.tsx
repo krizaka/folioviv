@@ -35,7 +35,7 @@ function useSectionSave(page: Page | null) {
     save: async (values: Partial<Page>) => {
       setSaved(false);
       setHeld(false);
-      const next = { ...EMPTY, ...(page ?? {}), ...values };
+      const next = { ...EMPTY, ...page, ...values };
       const answer = (await call.run("/api/walker/shop", { json: next })) as { held?: boolean } | null;
       setSaved(answer !== null);
       setHeld(answer?.held === true);

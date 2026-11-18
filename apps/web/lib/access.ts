@@ -1,6 +1,7 @@
 import { ownClient, SHOP_ROLES, shopClient, shopOfMember, type ShopPermission, type ShopRole } from "@folioviv/db";
 import { can, ipAllowed as ipListAllows, requireAdmin as adminVerdict, sessionTokenOf as tokenOf } from "@krizaka/auth";
 import { cookies, headers } from "next/headers";
+import { notFound } from "next/navigation";
 import { after } from "next/server";
 
 import { clientIp } from "./client-ip";
@@ -65,6 +66,18 @@ export async function pageAdmin(): Promise<Session | null> {
   const session = await pageSession();
   if (session?.account.role !== "ADMIN") return null;
   return ipAllowed(await headers()) ? session : null;
+}
+
+/**
+ * The first line of every console page: the layout is not enough, a page segment can be rendered without it (RSC / prefetch),
+ * so each page answers 404 itself unless the visitor is an administrator on an allowed address.
+ */
+export async function guardAdminPage(): Promise<Session> {
+  const admin = await pageAdmin();
+  if (!admin) {
+    notFound();
+  }
+  return admin;
 }
 
 /**

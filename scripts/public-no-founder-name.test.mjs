@@ -1,33 +1,72 @@
 import { test } from "vitest";
-import { createHash } from "node:crypto";
-import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { randomBytes } from "node:crypto";
 import assert from "node:assert/strict";
+import {
+  filesNamingFounder,
+  GuardErrorCode,
+  guardFrom,
+  makeSecret,
+  namesFounder,
+  parseGuard,
+} from "./lib/founder-name-guard.mjs";
+import { publicPaths, publicTexts } from "./lib/public-surface.mjs";
 
-// Founder decision, 2026-11-05 (rule public-no-founder-name): no founder name on a public surface. The name is never written in
-// this repository, not even here: the test holds the SHA-256 of each lowercase word of it and hashes the words of every file.
-const NAME_WORD_HASHES = new Set([
-  "86e08046be6344c1487dfaefe42a67f0fff79414916b0dfcdbb18cab0201a014",
-  "a954e93925dca619a33955a410991a9ba133bd5ea18075caf0d6849455c6537e",
-]);
+// Founder decision, 2026-11-05 (rule public-no-founder-name): no founder name on a public surface. Nothing derived from the name is
+// in this repository (krizaka-restricted#375): the words are compared by their HMAC under the key of the Actions secret
+// FOUNDER_NAME_GUARD. The matcher is proven on a fictional word under a throwaway key; the scan runs with the real secret in the
+// « Founder name guard » job of ci.yml, and fails closed there when the secret is missing (FOUNDER_NAME_GUARD_REQUIRED=true).
 
-const PUBLIC =
-  /^(README|LICENSE|NOTICE|SECURITY|CONTRIBUTING)[^/]*$|(^|\/)package\.json$|^apps\/web\/(messages|content|public|app|components)\//;
-const TEXT = /\.(md|mdx|txt|json|ts|tsx|mjs|js|html|yml|yaml)$|^[A-Z]+$/;
+const sample = parseGuard(makeSecret(["Zorblax", "quinn vantablack"], randomBytes(32)));
 
-const sha = (word) => createHash("sha256").update(word).digest("hex");
-const namesFounder = (text) => (text.toLowerCase().match(/[\p{L}]+/gu) ?? []).some((w) => NAME_WORD_HASHES.has(sha(w)));
-
-test("a public surface names the founder nowhere", () => {
-  const files = execFileSync("git", ["ls-files"], { encoding: "utf8" })
-    .split("\n")
-    .filter((f) => PUBLIC.test(f) && TEXT.test(f));
-  assert.ok(files.length > 5, "the scan finds the public files");
-  const offenders = files.filter((f) => !/\.test\.[cm]?[jt]sx?$/.test(f) && namesFounder(readFileSync(f, "utf8")));
-  assert.deepEqual(offenders, []);
+test("the matcher finds a refused word, alone, in a pair or glued as a handle, and nothing else", () => {
+  assert.equal(namesFounder("Written by ZORBLAX.", sample), true);
+  assert.equal(namesFounder("by Quinn\nVantablack", sample), true);
+  assert.equal(namesFounder("@quinnvantablack on GitHub", sample), true);
+  assert.equal(namesFounder("Quinn alone, Vantablack alone", sample), false);
+  assert.equal(namesFounder("Technologies Krizaka Inc.", sample), false);
 });
 
-test("the matcher finds a name word and ignores the others", () => {
-  assert.equal(namesFounder("Technologies Krizaka Inc."), false);
-  assert.equal(namesFounder(`by ${"x"}`), false);
+test("without the secret the guard fails closed where it is required, and skips elsewhere", () => {
+  assert.throws(
+    () => guardFrom({ FOUNDER_NAME_GUARD_REQUIRED: "true" }),
+    (e) => e.code === GuardErrorCode.missing,
+  );
+  assert.match(guardFrom({}).skipped, /skipped/);
+});
+
+test("the scan names the files, never the word", () => {
+  const entries = [
+    ["README.md", "Made in Montréal"],
+    ["apps/web/messages/fr.json", '{"by": "Zorblax"}'],
+  ];
+  assert.deepEqual(filesNamingFounder(entries, sample), ["apps/web/messages/fr.json"]);
+});
+
+test("the public surface is the root documents, the manifests and the web app's public folders", () => {
+  const listed = [
+    "README.md",
+    "apps/web/app/page.tsx",
+    "apps/web/lib/db.ts",
+    "packages/x/package.json",
+    "docs/a.md",
+    "NOTICE",
+  ];
+  assert.deepEqual(publicPaths(listed), ["README.md", "apps/web/app/page.tsx", "packages/x/package.json", "NOTICE"]);
+});
+
+test("a malformed secret always fails, and never echoes its value", () => {
+  const raw = "not json {zorblax}";
+  assert.throws(
+    () => guardFrom({ FOUNDER_NAME_GUARD: raw }),
+    (e) => e.code === GuardErrorCode.malformed && !e.message.includes("zorblax"),
+  );
+});
+
+const outcome = guardFrom(process.env);
+if (outcome.skipped) console.warn(`::warning::${outcome.skipped}`);
+
+test.skipIf(Boolean(outcome.skipped))("a public surface names the founder nowhere", () => {
+  const files = publicTexts();
+  assert.ok(files.length > 5, "the scan finds the public files");
+  assert.deepEqual(filesNamingFounder(files, outcome.guard), []);
 });
