@@ -1,9 +1,4 @@
 {
   "app": "folioviv",
-  "rules": {
-    "landmark-complementary-is-top-level": {
-      "impact": "moderate",
-      "count": 4
-    }
-  }
+  "rules": {}
 }
