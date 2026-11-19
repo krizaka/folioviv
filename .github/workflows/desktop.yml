@@ -34,7 +34,7 @@ jobs:
   desktop-release:
     if: github.event_name == 'push' && vars.CI_SLEEP != 'true'
     permissions:
-      contents: write
+      contents: write # this job writes to the repository
     uses: krizaka/.github/.github/workflows/tauri-macos.yml@93402d11fa137c4344a6f15dce921f02b48e238e # main
     with:
       working-directory: apps/desktop
