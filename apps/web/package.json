@@ -18,7 +18,7 @@
     "@krizaka/api-keys": "0.3.1",
     "@krizaka/auth": "^0.14.0",
     "@krizaka/brief": "0.1.1",
-    "@krizaka/charts": "^1.0.2",
+    "@krizaka/charts": "^1.0.3",
     "@krizaka/email": "^1.2.3",
     "@krizaka/email-verification": "^0.1.1",
     "@krizaka/fonts": "0.5.4",
