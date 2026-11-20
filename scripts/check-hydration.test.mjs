@@ -6,6 +6,7 @@ import { compact } from "../apps/web/lib/test-source";
 
 import {
   ACCOUNT_PAGES,
+  ADMIN_PAGES,
   BROWSER,
   detailPagesFor,
   externalRequest,
@@ -45,6 +46,11 @@ describe("the hydration crawl (one rendering for the server and the browser, K0)
     for (const page of ["/app/profile", "/app/profile/security"]) expect(ACCOUNT_PAGES).toContain(page);
     expect(THEMES).toEqual(["dark", "light"]);
     expect(VIEWPORTS.map((v) => v.width)).toEqual([1440, 390, 360]);
+  });
+
+  it("crawls the administration console's tables too, in both languages (#4138: the dates differed between server and browser)", () => {
+    for (const page of ["/fr/console/shops", "/en/console/invoices", "/fr/console/ledger", "/en/console/audit"])
+      expect(ADMIN_PAGES).toContain(page);
   });
 
   it("owes every page one h1 (the page's, never the frame's) and no sideways scroll, down to 360 px", () => {
