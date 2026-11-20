@@ -11,6 +11,7 @@ import {
   REGION_CHOICES,
   residencyOfSaved,
   settingsOf,
+  statusOfSaved,
 } from "./storage-regions";
 
 const en = bindProduct(enRaw);
@@ -54,5 +55,18 @@ describe("where the administrator keeps the files (folioviv#397)", () => {
       for (const key of KEYS)
         expect((messages.console.admin.storage.residency as Record<string, string>)[key], key).toBeTruthy();
     }
+  });
+
+  it("has a translated name for every provider it offers (folioviv#4139: no raw message key)", () => {
+    for (const messages of [en, fr]) {
+      const names = messages.console.admin.storage.provider as Record<string, string>;
+      for (const c of REGION_CHOICES) expect(names[c.preset], `${c.preset} in ${messages === en ? "en" : "fr"}`).toBeTruthy();
+    }
+  });
+
+  it("does not claim the server's own disk when nothing was saved: the environment decides, or the saved provider is named", () => {
+    expect(statusOfSaved({ provider: "local", endpoint: "", region: "" })).toBe("environment");
+    expect(statusOfSaved({ provider: "http", endpoint: "storage.bunnycdn.com", region: "" })).toBe("elsewhere");
+    expect(statusOfSaved({ provider: "s3", endpoint: "tor1.digitaloceanspaces.com", region: "tor1" })).toBe("canada-on");
   });
 });

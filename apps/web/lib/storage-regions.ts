@@ -8,7 +8,7 @@ import { presetEndpoint, type ResidencyLabel, residencyLabel, S3_PRESETS } from 
 export interface RegionChoice {
   /** `<preset>:<region>`, the value of the chip. */
   id: string;
-  preset: "digitalocean-spaces" | "aws-s3" | "ovhcloud";
+  preset: "digitalocean-spaces" | "aws-s3" | "ovhcloud" | "google-cloud-storage";
   region: string;
   endpoint: string;
   /** What the files' residency would be if this were saved. */
@@ -70,3 +70,15 @@ export const settingsOf = (
   "storage.endpoint": choice.endpoint,
   "storage.region": choice.region,
 });
+
+/**
+ * What the status line says about the saved settings: « local » is the registry's default, not a choice (the deployment's environment decides,
+ * a dev server can store on a CDN while the setting still reads « local »), so it is never worded as « the server's own disk » (folioviv#4139).
+ */
+export function statusOfSaved(settings: {
+  provider: string;
+  endpoint: string;
+  region: string;
+}): ResidencyLabel["key"] | "environment" {
+  return settings.provider === "local" ? "environment" : residencyOfSaved(settings);
+}
