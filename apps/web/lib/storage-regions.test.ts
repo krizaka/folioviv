@@ -60,8 +60,9 @@ describe("where the administrator keeps the files (folioviv#397)", () => {
   it("has a translated name for every provider it offers (folioviv#4139: no raw message key)", () => {
     for (const messages of [en, fr]) {
       const names = messages.console.admin.storage.provider as Record<string, string>;
-      for (const c of REGION_CHOICES)
+      for (const c of REGION_CHOICES) {
         expect(names[c.preset], `${c.preset} in ${messages === en ? "en" : "fr"}`).toBeTruthy();
+      }
     }
   });
 
