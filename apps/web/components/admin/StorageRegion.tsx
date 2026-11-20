@@ -13,8 +13,8 @@ import {
   choiceOf,
   OTHER_CHOICES,
   type RegionChoice,
-  residencyOfSaved,
   settingsOf,
+  statusOfSaved,
 } from "@/lib/storage-regions";
 
 export interface SavedStorage {
@@ -38,7 +38,7 @@ export function StorageRegion({ saved }: Readonly<{ saved: SavedStorage }>) {
   const all = [...CANADIAN_CHOICES, ...OTHER_CHOICES];
   const label = (c: RegionChoice) =>
     say("admin.storage.regionLabel", { provider: say(`admin.storage.provider.${c.preset}`), region: c.region });
-  const shown = choice ? choice.residency.key : residencyOfSaved(saved);
+  const shown = choice ? choice.residency.key : statusOfSaved(saved);
   const save = async () => {
     if (!choice) {
       return;
@@ -61,6 +61,7 @@ export function StorageRegion({ saved }: Readonly<{ saved: SavedStorage }>) {
   const group = (id: string, title: string, choices: RegionChoice[]) => (
     // @ephemeral: a draft choice in a form, saved with the button below; the saved value is read from the database on every visit
     <Chip.Group
+      className="min-w-0 flex-wrap"
       type="single"
       label={title}
       value={choice?.id ?? ""}
@@ -75,7 +76,7 @@ export function StorageRegion({ saved }: Readonly<{ saved: SavedStorage }>) {
     </Chip.Group>
   );
   return (
-    <section className="flex flex-col gap-4" aria-label={say("admin.storage.pick")}>
+    <section className="flex min-w-0 flex-col gap-4" aria-label={say("admin.storage.pick")}>
       <h2 className="font-display text-lg font-bold text-fg">{say("admin.storage.pick")}</h2>
       {group("canada", say("admin.storage.canada"), CANADIAN_CHOICES)}
       {group("elsewhere", say("admin.storage.elsewhere"), OTHER_CHOICES)}
@@ -93,7 +94,7 @@ export function StorageRegion({ saved }: Readonly<{ saved: SavedStorage }>) {
       <p className="text-sm text-fg-secondary">
         {choice ? say("admin.storage.preview") : say("admin.storage.current")}
       </p>
-      <p className="max-w-prose font-medium text-fg" data-residency={shown}>
+      <p className="max-w-prose break-words font-medium text-fg" data-residency={shown}>
         {say(`admin.storage.residency.${shown}`)}
       </p>
       {call.problem ? <Alert tone="danger">{call.problem}</Alert> : null}

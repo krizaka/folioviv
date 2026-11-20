@@ -1074,7 +1074,8 @@
         "provider": {
           "digitalocean-spaces": "DigitalOcean Spaces",
           "aws-s3": "Amazon S3",
-          "ovhcloud": "OVHcloud"
+          "ovhcloud": "OVHcloud",
+          "google-cloud-storage": "Google Cloud Storage"
         },
         "regionLabel": "{provider} · {region}",
         "current": "Saved now",
@@ -1093,7 +1094,8 @@
           "elsewhere": "Files are not kept in Canada: they are stored outside the country.",
           "unknown": "Where the files are kept is not known: no sentence claims Canada.",
           "user-cloud": "Files stay in the cloud the person connected themselves.",
-          "device": "Files stay on the server's own disk (development only)."
+          "device": "Files stay on the server's own disk (development only).",
+          "environment": "Nothing is saved here: the deployment's environment decides where the files go."
         }
       },
       "associations": {
