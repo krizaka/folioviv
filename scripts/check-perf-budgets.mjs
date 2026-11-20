@@ -95,7 +95,8 @@ export function accepted(recorded, measured, reason) {
   const why = typeof reason === "string" ? reason.trim() : "";
   if (!why) throw new Error('--accept needs a reason: --accept "<why the budget grows>"');
   const jsBytes = { ...recorded };
-  for (const [route, bytes] of Object.entries(measured)) jsBytes[route] = route in jsBytes ? Math.max(jsBytes[route], bytes) : bytes;
+  for (const [route, bytes] of Object.entries(measured))
+    jsBytes[route] = route in jsBytes ? Math.max(jsBytes[route], bytes) : bytes;
   return { reason: why, jsBytes };
 }
 
@@ -258,7 +259,10 @@ async function main() {
     writeFileSync(BUDGETS_FILE, `${JSON.stringify(next, null, 2)}\n`);
     console.log(`Accepted: ${next.reason}`);
   } else if (process.argv.includes("--update"))
-    writeFileSync(BUDGETS_FILE, `${JSON.stringify({ ...(file.reason ? { reason: file.reason } : {}), jsBytes: lowered(recorded, measured) }, null, 2)}\n`);
+    writeFileSync(
+      BUDGETS_FILE,
+      `${JSON.stringify({ ...(file.reason ? { reason: file.reason } : {}), jsBytes: lowered(recorded, measured) }, null, 2)}\n`,
+    );
 
   const problems = Object.entries(report).flatMap(([route, s]) => judge(route, s));
   const blockingProblems = problems.filter((p) => !NON_BLOCKING_ROUTES.some((r) => p.startsWith(`${r}:`)));
