@@ -18,8 +18,9 @@ import { APP_VERSION, contactHref, LICENSE_URL, pagePath, REPO_URL } from "@/lib
  * search engines the invitation line ends the signature row — one footer, no strip under it.
  */
 // ui-allow: the product footer: it composes the library SiteFooter (imported as FamilyFooter) with this product's columns, no copy of it
-export function SiteFooter({ locale }: Readonly<{ locale: Locale }>) {
+export function SiteFooter({ locale, offOrigin = false }: Readonly<{ locale: Locale; /** The page is a shop's own origin: the app's pages are another origin, no router prefetch (the CSP `connect-src 'self'`). */ offOrigin?: boolean }>) {
   const t = translator(locale);
+  const prefetch = offOrigin ? false : undefined;
   return (
     <FamilyFooter
       current={BRAND_ID}
@@ -43,23 +44,23 @@ export function SiteFooter({ locale }: Readonly<{ locale: Locale }>) {
           <ShopLink href={shopHref(DEMO_SHOP, locale)}>{t("chrome.menu.shop.title")}</ShopLink>
         </SiteFooterLink>
         <SiteFooterLink asChild>
-          <Link href={pagePath(locale, "pricing")}>{t("chrome.menu.pricing.title")}</Link>
+          <Link href={pagePath(locale, "pricing")} prefetch={prefetch}>{t("chrome.menu.pricing.title")}</Link>
         </SiteFooterLink>
         {downloadPageOpen() ? (
           <SiteFooterLink asChild>
-            <Link href={pagePath(locale, "download")}>{t("download.title")}</Link>
+            <Link href={pagePath(locale, "download")} prefetch={prefetch}>{t("download.title")}</Link>
           </SiteFooterLink>
         ) : null}
         <SiteFooterLink asChild>
-          <Link href={pagePath(locale, "docs")}>{t("chrome.menu.docs.title")}</Link>
+          <Link href={pagePath(locale, "docs")} prefetch={prefetch}>{t("chrome.menu.docs.title")}</Link>
         </SiteFooterLink>
       </SiteFooterColumn>
       <SiteFooterColumn title={t("chrome.footerColumns.legal")}>
         <SiteFooterLink asChild>
-          <Link href={pagePath(locale, "privacy")}>{t("chrome.legal")}</Link>
+          <Link href={pagePath(locale, "privacy")} prefetch={prefetch}>{t("chrome.legal")}</Link>
         </SiteFooterLink>
         <SiteFooterLink asChild>
-          <Link href={pagePath(locale, "terms")}>{t("chrome.terms")}</Link>
+          <Link href={pagePath(locale, "terms")} prefetch={prefetch}>{t("chrome.terms")}</Link>
         </SiteFooterLink>
       </SiteFooterColumn>
       <SiteFooterColumn title="Krizaka">
