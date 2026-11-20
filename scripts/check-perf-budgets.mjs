@@ -4,7 +4,10 @@
 //   - LCP <= 2.5 s and the LCP element is the hero;  - CLS 0;  - at most 5 phone screens (page height / viewport height);
 //   - client JavaScript per route (the bytes the page loads) may only go down: perf-budgets.json is the ratchet.
 //
-//   node scripts/check-perf-budgets.mjs --base http://localhost:3000 [--runs 3] [--update] [--out perf-report.json]
+//   node scripts/check-perf-budgets.mjs --base http://localhost:3000 [--runs 3] [--update | --accept "<reason>"] [--out perf-report.json]
+//
+// `--accept "<reason>"` is the one reviewed way to record a growth (a library release, say): it writes the measured bytes of the routes that grew
+// and the reason into perf-budgets.json, and the run does not fail on that growth. No hand edit of the file.
 //
 // LCP, CLS and the screens are absolute targets, never loosened. A route with no entry in perf-budgets.json has no JS baseline yet: it is
 // reported, and `--update` records it (it never raises an existing entry). `PERF_BLOCKING=0` reports the absolute budgets without failing
@@ -85,6 +88,15 @@ export function lowered(recorded, measured) {
   for (const [route, bytes] of Object.entries(measured))
     next[route] = route in next ? Math.min(next[route], bytes) : bytes;
   return next;
+}
+
+/** The entry recording a growth: the routes that grew take the measured bytes, the rest stay; the reason is mandatory and is written with them. */
+export function accepted(recorded, measured, reason) {
+  const why = typeof reason === "string" ? reason.trim() : "";
+  if (!why) throw new Error('--accept needs a reason: --accept "<why the budget grows>"');
+  const jsBytes = { ...recorded };
+  for (const [route, bytes] of Object.entries(measured)) jsBytes[route] = route in jsBytes ? Math.max(jsBytes[route], bytes) : bytes;
+  return { reason: why, jsBytes };
 }
 
 const arg = (name, fallback) => {
@@ -228,16 +240,29 @@ async function main() {
   await browser.close();
   writeFileSync(out, `${JSON.stringify(report, null, 2)}\n`);
 
-  const recorded = JSON.parse(readFileSync(BUDGETS_FILE, "utf8")).jsBytes ?? {};
+  const file = JSON.parse(readFileSync(BUDGETS_FILE, "utf8"));
+  const recorded = file.jsBytes ?? {};
   const measured = Object.fromEntries(Object.entries(report).map(([r, s]) => [r, s.jsBytes]));
   const js = ratchet(recorded, measured);
   if (js.added.length) console.log(`No JS baseline yet: ${js.added.join(", ")} (run with --update to record)`);
-  if (process.argv.includes("--update"))
-    writeFileSync(BUDGETS_FILE, `${JSON.stringify({ jsBytes: lowered(recorded, measured) }, null, 2)}\n`);
+  const accept = process.argv.includes("--accept");
+  if (accept) {
+    // Records the growth (and any lowering is left to --update): the reason is written, so the next reader sees why.
+    let next;
+    try {
+      next = accepted(recorded, measured, arg("accept"));
+    } catch (e) {
+      console.error(e.message);
+      process.exit(2);
+    }
+    writeFileSync(BUDGETS_FILE, `${JSON.stringify(next, null, 2)}\n`);
+    console.log(`Accepted: ${next.reason}`);
+  } else if (process.argv.includes("--update"))
+    writeFileSync(BUDGETS_FILE, `${JSON.stringify({ ...(file.reason ? { reason: file.reason } : {}), jsBytes: lowered(recorded, measured) }, null, 2)}\n`);
 
   const problems = Object.entries(report).flatMap(([route, s]) => judge(route, s));
   const blockingProblems = problems.filter((p) => !NON_BLOCKING_ROUTES.some((r) => p.startsWith(`${r}:`)));
-  const jsProblems = js.increased.map((i) => `${i.route}: client JS ${i.to} B > ${i.from} B recorded`);
+  const jsProblems = accept ? [] : js.increased.map((i) => `${i.route}: client JS ${i.to} B > ${i.from} B recorded`);
   for (const p of [...problems, ...jsProblems])
     console.error(`${blockingProblems.includes(p) || jsProblems.includes(p) ? "FAIL" : "WARN"} ${p}`);
   if (jsProblems.length || blocksRun(blockingProblems)) process.exit(1);
