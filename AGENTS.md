@@ -1,228 +1,65 @@
 # Folioviv — agent contract
 
-> Governance of **`krizaka/folioviv`**: Folioviv, a Krizaka product — the operating system of independent Québec shops.
-> Agent-neutral: humans and AI agents follow the same rules. Epic: krizaka/.github#52.
+<!-- krizaka-agents-template v2: rendered from krizaka/.github docs/standards/agents-template.md (scripts/agents-md.mjs). The one AGENTS.md standard: six sections in this order, at most 150 lines, bullets and imperatives. The conformance check « agents-template » reads the headings, the length and CLAUDE.md. Detail goes to docs/ via References, not here. -->
 
-## 1. What this repository is
+## Project context
 
-- A **pnpm + Turborepo** monorepo — one product, one repository: `apps/web` (Next.js 16: the public page, sign-in, the
-  member's space, the administration and the BFF — route handlers are the only HTTP surface), `apps/mobile` (Expo,
-  skeleton), `packages/core` (the domain, pure and deterministic), `packages/db` (PostgreSQL 16, Drizzle, versioned
-  migrations, the shop's operations).
-- **Built only from Krizaka bricks**: `@krizaka/ui` (auth-layout, app-shell, product-page, data-table, cards, mascots…),
-  `@krizaka/query`, `@krizaka/i18n`, `@krizaka/icons`, `@krizaka/tokens` (`brands/folioviv.css`), `@krizaka/realtime`.
-  A missing generic component goes to krizaka-ui, released, then used — never copied here. No `@tanstack/*` import, no
-  `fetch` in a client `useEffect`, no hand-written `<table>` or multi-field `<form>`.
+- Folioviv: the operating system of independent Québec service shops (appointments, invoices, GST/QST figures, public storefront). Restaurants, cafés, bars, bakeries are out (the database refuses them).
+- Kind: `product` · team: `folioviv` · registry entry: [repos.json](https://github.com/krizaka/.github/blob/main/repos.json).
+- pnpm + Turborepo: `apps/web` (Next.js 16: public page, sign-in, member space, administration, BFF: route handlers are the only HTTP surface), `apps/mobile` (Expo skeleton, outside the workspace), `packages/core` (pure, deterministic domain), `packages/db` (PostgreSQL 16, Drizzle, migrations, the shop's operations).
+- Read this file first, then the section of [docs/agents.md](docs/agents.md) for what you touch.
+- `CLAUDE.md` is the one line `@AGENTS.md` (or a symlink to this file): never a second copy of it.
 
-- **Storefront photos are uploaded by the owner** (`/api/walker/media/upload`): JPEG/PNG/WebP checked by bytes, ≤ 2 MB after the
-  phone redraws them, stored content-hashed under `user/folioviv/shops/<shop>/` of the media storage by `@krizaka/storage` (`lib/media-storage.ts`; the
-  administrator's `storage.*` settings over `MEDIA_STORAGE_*` / `MEDIA_CDN_HOSTNAME`; no local copy of the upload code, nothing
-  encrypted since the files are public on the CDN), only the CDN address kept; the keys published before the package stay valid. Off (503, the owner pastes an address) until the storage is configured.
+## Essential commands
 
-- **Proposed images and videos (#267).** So that no section of a storefront is empty, each trade (`SHOP_TYPES` in `@folioviv/core`: salon, coaching,
-  workshop, cleaning, pets, consulting - never a restaurant or a bar) has default media for the slots `cover` (image + silent loop), `gallery` and `service`
-  (`packages/core/src/shop-media.ts`). The files are generated locally and never committed (`apps/web/scripts/default-media/`: FLUX.2 klein through
-  `sd-cli`, ffmpeg loops, `sharp` renditions), live on the media CDN under `apps/folioviv/defaults/<type>/<slot>/` (hashed names, uploaded with krizaka-com's
-  `cdn-assets.mjs`), and are named by `apps/web/lib/default-media.manifest.json` (the only thing committed). They are neutral pictures: no real person, no text,
-  never presented as the owner's shop. A slot the owner filled is never replaced; the owner chooses a proposal in « Images proposées » or turns them off
-  (`shop_page.use_defaults`); the administrator holds `features.defaultMedia` and `storefront.defaultMedia.types`.
-- **Storefront templates (#261, `docs/design/storefront-templates.md`).** A template is versioned data (`packages/core/src/storefront-templates/`: section order and
-  variants, media slots, hue, paper, text styles per role), two per trade, never a text or a photo. The shop keeps the `id@version` it applied (`shop_page.template_id`,
-  `template_version`; no template = today's page, always) and its own order (`sections_custom`: a template asks « keep my order / use its order » before replacing it,
-  `applyTemplate`). The owner picks in « Apparence » / « Look » (`TemplatePicker`, a tiny preview per tile) and at shop creation, where the trade is asked and the
-  administrator's default is preselected — it preselects, never applies by itself. A template improves as `id@version+1` beside the old one: the shop keeps its
-  version until the owner updates (« update available »). The demo shops (and the Saint-Henri persona) each wear a template of their trade, applied once by their seed.
-  The administrator holds `features.storefrontTemplates` (on),
-  `storefront.templates.offered` and `storefront.templates.default.<trade>`. A missing block or variant goes to krizaka-ui first.
-- **The shop as a place (B45, #310-#315, #317).** The public page can carry a wall (`shop_wall`, `shop_wall_items`: photos, cards, the sign; percent positions, a tilt of ±8°, a texture among four, `limits.wallItems`, twelve drawn), the latest video (`shop_reels`: an MP4/WebM uploaded - checked by its bytes and its container's duration against `limits.reelSeconds` and `limits.reelMegabytes` - or a link to a TikTok, a YouTube Short or an Instagram reel on an exact host, shown behind a facade: **nothing loads from a platform before the visitor clicks**), the shop's profile links (plain outbound anchors), a bulletin board (`shop_announcements`, three up at a time) and verified reviews (`shop_reviews`, a first name and an initial only, a Bayesian score from `reviews.*`; a small read model until `@krizaka/reviews`, krizaka-ts#37). The rules are `packages/core/src/community.ts`, the operations `packages/db/src/shop-community.ts` (every function takes the shop; another shop's row is not found), the owner's place is Boutique › Page (owner and manager write, staff read the API). The page's `frame-src` names this origin (the studio's preview) and the three embed hosts, nothing else. The demo shops get their place from `demo-community.ts` (media on the CDN under `sites/folioviv/demo/<slug>/`, never committed).
+- Install: `pnpm install --frozen-lockfile`; dev: `pnpm dev`; build: `pnpm build`.
+- Everything before a push: `pnpm run check` (lint · typecheck · tests; the `precheck` script runs install then check).
+- Lint: `pnpm lint` (workspace guard, ESLint, i18n check, ast-grep rules + ratchet, dependency-cruiser, krizaka versions); typecheck: `pnpm typecheck`; tests: `pnpm test`.
+- Format: `pnpm format` / `pnpm format:check`; ast-grep codemods: `pnpm sg:fix`; ratchet lock: `pnpm sg:ratchet:update` (never raises a count).
+- Database: `pnpm db:rebuild` (`--yes` non-local host, `--cast` demo cast, `--write-expected` after a schema change); `pnpm --filter @folioviv/db db:generate` writes the next migration; seed: `pnpm dev:seed`.
+- Other checks: `pnpm check:i18n`, `check:overflow`, `check:hydration`, `check:perf`, `test:visual`, `e2e:walker`.
 
-- **Explorer lists the showcase shops only (krizaka-internal#3743).** `shops.showcase` (migration `0001`) is set by the seed on Pattes, Cèdre, Encre Vive and Ferland; the Saint-Henri directory shops and the studio stay published and reachable by their address but are not listed. The owner reads the flag at `GET /api/walker/shop`; only the seed or support writes it.
+- Run them on what you changed before every push; CI runs the rest.
 
-- **No junk user in the dev database (krizaka-internal#2716).** One persona cast (`castOf` in `@krizaka/org`) and one seed (`seed-cast.mjs`) serve local and deployed, with the same data. A journey signs in as a persona of the cast, or creates its user at an `e2e-…@folioviv.test` address (`ownUsers()` in `apps/web/e2e/journeys/own-users.mjs`) and deletes it in `afterAll`. `scripts/ci-journeys-run.sh` is the teardown check: the users before the run = the users after (`journey-users.mjs snapshot` / `check`), so a journey that leaves a user fails the suite. A seed on a shared host takes the cast e-mails from the environment (`QA_*_EMAIL`, from the `APP_QA_*` secrets), never a built-in address.
+## Architecture & conventions
 
-- **A QA persona that cannot sign in fails the seed (krizaka-internal#3827).** The demo owner (WALKER) is seeded at `QA_WALKER_EMAIL` (the `APP_QA_FOLIOVIV_WALKER_EMAIL` secret; a database on this machine keeps `lea.beaulieu@folioviv.test`; an account already holding the shop at the seed's address is moved, shop kept), CAMILLE's sign-in at `QA_STAFF_EMAIL`. After seeding, `qa-sign-in-guard.mjs` signs in ERIC, CAMILLE (when given), MIRA and WALKER with the environment's address and password and throws naming the persona (never the address or password). `seed-dev.sh` must hand the `@qa` values down.
+- Follow the [krizaka-engineering skill](https://github.com/krizaka/krizaka-skills/blob/main/skills/krizaka-engineering/SKILL.md); search its [packages reference](https://github.com/krizaka/krizaka-skills/blob/main/skills/krizaka-engineering/references/packages.md) before writing anything generic.
+- Build only from Krizaka bricks (`@krizaka/ui`, `query`, `i18n`, `icons`, `tokens`, `realtime`, `storage`, `organize`, `privacy`); a missing generic component goes to krizaka-ui, released, then used, never copied. No `@tanstack/*` import, no `fetch` in a client `useEffect`, no hand-written `<table>` or multi-field `<form>`.
+- Keep ports and adapters: domain code reads no env, no ambient clock, no database client; route handlers are thin. Payments go through the port `apps/web/lib/payments`; the translation model through `TranslationPort`.
+- Work on "the" shop through `requireShop` / `requireOwner` / `requireShopClient` (`lib/access.ts`), never a shop id from the request; another shop's resource answers 404, never 403. Classify each new table in `packages/db/src/tenancy.ts`.
+- Write every user string in `apps/web/messages/{en,fr}.json` (English the reference), e-mails in `apps/web/mail-templates/<id>/<locale>/`; never a locale ternary; `--kz-*` token roles only, no hard-coded colour.
+- Put limits, prices, durations and flags in administrator settings; env variables are `<CONTEXT>_<THING>`, declared once in `apps/web/lib/env.ts` and in `deploy/digitalocean/app.yaml`.
+- Name things by what they do; no `*Utils`, `*Helper`, `*Manager`. One job per function (complexity ≤ 15, nesting ≤ 2, body < 60 lines).
+- Default media (avatars, banners, logos) come from `@krizaka/org` (`listDefaults`, `defaultFor`), never hard-coded.
 
-- **No mobile app in the dev preview.** `apps/mobile` is an unbuilt skeleton, outside the workspace until the mobile phase (A5,
-  krizaka/.github#52); the walker's phone is served by the phone-first web app. The Dev preview criteria `mobile.*` are `na` for that
-  reason (`dev-preview.json`); the day a mobile build exists, they become real criteria again.
+## Guard-rails & known pitfalls (read before coding)
 
-## 2. Non-negotiables
+- The checks are the judge ([ADR-015](https://github.com/krizaka/krizaka-internal/blob/main/docs/adr/.github/ADR-015-ai-code-audit-measured-and-enforced.md), [guards](https://github.com/krizaka/.github/blob/main/docs/standards/guards.md)): never `--no-verify`, never a new `eslint-disable`, never a raised ratchet or baseline; never silence an ast-grep rule (fix, or justify a technical fact with `// @fixed: <reason>`).
+- Money is integer cents: no float, no `real`, no `numeric` read as a float. GST 5/100 and QST 9975/100000 are exact fractions, applied once per invoice on the taxable subtotal, rounded half away from zero (`@folioviv/core`); change a rate or rounding rule only with a test on known invoices first.
+- The ledger is append-only (triggers); a correction is a credit note; an invoice's state is derived (no route moves it, no « bulk paid »). Never silently adopt an AI figure: reconcile against the ledger.
+- Folioviv prepares, the merchant files: never file, transmit or promise electronic transmission to Revenu Québec or the CRA (a test scans the e-mails).
+- No AI in the product, screens or words (never « IA », « intelligent »); the only model is shop-page translation, labelled « traduction automatique », sending no client data. Anything else reopens krizaka/folioviv#161 first.
+- Loi 25: consent per purpose, never pre-ticked; a new table with personal data gets a `@krizaka/privacy` contributor and a `RETENTION_RULES` entry; a public text states a place or flow only where code proves it.
+- Never edit a merged migration; dev is rebuilt with `db:rebuild`, never patched by hand; one database per worktree, never a shared or `*_demo` one.
+- Sign-up is closed server-side (QA accounts only); a journey that creates a user uses `ownUsers()` and deletes it; the administration lives on admin.folioviv.com only.
+- Count-then-insert and check-then-write run in one transaction with a lock, with a concurrency test; a rule (limit, permission, validation) lives in the service, not in a route; validate the original input, never a trimmed copy; a cleanup never masks the original error.
+- A new walker route uses a shop guard or is declared in `tenant-isolation.integration.test.ts`; a new env key is declared in the spec or in `NOT_DECLARED` of `env-spec.test.ts`.
+- Not deployed: no DigitalOcean app, no DNS; mobile skeleton is not built. Restaurants stay excluded; the point of sale stays a stub.
+- Never write a URL, law article, price or figure you did not read; write `TO VALIDATE`. No secret, capture or log in the repo; no production data in a session.
+- Use `?.` and `??` in TypeScript, not a `&&` chain or a null ternary; a closed set is an `as const` object, never `enum`.
+- Keep the edit hook in `.claude/settings.json`: `npx --no-install krizaka-edit-check` on `Edit|Write`.
 
-- **Folioviv prepares; the merchant files.** "Prepare my tax return" produces the GST/QST figures (FPZ-500) and their
-  working papers; nothing in the code or the copy files, transmits or promises electronic transmission to Revenu Québec or
-  the CRA. A test scans the e-mails for such a promise.
-- **Money is integer cents.** No float, no `real`, no `numeric` read as a float. GST 5/100 and QST 9975/100000 are exact
-  fractions, applied once per invoice on the taxable subtotal, rounded half away from zero (`@folioviv/core`). Changing a
-  rate or a rounding rule needs a test on known invoices first.
-- **The ledger is the authority.** Append-only (triggers); every invoice's ledger entries equal its taxes at commit (a
-  deferred constraint trigger); a correction is a credit note. An AI's figures are reconciled against the ledger and every
-  difference is shown — never silently adopted.
-- **Restaurants, cafés, bars and bakeries are excluded** (a sales recording system certified MEV-WEB is required in Québec): the database refuses those shop kinds. Folioviv targets service businesses only.
-  The point of sale stays a stub behind `APP_POS_ENABLED`. **Subscription payments (prices are a catalogue the administrator edits at `/console/prices`, ADR-009, folioviv#371: the founder offer 39 $ CAD/month plus taxes for the first businesses by its `founderCap` limit; Starter 45 $ and Scale B2B 99 $ plus taxes, public, Scale's B2B features « soon »; 0 % on cards, a capped debit fee per order; the seed in `apps/web/lib/pricing.ts`, read only through `lib/price-catalogue.ts`; a subscription keeps the version it was sold at) go through a payments port** (`apps/web/lib/payments`, ADR-003): the vendor is configuration (`PAYMENTS_PROVIDER`), the price is data at the vendor, the webhook is verified and idempotent; the offer shows only when `APP_FOUNDER_OFFER_ENABLED`. No merchant payment (the shop's own sales) is wired.
-- **Loi 25 by design.** Consent per purpose, never pre-ticked, append-only; the access, portability and erasure of a client file are
-  `@krizaka/privacy` (folioviv#370): the subject is `{ kind: "client", id }`, `packages/db/src/privacy.ts` registers one contributor per
-  module (the file, the visits, the invoices, the requests, the consents), `exportClient` assembles the document, `eraseClient` runs every
-  contributor in one transaction and withdraws the live consents; the shop's owner answers a client from the console
-  (`/api/walker/clients/[id]/export` and `/erase`, permission `privacy`, audited). Retention is data (`RETENTION_RULES`,
-  `@folioviv/core`): invoices, their lines, payments and the tax ledger stay six years (the erasure blanks the person, keeps the row); a
-  new table that holds personal data gets a contributor and a rule. The privacy impact assessment, the register of transfers outside
-  Québec (`docs/privacy/`, tested against `deploy/digitalocean/app.yaml`) and the claims the lawyer reads (krizaka/.github#250) are the
-  published position: a public text states a place or a flow only where the code or the spec proves it (`public-claims.test.ts`,
-  `transfers.test.ts`). Canadian hosting is planned, not claimed.
-- **No AI in the product, in its screens or its words.** Folioviv says what it does (appointments, invoices, tax figures) in plain words; never « IA », « intelligent » or « révolutionnaire ». If a model is ever needed, it goes through Sovkora, behind a port, and the epic krizaka/folioviv#161 is reopened first.
-  **One model is now involved (2026-10-23, #258, decision recorded on #161): translating the shop page's texts.** It goes through the `TranslationPort`
-  (`packages/db/src/translation-port.ts`; the adapter in `apps/web/lib/translation.ts` calls the Sovkora Studio `text-translation`, krizaka/sovkora-packs#119).
-  Only the page's own texts and a glossary (shop name, service names, street address) are sent, never anything about a client. The owner sees
-  « traduction automatique » (never « IA »), edits any text, an edited text is never overwritten without asking, and a text whose source changed is flagged « à revoir ».
-  The administrator holds `features.storefrontTranslation`, `storefront.languages.allowed` and `limits.translationsPerShopPerDay`. Nothing else in Folioviv uses a model: the ledger, the figures and the tax return stay deterministic.
+## Expected validation workflow
 
-## 3. The product is independent
+- [ ] `pnpm run check` is green; fix the cause of a red, never the guard.
+- [ ] A fix starts with a failing test (a bug means a missing guard); database rules are proven on a real PostgreSQL, never mocks.
+- [ ] Each visible page is checked dark and light, desktop and phone (captures go to Bunny); a notable UX choice has an entry in `docs/UX_DECISIONS.md`.
+- [ ] Every review thread is answered (test-first fix, or a reason) and resolved.
+- [ ] A feature or fix PR names its journey (`Journey: <name>` or `Journey: n/a — <reason>`); one issue, one small PR (`Closes #<n>`); merge only with green CI.
 
-- No link to another Krizaka product, no family switcher. Krizaka is the publisher, named **only in the footer** and the
-  legal mentions. The colour is the Folioviv brand (Laurentian forest green with warm copper), the mark
-  `FoliovivLogo` ("the open shop"), the mascot **the beaver**, the artisan. Components use `--kz-*` roles only;
-  dark and light are first-class.
+## References
 
-## 4. Security of the dev environment
-
-- Sign-up is closed server-side (`AUTH_SIGNUP_ENABLED` not `true` → 403); QA accounts only (`apps/web/scripts/qa-accounts.mjs`).
-- The administration lives on **admin.folioviv.com** (same app, host-routed by `proxy.ts` / `lib/host.ts`; 404 on the
-  product host); a session, the ADMIN role **and** an address of `AUTH_ALLOWED_IPS`. Never indexed.
-- Passwords scrypt; sessions random tokens kept as keyed hashes; rate limits on sign-in; CSP same-origin, HSTS.
-- Environment variables by bounded context (`APP_`, `DATABASE_`, `AUTH_`, `ABUSE_`, `REALTIME_`), declared once in
-  `apps/web/lib/env.ts`. Secrets never in the repository, never printed (`~/.krizaka-worktrees/tools/secret.sh`).
-- **Not deployed.** No DigitalOcean app, no DNS: hosting is the founder's decision.
-- **A spec declares every key the app reads.** `deploy/digitalocean/app.yaml` declares each variable of `envSchema` (`apps/web/lib/env.ts`), secrets as `type: SECRET` with a `__NAME__` placeholder (never a value in git); a key left out goes in `NOT_DECLARED` of `apps/web/lib/env-spec.test.ts` with its reason, or the test fails (krizaka-internal#3249).
-
-## 4b. The workspace, organised
-
-- Clients and invoices are organised with `@krizaka/organize` 0.4.0 (krizaka-ts ADR-003): **tags and saved views belong to the shop**
-  (`packages/db/src/workspace.ts`, the `organize` schema, migration `0033` generated by `gen-workspace-migration.ts` with a drift test).
-  The owner and the manager write tags; another shop's tag, view or entity id is a 404; a bulk tag/untag is at most 200, one transaction,
-  one audit line per entity. The administrator's defaults (`workspace-defaults.ts`) are seeded as data, edited at
-  `/api/admin/organize/<kind>/config`. An invoice's state is **derived** (`stateSql` mirrors `invoiceState`, a test keeps them in step):
-  no route moves it and nothing a bulk action does touches the ledger.
-
-## 5. Database
-
-- PostgreSQL 16, schema in `packages/db/src/schema.ts` (Drizzle). `pnpm --filter @folioviv/db db:generate` writes the
-  next migration; rules the schema cannot say are custom SQL migrations. A merged migration is never edited.
-  **One baseline** (`0000_baseline`, krizaka-internal#2044: no production yet, no history kept); the price grid is data from code (`price-schedule.ts`, run by `migrate`). `pnpm db:rebuild` (`--yes` for a non-local host, `--cast` for the demo cast, `--write-expected` after a schema change) drops every schema, migrates from zero, seeds the configuration and checks the schema against `packages/db/src/schema-expected.json`; CI builds a database from zero and runs the same check (`db-rebuild.test.ts`). Dev is rebuilt with it, never patched by hand.
-- One database per worktree/session; never a shared or `*_demo` database from a session. Tests create a database per file
-  on CI's PostgreSQL service or on a Testcontainers one.
-- **Tenant isolation (#247).** A shop's data is reachable only by that shop's members, and nothing tells anyone else it exists.
-  - Every table is classified in `packages/db/src/tenancy.ts` (`TABLE_OWNERSHIP`): `shop` (carries `shop_id`: NOT NULL, a foreign
-    key to shops, the leading column of an index), `child` (reached through a parent that ends at a `shop` table), `scoped`,
-    `account` or `platform`. A new table that is not classified fails `tenancy.test.ts`: say whose data it holds before it ships.
-  - A route works on "the" shop through `requireShop` / `requireOwner` / `requireShopClient` (`lib/access.ts`), never on a shop id
-    taken from the request. Another shop's id (`?shopId=`) and another shop's resource answer **404**, the answer of an id that does
-    not exist (never 403, which would confirm it). Two idempotent deletes (hours, zones) answer 200 and change nothing; two
-    package codes (`AK_NO_REPORT` 409, `INVITE_INVALID` 400) are the same for a foreign and an unknown id.
-  - `app/api/tenant-isolation.integration.test.ts` walks every `app/api/walker/**` route: without a session (401), as a member of
-    another shop (404), and with a resource of another shop (404). A new walker route must use a shop guard, or be declared in the
-    test (`SESSION_OWNED`, `RESOURCES`) with its reason; the test fails otherwise.
-
-## 6. Checks — local first, CI always
-
-- **Before every push**: `pnpm run check` (lint · typecheck · tests), run by the `precheck` script (install, then check) that the pre-push of `krizaka-hooks`
-  (@krizaka/config, ADR-026; installed by `pnpm install`) runs. Never push "to see what CI says". Never merge with a pending or red check (CodeQL included).
-- **No test, not done**: every feature and fix ships with its tests; a fix starts with a failing test. The database rules
-  are proven on a real PostgreSQL, never with mocks.
-- Every visible page is checked in dark and light, desktop and phone. PR captures go to Bunny, never into the repository.
-- Each notable UX choice has its entry in `docs/UX_DECISIONS.md`.
-
-## 7. Text
-
-- Every user-facing string is in `apps/web/messages/{en,fr}.json` (English the reference; `krizaka-i18n check` in
-  `pnpm lint`); e-mails in `apps/web/mail-templates/<id>/<locale>/` (krizaka-notifications format). Never a locale ternary.
-
-## Static rules & codemods (ast-grep)
-
-The org code rules (addendum 2026-10-15) are lint rules, not review comments. [`@ast-grep/cli`](https://ast-grep.github.io)
-is a **pinned devDependency** (no global install, CI reproduces local): `sgconfig.yml` + `rules/*.yml` (one rule per file,
-with a message and, where safe, a `fix:`; written for Tsx and `.ts` is parsed as Tsx too, so each rule covers `.ts` and `.tsx`), `rule-tests/` (valid/invalid cases of each rule).
-
-| Rule                                                               | What it refuses                                                                                                                                                                                                                                                                                        |
-| :----------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `no-hand-ms-*`, `no-get-time-difference`, `no-get-time-arithmetic` | hand-written time arithmetic (`n * 60 * 1000`, `a.getTime() - b.getTime()`): date-fns, or a duration read from the settings                                                                                                                                                                            |
-| `no-env-in-domain`                                                 | an `env` import in domain code (`packages/*/src`, `src/`): the value arrives as a parameter                                                                                                                                                                                                            |
-| `no-db-in-service-or-rules`                                        | a db client / schema import in `*.service.ts`, `*-service.ts`, `*.rules.ts`, `*-rules.ts`                                                                                                                                                                                                              |
-| `no-ts-enum`                                                       | the TypeScript `enum` keyword (`as const` object + derived type, or a Postgres enum)                                                                                                                                                                                                                   |
-| `no-enum-string-compare`                                           | `x.status === "OPEN"` (field named status/kind/role/reason/state/direction compared to a string literal)                                                                                                                                                                                               |
-| `no-ambient-clock`                                                 | `new Date()` / `Date.now()` in domain code: the clock is injected                                                                                                                                                                                                                                      |
-| `no-types-at-package-root`                                         | `types.ts` at a package root (`<feature>/<feature>.types.ts`)                                                                                                                                                                                                                                          |
-| `no-unjustified-numeric-export`                                    | a numeric (or `…ToMilliseconds(n)`) `export const` in feature code without `// @fixed: <reason>` just above                                                                                                                                                                                            |
-| `no-locale-ternary`                                                | a text chosen with a locale ternary (`locale === "fr" ? a.nameFr : a.nameEn`, `isFr ? …`): a message (`say`) or the pair indexed by the locale, `{ fr, en }[locale]`; a choice between two locale tags (`"fr-CA" : "en-CA"`) is allowed                                                                |
-| `no-hand-made-nav`, `no-hand-made-language-switch`                 | a navigation bar that is not `NavBar` of @krizaka/ui (own Radix NavigationMenu, a local `NavBar`/`TopNav`), a hand-made language switch (`hrefLang` in a component, a row of `aria-pressed={locale === …}` buttons): use `NavBar` and `NavBar.Language` (« Navigation in the family », ui.krizaka.com) |
-| `no-status-move`                                                   | `ws.status.move(…)`: Folioviv has no editable status set; an invoice's state is derived from the ledger, so a « bulk paid » must not exist (folioviv#337)                                                                                                                                              |
-| `no-utc-day-slice`                                                 | `x.toISOString().slice(0, 10)`: that is the UTC day, not the shop's (in Montréal after 19:00 it is tomorrow). `localDay(instant, timeZone)` of `@krizaka/intl` (`shopDay` on the server)                                                                                                               |
-
-- **Run**: `npm run lint` runs everything (it includes `ast-grep test` and the ratchet). `npx ast-grep scan` lists the
-  violations with their message; `npm run lint:sg:test` runs the rule tests.
-- **Ratchet**: `scripts/sg-ratchet.mjs` counts the violations per rule and refuses any increase against
-  `sg-ratchet.json` (same idea as `krizaka-ratchet` / `lint-ratchet.json`: the debt only goes down). Fixed some? Lock the gain with
-  `npm run sg:ratchet:update` (it never raises a count and records a new rule at its current count). A new rule is
-  added with its test in `rule-tests/` and its baseline in the same pull request. The script is identical in every
-  Krizaka TypeScript repository (keep the copies identical; its unit test is `scripts/sg-ratchet.test.mjs`).
-- **Imports** (`.dependency-cruiser.cjs`, the shared preset of `@krizaka/config`, run by `pnpm run lint:deps` / `scripts/deps.mjs`, one run per workspace): « Krizaka first » (`date-fns` is refused in apps; the existing uses are in each workspace's `.dependency-cruiser-known-violations.json`, which only shrinks: `node scripts/deps.mjs update`), no cycle, no unresolvable import, no devDependency in production code. A new workspace is added to `WORKSPACES` (a test fails otherwise).
-- **Codemods**: `npm run sg:fix` applies the `fix:` of the rules (`ast-grep scan --update-all`) and adds the date-fns import;
-  behaviour is identical — run `npm run lint && npm test` after, and land the result in a small pull request.
-- A rule is never silenced to get a PR green; fix the code, or (a business parameter that is a technical fact) justify it with `// @fixed:`.
-
-## Before you open or update a pull request (coding agents)
-
-These are the defects code review found most often on 2026-10-23. Check them yourself before you open or update a pull request:
-
-1. **Checks:** run the repository's full check (lint, typecheck, tests, build) and fix it. Never push a red check.
-2. **Concurrency:** any « count then insert » or « check then write » runs in one transaction with a lock, and has a concurrency test.
-3. **One gate:** a rule (limit, permission, validation) is enforced in the service, so no route can skip it. Test every route.
-4. **Errors:** a cleanup (ROLLBACK, DROP, close) never masks the original error. Rethrow it, or throw an `AggregateError` with the original first.
-5. **Validation:** validate the original input, never a truncated or pre-trimmed copy. Server and client reject the same inputs.
-6. **Accessibility:**
-   - every control has a unique label, and FR/EN pairs say their language;
-   - focus rings are never clipped by `overflow`;
-   - text never overflows its box at 360 px.
-7. **Naming:** environment variables follow `<CONTEXT>_<THING>` (`APP_`, `DATABASE_`, `AUTH_`, `MEDIA_`, `MAIL_`, `PAYMENTS_`, `AI_`…) and are declared once.
-8. **Words:** every user-facing string is in the FR and EN messages, and no colour is hard-coded.
-9. **Review threads:** answer every one. Fix it test-first, or reply with the reason, then resolve it.
-
-- **A bug means a missing guard** ([standard](https://github.com/krizaka/.github/blob/main/docs/standards/bug-means-missing-guard.md)): the fix PR first adds a guard that fails on `main`, then fixes the bug; the bug issue says why the guards missed it.
-
-- **Default media** (avatars, banners, logos): their URLs come from the Krizaka org JSON (`@krizaka/org`: `listDefaults(kind)`, `defaultFor(kind, seed)`) — never hard-coded or bundled in this repository; a folder is never given a person. [Standard](https://github.com/krizaka/.github/blob/main/docs/standards/default-media.md).
-
-**Repository layout:** the root follows [krizaka/.github `docs/standards/repo-layout.md`](https://github.com/krizaka/.github/blob/main/docs/standards/repo-layout.md); the CI guard `check-repo-layout` fails on a stray root file, and a justified extra is declared in `.repo-layout.json` with its why.
-
-## 9. Anti-slop (ADR-015)
-
-What a model tends to write and the code does not need. Each line points at the rule that refuses it
-([ADR-015](https://github.com/krizaka/krizaka-internal/blob/main/docs/adr/.github/ADR-015-ai-code-audit-measured-and-enforced.md), [docs/standards/guards.md](https://github.com/krizaka/.github/blob/main/docs/standards/guards.md)).
-
-1. **No defensive null on `@NullMarked` code.** No `Objects.requireNonNull` or `if (x == null)` on a value the type already
-   guarantees. Enforced by NullAway at compile time; a new package is `@NullMarked` (ArchUnit).
-2. **A closed set is a type.** An enum, a sealed interface or an `as const` object, never a string compared by hand;
-   strategies are a `Map<Kind, Strategy>` built once at startup. Enforced by PMD / ArchUnit (Java) and `no-enum-string-compare` (ast-grep).
-3. **HTTP in Java is a DTO record, `@Valid` and `ProblemDetail`.** No `Map.of("error", …)`, no entity in a response, one
-   `@RestControllerAdvice` per service. Enforced by ArchUnit.
-4. **No `*Utils`, `*Helper` or `*Manager`.** Name the thing by what it does (§4). Enforced by ArchUnit (ADR-015 §5).
-5. **`?.` and `??` in TypeScript**, not a chain of `&&` or a ternary on null. The target rules are `@typescript-eslint/prefer-optional-chain` and `prefer-nullish-coalescing`; they are not in `@krizaka/config` yet.
-6. **The build is the judge.** Compile, lint and test before every push; `krizaka-edit-check` runs on each edit (below) and
-   NullAway and ArchUnit run at pre-push and in CI. A rule is never silenced to get green.
-
-**The edit hook.** Every repository adds this to `.claude/settings.json`. After each `Edit` or `Write`, the one file is
-checked in under 10 s: ESLint with the repository's config for TypeScript, PMD with the Krizaka rules for Java (never Maven).
-A finding comes back to the agent (exit 2); a timeout is silent.
-
-```json
-{
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write",
-        "hooks": [{ "type": "command", "command": "npx --yes -p @krizaka/config krizaka-edit-check", "timeout": 10 }]
-      }
-    ]
-  }
-}
-```
-
-In a TypeScript repository that already depends on `@krizaka/config`, use `npx --no-install krizaka-edit-check` (no download).
+- [docs/agents.md](docs/agents.md): the previous long AGENTS.md, whole (storefront media and templates, shop-as-a-place, tenancy, Loi 25, ast-grep rule table, ratchet, anti-slop, pre-PR list).
+- [docs/UX_DECISIONS.md](docs/UX_DECISIONS.md), [docs/design/](docs/design), [docs/privacy/](docs/privacy), [docs/adr/](docs/adr), [docs/ci-and-deploy.md](docs/ci-and-deploy.md).
+- [Org standards](https://github.com/krizaka/.github/tree/main/docs/standards) of krizaka/.github; the [engineering charter](https://github.com/krizaka/.github/blob/main/AGENTS.template.md).
+- [krizaka-engineering skill](https://github.com/krizaka/krizaka-skills/blob/main/skills/krizaka-engineering/SKILL.md).
