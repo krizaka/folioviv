@@ -5,7 +5,7 @@ export const ADMIN_TIME_ZONE = "America/Toronto";
 
 /** A date for the console: medium date, and the time when asked. A `YYYY-MM-DD` day stays on its own day. */
 export function formatDate(iso: string, locale: "en" | "fr", time = false): string {
-  const dayOnly = /^\d{4}-\d{2}-\d{2}$/.test(iso);
+  const dayOnly = iso.length === 10; // `YYYY-MM-DD`: an instant always carries its time
   const timeZone = dayOnly ? "UTC" : ADMIN_TIME_ZONE;
   return new Date(iso).toLocaleString(
     INTL[locale],
