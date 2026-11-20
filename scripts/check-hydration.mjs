@@ -7,7 +7,7 @@
 //   HYDRATION_OWNER_EMAIL=… HYDRATION_OWNER_PASSWORD=… [HYDRATION_CLIENT_EMAIL=… HYDRATION_CLIENT_PASSWORD=…] \
 //     node scripts/check-hydration.mjs --base http://localhost:3000 [--locale en-US] [--timezone America/Vancouver]
 //
-// Without credentials only the public pages are crawled. Passwords stay in the environment; nothing but the checks is printed.
+// HYDRATION_ADMIN_EMAIL / _PASSWORD add the administration console. Without credentials only the public pages are crawled. Passwords stay in the environment; nothing but the checks is printed.
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
@@ -59,6 +59,8 @@ export const OWNER_PAGES = [
   "/shop",
   "/shop/languages",
 ];
+/** The administration console's tables (admin.folioviv.com serves them at the root; locally they sit under `/console`), in both languages: their dates once differed between the server and the browser (#4138). */
+export const ADMIN_PAGES = ["fr", "en"].flatMap((l) => ["shops", "invoices", "ledger", "audit"].map((p) => `/${l}/console/${p}`));
 /** The account's own pages. */
 export const ACCOUNT_PAGES = ["/app/profile", "/app/profile/security"];
 
@@ -253,7 +255,7 @@ async function crawl(browser, { base, paths, theme, account, problems, visited, 
   await context.close();
 }
 
-export async function check({ base, owner, client, visitor = BROWSER }) {
+export async function check({ base, owner, client, admin, visitor = BROWSER }) {
   const browser = await chromium.launch();
   const problems = [];
   const visited = [];
@@ -276,6 +278,8 @@ export async function check({ base, owner, client, visitor = BROWSER }) {
         ];
         await crawl(browser, { base, paths, theme, account: { ...owner, role: "owner" }, problems, visited, visitor });
       }
+      if (admin)
+        await crawl(browser, { base, paths: ADMIN_PAGES, theme, account: { ...admin, role: "admin" }, problems, visited, visitor });
       if (client)
         await crawl(browser, {
           base,
@@ -302,10 +306,11 @@ if (process.argv[1] && import.meta.url.endsWith(process.argv[1].replace(/^.*\//,
   const base = arg("base", "http://localhost:3000").replace(/\/$/, "");
   const owner = account("HYDRATION_OWNER");
   const client = account("HYDRATION_CLIENT");
+  const admin = account("HYDRATION_ADMIN");
   if (!owner)
     process.stdout.write("check-hydration: no HYDRATION_OWNER_* credentials — the signed-in pages are not crawled\n");
   const visitor = { timezoneId: arg("timezone", BROWSER.timezoneId), locale: arg("locale", BROWSER.locale) };
-  const { problems, visited } = await check({ base, owner, client, visitor });
+  const { problems, visited } = await check({ base, owner, client, admin, visitor });
   process.stdout.write(
     `check-hydration: ${visited.length} page loads in ${visitor.timezoneId} (${visitor.locale}), ${THEMES.length} themes, ${VIEWPORTS.length} widths\n`,
   );
