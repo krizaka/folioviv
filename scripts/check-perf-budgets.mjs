@@ -219,6 +219,26 @@ async function sample(browser, url) {
   };
 }
 
+/** Writes the JS baseline when asked: --accept records a growth with its reason, --update only lowers. */
+function recordBaseline({ file, recorded, measured, accept, update }) {
+  if (accept) {
+    // Records the growth (and any lowering is left to --update): the reason is written, so the next reader sees why.
+    let next;
+    try {
+      next = accepted(recorded, measured, arg("accept"));
+    } catch (e) {
+      console.error(e.message);
+      process.exit(2);
+    }
+    writeFileSync(BUDGETS_FILE, `${JSON.stringify(next, null, 2)}\n`);
+    console.log(`Accepted: ${next.reason}`);
+  } else if (update)
+    writeFileSync(
+      BUDGETS_FILE,
+      `${JSON.stringify({ ...(file.reason ? { reason: file.reason } : {}), jsBytes: lowered(recorded, measured) }, null, 2)}\n`,
+    );
+}
+
 async function main() {
   const base = arg("base", "http://localhost:3000");
   const runs = Number(arg("runs", "3"));
@@ -247,22 +267,7 @@ async function main() {
   const js = ratchet(recorded, measured);
   if (js.added.length) console.log(`No JS baseline yet: ${js.added.join(", ")} (run with --update to record)`);
   const accept = process.argv.includes("--accept");
-  if (accept) {
-    // Records the growth (and any lowering is left to --update): the reason is written, so the next reader sees why.
-    let next;
-    try {
-      next = accepted(recorded, measured, arg("accept"));
-    } catch (e) {
-      console.error(e.message);
-      process.exit(2);
-    }
-    writeFileSync(BUDGETS_FILE, `${JSON.stringify(next, null, 2)}\n`);
-    console.log(`Accepted: ${next.reason}`);
-  } else if (process.argv.includes("--update"))
-    writeFileSync(
-      BUDGETS_FILE,
-      `${JSON.stringify({ ...(file.reason ? { reason: file.reason } : {}), jsBytes: lowered(recorded, measured) }, null, 2)}\n`,
-    );
+  recordBaseline({ file, recorded, measured, accept, update: process.argv.includes("--update") });
 
   const problems = Object.entries(report).flatMap(([route, s]) => judge(route, s));
   const blockingProblems = problems.filter((p) => !NON_BLOCKING_ROUTES.some((r) => p.startsWith(`${r}:`)));
