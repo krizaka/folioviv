@@ -60,7 +60,9 @@ export const OWNER_PAGES = [
   "/shop/languages",
 ];
 /** The administration console's tables (admin.folioviv.com serves them at the root; locally they sit under `/console`), in both languages: their dates once differed between the server and the browser (#4138). */
-export const ADMIN_PAGES = ["fr", "en"].flatMap((l) => ["shops", "invoices", "ledger", "audit"].map((p) => `/${l}/console/${p}`));
+export const ADMIN_PAGES = ["fr", "en"].flatMap((l) =>
+  ["shops", "invoices", "ledger", "audit"].map((p) => `/${l}/console/${p}`),
+);
 /** The account's own pages. */
 export const ACCOUNT_PAGES = ["/app/profile", "/app/profile/security"];
 
@@ -279,7 +281,15 @@ export async function check({ base, owner, client, admin, visitor = BROWSER }) {
         await crawl(browser, { base, paths, theme, account: { ...owner, role: "owner" }, problems, visited, visitor });
       }
       if (admin)
-        await crawl(browser, { base, paths: ADMIN_PAGES, theme, account: { ...admin, role: "admin" }, problems, visited, visitor });
+        await crawl(browser, {
+          base,
+          paths: ADMIN_PAGES,
+          theme,
+          account: { ...admin, role: "admin" },
+          problems,
+          visited,
+          visitor,
+        });
       if (client)
         await crawl(browser, {
           base,
