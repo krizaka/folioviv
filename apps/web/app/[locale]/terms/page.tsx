@@ -40,7 +40,9 @@ export default async function Terms({ params }: Readonly<{ params: Promise<{ loc
           {t.terms.sections.map((s) => (
             <section key={s.h} className="mt-8 max-w-3xl">
               <h2 className="m-0 text-xl font-semibold text-fg">{s.h}</h2>
-              <p className="mt-2 text-base leading-relaxed text-fg-secondary">{format(s.p, publisherVars())}</p>
+              <p className="mt-2 break-words text-base leading-relaxed text-fg-secondary">
+                {format(s.p, publisherVars())}
+              </p>
             </section>
           ))}
           <p className="mt-8 max-w-3xl">
