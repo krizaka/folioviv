@@ -44,7 +44,7 @@
 - Sign-up is closed server-side (QA accounts only); a journey that creates a user uses `ownUsers()` and deletes it; the administration lives on admin.folioviv.com only.
 - Count-then-insert and check-then-write run in one transaction with a lock, with a concurrency test; a rule (limit, permission, validation) lives in the service, not in a route; validate the original input, never a trimmed copy; a cleanup never masks the original error.
 - A new walker route uses a shop guard or is declared in `tenant-isolation.integration.test.ts`; a new env key is declared in the spec or in `NOT_DECLARED` of `env-spec.test.ts`.
-- Not deployed: no DigitalOcean app, no DNS; mobile skeleton is not built. Restaurants stay excluded; the point of sale stays a stub.
+- No mobile app in the dev preview (`mobile.*` criteria are `na` in `dev-preview.json` until a build exists). Not deployed: no DigitalOcean app, no DNS. Restaurants stay excluded; the point of sale stays a stub.
 - Never write a URL, law article, price or figure you did not read; write `TO VALIDATE`. No secret, capture or log in the repo; no production data in a session.
 - Use `?.` and `??` in TypeScript, not a `&&` chain or a null ternary; a closed set is an `as const` object, never `enum`.
 - Keep the edit hook in `.claude/settings.json`: `npx --no-install krizaka-edit-check` on `Edit|Write`.
