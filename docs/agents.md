@@ -2,7 +2,6 @@
 
 The previous AGENTS.md, kept whole (krizaka-internal#4515). `AGENTS.md` is the short manual; read the section here for what you touch.
 
-
 > Governance of **`krizaka/folioviv`**: Folioviv, a Krizaka product — the operating system of independent Québec shops.
 > Agent-neutral: humans and AI agents follow the same rules. Epic: krizaka/.github#52.
 
