@@ -78,7 +78,9 @@ export function SiteBar({
           <NavBar.Items>
             {items.map((i) => (
               <NavBar.Link key={i.id} asChild active={i.active}>
-                <Link href={i.href} prefetch={prefetch}>{i.label}</Link>
+                <Link href={i.href} prefetch={prefetch}>
+                  {i.label}
+                </Link>
               </NavBar.Link>
             ))}
           </NavBar.Items>
@@ -100,7 +102,9 @@ export function SiteBar({
             >
               {items.map((i) => (
                 <NavBar.MobileLink key={i.id} asChild active={i.active}>
-                  <Link href={i.href} prefetch={prefetch}>{i.label}</Link>
+                  <Link href={i.href} prefetch={prefetch}>
+                    {i.label}
+                  </Link>
                 </NavBar.MobileLink>
               ))}
               <NavBar.MobilePreferences label={t("preferences")}>
