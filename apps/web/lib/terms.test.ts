@@ -36,6 +36,10 @@ describe("the terms of use (folioviv#379)", () => {
     expect(page).toContain('pagePath(locale, "privacy")');
   });
 
+  it("lets a section break a long unbreakable string (the trademark URL) instead of scrolling sideways at 390 px (#4140)", () => {
+    expect(read("app/[locale]/terms/page.tsx")).toMatch(/<p className="[^"]*\bbreak-words\b[^"]*">\s*\{format\(s\.p/);
+  });
+
   it("has the same sections in French (the reference) and in English", () => {
     expect(fr.terms.sections).toHaveLength(en.terms.sections.length);
     expect(fr.terms.sections.length).toBeGreaterThanOrEqual(12);

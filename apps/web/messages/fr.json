@@ -1076,7 +1076,8 @@
         "provider": {
           "digitalocean-spaces": "DigitalOcean Spaces",
           "aws-s3": "Amazon S3",
-          "ovhcloud": "OVHcloud"
+          "ovhcloud": "OVHcloud",
+          "google-cloud-storage": "Google Cloud Storage"
         },
         "regionLabel": "{provider} · {region}",
         "current": "Enregistré maintenant",
@@ -1095,7 +1096,8 @@
           "elsewhere": "Les fichiers ne sont pas gardés au Canada : ils sont stockés hors du pays.",
           "unknown": "On ne sait pas où les fichiers sont gardés : aucune phrase ne dit « Canada ».",
           "user-cloud": "Les fichiers restent dans le nuage que la personne a connecté elle-même.",
-          "device": "Les fichiers restent sur le disque du serveur (développement seulement)."
+          "device": "Les fichiers restent sur le disque du serveur (développement seulement).",
+          "environment": "Rien d'enregistré ici : l'environnement du déploiement décide où vont les fichiers."
         }
       },
       "associations": {

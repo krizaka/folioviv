@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { blocksRun, judge, lowered, median, ratchet, screensOf, summarise } from "./check-perf-budgets.mjs";
+import { accepted, blocksRun, judge, lowered, median, ratchet, screensOf, summarise } from "./check-perf-budgets.mjs";
 
 const ok = { lcpMs: 1800, cls: 0, screens: 4.2, heroLcp: true, jsBytes: 100 };
 
@@ -44,6 +44,15 @@ describe("perf budgets", () => {
 
   it("lowered never raises an entry and records new routes", () => {
     expect(lowered({ a: 100, b: 50 }, { a: 120, b: 40, c: 7 })).toEqual({ a: 100, b: 40, c: 7 });
+  });
+
+  it("accepted records a growth with its reason, never lowers, and refuses an empty reason", () => {
+    expect(accepted({ a: 100, b: 50 }, { a: 120, b: 40, c: 7 }, " @krizaka release ui 5.2.0 ")).toEqual({
+      reason: "@krizaka release ui 5.2.0",
+      jsBytes: { a: 120, b: 50, c: 7 },
+    });
+    expect(() => accepted({ a: 1 }, { a: 2 }, "  ")).toThrow(/needs a reason/);
+    expect(() => accepted({ a: 1 }, { a: 2 }, undefined)).toThrow(/needs a reason/);
   });
 
   it("a layout shift always fails the run (it is deterministic, spread 0), while LCP and the screens stay reported when the run is non-blocking (folioviv#460)", () => {
