@@ -22,6 +22,17 @@ export interface SiteBarLabels {
   preferences: string;
 }
 
+/** « Explorer » first (the public side of the product: find a shop), then the family's links: three in all, under the bar's four. */
+function barItems(locale: Locale, current: PageId, exploreLabel: string) {
+  const family = publicBarLinks({ pricing: pagePath(locale, "pricing"), docs: pagePath(locale, "docs") }, locale).map(
+    (l) => ({ ...l, active: l.id === current || (l.id === "docs" && current.startsWith("docs/")) }),
+  );
+  return [
+    { id: "explore", label: exploreLabel, href: pagePath(locale, "explore"), active: current === "explore" },
+    ...family,
+  ];
+}
+
 /**
  * The bar of a Krizaka product (products independent): the animated mark · flat links (`publicBarLinks` of the family: Pricing,
  * Docs — Overview is the mark, the demo shop is in the footer and the home's action) · the repository, the theme,
@@ -39,6 +50,7 @@ export function SiteBar({
   brand,
   sessionBar,
   sessionPanel,
+  offOrigin = false,
 }: Readonly<{
   locale: Locale;
   current: PageId;
@@ -49,33 +61,28 @@ export function SiteBar({
   /** The lockup (commercial name and endorsement), drawn by the server so it stays out of the browser bundle. */ brand: ReactNode;
   sessionBar: ReactNode;
   sessionPanel: ReactNode;
+  /** The page is a shop's own origin: the app's pages are another origin, no router prefetch (the CSP `connect-src 'self'`). */ offOrigin?: boolean;
 }>) {
+  const prefetch = offOrigin ? false : undefined;
   const t = (key: keyof SiteBarLabels) => labels[key];
   const languages = languagesFor(path ?? pagePath(locale, current), offered);
-  const currentLanguage = contentLocale ?? locale;
-  const home = pagePath(locale, "home");
-  const family = publicBarLinks({ pricing: pagePath(locale, "pricing"), docs: pagePath(locale, "docs") }, locale).map(
-    (l) => ({ ...l, active: l.id === current || (l.id === "docs" && current.startsWith("docs/")) }),
-  );
-  // « Explorer » first (the public side of the product: find a shop), then the family's links: three in all, under the bar's four.
-  const items = [
-    { id: "explore", label: t("explore"), href: pagePath(locale, "explore"), active: current === "explore" },
-    ...family,
-  ];
+  const items = barItems(locale, current, t("explore"));
   return (
     <div className="pointer-events-none sticky top-0 z-50 h-0 px-3" data-site-bar>
       {/* 12 px under the development notice (or the top): an offset that takes no room in the flow, so nothing moves below it. */}
       <div className="relative top-3">
         <NavBar.Root label={t("nav")} className="pointer-events-auto mx-auto max-w-(--kz-page-max,72rem)">
           <NavBar.Brand asChild>
-            <Link href={home} aria-label={t("brandHome")}>
+            <Link href={pagePath(locale, "home")} prefetch={prefetch} aria-label={t("brandHome")}>
               {brand}
             </Link>
           </NavBar.Brand>
           <NavBar.Items>
             {items.map((i) => (
               <NavBar.Link key={i.id} asChild active={i.active}>
-                <Link href={i.href}>{i.label}</Link>
+                <Link href={i.href} prefetch={prefetch}>
+                  {i.label}
+                </Link>
               </NavBar.Link>
             ))}
           </NavBar.Items>
@@ -86,7 +93,12 @@ export function SiteBar({
               <ThemeToggle label={t("theme")} variant="ghost" />
             </span>
             <span className="hidden md:inline-flex">
-              <NavBar.Language label={t("language")} current={currentLanguage} languages={languages} linkAs={Link} />
+              <NavBar.Language
+                label={t("language")}
+                current={contentLocale ?? locale}
+                languages={languages}
+                linkAs={Link}
+              />
             </span>
             {sessionBar}
 
@@ -97,12 +109,19 @@ export function SiteBar({
             >
               {items.map((i) => (
                 <NavBar.MobileLink key={i.id} asChild active={i.active}>
-                  <Link href={i.href}>{i.label}</Link>
+                  <Link href={i.href} prefetch={prefetch}>
+                    {i.label}
+                  </Link>
                 </NavBar.MobileLink>
               ))}
               <NavBar.MobilePreferences label={t("preferences")}>
                 <ThemeToggle label={t("theme")} variant="ghost" />
-                <NavBar.Language label={t("language")} current={currentLanguage} languages={languages} linkAs={Link} />
+                <NavBar.Language
+                  label={t("language")}
+                  current={contentLocale ?? locale}
+                  languages={languages}
+                  linkAs={Link}
+                />
               </NavBar.MobilePreferences>
               {sessionPanel}
             </NavBar.Mobile>

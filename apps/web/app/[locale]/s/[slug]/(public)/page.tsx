@@ -18,7 +18,7 @@ import { proposedDefaults } from "@/lib/default-media-settings";
 import { asLocale, asPageLocale, getDictionary, uiLocaleOf } from "@/lib/i18n";
 import { SESSION_COOKIE } from "@/lib/session";
 import { appSettings, shopPaperShown, shopSectionFeatures } from "@/lib/settings";
-import { shopPageUrl } from "@/lib/shop-domain";
+import { shopDomain, shopPageUrl } from "@/lib/shop-domain";
 import { loadPublicShop, loadPublicShopOrMove, loadPublishedPageData } from "@/lib/shop-page";
 import { buildStorefront } from "@/lib/storefront";
 
@@ -109,6 +109,7 @@ export default async function ShopPage({
         languages={page.languages.enabled}
         contentLocale={content}
         anonymous={anonymous}
+        offOrigin={shopDomain(process.env) !== null}
       />
       {live ? <StorefrontLive slug={slug} enabled /> : null}
       <DemoLookSwitch slug={slug} current={shown} path={`/${content}/s/${slug}`} locale={locale} />
@@ -123,7 +124,7 @@ export default async function ShopPage({
           today={localDay(now, page.shop.timezone)}
         />
       </main>
-      <SiteFooter locale={locale} />
+      <SiteFooter locale={locale} offOrigin={shopDomain(process.env) !== null} />
     </>
   );
 }

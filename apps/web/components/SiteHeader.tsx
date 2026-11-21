@@ -18,6 +18,7 @@ export function SiteHeader({
   languages,
   contentLocale,
   anonymous = false,
+  offOrigin = false,
 }: Readonly<{
   locale: Locale;
   current: PageId;
@@ -25,6 +26,7 @@ export function SiteHeader({
   /** The languages the page is offered in (a shop page: the owner's list); default: the product's own. */ languages?: readonly string[];
   /** The language of the page's content when it is not the product's (Spanish). */ contentLocale?: string;
   /** The page saw no session cookie. */ anonymous?: boolean;
+  /** The page is a shop's own origin: its links to the app do not prefetch. */ offOrigin?: boolean;
 }>) {
   const t = translator(locale);
   const words: BarWords = {
@@ -68,6 +70,7 @@ export function SiteHeader({
       {...(languages ? { languages } : {})}
       {...(contentLocale ? { contentLocale } : {})}
       labels={labels}
+      offOrigin={offOrigin}
       brand={<BrandLockup locale={locale} />}
       sessionBar={session("bar")}
       sessionPanel={session("panel")}
