@@ -58,6 +58,7 @@ export function SiteHeader({
         signupOpen={false}
         signIn={words.signIn}
         tryIt={words.tryIt}
+        offOrigin={offOrigin}
       />
     ) : (
       <LazyBarSession locale={locale} words={words} placement={placement} />

@@ -7,6 +7,7 @@ import { ThemeToggle } from "@krizaka/ui/theme";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { OriginLink } from "@/components/OriginLink";
 import type { Locale } from "@/lib/i18n";
 import { type PageId, pagePath, REPO_URL } from "@/lib/site";
 
@@ -61,9 +62,8 @@ export function SiteBar({
   /** The lockup (commercial name and endorsement), drawn by the server so it stays out of the browser bundle. */ brand: ReactNode;
   sessionBar: ReactNode;
   sessionPanel: ReactNode;
-  /** The page is a shop's own origin: the app's pages are another origin, no router prefetch (the CSP `connect-src 'self'`). */ offOrigin?: boolean;
+  /** The page is a shop's own origin: the app's pages are another origin, no router link (the CSP `connect-src 'self'`). */ offOrigin?: boolean;
 }>) {
-  const prefetch = offOrigin ? false : undefined;
   const t = (key: keyof SiteBarLabels) => labels[key];
   const languages = languagesFor(path ?? pagePath(locale, current), offered);
   const items = barItems(locale, current, t("explore"));
@@ -73,16 +73,16 @@ export function SiteBar({
       <div className="relative top-3">
         <NavBar.Root label={t("nav")} className="pointer-events-auto mx-auto max-w-(--kz-page-max,72rem)">
           <NavBar.Brand asChild>
-            <Link href={pagePath(locale, "home")} prefetch={prefetch} aria-label={t("brandHome")}>
+            <OriginLink href={pagePath(locale, "home")} offOrigin={offOrigin} aria-label={t("brandHome")}>
               {brand}
-            </Link>
+            </OriginLink>
           </NavBar.Brand>
           <NavBar.Items>
             {items.map((i) => (
               <NavBar.Link key={i.id} asChild active={i.active}>
-                <Link href={i.href} prefetch={prefetch}>
+                <OriginLink href={i.href} offOrigin={offOrigin}>
                   {i.label}
-                </Link>
+                </OriginLink>
               </NavBar.Link>
             ))}
           </NavBar.Items>
@@ -109,9 +109,9 @@ export function SiteBar({
             >
               {items.map((i) => (
                 <NavBar.MobileLink key={i.id} asChild active={i.active}>
-                  <Link href={i.href} prefetch={prefetch}>
+                  <OriginLink href={i.href} offOrigin={offOrigin}>
                     {i.label}
-                  </Link>
+                  </OriginLink>
                 </NavBar.MobileLink>
               ))}
               <NavBar.MobilePreferences label={t("preferences")}>

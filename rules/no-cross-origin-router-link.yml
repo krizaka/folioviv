@@ -1,0 +1,35 @@
+id: no-cross-origin-router-link
+language: Tsx
+severity: error
+message: "No link computes its own `prefetch` (only a same-origin opt-out, `prefetch={false}`, is a link's choice), and the router's `<Link>` never carries a `/<locale>/s/<slug>` address: that route answers a 308 to the shop's own origin, and the router's prefetch of it breaks the CSP `connect-src 'self'`."
+note: "krizaka-internal#4137. Use `OriginLink` (components/OriginLink.tsx): the router for a path that stays on this origin, a plain anchor for another origin, the `/s/<slug>` hop, or the app seen from a shop (`offOrigin`). Build a shop's address with `shopHref` (lib/shop-links.ts)."
+rule:
+  any:
+    - kind: jsx_attribute
+      has:
+        kind: property_identifier
+        regex: ^prefetch$
+      not:
+        regex: ^prefetch=\{false\}$
+    - kind: jsx_attribute
+      all:
+        - has:
+            kind: property_identifier
+            regex: ^href$
+        - has:
+            stopBy: end
+            kind: template_string
+            regex: \/s\/\$\{
+        - inside:
+            any:
+              - kind: jsx_opening_element
+              - kind: jsx_self_closing_element
+            has:
+              field: name
+              regex: ^Link$
+ignores:
+  - "**/node_modules/**"
+  - "**/.next/**"
+  - "**/dist/**"
+  - "**/*.test.ts"
+  - "**/*.test.tsx"

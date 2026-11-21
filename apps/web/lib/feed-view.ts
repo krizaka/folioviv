@@ -23,6 +23,8 @@ export function buildFeed(input: {
   rows: readonly FeedFlyerRow[];
   locale: Locale;
   quartier?: string | null;
+  /** A shop's page address (`shopHref` of lib/shop-links: the shop's own origin once declared); default: the path on the app. */
+  shopHref?: (slug: string) => string;
 }): FeedView {
   const { rows, locale } = input;
   const quartier = input.quartier?.trim() || null;
@@ -45,7 +47,7 @@ export function buildFeed(input: {
       id: r.id,
       text: say(r.textFr, r.textEn),
       until: r.endsOn ? t("console.shopPage.flyerUntil", { day: dayOf(r.endsOn, locale) }) : null,
-      shop: { name: r.shopName, href: `/${locale}/s/${r.shopSlug}` },
+      shop: { name: r.shopName, href: input.shopHref?.(r.shopSlug) ?? `/${locale}/s/${r.shopSlug}` },
     });
   }
   return { flyers, quartiers, quartier };

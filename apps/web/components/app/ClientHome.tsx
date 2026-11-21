@@ -17,6 +17,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { z } from "zod";
 
+import { OriginLink } from "@/components/OriginLink";
 import { RequestsCard, type RequestsData } from "@/components/app/RequestsCard";
 import { useCall } from "@/components/app/useCall";
 import { formatDate as formatDay, formatMoney, INTL_LOCALE } from "@/lib/format";
@@ -125,9 +126,9 @@ function FileSection({
         <h2 className="min-w-0 break-words font-display text-xl font-bold text-fg">{file.client.shopName}</h2>
         {file.client.shopSlug ? (
           <Button asChild size="md" variant={primary ? "primary" : "secondary"} className="w-full sm:w-auto">
-            <Link href={`/${locale}/s/${file.client.shopSlug}`}>
+            <OriginLink href={`/${locale}/s/${file.client.shopSlug}`}>
               {say("client.bookAgain", { shop: file.client.shopName })}
-            </Link>
+            </OriginLink>
           </Button>
         ) : null}
       </div>

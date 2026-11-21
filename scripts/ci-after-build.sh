@@ -36,6 +36,12 @@ node scripts/check-cookies.mjs --base http://localhost:3000 --email "$HYDRATION_
 (cd apps/web && PORT=3001 APP_PUBLIC_URL=http://localhost:3001 APP_SHOP_DOMAIN=shops.localhost pnpm exec next start -p 3001 > ../../web-shops.log 2>&1 &)
 for _ in $(seq 1 60); do curl -sf http://127.0.0.1:3001/api/healthz > /dev/null && break; sleep 1; done
 node scripts/check-shop-host.mjs --base http://127.0.0.1:3001 --shop-domain shops.localhost --slug pattes-saint-henri --port 3001
+# No CSP violation on either origin (krizaka-internal#4137): the home and the shops in a browser, every link hovered. A third server, because the app's
+# origin must not be the listen origin: Next turns a redirect to its own listen origin into a relative one, which hides the shop → app hop (`leadsTo`
+# above). The app is app.localhost, the shops <slug>.shops.localhost (a browser resolves *.localhost to the loopback).
+(cd apps/web && PORT=3002 APP_PUBLIC_URL=http://app.localhost:3002 APP_SHOP_DOMAIN=shops.localhost pnpm exec next start -p 3002 > ../../web-csp.log 2>&1 &)
+for _ in $(seq 1 60); do curl -sf http://127.0.0.1:3002/api/healthz > /dev/null && break; sleep 1; done
+node scripts/check-csp.mjs --base http://app.localhost:3002 --shop 'http://{slug}.shops.localhost:3002'
 # The brand icons and their lock = the CDN manifest (the unit test checks icons = lock offline).
 node scripts/sync-brand-icons.mjs --check
 # Responsive guard: no horizontal overflow at 360–1440 px in both themes, and the accessibility guard (axe-core, contrast included).

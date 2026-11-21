@@ -1,0 +1,17 @@
+id: no-cross-origin-router-link
+valid:
+  - |
+    <OriginLink href={`/${locale}/s/${slug}`}>x</OriginLink>
+  - |
+    <Link href={`/${locale}/pricing`}>x</Link>
+  - |
+    <OriginLink href={pagePath(locale, "docs")} offOrigin={offOrigin}>x</OriginLink>
+  - |
+    <Link href={`/${locale}/app`} prefetch={false}>x</Link>
+invalid:
+  - |
+    <Link href={`/${locale}/s/${file.client.shopSlug}`}>x</Link>
+  - |
+    <Link href={i.href} prefetch={prefetch}>x</Link>
+  - |
+    <Link href="/fr/docs" prefetch />

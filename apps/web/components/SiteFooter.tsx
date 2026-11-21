@@ -1,8 +1,7 @@
 import { SiteFooter as FamilyFooter, SiteFooterColumn, SiteFooterLink } from "@krizaka/ui/site-footer";
-import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { ShopLink } from "@/components/ShopLink";
+import { OriginLink } from "@/components/OriginLink";
 import { BRAND_ID } from "@/lib/brand-id";
 import { downloadPageOpen } from "@/lib/downloads";
 import { productFooterLabels } from "@/lib/footer-labels";
@@ -13,17 +12,13 @@ import { uiVersion } from "@/lib/platform";
 import { shopHref } from "@/lib/shop-links";
 import { APP_VERSION, contactHref, LICENSE_URL, pagePath, REPO_URL } from "@/lib/site";
 
-/** A link to one of the product's own pages: the router's link, its prefetch off when the page is on a shop's origin (krizaka-internal#4137). */
-function PageLink({
-  href,
-  prefetch,
-  children,
-}: Readonly<{ href: string; prefetch: false | undefined; children: ReactNode }>) {
+/** A link to one of the product's own pages: `OriginLink` decides, by the page's origin, whether the router carries it (krizaka-internal#4137). */
+function PageLink({ href, offOrigin, children }: Readonly<{ href: string; offOrigin: boolean; children: ReactNode }>) {
   return (
     <SiteFooterLink asChild>
-      <Link href={href} prefetch={prefetch}>
+      <OriginLink href={href} offOrigin={offOrigin}>
         {children}
-      </Link>
+      </OriginLink>
     </SiteFooterLink>
   );
 }
@@ -39,10 +34,9 @@ export function SiteFooter({
   offOrigin = false,
 }: Readonly<{
   locale: Locale;
-  /** The page is a shop's own origin: the app's pages are another origin, no router prefetch (the CSP `connect-src 'self'`). */ offOrigin?: boolean;
+  /** The page is a shop's own origin: the app's pages are another origin, no router link (the CSP `connect-src 'self'`). */ offOrigin?: boolean;
 }>) {
   const t = translator(locale);
-  const prefetch = offOrigin ? false : undefined;
   return (
     <FamilyFooter
       current={BRAND_ID}
@@ -63,25 +57,25 @@ export function SiteFooter({
     >
       <SiteFooterColumn title={t("chrome.footerColumns.product")}>
         <SiteFooterLink asChild>
-          <ShopLink href={shopHref(DEMO_SHOP, locale)}>{t("chrome.menu.shop.title")}</ShopLink>
+          <OriginLink href={shopHref(DEMO_SHOP, locale)}>{t("chrome.menu.shop.title")}</OriginLink>
         </SiteFooterLink>
-        <PageLink href={pagePath(locale, "pricing")} prefetch={prefetch}>
+        <PageLink href={pagePath(locale, "pricing")} offOrigin={offOrigin}>
           {t("chrome.menu.pricing.title")}
         </PageLink>
         {downloadPageOpen() ? (
-          <PageLink href={pagePath(locale, "download")} prefetch={prefetch}>
+          <PageLink href={pagePath(locale, "download")} offOrigin={offOrigin}>
             {t("download.title")}
           </PageLink>
         ) : null}
-        <PageLink href={pagePath(locale, "docs")} prefetch={prefetch}>
+        <PageLink href={pagePath(locale, "docs")} offOrigin={offOrigin}>
           {t("chrome.menu.docs.title")}
         </PageLink>
       </SiteFooterColumn>
       <SiteFooterColumn title={t("chrome.footerColumns.legal")}>
-        <PageLink href={pagePath(locale, "privacy")} prefetch={prefetch}>
+        <PageLink href={pagePath(locale, "privacy")} offOrigin={offOrigin}>
           {t("chrome.legal")}
         </PageLink>
-        <PageLink href={pagePath(locale, "terms")} prefetch={prefetch}>
+        <PageLink href={pagePath(locale, "terms")} offOrigin={offOrigin}>
           {t("chrome.terms")}
         </PageLink>
       </SiteFooterColumn>

@@ -1,7 +1,7 @@
 import { cn } from "@krizaka/ui/cn";
 import { Stuck } from "@krizaka/ui/stuck";
-import Link from "next/link";
 
+import { OriginLink } from "@/components/OriginLink";
 import type { FlyerView } from "@/lib/community-view";
 
 /**
@@ -76,12 +76,12 @@ export function Bulletin({
                     <div className="mt-auto flex flex-col gap-1">
                       {f.until ? <p className="m-0 text-sm text-fg-secondary">{f.until}</p> : null}
                       {f.shop ? (
-                        <Link
+                        <OriginLink
                           href={f.shop.href}
                           className="rounded-sm text-sm font-semibold text-fg underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2"
                         >
                           {visit ? visit(f.shop.name) : f.shop.name}
-                        </Link>
+                        </OriginLink>
                       ) : null}
                     </div>
                   ) : null}
