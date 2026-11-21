@@ -21,10 +21,14 @@ describe("SiteFooter prefetch", () => {
     renderToStaticMarkup(<SiteFooter locale="fr" offOrigin />);
     const app = seen.filter((l) => /^\/fr\/(pricing|docs|privacy|terms|download)/.test(l.href));
     expect(app.length).toBeGreaterThan(0);
-    for (const l of app) expect(l.prefetch, l.href).toBe(false);
+    for (const l of app) {
+      expect(l.prefetch, l.href).toBe(false);
+    }
   });
   it("keeps the router's default on the app's own pages", () => {
     renderToStaticMarkup(<SiteFooter locale="fr" />);
-    for (const l of seen) expect(l.prefetch, l.href).toBeUndefined();
+    for (const l of seen) {
+      expect(l.prefetch, l.href).toBeUndefined();
+    }
   });
 });
