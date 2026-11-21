@@ -66,8 +66,6 @@ export function SiteBar({
   const prefetch = offOrigin ? false : undefined;
   const t = (key: keyof SiteBarLabels) => labels[key];
   const languages = languagesFor(path ?? pagePath(locale, current), offered);
-  const currentLanguage = contentLocale ?? locale;
-  const home = pagePath(locale, "home");
   const items = barItems(locale, current, t("explore"));
   return (
     <div className="pointer-events-none sticky top-0 z-50 h-0 px-3" data-site-bar>
@@ -75,7 +73,7 @@ export function SiteBar({
       <div className="relative top-3">
         <NavBar.Root label={t("nav")} className="pointer-events-auto mx-auto max-w-(--kz-page-max,72rem)">
           <NavBar.Brand asChild>
-            <Link href={home} prefetch={prefetch} aria-label={t("brandHome")}>
+            <Link href={pagePath(locale, "home")} prefetch={prefetch} aria-label={t("brandHome")}>
               {brand}
             </Link>
           </NavBar.Brand>
@@ -95,7 +93,12 @@ export function SiteBar({
               <ThemeToggle label={t("theme")} variant="ghost" />
             </span>
             <span className="hidden md:inline-flex">
-              <NavBar.Language label={t("language")} current={currentLanguage} languages={languages} linkAs={Link} />
+              <NavBar.Language
+                label={t("language")}
+                current={contentLocale ?? locale}
+                languages={languages}
+                linkAs={Link}
+              />
             </span>
             {sessionBar}
 
@@ -113,7 +116,12 @@ export function SiteBar({
               ))}
               <NavBar.MobilePreferences label={t("preferences")}>
                 <ThemeToggle label={t("theme")} variant="ghost" />
-                <NavBar.Language label={t("language")} current={currentLanguage} languages={languages} linkAs={Link} />
+                <NavBar.Language
+                  label={t("language")}
+                  current={contentLocale ?? locale}
+                  languages={languages}
+                  linkAs={Link}
+                />
               </NavBar.MobilePreferences>
               {sessionPanel}
             </NavBar.Mobile>

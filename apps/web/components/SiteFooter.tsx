@@ -1,5 +1,6 @@
 import { SiteFooter as FamilyFooter, SiteFooterColumn, SiteFooterLink } from "@krizaka/ui/site-footer";
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import { ShopLink } from "@/components/ShopLink";
 import { BRAND_ID } from "@/lib/brand-id";
@@ -11,6 +12,21 @@ import { DEMO_SHOP } from "@/lib/landing";
 import { uiVersion } from "@/lib/platform";
 import { shopHref } from "@/lib/shop-links";
 import { APP_VERSION, contactHref, LICENSE_URL, pagePath, REPO_URL } from "@/lib/site";
+
+/** A link to one of the product's own pages: the router's link, its prefetch off when the page is on a shop's origin (krizaka-internal#4137). */
+function PageLink({
+  href,
+  prefetch,
+  children,
+}: Readonly<{ href: string; prefetch: false | undefined; children: ReactNode }>) {
+  return (
+    <SiteFooterLink asChild>
+      <Link href={href} prefetch={prefetch}>
+        {children}
+      </Link>
+    </SiteFooterLink>
+  );
+}
 
 /**
  * The footer is @krizaka/ui's SiteFooter in product mode (`family={false}`): the product's pages, its source and contact,
@@ -49,35 +65,25 @@ export function SiteFooter({
         <SiteFooterLink asChild>
           <ShopLink href={shopHref(DEMO_SHOP, locale)}>{t("chrome.menu.shop.title")}</ShopLink>
         </SiteFooterLink>
-        <SiteFooterLink asChild>
-          <Link href={pagePath(locale, "pricing")} prefetch={prefetch}>
-            {t("chrome.menu.pricing.title")}
-          </Link>
-        </SiteFooterLink>
+        <PageLink href={pagePath(locale, "pricing")} prefetch={prefetch}>
+          {t("chrome.menu.pricing.title")}
+        </PageLink>
         {downloadPageOpen() ? (
-          <SiteFooterLink asChild>
-            <Link href={pagePath(locale, "download")} prefetch={prefetch}>
-              {t("download.title")}
-            </Link>
-          </SiteFooterLink>
+          <PageLink href={pagePath(locale, "download")} prefetch={prefetch}>
+            {t("download.title")}
+          </PageLink>
         ) : null}
-        <SiteFooterLink asChild>
-          <Link href={pagePath(locale, "docs")} prefetch={prefetch}>
-            {t("chrome.menu.docs.title")}
-          </Link>
-        </SiteFooterLink>
+        <PageLink href={pagePath(locale, "docs")} prefetch={prefetch}>
+          {t("chrome.menu.docs.title")}
+        </PageLink>
       </SiteFooterColumn>
       <SiteFooterColumn title={t("chrome.footerColumns.legal")}>
-        <SiteFooterLink asChild>
-          <Link href={pagePath(locale, "privacy")} prefetch={prefetch}>
-            {t("chrome.legal")}
-          </Link>
-        </SiteFooterLink>
-        <SiteFooterLink asChild>
-          <Link href={pagePath(locale, "terms")} prefetch={prefetch}>
-            {t("chrome.terms")}
-          </Link>
-        </SiteFooterLink>
+        <PageLink href={pagePath(locale, "privacy")} prefetch={prefetch}>
+          {t("chrome.legal")}
+        </PageLink>
+        <PageLink href={pagePath(locale, "terms")} prefetch={prefetch}>
+          {t("chrome.terms")}
+        </PageLink>
       </SiteFooterColumn>
       <SiteFooterColumn title="Krizaka">
         <SiteFooterLink href={REPO_URL}>{t("chrome.sourceCode")}</SiteFooterLink>
