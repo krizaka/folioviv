@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { cspProblems, pagesOf } from "./check-csp.mjs";
+import { cspProblems, isKnownOwnerEval, pagesOf } from "./check-csp.mjs";
 
 describe("check-csp (krizaka-internal#4137)", () => {
   it("loads the home in both languages, each shop on its own origin and the app's /s/<slug> hop to it", () => {
@@ -23,5 +23,11 @@ describe("check-csp (krizaka-internal#4137)", () => {
       "http://localhost:3001/fr: connect-src blocked http://localhost:3001/fr/s/x?_rsc=1 (no source)",
       "http://localhost:3001/fr: script-src blocked eval (chunk.js:1)",
     ]);
+  });
+
+  it("knows only the owner bundle's eval probe, never a blocked fetch", () => {
+    expect(isKnownOwnerEval({ directive: "script-src", blocked: "eval" })).toBe(true);
+    expect(isKnownOwnerEval({ directive: "connect-src", blocked: "http://x/fr/s/y?_rsc=1" })).toBe(false);
+    expect(isKnownOwnerEval({ directive: "script-src-elem", blocked: "http://cdn.test/a.js" })).toBe(false);
   });
 });

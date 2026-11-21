@@ -7,6 +7,7 @@
 //
 //   node scripts/check-csp.mjs --base http://app.localhost:3002 --shop 'http://{slug}.shops.localhost:3002'
 //   node scripts/check-csp.mjs --base https://dev.folioviv.com --shop 'https://{slug}.folioviv.shop'
+// With CSP_OWNER_EMAIL and CSP_OWNER_PASSWORD (the seeded owner; never printed) the owner's day is loaded too, signed in.
 import { pathToFileURL } from "node:url";
 
 import { chromium } from "playwright-core";
@@ -24,6 +25,13 @@ export function pagesOf(base, shopPattern, slugs = SLUGS) {
     ...slugs.flatMap((slug) => [`${shopPattern.replace("{slug}", slug)}/`, `${app}/fr/s/${slug}`]),
   ];
 }
+
+/**
+ * The owner's day still loads Node's crypto polyfill (crypto-browserify, through a server module reached from a client one), whose helpers probe
+ * `Function(…)`: a `script-src` eval report that is not a link's, reported to the CTO with krizaka-internal#4137 for a ticket of its own. Only that
+ * one is printed and not failed, and only on the owner's day; every other violation there fails, and nothing is tolerated on the public pages.
+ */
+export const isKnownOwnerEval = (e) => e.directive.startsWith("script-src") && e.blocked === "eval";
 
 /** One line per violation seen on a page: the directive, what it blocked and the page it came from. */
 export function cspProblems(page, events) {
@@ -58,14 +66,23 @@ async function exercise(page) {
   await page.waitForTimeout(SETTLE_MS);
 }
 
-async function visit(browser, url) {
+/** The owner's session in the context, when the run names an owner (the seeded walker): the owner's day is the app's busiest page of links. */
+async function signIn(context, base, owner) {
+  const answer = await context.request.post(`${base}/api/auth/sign-in`, { data: owner });
+  if (!answer.ok()) throw new Error(`the owner's sign-in answered ${answer.status()}`);
+}
+
+async function visit(browser, url, owner, tolerated = () => false) {
   const context = await watchedContext(browser);
+  if (owner) await signIn(context, new URL(url).origin, owner);
   const page = await context.newPage();
   try {
     const answer = await page.goto(url, { waitUntil: "load", timeout: 30_000 });
     if (!answer?.ok()) return [`${url}: answered ${answer?.status() ?? "nothing"}`];
     await exercise(page);
-    return cspProblems(url, await page.evaluate(() => globalThis.__csp ?? []));
+    const events = await page.evaluate(() => globalThis.__csp ?? []);
+    for (const e of events.filter(tolerated)) process.stdout.write(`  known, not failed: ${cspProblems(url, [e])[0]}\n`);
+    return cspProblems(url, events.filter((e) => !tolerated(e)));
   } finally {
     await context.close();
   }
@@ -74,12 +91,19 @@ async function visit(browser, url) {
 async function main(args) {
   const base = flag(args, "base") ?? "http://app.localhost:3002";
   const shop = flag(args, "shop") ?? "http://{slug}.shops.localhost:3002";
+  const env = process.env;
+  const owner = env.CSP_OWNER_EMAIL ? { email: env.CSP_OWNER_EMAIL, password: env.CSP_OWNER_PASSWORD } : null;
   const browser = await chromium.launch();
   const problems = [];
   try {
     for (const url of pagesOf(base, shop)) {
       const found = await visit(browser, url);
       process.stdout.write(`${found.length ? "✗" : "✓"} ${url}\n`);
+      problems.push(...found);
+    }
+    if (owner) {
+      const found = await visit(browser, `${base.replace(/\/$/, "")}/fr/app`, owner, isKnownOwnerEval);
+      process.stdout.write(`${found.length ? "✗" : "✓"} the owner's day (/fr/app)\n`);
       problems.push(...found);
     }
   } finally {

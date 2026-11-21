@@ -41,7 +41,7 @@ node scripts/check-shop-host.mjs --base http://127.0.0.1:3001 --shop-domain shop
 # above). The app is app.localhost, the shops <slug>.shops.localhost (a browser resolves *.localhost to the loopback).
 (cd apps/web && PORT=3002 APP_PUBLIC_URL=http://app.localhost:3002 APP_SHOP_DOMAIN=shops.localhost pnpm exec next start -p 3002 > ../../web-csp.log 2>&1 &)
 for _ in $(seq 1 60); do curl -sf http://127.0.0.1:3002/api/healthz > /dev/null && break; sleep 1; done
-node scripts/check-csp.mjs --base http://app.localhost:3002 --shop 'http://{slug}.shops.localhost:3002'
+CSP_OWNER_EMAIL="$HYDRATION_OWNER_EMAIL" CSP_OWNER_PASSWORD="$HYDRATION_OWNER_PASSWORD" node scripts/check-csp.mjs --base http://app.localhost:3002 --shop 'http://{slug}.shops.localhost:3002'
 # The brand icons and their lock = the CDN manifest (the unit test checks icons = lock offline).
 node scripts/sync-brand-icons.mjs --check
 # Responsive guard: no horizontal overflow at 360–1440 px in both themes, and the accessibility guard (axe-core, contrast included).
