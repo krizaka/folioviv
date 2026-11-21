@@ -23,7 +23,7 @@
 
 ## Architecture & conventions
 
-- Follow the [krizaka-engineering skill](https://github.com/krizaka/krizaka-skills/blob/main/skills/krizaka-engineering/SKILL.md); search its [packages reference](https://github.com/krizaka/krizaka-skills/blob/main/skills/krizaka-engineering/references/packages.md) before writing anything generic.
+- Follow the [krizaka-engineering skill](https://github.com/krizaka/krizaka-agents/blob/main/plugins/krizaka-engineering/skills/krizaka-engineering/SKILL.md); search its [packages reference](https://github.com/krizaka/krizaka-agents/blob/main/plugins/krizaka-engineering/skills/krizaka-engineering/references/packages.md) before writing anything generic.
 - Build only from Krizaka bricks (`@krizaka/ui`, `query`, `i18n`, `icons`, `tokens`, `realtime`, `storage`, `organize`, `privacy`); a missing generic component goes to krizaka-ui, released, then used, never copied. No `@tanstack/*` import, no `fetch` in a client `useEffect`, no hand-written `<table>` or multi-field `<form>`.
 - Keep ports and adapters: domain code reads no env, no ambient clock, no database client; route handlers are thin. Payments go through the port `apps/web/lib/payments`; the translation model through `TranslationPort`.
 - Work on "the" shop through `requireShop` / `requireOwner` / `requireShopClient` (`lib/access.ts`), never a shop id from the request; another shop's resource answers 404, never 403. Classify each new table in `packages/db/src/tenancy.ts`.
@@ -62,4 +62,4 @@
 - [docs/agents.md](docs/agents.md): the previous long AGENTS.md, whole (storefront media and templates, shop-as-a-place, tenancy, Loi 25, ast-grep rule table, ratchet, anti-slop, pre-PR list).
 - [docs/UX_DECISIONS.md](docs/UX_DECISIONS.md), [docs/design/](docs/design), [docs/privacy/](docs/privacy), [docs/adr/](docs/adr), [docs/ci-and-deploy.md](docs/ci-and-deploy.md).
 - [Org standards](https://github.com/krizaka/.github/tree/main/docs/standards) of krizaka/.github; the [engineering charter](https://github.com/krizaka/.github/blob/main/AGENTS.template.md).
-- [krizaka-engineering skill](https://github.com/krizaka/krizaka-skills/blob/main/skills/krizaka-engineering/SKILL.md).
+- [krizaka-engineering skill](https://github.com/krizaka/krizaka-agents/blob/main/plugins/krizaka-engineering/skills/krizaka-engineering/SKILL.md).
