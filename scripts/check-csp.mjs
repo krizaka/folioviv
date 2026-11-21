@@ -81,8 +81,12 @@ async function visit(browser, url, owner, tolerated = () => false) {
     if (!answer?.ok()) return [`${url}: answered ${answer?.status() ?? "nothing"}`];
     await exercise(page);
     const events = await page.evaluate(() => globalThis.__csp ?? []);
-    for (const e of events.filter(tolerated)) process.stdout.write(`  known, not failed: ${cspProblems(url, [e])[0]}\n`);
-    return cspProblems(url, events.filter((e) => !tolerated(e)));
+    for (const e of events.filter(tolerated))
+      process.stdout.write(`  known, not failed: ${cspProblems(url, [e])[0]}\n`);
+    return cspProblems(
+      url,
+      events.filter((e) => !tolerated(e)),
+    );
   } finally {
     await context.close();
   }
