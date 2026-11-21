@@ -10,23 +10,14 @@ export function SignedOutActions({
   signupOpen,
   signIn,
   tryIt,
-  base = "",
-}: Readonly<{
-  locale: "en" | "fr";
-  placement: "bar" | "panel";
-  signupOpen: boolean;
-  signIn: string;
-  tryIt: string;
-  /** The app's origin when this page is on another (a shop's own): an absolute link is not prefetched (krizaka-internal#4137). */
-  base?: string;
-}>) {
+}: Readonly<{ locale: "en" | "fr"; placement: "bar" | "panel"; signupOpen: boolean; signIn: string; tryIt: string }>) {
   return (
     <ProductBarActions
       placement={placement}
       signupOpen={signupOpen}
       linkAs={Link}
-      signIn={{ href: `${base}/${locale}/sign-in`, label: signIn }}
-      tryIt={{ href: `${base}/${locale}/sign-up`, label: tryIt }}
+      signIn={{ href: `/${locale}/sign-in`, label: signIn }}
+      tryIt={{ href: `/${locale}/sign-up`, label: tryIt }}
     />
   );
 }

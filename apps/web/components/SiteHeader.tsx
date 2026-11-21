@@ -4,7 +4,6 @@ import { SignedOutActions } from "@/components/account/SignedOutActions";
 import { BrandLockup } from "@/components/BrandLockup";
 import { SiteBar } from "@/components/SiteChrome";
 import { type Locale, translator } from "@/lib/i18n";
-import { appOriginOf, shopDomain } from "@/lib/shop-domain";
 import type { PageId } from "@/lib/site";
 
 /**
@@ -30,7 +29,6 @@ export function SiteHeader({
   /** The page is a shop's own origin: its links to the app do not prefetch. */ offOrigin?: boolean;
 }>) {
   const t = translator(locale);
-  const base = offOrigin && shopDomain(process.env) ? appOriginOf(process.env) : "";
   const words: BarWords = {
     signIn: t("chrome.signIn"),
     tryIt: t("chrome.tryIt"),
@@ -58,7 +56,6 @@ export function SiteHeader({
         locale={locale}
         placement={placement}
         signupOpen={false}
-        base={base}
         signIn={words.signIn}
         tryIt={words.tryIt}
       />
@@ -73,7 +70,7 @@ export function SiteHeader({
       {...(languages ? { languages } : {})}
       {...(contentLocale ? { contentLocale } : {})}
       labels={labels}
-      base={base}
+      offOrigin={offOrigin}
       brand={<BrandLockup locale={locale} />}
       sessionBar={session("bar")}
       sessionPanel={session("panel")}

@@ -22,22 +22,6 @@ export interface SiteBarLabels {
   preferences: string;
 }
 
-/** A link moved onto another origin's address (a shop's page leading to the app); the same link when `base` is empty. */
-const onBase =
-  (base: string) =>
-  <T extends { href: string }>(link: T): T => ({ ...link, href: base + link.href });
-
-/** « Explorer » first (the public side of the product: find a shop), then the family's links: three in all, under the bar's four. */
-function barItems(locale: Locale, current: PageId, exploreLabel: string, base: string) {
-  const family = publicBarLinks({ pricing: pagePath(locale, "pricing"), docs: pagePath(locale, "docs") }, locale).map(
-    (l) => ({ ...l, active: l.id === current || (l.id === "docs" && current.startsWith("docs/")) }),
-  );
-  return [
-    { id: "explore", label: exploreLabel, href: pagePath(locale, "explore"), active: current === "explore" },
-    ...family,
-  ].map(onBase(base));
-}
-
 /**
  * The bar of a Krizaka product (products independent): the animated mark · flat links (`publicBarLinks` of the family: Pricing,
  * Docs — Overview is the mark, the demo shop is in the footer and the home's action) · the repository, the theme,
@@ -55,7 +39,7 @@ export function SiteBar({
   brand,
   sessionBar,
   sessionPanel,
-  base = "",
+  offOrigin = false,
 }: Readonly<{
   locale: Locale;
   current: PageId;
@@ -66,28 +50,37 @@ export function SiteBar({
   /** The lockup (commercial name and endorsement), drawn by the server so it stays out of the browser bundle. */ brand: ReactNode;
   sessionBar: ReactNode;
   sessionPanel: ReactNode;
-  /** The origin the app's pages answer from, when it is not this page's (a shop's own origin): an absolute link is never prefetched, so the CSP `connect-src` has nothing to refuse (krizaka-internal#4137). */
-  base?: string;
+  /** The page is a shop's own origin: the app's pages are another origin, no router prefetch (the CSP `connect-src 'self'`). */ offOrigin?: boolean;
 }>) {
+  const prefetch = offOrigin ? false : undefined;
   const t = (key: keyof SiteBarLabels) => labels[key];
   const languages = languagesFor(path ?? pagePath(locale, current), offered);
   const currentLanguage = contentLocale ?? locale;
-  const home = base + pagePath(locale, "home");
-  const items = barItems(locale, current, t("explore"), base);
+  const home = pagePath(locale, "home");
+  const family = publicBarLinks({ pricing: pagePath(locale, "pricing"), docs: pagePath(locale, "docs") }, locale).map(
+    (l) => ({ ...l, active: l.id === current || (l.id === "docs" && current.startsWith("docs/")) }),
+  );
+  // « Explorer » first (the public side of the product: find a shop), then the family's links: three in all, under the bar's four.
+  const items = [
+    { id: "explore", label: t("explore"), href: pagePath(locale, "explore"), active: current === "explore" },
+    ...family,
+  ];
   return (
     <div className="pointer-events-none sticky top-0 z-50 h-0 px-3" data-site-bar>
       {/* 12 px under the development notice (or the top): an offset that takes no room in the flow, so nothing moves below it. */}
       <div className="relative top-3">
         <NavBar.Root label={t("nav")} className="pointer-events-auto mx-auto max-w-(--kz-page-max,72rem)">
           <NavBar.Brand asChild>
-            <Link href={home} aria-label={t("brandHome")}>
+            <Link href={home} prefetch={prefetch} aria-label={t("brandHome")}>
               {brand}
             </Link>
           </NavBar.Brand>
           <NavBar.Items>
             {items.map((i) => (
               <NavBar.Link key={i.id} asChild active={i.active}>
-                <Link href={i.href}>{i.label}</Link>
+                <Link href={i.href} prefetch={prefetch}>
+                  {i.label}
+                </Link>
               </NavBar.Link>
             ))}
           </NavBar.Items>
@@ -109,7 +102,9 @@ export function SiteBar({
             >
               {items.map((i) => (
                 <NavBar.MobileLink key={i.id} asChild active={i.active}>
-                  <Link href={i.href}>{i.label}</Link>
+                  <Link href={i.href} prefetch={prefetch}>
+                    {i.label}
+                  </Link>
                 </NavBar.MobileLink>
               ))}
               <NavBar.MobilePreferences label={t("preferences")}>
