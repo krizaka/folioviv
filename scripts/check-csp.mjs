@@ -86,7 +86,8 @@ async function main(args) {
     await browser.close();
   }
   if (problems.length) {
-    process.stderr.write(`${problems.length} CSP violation(s):\n${problems.map((p) => `  ${p}`).join("\n")}\n`);
+    const lines = problems.map((p) => "  " + p).join("\n");
+    process.stderr.write(`${problems.length} CSP violation(s):\n${lines}\n`);
     process.exit(1);
   }
   process.stdout.write("no CSP violation\n");
