@@ -19,6 +19,7 @@ import { asLocale, format, getDictionary, type Locale } from "@/lib/i18n";
 import { may, memberShop } from "@/lib/member-shop";
 import { shopRoutes } from "@/lib/routes";
 import { settle } from "@/lib/settle";
+import { shopHref } from "@/lib/shop-links";
 import { todayView } from "@/lib/today";
 import { consoleFor } from "@/lib/vocabulary";
 
@@ -132,7 +133,7 @@ async function OwnerDay({
       board={board}
       boardFailed={boardFailed}
       period={period}
-      publicPageHref={shop.published && shop.slug ? `/${locale}/s/${shop.slug}` : null}
+      publicPageHref={shop.published && shop.slug ? shopHref(shop.slug, locale) : null}
       visits={dependants ? Object.fromEntries(visits.map((v) => [v.appointmentId, withMinutes(v)])) : undefined}
       banner={
         brief || figures?.ok ? (

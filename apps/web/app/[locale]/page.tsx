@@ -3,7 +3,6 @@ import { Button } from "@krizaka/ui/button";
 import { LandingPage } from "@krizaka/ui/landing-page";
 import { Section } from "@krizaka/ui/page";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { preconnect } from "react-dom";
 
 import { HeroPhone } from "@/components/home/HeroPhone";
@@ -11,7 +10,7 @@ import { NeighbourhoodFeed } from "@/components/home/NeighbourhoodFeed";
 import { BookPreview } from "@/components/home/previews/BookPreview";
 import { BooksPreview } from "@/components/home/previews/BooksPreview";
 import { InvoicePreview } from "@/components/home/previews/InvoicePreview";
-import { ShopLink } from "@/components/ShopLink";
+import { OriginLink } from "@/components/OriginLink";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { pageSession } from "@/lib/access";
@@ -42,7 +41,7 @@ export default async function Home({ params }: Readonly<{ params: Promise<{ loca
   preconnectShop(DEMO_SHOP);
   // The hero's action follows the session, rendered on the server: no flash of the signed-out action.
   const feed = await homeFeed(locale);
-  const hero = heroActions(locale, Boolean(await pageSession().catch(() => null)));
+  const hero = heroActions(locale, Boolean(await pageSession().catch(() => null)), shopHref(DEMO_SHOP, locale));
   // The three jobs are the real components of the app, drawn with demo data (folioviv#470): below the fold, never the LCP.
   const previews = {
     book: <BookPreview locale={locale} />,
@@ -65,13 +64,13 @@ export default async function Home({ params }: Readonly<{ params: Promise<{ loca
             <>
               <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
                 <Button asChild variant="primary" size="lg" className="w-full sm:w-auto">
-                  <Link href={hero.primary.href}>
+                  <OriginLink href={hero.primary.href}>
                     {d.actions[hero.primary.message]} <ForwardIcon size={16} strokeWidth={2.25} />
-                  </Link>
+                  </OriginLink>
                 </Button>
                 {hero.secondary ? (
                   <Button asChild variant="secondary" size="lg" className="w-full sm:w-auto">
-                    <Link href={hero.secondary.href}>{d.actions[hero.secondary.message]}</Link>
+                    <OriginLink href={hero.secondary.href}>{d.actions[hero.secondary.message]}</OriginLink>
                   </Button>
                 ) : null}
               </div>
@@ -98,7 +97,7 @@ export default async function Home({ params }: Readonly<{ params: Promise<{ loca
               lead={d.feed.lead}
               actions={
                 <Button asChild variant="secondary" size="md">
-                  <ShopLink href={shopHref(DEMO_SHOP, locale)}>{d.feed.demo}</ShopLink>
+                  <OriginLink href={shopHref(DEMO_SHOP, locale)}>{d.feed.demo}</OriginLink>
                 </Button>
               }
             >

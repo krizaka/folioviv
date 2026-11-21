@@ -25,10 +25,14 @@ export interface HeroAction {
 }
 
 /** Signed in: « Open my shop » into the owner's app. Signed out: « Try the demo shop », with « Sign in » beside it. Never « Talk to us ». */
-export function heroActions(locale: Locale, signedIn: boolean): { primary: HeroAction; secondary: HeroAction | null } {
+export function heroActions(
+  locale: Locale,
+  signedIn: boolean,
+  /** The demo shop's address (`shopHref`: its own origin once the shop domain is declared). */ demoHref = `/${locale}/s/${DEMO_SHOP}`,
+): { primary: HeroAction; secondary: HeroAction | null } {
   if (signedIn) return { primary: { href: `/${locale}/app`, message: "openShop" }, secondary: null };
   return {
-    primary: { href: `/${locale}/s/${DEMO_SHOP}`, message: "tryDemo" },
+    primary: { href: demoHref, message: "tryDemo" },
     secondary: { href: `/${locale}/sign-in`, message: "signIn" },
   };
 }

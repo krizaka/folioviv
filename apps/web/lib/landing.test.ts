@@ -190,6 +190,10 @@ describe("the hero follows the session (krizaka/folioviv#285)", () => {
     expect(label(fr, primary.message)).toBe("Essayer la boutique démo");
     expect(secondary && label(fr, secondary.message)).toBe("Se connecter");
     expect(primary.href).toBe(`/fr/s/${DEMO_SHOP}`);
+    // krizaka-internal#4137: the shop's own origin when the page gives it (the shop domain declared).
+    expect(heroActions("fr", false, "https://demo.folioviv.shop/fr").primary.href).toBe(
+      "https://demo.folioviv.shop/fr",
+    );
   });
 
   it("signed in, EN and FR: one primary « Open my shop » / « Ouvrir ma boutique » into the owner's app, no second action", () => {

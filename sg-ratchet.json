@@ -6,6 +6,7 @@
     "no-bare-digits-on-serialized": 0,
     "no-bare-skip": 0,
     "no-cookie-domain": 0,
+    "no-cross-origin-router-link": 0,
     "no-db-in-service-or-rules": 0,
     "no-enum-string-compare": 3,
     "no-env-in-domain": 4,

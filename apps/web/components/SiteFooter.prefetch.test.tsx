@@ -1,10 +1,10 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const seen: { href: string; prefetch: unknown }[] = [];
+const routed: string[] = [];
 vi.mock("next/link", () => ({
-  default: ({ href, prefetch, children }: { href: string; prefetch?: unknown; children?: unknown }) => {
-    seen.push({ href, prefetch });
+  default: ({ href, children }: { href: string; children?: unknown }) => {
+    routed.push(href);
     return <a href={href}>{children as never}</a>;
   },
 }));
@@ -12,23 +12,19 @@ vi.mock("next/link", () => ({
 import { SiteFooter } from "@/components/SiteFooter";
 
 // krizaka-internal#4137: on a shop's own origin the app's pages (/fr/pricing, /fr/docs…) are another origin: a router prefetch of them
-// breaks the CSP `connect-src 'self'`. The shop pages' footer says so (`offOrigin`) and its links do not prefetch; the app's own pages keep it.
-describe("SiteFooter prefetch", () => {
+// breaks the CSP `connect-src 'self'`. The shop pages' footer says so (`offOrigin`) and draws them as plain anchors; the app's own pages keep the router.
+describe("SiteFooter links", () => {
   beforeEach(() => {
-    seen.length = 0;
+    routed.length = 0;
   });
-  it("does not prefetch the app's pages from a shop's own origin", () => {
-    renderToStaticMarkup(<SiteFooter locale="fr" offOrigin />);
-    const app = seen.filter((l) => /^\/fr\/(pricing|docs|privacy|terms|download)/.test(l.href));
-    expect(app.length).toBeGreaterThan(0);
-    for (const l of app) {
-      expect(l.prefetch, l.href).toBe(false);
-    }
+  it("draws no router link from a shop's own origin", () => {
+    const html = renderToStaticMarkup(<SiteFooter locale="fr" offOrigin />);
+    expect(html).toContain('href="/fr/pricing"');
+    expect(routed).toEqual([]);
   });
-  it("keeps the router's default on the app's own pages", () => {
+  it("keeps the router on the app's own pages, never for the /s/<slug> hop", () => {
     renderToStaticMarkup(<SiteFooter locale="fr" />);
-    for (const l of seen) {
-      expect(l.prefetch, l.href).toBeUndefined();
-    }
+    expect(routed).toContain("/fr/pricing");
+    expect(routed.some((h) => h.includes("/s/"))).toBe(false);
   });
 });

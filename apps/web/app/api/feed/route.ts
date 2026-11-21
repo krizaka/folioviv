@@ -6,6 +6,7 @@ import { handle } from "@/lib/http";
 import { asLocale } from "@/lib/i18n";
 import { limit } from "@/lib/rate-limit";
 import { shopSectionFeatures } from "@/lib/settings";
+import { shopHref } from "@/lib/shop-links";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +25,12 @@ export function GET(req: Request) {
     const locale = asLocale(url.searchParams.get("locale") ?? "en");
     const quartier = (url.searchParams.get("quartier") ?? "").slice(0, MAX_QUARTIER);
     const on = (await shopSectionFeatures()).announcements;
-    const view = buildFeed({ rows: on ? await feedFlyers(db()) : [], locale, quartier });
+    const view = buildFeed({
+      rows: on ? await feedFlyers(db()) : [],
+      locale,
+      quartier,
+      shopHref: (slug) => shopHref(slug, locale),
+    });
     return Response.json(view, { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } });
   });
 }

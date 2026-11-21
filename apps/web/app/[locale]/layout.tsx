@@ -38,6 +38,9 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   };
 }
 
+/** zod's global configuration, set before its first schema is built (zod/v4/core: `globalThis.__zod_globalConfig`). */
+const ZOD_JITLESS = "globalThis.__zod_globalConfig={jitless:true};";
+
 /** The root of every page, in the language of the address, dark by default (the visitor's `kz-theme` wins). */
 export default async function LocaleLayout({
   children,
@@ -45,12 +48,15 @@ export default async function LocaleLayout({
 }: Readonly<{ children: React.ReactNode; params: Promise<{ locale: string }> }>) {
   const { locale } = await params;
   if (!PAGE_LOCALES.includes(locale as PageLocale)) notFound();
-  // The nonce of a shop page's strict policy (proxy.ts sets it on the request): the theme script is the one inline script the page runs.
+  // The nonce of a shop page's strict policy (proxy.ts sets it on the request): it signs the page's two inline scripts, the theme and zod's switch.
   const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
     <html lang={locale} data-surface="product" suppressHydrationWarning>
       <head>
         <ThemeScript defaultMode="dark" nonce={nonce} />
+        {/* Before any chunk: zod 4 probes `Function("")` as it builds its first object schema, and with no 'unsafe-eval' the CSP reports the probe as a
+            `script-src` violation (krizaka-internal#4137). zod reads this switch from `globalThis` (no byte in the bundle); its parser is then the interpreted one. */}
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: ZOD_JITLESS }} />
       </head>
       <body
         className={cn(

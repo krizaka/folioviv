@@ -27,6 +27,9 @@ describe("the neighbourhood feed (#318)", () => {
       shop: { name: "Pattes de Saint-Henri", href: "/fr/s/pattes" },
     });
     expect(en.flyers[0]).toMatchObject({ text: "Open day on Saturday", shop: { href: "/en/s/pattes" } });
+    // krizaka-internal#4137: with the shop domain declared, the address is the shop's own origin, never the /s/<slug> hop.
+    const own = buildFeed({ rows: [row()], locale: "fr", shopHref: (slug) => `https://${slug}.folioviv.shop/fr` });
+    expect(own.flyers[0]!.shop?.href).toBe("https://pattes.folioviv.shop/fr");
   });
 
   it("falls back to the other language when the flyer was written in one", () => {

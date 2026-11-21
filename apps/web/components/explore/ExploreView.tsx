@@ -9,7 +9,7 @@ import { Input } from "@krizaka/ui/field";
 import dynamic from "next/dynamic";
 import { useState, useSyncExternalStore } from "react";
 
-import { ShopLink } from "@/components/ShopLink";
+import { OriginLink } from "@/components/OriginLink";
 import { canLocate, distanceLabel, mapCenter, type Origin } from "@/lib/explore";
 import type { GeoAttribution, GeoPlace } from "@/lib/geocoding";
 
@@ -126,7 +126,7 @@ function ShopCard({
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         <Button asChild variant="primary" size="sm" shape="cut">
-          <ShopLink href={shopHref.replace("{slug}", shop.slug)}>{words.list.visit}</ShopLink>
+          <OriginLink href={shopHref.replace("{slug}", shop.slug)}>{words.list.visit}</OriginLink>
         </Button>
         {shop.point ? (
           <Button type="button" variant="ghost" size="sm" aria-pressed={selected} onClick={onShowOnMap}>

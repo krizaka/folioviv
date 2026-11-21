@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { buildFeed, type FeedView } from "@/lib/feed-view";
 import type { Locale } from "@/lib/i18n";
 import { shopSectionFeatures } from "@/lib/settings";
+import { shopHref } from "@/lib/shop-links";
 
 /**
  * The feed the home draws on the server (the first paint; a neighbourhood asks `/api/feed`). The home never breaks for it:
@@ -13,7 +14,7 @@ export async function homeFeed(locale: Locale): Promise<FeedView> {
   const none = buildFeed({ rows: [], locale });
   try {
     if (!(await shopSectionFeatures()).announcements) return none;
-    return buildFeed({ rows: await feedFlyers(db()), locale });
+    return buildFeed({ rows: await feedFlyers(db()), locale, shopHref: (slug) => shopHref(slug, locale) });
   } catch {
     return none;
   }
