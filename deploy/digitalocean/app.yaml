@@ -46,7 +46,7 @@ jobs:
     instance_size_slug: basic-xxs
     # A failed run (drift, or the database unreachable) mails the team owners through DigitalOcean.
     alerts:
-      - rule: JOB_FAILED
+      - rule: JOB_INVOCATION_FAILED
     envs:
       - key: DATABASE_URL
         scope: RUN_TIME
