@@ -8,7 +8,8 @@ const expected = {
 };
 
 describe("the live dev schema against schema-expected.json", () => {
-  it("watches the three application schemas", () => expect([...WATCHED_SCHEMAS]).toEqual(["organize", "privacy", "public"]));
+  it("watches the three application schemas", () =>
+    expect([...WATCHED_SCHEMAS]).toEqual(["organize", "privacy", "public"]));
 
   it("says « no drift » and does not fail when the schema is right", () => {
     expect(driftReport(expected, expected)).toEqual({ drifted: false, line: "no drift" });
