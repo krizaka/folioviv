@@ -27,6 +27,35 @@ ingress:
           prefix: /
       component:
         name: web
+# The nightly schema check (krizaka-internal#4233): the job runs inside the app the dev cluster's firewall trusts, so nothing depends on a machine's IP.
+jobs:
+  - name: schema-drift
+    kind: SCHEDULED
+    schedule:
+      cron: "30 7 * * *"
+      time_zone: Etc/UTC
+    github:
+      repo: krizaka/folioviv
+      branch: main
+      deploy_on_push: true
+    dockerfile_path: deploy/docker/Dockerfile
+    source_dir: /
+    # Prints « no drift » or the drifted tables and columns, exits 1 on drift (bundled by the Dockerfile from packages/db/src/schema-drift-cli.ts).
+    run_command: node schema-drift.mjs
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    # A failed run (drift, or the database unreachable) mails the team owners through DigitalOcean.
+    alerts:
+      - rule: JOB_FAILED
+    envs:
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        type: SECRET
+        value: __DATABASE_URL__
+      - key: DATABASE_CA_CERT
+        scope: RUN_TIME
+        type: SECRET
+        value: __DATABASE_CA_CERT__
 services:
   - name: web
     github:

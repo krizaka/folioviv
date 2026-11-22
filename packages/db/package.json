@@ -23,7 +23,8 @@
     "db:generate": "drizzle-kit generate",
     "seed": "tsx src/seed-cli.ts",
     "seed:demos": "tsx src/seed-demos-cli.ts",
-    "db:rebuild": "tsx src/rebuild-cli.ts"
+    "db:rebuild": "tsx src/rebuild-cli.ts",
+    "db:drift": "tsx src/schema-drift-cli.ts"
   },
   "dependencies": {
     "@folioviv/core": "workspace:*",
@@ -50,6 +51,7 @@
     "@types/pg": "^8.15.6",
     "@vitest/coverage-v8": "4.1.12",
     "drizzle-kit": "^0.31.11",
+    "esbuild": "0.25.12",
     "tsx": "^4.23.15",
     "typescript": "^5.9.3",
     "vitest": "^4.1.12"

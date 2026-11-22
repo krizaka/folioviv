@@ -26,6 +26,10 @@ ARG APP_COMMIT_SHA
 ARG APP_SEARCH_INDEXING
 ENV APP_COMMIT_SHA=$APP_COMMIT_SHA APP_SEARCH_INDEXING=$APP_SEARCH_INDEXING
 RUN pnpm --filter @folioviv/web build
+# The nightly schema check of the folioviv-dev job (krizaka-internal#4233): one bundled file (pg and schema-expected.json inside), run by `node`.
+RUN pnpm --filter @folioviv/db exec esbuild src/schema-drift-cli.ts --bundle --platform=node --format=esm --target=node22 \
+    --banner:js="import{createRequire}from'node:module';const require=createRequire(import.meta.url);" \
+    --outfile=/app/dist/schema-drift.mjs
 
 # 3. Run
 FROM node:22-alpine@sha256:fe4f6d74e20370acb04ad889077d14d0f64a9c8ea6a42bc60cddf1e844699914 AS runner
@@ -43,6 +47,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/mail-templates ./apps/web/mail-templates
 COPY --from=builder --chown=nextjs:nodejs /app/packages/db/drizzle ./packages/db/drizzle
+COPY --from=builder --chown=nextjs:nodejs /app/dist/schema-drift.mjs ./schema-drift.mjs
 USER nextjs
 EXPOSE 3000
 HEALTHCHECK --interval=15s --timeout=5s --start-period=20s --retries=3 \
