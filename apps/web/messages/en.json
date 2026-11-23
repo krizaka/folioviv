@@ -137,7 +137,7 @@
       "error": "The flyers could not be loaded. Try again in a moment."
     },
     "preview": {
-      "demo": "Demo data",
+      "demo": "Example · demo data",
       "invoiceLine": "Group walks, October",
       "book": {
         "action": "A client picks a time on {day}",
@@ -476,7 +476,7 @@
   "privacy": {
     "title": "Privacy",
     "updated": "Updated {date}",
-    "body": "{product} is in development: only the accounts our team creates can sign in. A shop's data — its clients, appointments, invoices and tax ledger — is kept in {product}'s database in Canada, encrypted at rest, visible to that shop only. Client consent is recorded per purpose and can be withdrawn; a client's personal information can be erased, while the invoices tax law requires are kept. The tax figures {product} prepares are computed from the period's ledger inside {product}; nothing is produced for, filed with or transmitted to any government. Nothing is sold. To ask a question or have your data removed, use the contact form.",
+    "body": "{product} is in development: only accounts created by our team have access. A shop's data — its clients, appointments, invoices and tax ledger — is kept in {product}'s database in Canada, encrypted at rest, visible to that shop only. Client consent is recorded per purpose and can be withdrawn; a client's personal information can be erased, while the invoices tax law requires are kept. The tax figures {product} prepares are computed from the period's ledger inside {product}; nothing is produced for, filed with or transmitted to any government. Nothing is sold. To ask a question or have your data removed, use the contact form.",
     "officer": {
       "title": "Privacy officer",
       "text": "Person in charge of the protection of personal information: the president of {publisher} — confidentialite@krizaka.com. Write to this address to access, correct or erase your information, withdraw a consent or file a complaint; we answer within 30 days."
