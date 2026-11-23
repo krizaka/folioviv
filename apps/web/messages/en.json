@@ -175,6 +175,55 @@
         "It is not made for food service: restaurants, cafés, bars and bakeries with on-site consumption are excluded.",
         "It is not open for sign-up: access is by invitation while it is in development."
       ]
+    },
+    "productPage": {
+      "hero": {
+        "title": "Your bookings and invoices, in order.",
+        "lead": "Clients book, you invoice with GST and QST, and you file yourself.",
+        "contact": "Write to us",
+        "sample": "See a sample report",
+        "moment": "A prepared tax report, for you to review",
+        "tag": "Example"
+      },
+      "moment": {
+        "lines": [
+          "The quarter's issued invoices",
+          "GST 5 % and QST 9.975 %, worked out once per invoice",
+          "Every figure points to its invoices",
+          "For you to review, then file"
+        ],
+        "verdict": "Prepared",
+        "title": "Tax report to review",
+        "reference": "You file it yourself"
+      },
+      "scenes": {
+        "web-storefront": {
+          "title": "The shop's page",
+          "line": "What your client sees before booking."
+        },
+        "web-composer": {
+          "title": "The page composer",
+          "line": "You arrange the page; nothing is published until you decide."
+        },
+        "android-today-books": {
+          "title": "The day and the books",
+          "line": "The day's board and the books, on the phone."
+        }
+      },
+      "limits": {
+        "title": "What it does not do",
+        "items": {
+          "taxes": "It prepares your taxes; you file them yourself.",
+          "sector": "Not for restaurants, cafés, bars or bakeries.",
+          "ledger": "A correction goes through a credit note."
+        }
+      },
+      "closing": {
+        "title": "Let's talk about your business."
+      },
+      "about": "Bookings, invoices with GST and QST, and a tax report that the merchant reviews and files in person. It is in development.",
+      "play": "Play",
+      "pause": "Pause"
     }
   },
   "docs": {

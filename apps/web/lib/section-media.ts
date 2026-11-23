@@ -31,6 +31,8 @@ export const MEDIA_REGISTRY: MediaRegistry = registry.parse(data);
 /** One media to show: its words id (its name and caption in the messages), its addresses and its box. */
 export interface RoleMedia {
   id: string;
+  /** The platform it was recorded on (`web`, `android`): the frame it is drawn in. */
+  platform: string;
   poster: string;
   webm: string;
   mp4: string;
@@ -63,6 +65,7 @@ export function sectionMedia(
         return [
           {
             id,
+            platform: v.platform,
             poster: videoUrl(v.files.poster),
             webm: videoUrl(v.files.webm),
             mp4: videoUrl(v.files.mp4),

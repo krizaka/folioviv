@@ -25,8 +25,8 @@ describe("the pages' media, by role (krizaka-internal#4636)", () => {
     }
   });
 
-  it("the home's storefront section shows the storefront recording, on the media CDN", () => {
-    const [clip] = sectionMedia("home", "storefront");
+  it("the home's scenes start with the storefront recording, on the media CDN", () => {
+    const [clip] = sectionMedia("home", "scene");
     expect(clip?.id).toBe("web-storefront");
     expect(clip?.mp4).toMatch(/^https:\/\/krizaka-assets\.b-cdn\.net\/sites\/folioviv\/.+\.mp4$/);
     expect(clip?.width).toBeGreaterThan(clip?.height ?? 0);

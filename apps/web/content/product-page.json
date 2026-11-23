@@ -1,0 +1,15 @@
+{
+  "$comment": "The product public page template (krizaka-internal#4636, design krizaka-internal#4692): structure only, no words (they are in messages `landing.productPage`). The scenes are the media the registry lists for `page`/`sceneRole`, in its order; the budget is the most words each section may say, held by lib/product-page.test.ts. `moment.flagged` is the index of the report line the pen marks; `limits` are the ids of the limits band's lines.",
+  "page": "home",
+  "sceneRole": "scene",
+  "limits": ["taxes", "sector", "ledger"],
+  "moment": { "flagged": 3 },
+  "budget": {
+    "hero.title": 8,
+    "hero.lead": 14,
+    "scene.title": 5,
+    "scene.line": 12,
+    "limit": 10,
+    "closing.title": 6
+  }
+}

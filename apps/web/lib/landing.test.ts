@@ -24,18 +24,12 @@ const words = (node: unknown): string[] =>
 describe("the home is short and concrete", () => {
   const home = read("app/[locale]/page.tsx");
 
-  it("is a LandingPage: one benefit line, the real app on a phone, three screens, one way in", () => {
-    expect(home).toContain('from "@krizaka/ui/landing-page"');
-    for (const prop of ["title=", "lead=", "visual={", "features={"]) expect(home).toContain(prop);
-    expect(home).toContain("<HeroPhone");
+  it("is the product page template: the data builds it, the page holds no words", () => {
+    expect(home).toContain('from "@krizaka/ui/product-page"');
+    expect(home).toContain("<ProductPage data={data} />");
+    expect(home).toContain("homePageData(");
     expect(HOME_SECTIONS).toEqual(["hero", "screens", "trust"]);
     expect(SCREENS.map((s) => s.id)).toEqual(["book", "invoice", "books"]);
-  });
-
-  it("names the screens' section with a heading, so the features' h3 follow an h2 (axe heading-order, #448)", () => {
-    expect(home).toContain("featuresHeading={{ title: d.screensTitle }}");
-    expect(en.landing.screensTitle).toBeTruthy();
-    expect(fr.landing.screensTitle).toBeTruthy();
   });
 
   it("carries no filler: no eyebrow, figures band, mascot, comparison, FAQ, changelog or closing panel", () => {
@@ -50,10 +44,6 @@ describe("the home is short and concrete", () => {
       "closing={{",
     ])
       expect(home, needle).not.toContain(needle);
-  });
-
-  it("has exactly one primary action: the way in", () => {
-    expect(home.match(/variant="primary"/g) ?? []).toHaveLength(1);
   });
 
   it("each screen is a real capture with its text and alt in both languages, on the CDN", () => {
@@ -118,22 +108,6 @@ describe("the words are plain: no AI, no hype, no engine on the public pages", (
 });
 
 describe("the first screen loads its proof first", () => {
-  it("preconnects to the media CDN and preloads the hero take's poster (the LCP) at high priority", () => {
-    const home = read("app/[locale]/page.tsx");
-    expect(home).toMatch(/preconnect\(MEDIA_CDN/);
-    expect(home).toMatch(/<link rel="preload" as="image" href=\{heroTake\(locale\)\.poster\} fetchPriority="high" \/>/);
-  });
-  it("the hero is the whole take: a muted looping video over its poster, still under reduced motion", () => {
-    for (const locale of ["en", "fr"] as const) {
-      const take = heroTake(locale);
-      expect(take.poster).toMatch(/\/phone-hero-\w\w\.[0-9a-f]{10}\.jpg$/);
-      expect(take.webm).toMatch(/\/hero-\w\w\.[0-9a-f]{10}\.webm$/);
-    }
-    const video = read("components/home/HeroTake.tsx");
-    for (const needle of ["muted", "loop", "playsInline", "poster={poster}", "prefers-reduced-motion", "saveData"])
-      expect(video).toContain(needle);
-    expect(video).not.toContain("autoPlay");
-  });
   it("the CSP lets the CDN serve media (a video is not an image)", () => {
     expect(contentSecurityPolicy({ production: true, upgradeInsecure: true })).toContain(
       "media-src 'self' https://krizaka-assets.b-cdn.net",

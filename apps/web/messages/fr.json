@@ -175,6 +175,55 @@
         "Il n'est pas fait pour la restauration : restaurants, cafés, bars et boulangeries avec consommation sur place sont exclus.",
         "Il n'est pas ouvert à l'inscription : l'accès se fait sur invitation pendant le développement."
       ]
+    },
+    "productPage": {
+      "hero": {
+        "title": "Vos rendez-vous et vos factures, en ordre.",
+        "lead": "Vos clients réservent, vous facturez avec TPS et TVQ, vous déposez vous-même.",
+        "contact": "Nous écrire",
+        "sample": "Voir un exemple de rapport",
+        "moment": "Un rapport de taxes préparé, à relire par vous",
+        "tag": "Exemple"
+      },
+      "moment": {
+        "lines": [
+          "Les factures émises du trimestre",
+          "TPS 5 % et TVQ 9,975 %, calculées une fois par facture",
+          "Chaque montant renvoie à ses factures",
+          "À relire, puis à déposer par vous"
+        ],
+        "verdict": "Préparé",
+        "title": "Rapport de taxes à relire",
+        "reference": "Vous le déposez vous-même"
+      },
+      "scenes": {
+        "web-storefront": {
+          "title": "La page de la boutique",
+          "line": "Ce que votre client voit avant de réserver."
+        },
+        "web-composer": {
+          "title": "Le compositeur de page",
+          "line": "Vous organisez la page ; rien n'est publié avant votre décision."
+        },
+        "android-today-books": {
+          "title": "Le jour et les livres",
+          "line": "Le tableau du jour et les livres, sur téléphone."
+        }
+      },
+      "limits": {
+        "title": "Ce qu'il ne fait pas",
+        "items": {
+          "taxes": "Il prépare vos taxes ; vous les déposez vous-même.",
+          "sector": "Pas pour les restaurants, cafés, bars ni boulangeries.",
+          "ledger": "Une correction passe par une note de crédit."
+        }
+      },
+      "closing": {
+        "title": "Parlons de votre commerce."
+      },
+      "about": "Rendez-vous, factures avec TPS et TVQ, et un rapport de taxes que le commerçant relit et dépose lui-même. Il est en développement.",
+      "play": "Lecture",
+      "pause": "Pause"
     }
   },
   "docs": {
