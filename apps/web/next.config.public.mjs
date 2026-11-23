@@ -23,6 +23,7 @@ const nextConfig = {
     root: fileURLToPath(new URL("../..", import.meta.url)),
     resolveAlias: {
       "@/components/SiteHeader": "./components/public-build/SiteHeader.tsx",
+      "@/lib/bar-items": "./lib/public-build/bar-items.ts",
       "@/components/home/NeighbourhoodFeed": "./components/public-build/NeighbourhoodFeed.tsx",
       "@/lib/home-feed": "./lib/public-build/home-feed.ts",
       "@/lib/hero-session": "./lib/public-build/hero-session.ts",

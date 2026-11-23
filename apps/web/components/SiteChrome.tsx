@@ -8,7 +8,6 @@ import type { ReactNode } from "react";
 
 import { OriginLink } from "@/components/OriginLink";
 import { barItems } from "@/lib/bar-items";
-import { publicBuild } from "@/lib/build-target";
 import type { Locale } from "@/lib/i18n";
 import { type PageId, pagePath, REPO_URL } from "@/lib/site";
 
@@ -54,16 +53,15 @@ export function SiteBar({
   sessionPanel: ReactNode;
   /** The page is a shop's own origin: the app's pages are another origin, no router link (the CSP `connect-src 'self'`). */ offOrigin?: boolean;
 }>) {
-  const t = (key: keyof SiteBarLabels) => labels[key];
   const languages = languagesFor(path ?? pagePath(locale, current), offered);
-  const items = barItems(locale, current, t("explore"), publicBuild);
+  const items = barItems(locale, current, labels.explore);
   return (
     <div className="pointer-events-none sticky top-0 z-50 h-0 px-3" data-site-bar>
       {/* 12 px under the development notice (or the top): an offset that takes no room in the flow, so nothing moves below it. */}
       <div className="relative top-3">
-        <NavBar.Root label={t("nav")} className="pointer-events-auto mx-auto max-w-(--kz-page-max,72rem)">
+        <NavBar.Root label={labels.nav} className="pointer-events-auto mx-auto max-w-(--kz-page-max,72rem)">
           <NavBar.Brand asChild>
-            <OriginLink href={pagePath(locale, "home")} offOrigin={offOrigin} aria-label={t("brandHome")}>
+            <OriginLink href={pagePath(locale, "home")} offOrigin={offOrigin} aria-label={labels.brandHome}>
               {brand}
             </OriginLink>
           </NavBar.Brand>
@@ -78,13 +76,13 @@ export function SiteBar({
           </NavBar.Items>
 
           <NavBar.Actions className="gap-1">
-            <NavBar.Repo href={REPO_URL} label={t("sourceCode")} className="hidden lg:inline-flex" />
+            <NavBar.Repo href={REPO_URL} label={labels.sourceCode} className="hidden lg:inline-flex" />
             <span className="hidden md:inline-flex">
-              <ThemeToggle label={t("theme")} variant="ghost" />
+              <ThemeToggle label={labels.theme} variant="ghost" />
             </span>
             <span className="hidden md:inline-flex">
               <NavBar.Language
-                label={t("language")}
+                label={labels.language}
                 current={contentLocale ?? locale}
                 languages={languages}
                 linkAs={Link}
@@ -93,8 +91,8 @@ export function SiteBar({
             {sessionBar}
 
             <NavBar.Mobile
-              openLabel={t("menu")}
-              closeLabel={t("menu")}
+              openLabel={labels.menu}
+              closeLabel={labels.menu}
               className="max-h-[calc(100dvh-6rem)] gap-1 overflow-y-auto overscroll-contain p-3"
             >
               {items.map((i) => (
@@ -104,10 +102,10 @@ export function SiteBar({
                   </OriginLink>
                 </NavBar.MobileLink>
               ))}
-              <NavBar.MobilePreferences label={t("preferences")}>
-                <ThemeToggle label={t("theme")} variant="ghost" />
+              <NavBar.MobilePreferences label={labels.preferences}>
+                <ThemeToggle label={labels.theme} variant="ghost" />
                 <NavBar.Language
-                  label={t("language")}
+                  label={labels.language}
                   current={contentLocale ?? locale}
                   languages={languages}
                   linkAs={Link}
