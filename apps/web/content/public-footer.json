@@ -1,0 +1,35 @@
+{
+  "$comment": "The footer of the public export (krizaka-internal#4636, the pattern of verikora#914): grouped columns of the pages the export holds, then the legal line, no version. Words are message keys; a link names a page of lib/site.ts (`page`) or one of the site's addresses (`site`), never a typed URL. A page link the export does not hold is not drawn. Read by lib/public-footer.ts.",
+  "labelKey": "chrome.footerLabel",
+  "columns": [
+    {
+      "id": "product",
+      "titleKey": "chrome.footerColumns.product",
+      "links": [
+        { "labelKey": "chrome.menu.docs.title", "page": "docs" },
+        { "labelKey": "chrome.legal", "page": "privacy" }
+      ]
+    },
+    {
+      "id": "code",
+      "titleKey": "chrome.footerColumns.code",
+      "links": [
+        { "labelKey": "chrome.sourceCode", "site": "repo" },
+        { "labelKey": "chrome.license", "site": "license" }
+      ]
+    },
+    {
+      "id": "publisher",
+      "titleKey": "chrome.footerColumns.publisher",
+      "links": [
+        { "labelKey": "chrome.contact", "site": "contact" },
+        { "labelKey": "chrome.footerColumns.publisherSite", "site": "publisher" }
+      ]
+    }
+  ],
+  "legal": {
+    "showVersion": false,
+    "links": []
+  },
+  "social": ["instagram", "youtube", "linkedin"]
+}

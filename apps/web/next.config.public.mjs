@@ -17,12 +17,13 @@ const nextConfig = {
   // Each page is a folder with an index.html: any static host serves /fr/docs without a rewrite rule.
   trailingSlash: true,
   // The monorepo root: the linked files resolve outside the staged folder.
-  // Modules that differ wholesale from the app are swapped here and nowhere else: the bar (no session island, no sign-in), the home's
+  // Modules that differ wholesale from the app are swapped here and nowhere else: the bar (no session island, no sign-in), the footer (from data), the home's
   // feed (no database), the hero's session, the nonce of a response (a static page has none).
   turbopack: {
     root: fileURLToPath(new URL("../..", import.meta.url)),
     resolveAlias: {
       "@/components/SiteHeader": "./components/public-build/SiteHeader.tsx",
+      "@/components/SiteFooter": "./components/public-build/SiteFooter.tsx",
       "@/lib/bar-items": "./lib/public-build/bar-items.ts",
       "@/components/home/NeighbourhoodFeed": "./components/public-build/NeighbourhoodFeed.tsx",
       "@/lib/home-feed": "./lib/public-build/home-feed.ts",

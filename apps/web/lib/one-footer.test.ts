@@ -48,7 +48,8 @@ describe("the pages render exactly one footer", () => {
 
   it("nothing else draws a footer-like band", () => {
     const offenders = [...files("app"), ...files("components")]
-      .filter((f) => /\.tsx$/.test(f) && !/components\/SiteFooter\.tsx$/.test(f))
+      // The public export's footer swaps the app's by an alias (next.config.public.mjs): still one footer per page.
+      .filter((f) => /\.tsx$/.test(f) && !/components\/(public-build\/)?SiteFooter\.tsx$/.test(f))
       .filter((f) => /<footer\b|<FamilyFooter\b|dev-environment-notice/.test(read(f)));
     expect(offenders).toEqual([]);
   });

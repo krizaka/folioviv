@@ -10,6 +10,7 @@ import { NeighbourhoodFeed } from "@/components/home/NeighbourhoodFeed";
 import { BookPreview } from "@/components/home/previews/BookPreview";
 import { BooksPreview } from "@/components/home/previews/BooksPreview";
 import { InvoicePreview } from "@/components/home/previews/InvoicePreview";
+import { SectionMedia } from "@/components/media/SectionMedia";
 import { OriginLink } from "@/components/OriginLink";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -80,7 +81,7 @@ export default async function Home({ params }: Readonly<{ params: Promise<{ loca
                   ) : null}
                 </div>
               ) : null}
-              {/* What Folioviv is not for protects the product's claims: under the hero's actions, at a readable size (folioviv#440). */}
+              {/* What the product is not for protects the product's claims: under the hero's actions, at a readable size (folioviv#440). */}
               <p className="m-0 mt-4 max-w-prose text-base text-fg-secondary" data-testid="scope-line">
                 {d.trust.scope}
               </p>
@@ -121,6 +122,17 @@ export default async function Home({ params }: Readonly<{ params: Promise<{ loca
               />
             </Section>
           )}
+          {/* The page a client books from, shown by the recording the media registry gives this role (content/media-registry.json). */}
+          <Section id="storefront" spacing="sm" title={d.storefront.title} lead={d.storefront.lead}>
+            <SectionMedia page="home" role="storefront" locale={locale} />
+          </Section>
+          <Section id="limits" spacing="sm" title={d.limits.title} divider>
+            <ul className="m-0 flex max-w-[70ch] list-disc flex-col gap-2 pl-5 text-fg-secondary" data-testid="limits">
+              {d.limits.items.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </Section>
           <Section id="trust" spacing="sm">
             <p className="m-0 text-sm text-fg-muted" data-testid="trust-line">
               {d.trust.line}

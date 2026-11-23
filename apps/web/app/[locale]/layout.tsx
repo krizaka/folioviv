@@ -2,6 +2,7 @@ import "../globals.css";
 import "@krizaka/ui/blocks.css";
 import "@krizaka/ui/story.css"; // the story pieces the storefront work draws: the template picker's tiles (ChoiceGrid)
 
+import { org } from "@krizaka/org";
 import { cn } from "@krizaka/ui/cn";
 import { MotionObserver } from "@krizaka/ui/motion";
 import { ThemeProvider, ThemeScript } from "@krizaka/ui/theme";
@@ -15,7 +16,7 @@ import { getDictionary, type Locale, LOCALES, PAGE_LOCALES, type PageLocale, uiL
 import { publicBuild } from "@/lib/build-target";
 import { requestNonce } from "@/lib/request-nonce";
 import { shopDisplay, shopSans } from "@/lib/shop-fonts";
-import { SITE_URL } from "@/lib/site";
+import { KRIZAKA_URL, SITE_URL } from "@/lib/site";
 
 export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover" };
 
@@ -34,7 +35,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     title: { default: t.meta.siteName, template: t.meta.titleTemplate.replace("{title}", "%s") },
     description: t.meta.description,
     applicationName: t.meta.siteName,
-    authors: [{ name: "Krizaka", url: "https://www.krizaka.com" }],
+    authors: [{ name: org.company.tradeName, url: KRIZAKA_URL }],
     // Closed to search engines unless the setting is explicitly on for the configured public host (the header and robots.txt say it too, lib/indexing.ts).
     ...(indexableOn(publicHost()) ? {} : { robots: { index: false, follow: false, noarchive: true } }),
   };

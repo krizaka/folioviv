@@ -186,8 +186,12 @@ describe("one status, the same word everywhere: paused", () => {
 
 describe("the line is « taxes préparées », never « réglées »", () => {
   it("the title, the lead and the description", () => {
-    expect(fr.landing.title).toBe("Vos rendez-vous et vos factures réglés, vos taxes préparées.");
-    expect(en.landing.title).toBe("Your bookings and invoices sorted, your taxes prepared.");
+    // « réglés » read as « paid » (krizaka-internal#4636, report H5): « en ordre », and the same in English.
+    expect(fr.landing.title).toBe("Vos rendez-vous et factures en ordre, vos taxes préparées.");
+    expect(en.landing.title).toBe("Your bookings and invoices in order, your taxes prepared.");
+    for (const text of [fr.landing.title, fr.meta.description]) {
+      expect(text).not.toMatch(/réglé/i);
+    }
     for (const text of [fr.landing.title, fr.landing.lead, fr.meta.description]) {
       expect(text).not.toMatch(/taxes?[^.]{0,20}réglé/i);
     }

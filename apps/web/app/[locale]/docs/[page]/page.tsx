@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 
 import { DocsSidebar } from "@/components/docs/DocsSidebar";
 import { SiteFooter } from "@/components/SiteFooter";
+import { SectionMedia } from "@/components/media/SectionMedia";
 import { SiteHeader } from "@/components/SiteHeader";
 import { jsonLdHtml } from "@/lib/csp";
 import { docHref, isDocId, neighbours } from "@/lib/docs";
@@ -50,6 +51,7 @@ export default async function DocsPage({ params }: Readonly<{ params: Promise<{ 
           toc={{ label: d.tocLabel, items: doc.sections.map((s) => ({ id: s.id, label: s.h })) }}
           pager={{ previous: link(previous), next: link(next), labels: { previous: d.previous, next: d.next } }}
         >
+          <SectionMedia page={`docs/${page}`} role="lead" locale={locale} />
           {doc.sections.map((s) => (
             <section key={s.id} id={s.id}>
               <h2>{s.h}</h2>

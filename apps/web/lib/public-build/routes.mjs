@@ -1,6 +1,8 @@
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
 
+import { PUBLIC_PAGES } from "./pages.mjs";
+
 /**
  * The public export of Folioviv (krizaka-internal#4626): the pages a visitor may read while the product is paused and has no sign-in there.
  * One list, read by the build script (which stages exactly these page files), the export check and its test.
@@ -8,8 +10,7 @@ import { join } from "node:path";
  */
 export const PUBLIC_LOCALES = ["fr", "en"];
 
-/** The page folders under `app/[locale]/` that are exported ("" is the home; `docs/[page]` are the five guide pages the docs hub links to). */
-export const PUBLIC_PAGES = ["", "docs", "docs/[page]", "privacy"];
+export { PUBLIC_PAGES } from "./pages.mjs";
 
 /** The five pages of the guide (`DOC_IDS` of lib/site.ts, checked equal by a test: this file is plain JS for the build script). */
 export const PUBLIC_DOC_IDS = ["shop", "bookings", "invoices", "books", "data"];

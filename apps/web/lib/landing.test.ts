@@ -105,7 +105,8 @@ describe("the words are plain: no AI, no hype, no engine on the public pages", (
       expect(m.landing.lead.length).toBeLessThanOrEqual(120);
       expect(words(m.landing)).not.toContain("—");
     }
-    expect(fr.landing.title).toBe("Vos rendez-vous et vos factures réglés, vos taxes préparées.");
+    // « réglés » read as « paid » (krizaka-internal#4636, report H5).
+    expect(fr.landing.title).toBe("Vos rendez-vous et factures en ordre, vos taxes préparées.");
   });
   it("claims « designed for », never « compliant »", () => {
     const everything = JSON.stringify([en.meta, en.landing, fr.meta, fr.landing]) + llmsText();

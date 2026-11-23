@@ -3,7 +3,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { SiteFooter } from "@/components/SiteFooter";
+import { SectionMedia } from "@/components/media/SectionMedia";
 import { SiteHeader } from "@/components/SiteHeader";
+import { BRAND_ID } from "@/lib/brand-id";
 import { jsonLdHtml } from "@/lib/csp";
 import { docHref } from "@/lib/docs";
 import { asLocale, getDictionary } from "@/lib/i18n";
@@ -32,8 +34,8 @@ export default async function Docs({ params }: Readonly<{ params: Promise<{ loca
           collectionsTitle={d.collectionsTitle}
           collections={[
             {
-              id: "folioviv",
-              brand: "folioviv",
+              id: BRAND_ID,
+              brand: BRAND_ID,
               title: d.collection.title,
               href: pagePath(locale, "docs/shop"),
               description: d.collection.description,
@@ -45,6 +47,9 @@ export default async function Docs({ params }: Readonly<{ params: Promise<{ loca
             items: DOC_IDS.map((id) => ({ href: docHref(locale, id), title: d.pages[id].title })),
           }}
         />
+        <div className="mx-auto w-full max-w-(--kz-page-max,72rem) px-4">
+          <SectionMedia page="docs" role="lead" locale={locale} />
+        </div>
       </main>
       <SiteFooter locale={locale} />
     </>

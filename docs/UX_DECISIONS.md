@@ -16,7 +16,7 @@ Feedback: the pinned Discussion of the repository.
 
 - **Decision**: an invoice is drawn in its own language (French by default), whatever the page's language.
 - **Problem**: a bilingual shop must hand clients a document the Charter of the French language accepts.
-- **Principle**: consistency between preview and artefact — what you see is what the client gets (Shneiderman, *Designing the User Interface*).
+- **Principle**: consistency between preview and artefact — what you see is what the client gets (Shneiderman, _Designing the User Interface_).
 - **Refused**: translating the invoice with the interface.
 - **Cost**: an English-speaking owner sees French lines on a French invoice.
 - **Wrong if**: owners ask for the preview in their own language more than for the real document — then add a toggle, never change the document.
@@ -26,7 +26,7 @@ Feedback: the pinned Discussion of the repository.
 - **Decision**: "Prepare my tax return" shows the figures and their sources; the merchant files. Any difference between the
   assistant and the ledger is shown.
 - **Problem**: trust — a tool that files for you is a tool you cannot check.
-- **Principle**: keep the user in control of irreversible actions (Norman, *The Design of Everyday Things*).
+- **Principle**: keep the user in control of irreversible actions (Norman, _The Design of Everyday Things_).
 - **Refused**: one-click filing; silently adopting the AI's figures.
 - **Cost**: a last step outside Folioviv.
 - **Wrong if**: merchants copy the figures with mistakes — then make the copy safer, still without filing.
@@ -123,7 +123,7 @@ Feedback: the pinned Discussion of the repository.
 
 ## The words of the business (krizaka/folioviv#117)
 
-- **Decision**: a shop has a *business type* (« Type of business » on the shop page: professional services, or pet care).
+- **Decision**: a shop has a _business type_ (« Type of business » on the shop page: professional services, or pet care).
   The type sets the words of every screen of the owner and of the clients of that shop (`console.vocabularies.<type>` in
   the messages: only what differs from the base) and two behaviours: a pet-care shop books for a dog and reports on the
   visit; any other business books the client for themselves and has no report.
@@ -263,6 +263,7 @@ Feedback: the pinned Discussion of the repository.
 - **Refused**: a client-side swap of the action (it would flash the signed-out one); a second « Open the app » in the bar.
 - **Cost**: the home is rendered per request (it reads the session); the 404 reads the language from the address through a header the proxy sets.
 - **Signal we are wrong**: signed-in owners do not use the hero's « Open my shop », or the demo shop's visitors leave at the hero.
+
 ## The frame: where you work on the rail, who you are under the avatar (UX review 2026-10, K1)
 
 The signed-in space is the family's frame (`RailNav` + `AppHeader` of @krizaka/ui, `components/app/ShopFrame.tsx`): a rail of
@@ -517,7 +518,7 @@ number columns and `Stat` are tabular in @krizaka/ui already. Guarded by `compon
 - **Decision**: tags belong to **the shop** (owner and manager write them, a client never sees them), with a colour marker of the closed
   palette (a dot, never the only signal: the name is always there). A shop starts with the administrator's default tag set for its
   trade and language, seeded once (a deleted tag does not come back). **The binder's dividers are the tags** (`Tabs.Nav
-  variant="binder"`): « Tous » and one divider per tag with its count, the address is the state (`?tags=`), so a divider is a link and
+variant="binder"`): « Tous » and one divider per tag with its count, the address is the state (`?tags=`), so a divider is a link and
   back/forward and a shared link keep it. **Saved views** are links too — the administrator's (« À encaisser », « En retard »,
   « Payées »), the shop's shared ones and mine — and « Enregistrer cette vue » appears when the filters in force are not one of them.
   **The selection bar tags and untags** (at most 200, one call, one audit line per row) next to the export. The client's file opens on
@@ -569,7 +570,6 @@ number columns and `Stat` are tabular in @krizaka/ui already. Guarded by `compon
 - The video player speaks the page's language (its labels come from the catalogues); the shop's own video plays in the television, muted and only while on screen.
 - The booking journey wears a **thin paper head** on steps 1, 2 and 4 (the shop's name in the display face, « Step 2 of 4 · The time », « Edit » on the time step) and the confirmation presses a « booked » stamp once. No wall, tilt, doodle or texture reaches a form; the skeleton carries a box of the head's height.
 
-
 ## The owner's figures explain themselves (#260)
 
 - **Decision**: every figure on the Monday brief and on « Vos livres » is a `KpiExplained` (meaning, formula with the numbers read from the ledger, sources linked to their rows, freshness, state); « Que faire maintenant » (`NextActions`) sits on Today and the brief; the lexique (`Glossary`, `GlossaryTerm`) explains the words, the ones needing an accountant marked.
@@ -615,3 +615,10 @@ number columns and `Stat` are tabular in @krizaka/ui already. Guarded by `compon
 - "Near me" asks the browser for the position on the click only, keeps it in the page's state and never sends or stores it.
 - A shop's position is the centre of the first area it serves that has one (what its public page already shows), never its street address. A shop with no position is listed and says so.
 
+## The public export says what the product does not do, and its media and footer are data (krizaka-internal#4636)
+
+- **Decision**: the home ends with « Ce que Folioviv ne fait pas » (files nothing, no point of sale, no food service, no sign-up) after a « La page que voient vos clients » section that plays the storefront recording. Each section's media comes from `content/media-registry.json` by role; the export's footer comes from `content/public-footer.json`, with the legal line from `@krizaka/org` and no version.
+- **Problem**: the export read like a proof of concept: a slogan and cards, no limit stated, a footer with a version and links to pages the export does not hold.
+- **Principle**: match between the system and the real world (say the limits before the visitor finds them), and recognition rather than recall (the real screens, labelled « Exemple »).
+- **Refused**: a typed list of clips or links in a component; a generated visual without the founder's yes.
+- **Wrong if**: visitors stop at the limits list and leave - then move it under the three cards' links to the guide.

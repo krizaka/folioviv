@@ -2,7 +2,7 @@
   "meta": {
     "siteName": "{product}",
     "titleTemplate": "{title} · {product}",
-    "description": "Your bookings and invoices sorted, your taxes prepared. {product} is for salons, studios and the self-employed in Québec: clients book, you invoice, your GST/QST figures are ready. In French and in English."
+    "description": "Your bookings and invoices in order, your taxes prepared. {product} is for the salons, studios and self-employed of Québec: clients book, you invoice, your GST and QST figures are ready. In French and in English."
   },
   "chrome": {
     "brandHome": "{product}, home",
@@ -27,7 +27,10 @@
     "terms": "Terms of use",
     "footerColumns": {
       "product": "Product",
-      "legal": "Legal"
+      "legal": "Legal",
+      "code": "Public code",
+      "publisher": "Publisher",
+      "publisherSite": "The publisher's site"
     },
     "menu": {
       "label": "Menu",
@@ -51,15 +54,18 @@
     "footerLabel": "Site footer",
     "preferences": "Preferences",
     "version": "v{version}",
-    "explore": "Explorer"
+    "explore": "Explorer",
+    "media": {
+      "recorded": "Recorded by our automated tests, on fictional data."
+    }
   },
   "stage": {
     "title": "Development version",
     "message": "Data can be reset at any time. This is not a commercial offer yet."
   },
   "landing": {
-    "title": "Your bookings and invoices sorted, your taxes prepared.",
-    "lead": "Clients book, you invoice, your tax figures are ready. In French and in English.",
+    "title": "Your bookings and invoices in order, your taxes prepared.",
+    "lead": "Clients book, you invoice with GST and QST, you review the tax report and file it yourself.",
     "actions": {
       "openShop": "Open my shop",
       "tryDemo": "Try the demo shop",
@@ -72,7 +78,7 @@
     },
     "hero": {
       "visualAlt": "The Pattes de Saint-Henri demo shop on a phone: a booking, the walker's day, the visit report and the books.",
-      "caption": "The real app, one take, October 19, 2026. No real person."
+      "caption": "The real app, in one take, on a demo shop. No real person."
     },
     "founder": {
       "title": "Founder offer: {price} a month plus taxes, setup included",
@@ -111,7 +117,7 @@
       },
       "invoice": {
         "title": "The invoice, taxes included",
-        "text": "GST 5 % and QST 9.975 % to the cent, in French or in English.",
+        "text": "GST 5 % and QST 9.975 %, worked out once on the invoice's subtotal, in whole cents. In French or in English.",
         "alt": "{line}, {subtotal}, becomes an invoice with GST {gst}, QST {qst} and a total of {total}."
       },
       "books": {
@@ -156,6 +162,19 @@
         "input": "Your invoices and your expenses, as they come",
         "result": "The three figures for your return"
       }
+    },
+    "storefront": {
+      "title": "The page your clients see",
+      "lead": "Your services, your hours and your openings on a page in your name. Clients pick a service, a person and a time that is truly free."
+    },
+    "limits": {
+      "title": "What {product} does not do",
+      "items": [
+        "It files and transmits no return: it prepares the figures, you file the return.",
+        "It takes no payment at the counter: there is no point of sale.",
+        "It is not made for food service: restaurants, cafés, bars and bakeries with on-site consumption are excluded.",
+        "It is not open for sign-up: access is by invitation while it is in development."
+      ]
     }
   },
   "docs": {
@@ -460,7 +479,7 @@
       "items": {
         "web-storefront": {
           "name": "The shop's public page",
-          "body": "A demo shop's page, then the same shop in other compositions of Krizaka UI."
+          "body": "A demo shop's page, then the same shop in other layouts."
         },
         "web-composer": {
           "name": "The page composer",
@@ -1512,7 +1531,12 @@
         "currentPlan": "Current plan",
         "plannedNote": "Plans are not on sale yet: the prices are planned and no card is asked.",
         "changePlan": "Change plan",
-        "plan": { "founder": "Founder offer", "starter": "Starter", "scale": "Pro", "association": "Association" },
+        "plan": {
+          "founder": "Founder offer",
+          "starter": "Starter",
+          "scale": "Pro",
+          "association": "Association"
+        },
         "unavailable": "No plan is on sale yet.",
         "yourPrice": "Your price",
         "yourPriceHint": "The price your subscription was sold at: you keep it as long as you stay.",
