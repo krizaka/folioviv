@@ -30,16 +30,19 @@ describe("the home's demo cards: one action and its result (folioviv#470, krizak
     },
   );
 
-  it.each(["en", "fr"] as const)("never puts the demo label over the content nor clips the result (%s)", async (locale) => {
-    const demo = getDictionary(locale).landing.preview.demo;
-    for (const h of await render(locale)) {
-      expect(h).toContain(demo);
-      // The label sits in the card's own footer row: nothing is positioned over the content.
-      expect(h).not.toMatch(/\babsolute\b/);
-      // No fixed height cut by a fade: the result is never hidden.
-      expect(h).not.toMatch(/\bh-72\b|mask-image|overflow-hidden|scale-\[/);
-    }
-  });
+  it.each(["en", "fr"] as const)(
+    "never puts the demo label over the content nor clips the result (%s)",
+    async (locale) => {
+      const demo = getDictionary(locale).landing.preview.demo;
+      for (const h of await render(locale)) {
+        expect(h).toContain(demo);
+        // The label sits in the card's own footer row: nothing is positioned over the content.
+        expect(h).not.toMatch(/\babsolute\b/);
+        // No fixed height cut by a fade: the result is never hidden.
+        expect(h).not.toMatch(/\bh-72\b|mask-image|overflow-hidden|scale-\[/);
+      }
+    },
+  );
 
   it.each(["en", "fr"] as const)("shows what it does, not a pseudo-document (%s)", async (locale) => {
     for (const h of await render(locale)) {
