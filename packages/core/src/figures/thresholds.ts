@@ -42,8 +42,8 @@ export const DEFAULT_FIGURE_THRESHOLDS: FigureThresholds = {
 
 /** The kinds of action « what to do now » can offer; the administrator chooses which are on. */
 export const ACTION_KIND = { chase: "chase", taxes: "taxes", slot: "slot" } as const;
-export type ActionKind = (typeof ACTION_KIND)[keyof typeof ACTION_KIND];
-export const ACTION_KINDS: readonly ActionKind[] = [ACTION_KIND.chase, ACTION_KIND.taxes, ACTION_KIND.slot];
+export type FigureActionKind = (typeof ACTION_KIND)[keyof typeof ACTION_KIND];
+export const ACTION_KINDS: readonly FigureActionKind[] = [ACTION_KIND.chase, ACTION_KIND.taxes, ACTION_KIND.slot];
 
 /** A figure's state against its thresholds: `info` when there is nothing to judge (no data yet). */
 export const FIGURE_STATE = { good: "good", watch: "watch", alert: "alert", info: "info" } as const;

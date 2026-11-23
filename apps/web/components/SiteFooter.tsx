@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 import { OriginLink } from "@/components/OriginLink";
 import { BRAND_ID } from "@/lib/brand-id";
+import { publicBuild } from "@/lib/build-target";
 import { downloadPageOpen } from "@/lib/downloads";
 import { productFooterLabels } from "@/lib/footer-labels";
 import { format, getDictionary, type Locale, translator } from "@/lib/i18n";
@@ -43,7 +44,7 @@ export function SiteFooter({
       family={false}
       labels={productFooterLabels(locale)}
       aria-label={t("chrome.footerLabel")}
-      env={indexable() ? undefined : "DEV"}
+      env={publicBuild || indexable() ? undefined : "DEV"}
       data-testid="app-version"
       legal={
         <>
@@ -51,18 +52,22 @@ export function SiteFooter({
             {format(getDictionary(locale).chrome.version, { version: APP_VERSION })}
             {uiVersion() ? ` · Krizaka UI ${uiVersion()}` : ""}
           </span>
-          {indexable() ? null : <span data-testid="dev-notice">{t("chrome.devNotice")}</span>}
+          {publicBuild || indexable() ? null : <span data-testid="dev-notice">{t("chrome.devNotice")}</span>}
         </>
       }
     >
       <SiteFooterColumn title={t("chrome.footerColumns.product")}>
-        <SiteFooterLink asChild>
-          <OriginLink href={shopHref(DEMO_SHOP, locale)}>{t("chrome.menu.shop.title")}</OriginLink>
-        </SiteFooterLink>
-        <PageLink href={pagePath(locale, "pricing")} offOrigin={offOrigin}>
-          {t("chrome.menu.pricing.title")}
-        </PageLink>
-        {downloadPageOpen() ? (
+        {publicBuild ? null : (
+          <SiteFooterLink asChild>
+            <OriginLink href={shopHref(DEMO_SHOP, locale)}>{t("chrome.menu.shop.title")}</OriginLink>
+          </SiteFooterLink>
+        )}
+        {publicBuild ? null : (
+          <PageLink href={pagePath(locale, "pricing")} offOrigin={offOrigin}>
+            {t("chrome.menu.pricing.title")}
+          </PageLink>
+        )}
+        {!publicBuild && downloadPageOpen() ? (
           <PageLink href={pagePath(locale, "download")} offOrigin={offOrigin}>
             {t("download.title")}
           </PageLink>
@@ -75,9 +80,11 @@ export function SiteFooter({
         <PageLink href={pagePath(locale, "privacy")} offOrigin={offOrigin}>
           {t("chrome.legal")}
         </PageLink>
-        <PageLink href={pagePath(locale, "terms")} offOrigin={offOrigin}>
-          {t("chrome.terms")}
-        </PageLink>
+        {publicBuild ? null : (
+          <PageLink href={pagePath(locale, "terms")} offOrigin={offOrigin}>
+            {t("chrome.terms")}
+          </PageLink>
+        )}
       </SiteFooterColumn>
       <SiteFooterColumn title="Krizaka">
         <SiteFooterLink href={REPO_URL}>{t("chrome.sourceCode")}</SiteFooterLink>

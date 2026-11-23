@@ -1,6 +1,5 @@
 "use client";
 
-import { publicBarLinks } from "@krizaka/ui/app-frame";
 import { languagesFor } from "@krizaka/ui/language-switch";
 import { NavBar } from "@krizaka/ui/nav-bar";
 import { ThemeToggle } from "@krizaka/ui/theme";
@@ -8,6 +7,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { OriginLink } from "@/components/OriginLink";
+import { barItems } from "@/lib/bar-items";
+import { publicBuild } from "@/lib/build-target";
 import type { Locale } from "@/lib/i18n";
 import { type PageId, pagePath, REPO_URL } from "@/lib/site";
 
@@ -21,17 +22,6 @@ export interface SiteBarLabels {
   explore: string;
   menu: string;
   preferences: string;
-}
-
-/** « Explorer » first (the public side of the product: find a shop), then the family's links: three in all, under the bar's four. */
-function barItems(locale: Locale, current: PageId, exploreLabel: string) {
-  const family = publicBarLinks({ pricing: pagePath(locale, "pricing"), docs: pagePath(locale, "docs") }, locale).map(
-    (l) => ({ ...l, active: l.id === current || (l.id === "docs" && current.startsWith("docs/")) }),
-  );
-  return [
-    { id: "explore", label: exploreLabel, href: pagePath(locale, "explore"), active: current === "explore" },
-    ...family,
-  ];
 }
 
 /**
@@ -66,7 +56,7 @@ export function SiteBar({
 }>) {
   const t = (key: keyof SiteBarLabels) => labels[key];
   const languages = languagesFor(path ?? pagePath(locale, current), offered);
-  const items = barItems(locale, current, t("explore"));
+  const items = barItems(locale, current, t("explore"), publicBuild);
   return (
     <div className="pointer-events-none sticky top-0 z-50 h-0 px-3" data-site-bar>
       {/* 12 px under the development notice (or the top): an offset that takes no room in the flow, so nothing moves below it. */}

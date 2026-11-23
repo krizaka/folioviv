@@ -13,16 +13,16 @@ import { InvoicePreview } from "@/components/home/previews/InvoicePreview";
 import { OriginLink } from "@/components/OriginLink";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
-import { pageSession } from "@/lib/access";
+import { publicBuild } from "@/lib/build-target";
 import { jsonLdHtml } from "@/lib/csp";
+import { heroSignedIn } from "@/lib/hero-session";
 import { homeFeed } from "@/lib/home-feed";
+import { homeStatus } from "@/lib/home-status";
 import { asLocale, getDictionary } from "@/lib/i18n";
-import { DEMO_SHOP, heroActions, productStatus, SCREENS } from "@/lib/landing";
+import { DEMO_SHOP, heroActions, SCREENS } from "@/lib/landing";
 import { pageMetadata, siteJsonLd } from "@/lib/seo";
 import { preconnectShop, shopHref } from "@/lib/shop-links";
 import { heroTake, MEDIA_CDN } from "@/lib/tour";
-
-import preview from "../../../../dev-preview.json";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   return pageMetadata(asLocale((await params).locale), "home");
@@ -35,13 +35,17 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function Home({ params }: Readonly<{ params: Promise<{ locale: string }> }>) {
   const locale = asLocale((await params).locale);
   const d = getDictionary(locale).landing;
-  const status = productStatus(preview);
+  const status = homeStatus();
   // The storefront still is the page's LCP: open the CDN's connection now and fetch it at once (React hoists the link into <head>).
   preconnect(MEDIA_CDN);
-  preconnectShop(DEMO_SHOP);
+  // The demo shop is a page of the app: the public export has none.
+  if (!publicBuild) {
+    preconnectShop(DEMO_SHOP);
+  }
   // The hero's action follows the session, rendered on the server: no flash of the signed-out action.
   const feed = await homeFeed(locale);
-  const hero = heroActions(locale, Boolean(await pageSession().catch(() => null)), shopHref(DEMO_SHOP, locale));
+  // The public export has no demo shop and no sign-in to point at: no action, only the scope line.
+  const hero = publicBuild ? null : heroActions(locale, await heroSignedIn(), shopHref(DEMO_SHOP, locale));
   // The three jobs are the real components of the app, drawn with demo data (folioviv#470): below the fold, never the LCP.
   const previews = {
     book: <BookPreview locale={locale} />,
@@ -62,18 +66,20 @@ export default async function Home({ params }: Readonly<{ params: Promise<{ loca
           visual={<HeroPhone locale={locale} />}
           actions={
             <>
-              <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-                <Button asChild variant="primary" size="lg" className="w-full sm:w-auto">
-                  <OriginLink href={hero.primary.href}>
-                    {d.actions[hero.primary.message]} <ForwardIcon size={16} strokeWidth={2.25} />
-                  </OriginLink>
-                </Button>
-                {hero.secondary ? (
-                  <Button asChild variant="secondary" size="lg" className="w-full sm:w-auto">
-                    <OriginLink href={hero.secondary.href}>{d.actions[hero.secondary.message]}</OriginLink>
+              {hero ? (
+                <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+                  <Button asChild variant="primary" size="lg" className="w-full sm:w-auto">
+                    <OriginLink href={hero.primary.href}>
+                      {d.actions[hero.primary.message]} <ForwardIcon size={16} strokeWidth={2.25} />
+                    </OriginLink>
                   </Button>
-                ) : null}
-              </div>
+                  {hero.secondary ? (
+                    <Button asChild variant="secondary" size="lg" className="w-full sm:w-auto">
+                      <OriginLink href={hero.secondary.href}>{d.actions[hero.secondary.message]}</OriginLink>
+                    </Button>
+                  ) : null}
+                </div>
+              ) : null}
               {/* What Folioviv is not for protects the product's claims: under the hero's actions, at a readable size (folioviv#440). */}
               <p className="m-0 mt-4 max-w-prose text-base text-fg-secondary" data-testid="scope-line">
                 {d.trust.scope}

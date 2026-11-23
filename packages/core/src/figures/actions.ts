@@ -4,7 +4,7 @@ import { INVOICE_STATE, invoiceState, remainingCents } from "../invoice-state";
 import type { Cents } from "../money";
 import { daysOverdue, type FiguresInput } from "./figures";
 import type { Period } from "./period";
-import { ACTION_KIND, type ActionKind, type FigureThresholds } from "./thresholds";
+import { ACTION_KIND, type FigureActionKind, type FigureThresholds } from "./thresholds";
 
 /** Where an action leads: the app maps each to its address (`shopRoutes`); the domain only says which place and which record. */
 export type ActionTarget =
@@ -15,7 +15,7 @@ export type ActionTarget =
 
 /** The words of an action are catalogue messages (`console.figures.actions.<kind>.title|why`) with these variables: nothing is composed here. */
 export interface NextAction {
-  kind: ActionKind;
+  kind: FigureActionKind;
   /** How soon: `now` (overdue money, a return past its period), `soon` (a period ending), `week` (a slot to fill). */
   urgency: "now" | "soon" | "week";
   /** What is at stake, in cents (0 when it is not money). */
@@ -43,11 +43,11 @@ const URGENCY = { now: 0, soon: 1, week: 2 } as const;
 export function nextActions(
   input: ActionsInput,
   thresholds: FigureThresholds,
-  offered: readonly ActionKind[],
+  offered: readonly FigureActionKind[],
 ): NextAction[] {
   const { today, invoices, period } = input.figures;
   const actions: NextAction[] = [];
-  const on = (k: ActionKind) => offered.includes(k);
+  const on = (k: FigureActionKind) => offered.includes(k);
 
   if (on(ACTION_KIND.chase)) {
     const overdue = invoices

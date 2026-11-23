@@ -1,6 +1,6 @@
 import {
   ACTION_KINDS,
-  type ActionKind,
+  type FigureActionKind,
   applyOwnerOverrides,
   DEFAULT_FIGURE_THRESHOLDS,
   type FigureThresholds,
@@ -16,7 +16,7 @@ import { appSettings } from "@/lib/settings";
  */
 export async function figureRules(
   ownerOverrides: () => Promise<OwnerOverrides>,
-): Promise<{ thresholds: FigureThresholds; offered: ActionKind[] }> {
+): Promise<{ thresholds: FigureThresholds; offered: FigureActionKind[] }> {
   const { defaults, offered } = await adminFigureRules();
   // The owner's own thresholds sit on top of the administrator's, inside the bounds, unless the administrator switched tuning off.
   const tunable = await appSettings().get("figures.ownerTunable");
@@ -24,7 +24,7 @@ export async function figureRules(
 }
 
 /** The administrator's thresholds and the actions offered, before any owner's tuning: what « back to the usual values » means. */
-export async function adminFigureRules(): Promise<{ defaults: FigureThresholds; offered: ActionKind[] }> {
+export async function adminFigureRules(): Promise<{ defaults: FigureThresholds; offered: FigureActionKind[] }> {
   const settings = appSettings();
   const get = <K extends Parameters<typeof settings.get>[0]>(key: K) => settings.get(key);
   const [

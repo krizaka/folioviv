@@ -11,7 +11,7 @@ import { useI18n } from "@/i18n";
 import { AppHeader } from "@/ui/AppHeader";
 import { QueryStates } from "@/ui/QueryStates";
 import { VisitDetail } from "@/ui/VisitDetail";
-import { VisitRow } from "@/ui/VisitRow";
+import { TodayVisitRow } from "@/ui/TodayVisitRow";
 import { useLocale } from "@/use-locale";
 import { useShop } from "@/use-shop";
 
@@ -69,7 +69,7 @@ export default function Today() {
                   data={d.visits}
                   keyExtractor={(v) => v.appointmentId}
                   renderItem={(v) => (
-                    <VisitRow
+                    <TodayVisitRow
                       visit={v}
                       timeZone={d.timezone}
                       selected={v.appointmentId === openId}

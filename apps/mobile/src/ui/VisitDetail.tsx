@@ -8,7 +8,7 @@ import { timeOf } from "@/domain/day";
 import { useI18n } from "@/i18n";
 import { useLocale } from "@/use-locale";
 
-import { STATUS_TONE } from "./VisitRow";
+import { STATUS_TONE } from "./TodayVisitRow";
 
 /** One appointment opened: when, where, who (each with a call), its state and the two moves of the owner (start, finish). */
 export function VisitDetail({

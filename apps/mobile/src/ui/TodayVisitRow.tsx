@@ -10,7 +10,7 @@ import { useLocale } from "@/use-locale";
 export const STATUS_TONE = { booked: "accent", done: "success", cancelled: "neutral", noShow: "warning" } as const;
 
 /** One appointment in the day's list: the time and the service, who is booked, its state; a press opens it (list to detail). */
-export function VisitRow({
+export function TodayVisitRow({
   visit,
   timeZone,
   selected,
