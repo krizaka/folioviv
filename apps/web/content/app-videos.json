@@ -5,34 +5,34 @@
     {
       "platform": "android",
       "flow": "today-books",
-      "seconds": 14.1,
-      "capturedAt": "2026-11-22T13:38:12.807Z",
+      "seconds": 13.6,
+      "capturedAt": "2026-11-23T16:16:20.109Z",
       "files": {
-        "webm": "sites/folioviv/download/android-today-books.ac79d4536f.webm",
-        "mp4": "sites/folioviv/download/android-today-books.684fdc7454.mp4",
-        "poster": "sites/folioviv/download/android-today-books.19fff97533.jpg"
+        "webm": "sites/folioviv/download/android-today-books.995381cbd1.webm",
+        "mp4": "sites/folioviv/download/android-today-books.496cc08d92.mp4",
+        "poster": "sites/folioviv/download/android-today-books.288800073a.jpg"
       }
     },
     {
       "platform": "web",
       "flow": "composer",
-      "seconds": 10.8,
-      "capturedAt": "2026-11-22T13:37:41.472Z",
+      "seconds": 10.6,
+      "capturedAt": "2026-11-23T16:15:31.577Z",
       "files": {
-        "webm": "sites/folioviv/download/web-composer.98c4f49fd4.webm",
-        "mp4": "sites/folioviv/download/web-composer.8a71af1650.mp4",
-        "poster": "sites/folioviv/download/web-composer.6d3ea3d240.jpg"
+        "webm": "sites/folioviv/download/web-composer.5c8b6a35c8.webm",
+        "mp4": "sites/folioviv/download/web-composer.229740eaaf.mp4",
+        "poster": "sites/folioviv/download/web-composer.ec652a2b3a.jpg"
       }
     },
     {
       "platform": "web",
       "flow": "storefront",
-      "seconds": 15.6,
-      "capturedAt": "2026-11-22T13:37:55.889Z",
+      "seconds": 15.5,
+      "capturedAt": "2026-11-23T16:15:46.304Z",
       "files": {
-        "webm": "sites/folioviv/download/web-storefront.90a9abd558.webm",
-        "mp4": "sites/folioviv/download/web-storefront.0e42b0de01.mp4",
-        "poster": "sites/folioviv/download/web-storefront.3e11f7bfd5.jpg"
+        "webm": "sites/folioviv/download/web-storefront.45b995690d.webm",
+        "mp4": "sites/folioviv/download/web-storefront.473743fae9.mp4",
+        "poster": "sites/folioviv/download/web-storefront.98b8b3b55d.jpg"
       }
     }
   ]
