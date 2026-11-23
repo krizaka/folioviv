@@ -51,7 +51,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@krizaka/config": "^0.29.1",
+    "@krizaka/config": "^0.29.2",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^24.19.2",
     "@types/pg": "^8.15.6",

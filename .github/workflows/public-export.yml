@@ -35,8 +35,8 @@ jobs:
       - run: pnpm install --frozen-lockfile --prefer-offline
       # The build itself is blocking: it fails on a route outside the list or a missing one.
       - run: pnpm build:public
-      # The guard's findings are real content of the export (the demo invoices' amounts on the home, the word « sign in » in the privacy
-      # text) and the `$n` React flight references read as amounts (krizaka/krizaka-ts#513). Report-only until #513 is released and the
-      # content is judged; never an allow-list of amounts. The fixture tests (export-check.test.ts) hold the guard red on a sign-in link.
+      # @krizaka/config 0.29.2 ignores the React flight references (krizaka-ts#513). The findings left are real content of the export: the demo
+      # invoices' amounts in the home's previews (140) and the words « sign in » of the privacy text (10). Report-only until that content is
+      # judged (krizaka-internal#4626); never an allow-list of amounts. The fixture tests (export-check.test.ts) hold the guard red on a sign-in link.
       - run: pnpm --filter @folioviv/web check:public
         continue-on-error: true

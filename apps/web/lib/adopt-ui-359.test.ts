@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 const root = join(__dirname, "..");
 const sources = (dir: string): string[] =>
   readdirSync(dir).flatMap((name) => {
-    if (["node_modules", ".next", "messages"].includes(name)) return [];
+    if (["node_modules", ".next", ".public-build", "out-public", "messages"].includes(name)) return [];
     const path = join(dir, name);
     if (statSync(path).isDirectory()) return sources(path);
     return /\.(tsx?|css)$/.test(name) && !name.endsWith(".test.ts") && !name.endsWith(".test.tsx") ? [path] : [];
