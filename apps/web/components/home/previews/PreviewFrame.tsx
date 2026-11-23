@@ -7,17 +7,21 @@ type Step = Readonly<{ label: string; body: ReactNode }>;
 /**
  * A feature card's picture (krizaka-internal#683): one useful action and its result, drawn with demo data. The action is
  * quiet, the result is the subject. It is decoration for the eye, not a control: `inert` and `aria-hidden`, with the text
- * alternative read instead. Its height follows its content (nothing is cut); the demo label is the card's own footer row,
+ * alternative read instead. Its height follows its content (nothing is cut); the demo label (« Exemple · … ») is the card's own footer row,
  * never laid over the content.
+ *
+ * It is async on purpose: React's payload defers an element to a row of its own once its row passes 3 200 bytes, and a card cut
+ * there would leave its amounts outside the `data-demo` object the export guard reads. As its own task, the card is one row.
  */
-export function PreviewFrame({
+export async function PreviewFrame({
   alt,
   demo,
   action,
   result,
 }: Readonly<{ alt: string; demo: string; action: Step; result: Step }>) {
   return (
-    <figure className="m-0 flex h-full w-full flex-col border border-border-default bg-surface-1">
+    // `data-demo` and the visible « Exemple » label mark the card as sample data: the export guard reads its amounts as a sample, never as a price (krizaka-internal#4678).
+    <figure data-demo="" className="m-0 flex h-full w-full flex-col border border-border-default bg-surface-1">
       <figcaption className="sr-only">{`${alt} (${demo})`}</figcaption>
       <div
         aria-hidden="true"

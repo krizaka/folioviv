@@ -111,7 +111,8 @@ describe("which pages are strict", () => {
 describe("the one inline script of a shop page", () => {
   it("is the theme script, and the layout hands it the response's nonce", () => {
     const layout = readFileSync(new URL("../app/[locale]/layout.tsx", import.meta.url), "utf8");
-    expect(layout).toContain('get("x-nonce")');
+    expect(readFileSync(new URL("../lib/request-nonce.ts", import.meta.url), "utf8")).toContain('get("x-nonce")');
+    expect(layout).toContain("await requestNonce()");
     expect(layout).toContain('<ThemeScript defaultMode="dark" nonce={nonce} />');
   });
 });

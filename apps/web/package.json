@@ -9,6 +9,8 @@
     "start": "next start",
     "lint": "eslint . --max-warnings 68 && krizaka-server-client-boundary && krizaka-ratchet",
     "typecheck": "tsc --noEmit",
+    "build:public": "node scripts/build-public.mjs",
+    "check:public": "node scripts/check-public-export.mjs",
     "test": "vitest run",
     "qa-accounts": "node scripts/qa-accounts.mjs"
   },
@@ -49,7 +51,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@krizaka/config": "^0.25.0",
+    "@krizaka/config": "^0.29.3",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^24.19.2",
     "@types/pg": "^8.15.6",

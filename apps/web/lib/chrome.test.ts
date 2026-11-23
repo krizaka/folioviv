@@ -4,13 +4,15 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const chrome = readFileSync(join(__dirname, "../components/SiteChrome.tsx"), "utf8");
+/** The bar's links are built in lib/bar-items.ts (the public export swaps their list). */
+const items = readFileSync(join(__dirname, "../lib/bar-items.ts"), "utf8");
 
 describe("the bar's composition (NavBar of @krizaka/ui, 3.30)", () => {
   it("shows the family's flat links (publicBarLinks: Pricing, Docs), four at most, no hand-written menu", () => {
-    expect(chrome).toContain("publicBarLinks(");
+    expect(items).toContain("publicBarLinks(");
     expect(chrome).toContain("<NavBar.Link");
     expect(chrome).not.toContain("<NavBar.Menu");
-    const slots = [...chrome.matchAll(/(pricing|docs|howItWorks|download): pagePath/g)];
+    const slots = [...items.matchAll(/(pricing|docs|howItWorks|download): pagePath/g)];
     expect(slots.length).toBeLessThanOrEqual(4);
   });
 
@@ -21,11 +23,11 @@ describe("the bar's composition (NavBar of @krizaka/ui, 3.30)", () => {
   });
 
   it("has « Explorer » in the bar and in the phone panel, through the same NavBar items (folioviv#235)", () => {
-    expect(chrome).toContain('id: "explore"');
-    expect(chrome).toContain('pagePath(locale, "explore")');
+    expect(items).toContain('id: "explore"');
+    expect(items).toContain('pagePath(locale, "explore")');
     // One list feeds the bar's links and the phone panel's: the entry is in both, never hand-made in one.
     expect(chrome).toMatch(/<NavBar\.Items>[\s\S]*items\.map[\s\S]*<NavBar\.Link/);
     expect(chrome).toMatch(/<NavBar\.Mobile[\s\S]*items\.map[\s\S]*<NavBar\.MobileLink/);
-    expect([...chrome.matchAll(/id: "/g)]).toHaveLength(1);
+    expect([...items.matchAll(/id: "/g)]).toHaveLength(1);
   });
 });

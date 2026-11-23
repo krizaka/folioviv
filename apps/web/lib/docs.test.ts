@@ -47,7 +47,7 @@ describe("the owner's guide (folioviv#382)", () => {
   });
 
   it("is in the bar (a flat link) and the footer", () => {
-    expect(read("components/SiteChrome.tsx")).toContain('docs: pagePath(locale, "docs")');
+    expect(read("lib/bar-items.ts")).toContain('docs: pagePath(locale, "docs")');
     expect(read("components/SiteFooter.tsx")).toContain('pagePath(locale, "docs")');
   });
 

@@ -27,6 +27,7 @@ const AWAKE = [
   "deploy-verify.yml",
   "docs-map.yml",
   "merge-resolution.yml",
+  "public-export.yml", // a 1-minute static build, reports on merge_group: it never sleeps (krizaka-internal#4626)
   "release-notes.yml",
   "security.yml",
   "update-visual-baselines.yml",

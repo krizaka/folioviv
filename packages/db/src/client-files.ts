@@ -128,7 +128,7 @@ export async function clientFile(db: Db, shopId: string, clientId: string): Prom
     SELECT a.id, lower(a.during) AS starts, upper(a.during) AS ends, a.status, sv.name_fr, sv.name_en, st.name AS staff, sv.price_cents
       FROM v JOIN appointments a ON a.id = v.appointment_id JOIN services sv ON sv.id = a.service_id JOIN staff st ON st.id = a.staff_id
      WHERE v.client_id = ${clientId} ORDER BY lower(a.during) DESC`);
-  type VisitRow = {
+  type ClientVisitRow = {
     id: string;
     starts: string;
     ends: string;
@@ -160,7 +160,7 @@ export async function clientFile(db: Db, shopId: string, clientId: string): Prom
   return {
     client: { ...client, since: client.since.toISOString() },
     dependants: pets.map((p) => ({ id: p.id, name: p.name, kind: p.kind, profile: p.profile as DependantProfile })),
-    visits: (visits.rows as VisitRow[]).map((r) => ({
+    visits: (visits.rows as ClientVisitRow[]).map((r) => ({
       id: r.id,
       startsAt: new Date(r.starts).toISOString(),
       endsAt: new Date(r.ends).toISOString(),

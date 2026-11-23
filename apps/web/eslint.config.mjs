@@ -10,7 +10,8 @@ const config = [
   ...krizakaStack({ severity: "warn", effects: "warn", complexity: "warn", sonar: "warn", codeRules: "off" }),
   // Sonar S6478 (#343): a component or render function defined inside a component is re-created on each render; build it at module level.
   { rules: { "react/no-unstable-nested-components": ["error", { allowAsProps: false }] } },
-  { ignores: [".next/**", "next-env.d.ts"] },
+  // The public export is generated (scripts/build-public.mjs): the staged project links the sources, which are linted where they are.
+  { ignores: [".next/**", ".public-build/**", "out-public/**", "next-env.d.ts"] },
 ];
 
 export default config;

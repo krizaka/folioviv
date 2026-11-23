@@ -2,24 +2,27 @@ import "../globals.css";
 import "@krizaka/ui/blocks.css";
 import "@krizaka/ui/story.css"; // the story pieces the storefront work draws: the template picker's tiles (ChoiceGrid)
 
+import { org } from "@krizaka/org";
 import { cn } from "@krizaka/ui/cn";
 import { MotionObserver } from "@krizaka/ui/motion";
 import { ThemeProvider, ThemeScript } from "@krizaka/ui/theme";
 import type { Metadata, Viewport } from "next";
-import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
 import { RoutePageTransition } from "@/components/RoutePageTransition";
 import { StageNotice } from "@/components/StageNotice";
 import { indexableOn, publicHost } from "@/lib/indexing";
 import { getDictionary, type Locale, LOCALES, PAGE_LOCALES, type PageLocale, uiLocaleOf } from "@/lib/i18n";
+import { publicBuild } from "@/lib/build-target";
+import { requestNonce } from "@/lib/request-nonce";
 import { shopDisplay, shopSans } from "@/lib/shop-fonts";
-import { SITE_URL } from "@/lib/site";
+import { KRIZAKA_URL, SITE_URL } from "@/lib/site";
 
 export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover" };
 
 export function generateStaticParams() {
-  return PAGE_LOCALES.map((locale) => ({ locale }));
+  // The public export holds the product's own two languages: the Spanish pages are shop pages, which it does not carry.
+  return (publicBuild ? LOCALES : PAGE_LOCALES).map((locale) => ({ locale }));
 }
 
 export const dynamicParams = false;
@@ -32,7 +35,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     title: { default: t.meta.siteName, template: t.meta.titleTemplate.replace("{title}", "%s") },
     description: t.meta.description,
     applicationName: t.meta.siteName,
-    authors: [{ name: "Krizaka", url: "https://www.krizaka.com" }],
+    authors: [{ name: org.company.tradeName, url: KRIZAKA_URL }],
     // Closed to search engines unless the setting is explicitly on for the configured public host (the header and robots.txt say it too, lib/indexing.ts).
     ...(indexableOn(publicHost()) ? {} : { robots: { index: false, follow: false, noarchive: true } }),
   };
@@ -49,7 +52,7 @@ export default async function LocaleLayout({
   const { locale } = await params;
   if (!PAGE_LOCALES.includes(locale as PageLocale)) notFound();
   // The nonce of a shop page's strict policy (proxy.ts sets it on the request): it signs the page's two inline scripts, the theme and zod's switch.
-  const nonce = (await headers()).get("x-nonce") ?? undefined;
+  const nonce = await requestNonce();
   return (
     <html lang={locale} data-surface="product" suppressHydrationWarning>
       <head>

@@ -2,7 +2,7 @@
   "meta": {
     "siteName": "{product}",
     "titleTemplate": "{title} · {product}",
-    "description": "Vos rendez-vous et vos factures réglés, vos taxes préparées. {product} s'adresse aux salons, studios et travailleurs autonomes du Québec : vos clients réservent, vous facturez, vos montants de TPS/TVQ sont prêts. En français et en anglais."
+    "description": "Vos rendez-vous et factures en ordre, vos taxes préparées. {product} s'adresse aux salons, studios et travailleurs autonomes du Québec : vos clients réservent, vous facturez, vos montants de TPS et de TVQ sont prêts. En français et en anglais."
   },
   "chrome": {
     "brandHome": "{product}, accueil",
@@ -27,7 +27,10 @@
     "terms": "Conditions d'utilisation",
     "footerColumns": {
       "product": "Produit",
-      "legal": "Légal"
+      "legal": "Légal",
+      "code": "Code public",
+      "publisher": "Éditeur",
+      "publisherSite": "Le site de l'éditeur"
     },
     "menu": {
       "label": "Menu",
@@ -51,15 +54,18 @@
     "footerLabel": "Pied de page",
     "preferences": "Préférences",
     "version": "v{version}",
-    "explore": "Explorer"
+    "explore": "Explorer",
+    "media": {
+      "recorded": "Enregistrée par nos tests automatisés, sur des données fictives."
+    }
   },
   "stage": {
     "title": "Version de développement",
     "message": "Les données peuvent être réinitialisées à tout moment. Ce n’est pas encore une offre commerciale."
   },
   "landing": {
-    "title": "Vos rendez-vous et vos factures réglés, vos taxes préparées.",
-    "lead": "Vos clients réservent, vous facturez, vos montants de taxes sont prêts. En français et en anglais.",
+    "title": "Vos rendez-vous et factures en ordre, vos taxes préparées.",
+    "lead": "Vos clients réservent, vous facturez avec TPS et TVQ, vous relisez le rapport de taxes et le déposez vous-même.",
     "actions": {
       "openShop": "Ouvrir ma boutique",
       "tryDemo": "Essayer la boutique démo",
@@ -72,7 +78,7 @@
     },
     "hero": {
       "visualAlt": "La boutique de démonstration Pattes de Saint-Henri sur un téléphone : une réservation, la journée de la promeneuse, le rapport de visite et les livres.",
-      "caption": "La vraie application, une seule prise, le 19 octobre 2026. Aucune personne réelle."
+      "caption": "La vraie application, en une seule prise, sur une boutique de démonstration. Aucune personne réelle."
     },
     "founder": {
       "title": "Offre fondateur : {price} par mois plus taxes, mise en route incluse",
@@ -111,7 +117,7 @@
       },
       "invoice": {
         "title": "La facture, taxes comprises",
-        "text": "TPS 5 % et TVQ 9,975 % au cent près, en français ou en anglais.",
+        "text": "TPS 5 % et TVQ 9,975 %, calculées une fois sur le sous-total de la facture, en cents entiers. En français ou en anglais.",
         "alt": "{line}, {subtotal}, devient une facture avec TPS {gst}, TVQ {qst} et un total de {total}."
       },
       "books": {
@@ -137,7 +143,7 @@
       "error": "Impossible de charger les affichettes. Réessayez dans un instant."
     },
     "preview": {
-      "demo": "Données de démonstration",
+      "demo": "Exemple · données de démonstration",
       "invoiceLine": "Promenades de groupe, octobre",
       "book": {
         "action": "Une cliente choisit une heure le {day}",
@@ -156,6 +162,19 @@
         "input": "Vos factures et vos dépenses, au fil de l'eau",
         "result": "Les trois montants de votre déclaration"
       }
+    },
+    "storefront": {
+      "title": "La page que voient vos clients",
+      "lead": "Vos services, vos heures et vos disponibilités sur une page à votre nom. Vos clients y choisissent un service, une personne et une heure vraiment libre."
+    },
+    "limits": {
+      "title": "Ce que {product} ne fait pas",
+      "items": [
+        "Il ne dépose ni ne transmet aucune déclaration : il prépare les montants, vous produisez la déclaration.",
+        "Il n'encaisse pas au comptoir : la caisse n'est pas offerte.",
+        "Il n'est pas fait pour la restauration : restaurants, cafés, bars et boulangeries avec consommation sur place sont exclus.",
+        "Il n'est pas ouvert à l'inscription : l'accès se fait sur invitation pendant le développement."
+      ]
     }
   },
   "docs": {
@@ -462,7 +481,7 @@
       "items": {
         "web-storefront": {
           "name": "La page publique de la boutique",
-          "body": "La page d'une boutique de démonstration, puis la même boutique dans d'autres compositions de Krizaka UI."
+          "body": "La page d'une boutique de démonstration, puis la même boutique dans d'autres mises en page."
         },
         "web-composer": {
           "name": "Le compositeur de page",
@@ -478,7 +497,7 @@
   "privacy": {
     "title": "Confidentialité",
     "updated": "Mis à jour le {date}",
-    "body": "{product} est en développement : seuls les comptes créés par notre équipe peuvent se connecter. Les données d'une boutique — ses clients, rendez-vous, factures et registre des taxes — sont gardées dans la base de données de {product} au Canada, chiffrées au repos, visibles de cette boutique seulement. Le consentement des clients est noté par finalité et peut être retiré ; les renseignements personnels d'un client peuvent être effacés, les factures qu'exige la loi fiscale étant gardées. Les chiffres de taxes préparés par {product} sont calculés à partir du registre de la période, dans {product} ; rien n'est produit pour un gouvernement, ni déposé auprès de lui, ni transmis. Rien n'est vendu. Pour poser une question ou faire supprimer vos données, utilisez le formulaire de contact.",
+    "body": "{product} est en développement : seuls les comptes créés par notre équipe y ont accès. Les données d'une boutique — ses clients, rendez-vous, factures et registre des taxes — sont gardées dans la base de données de {product} au Canada, chiffrées au repos, visibles de cette boutique seulement. Le consentement des clients est noté par finalité et peut être retiré ; les renseignements personnels d'un client peuvent être effacés, les factures qu'exige la loi fiscale étant gardées. Les chiffres de taxes préparés par {product} sont calculés à partir du registre de la période, dans {product} ; rien n'est produit pour un gouvernement, ni déposé auprès de lui, ni transmis. Rien n'est vendu. Pour poser une question ou faire supprimer vos données, utilisez le formulaire de contact.",
     "officer": {
       "title": "Responsable de la protection des renseignements personnels",
       "text": "Responsable de la protection des renseignements personnels : le président de {publisher} — confidentialite@krizaka.com. Écrivez à cette adresse pour accéder à vos renseignements, les corriger ou les effacer, retirer un consentement ou déposer une plainte ; nous répondons dans les 30 jours."
@@ -1514,7 +1533,12 @@
         "currentPlan": "Forfait actuel",
         "plannedNote": "Les forfaits ne sont pas encore en vente : les prix sont prévus et aucune carte n’est demandée.",
         "changePlan": "Changer de forfait",
-        "plan": { "founder": "Offre fondateur", "starter": "Starter", "scale": "Pro", "association": "Association" },
+        "plan": {
+          "founder": "Offre fondateur",
+          "starter": "Starter",
+          "scale": "Pro",
+          "association": "Association"
+        },
         "unavailable": "Aucun forfait n'est en vente pour l'instant.",
         "yourPrice": "Votre prix",
         "yourPriceHint": "Le prix auquel votre abonnement a été vendu : vous le gardez tant que vous restez.",

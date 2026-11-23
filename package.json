@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "turbo run dev --filter=@folioviv/web",
     "build": "turbo run build",
+    "build:public": "pnpm --filter @folioviv/web build:public",
     "lint:workspace": "npx --yes -p @krizaka/config@latest krizaka-workspace-guard",
     "lint": "pnpm run lint:workspace && turbo run lint && pnpm run check:i18n && ast-grep test --skip-snapshot-tests && krizaka-sg-ratchet && node scripts/deps.mjs && node scripts/check-krizaka-versions.mjs",
     "lint:deps": "node scripts/deps.mjs",
@@ -50,7 +51,7 @@
     "@krizaka/org": "^1.2.0",
     "@ast-grep/cli": "0.51.0",
     "@krizaka/a11y-audit": "0.2.0",
-    "@krizaka/config": "^0.25.0",
+    "@krizaka/config": "^0.29.3",
     "prettier": "^3.9.10",
     "@krizaka/i18n": "^0.2.9",
     "@krizaka/page-audit": "^0.8.1",

@@ -141,7 +141,7 @@ describe("the page and its messages", () => {
     // The public page is an invitation (no catalogue, no plan: lib/wave1-public.test.ts).
     expect(page).toContain("contactHref(");
     expect(read("lib/site.ts")).toContain('"pricing"');
-    expect(read("components/SiteChrome.tsx")).toContain('pricing: pagePath(locale, "pricing")');
+    expect(read("lib/bar-items.ts")).toContain('pricing: pagePath(locale, "pricing")');
     expect(read("components/SiteFooter.tsx")).toContain('pagePath(locale, "pricing")');
     expect(read("lib/seo.ts")).toContain("/en/pricing");
   });
