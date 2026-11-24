@@ -12,6 +12,7 @@ import { homeStatus } from "@/lib/home-status";
 import { asLocale, getDictionary, type Locale } from "@/lib/i18n";
 import { DEMO_SHOP, heroActions } from "@/lib/landing";
 import { homePageData, type ProductPageLinks } from "@/lib/product-page-data";
+import { productPageWords } from "@/lib/product-page-words";
 import { pageMetadata, siteJsonLd } from "@/lib/seo";
 import { contactHref } from "@/lib/site";
 import { shopHref } from "@/lib/shop-links";
@@ -26,9 +27,10 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
  */
 async function pageLinks(locale: Locale): Promise<ProductPageLinks> {
   const d = getDictionary(locale).landing;
-  const contact = { href: contactHref("home", locale), label: d.productPage.hero.contact };
+  const w = productPageWords(locale);
+  const contact = { href: contactHref("home", locale), label: w.hero.contact };
   if (publicBuild) {
-    return { primary: contact, secondary: { href: "#proof", label: d.productPage.hero.sample }, closing: contact };
+    return { primary: contact, secondary: { href: "#proof", label: w.hero.sample }, closing: contact };
   }
   const { primary, secondary } = heroActions(locale, await heroSignedIn(), shopHref(DEMO_SHOP, locale));
   const way = (a: { href: string; message: keyof typeof d.actions }) => ({ href: a.href, label: d.actions[a.message] });
@@ -43,6 +45,7 @@ async function pageLinks(locale: Locale): Promise<ProductPageLinks> {
 export default async function Home({ params }: Readonly<{ params: Promise<{ locale: string }> }>) {
   const locale = asLocale((await params).locale);
   const d = getDictionary(locale).landing;
+  const w = productPageWords(locale);
   const data = homePageData(locale, await pageLinks(locale));
   return (
     <>
@@ -54,7 +57,7 @@ export default async function Home({ params }: Readonly<{ params: Promise<{ loca
           className="mx-auto m-0 max-w-[60ch] px-4 pt-8 text-center text-base text-fg-secondary"
           data-testid="scope-line"
         >
-          {d.productPage.about}
+          {w.about}
         </p>
         <p
           className="mx-auto m-0 max-w-[60ch] px-4 pb-8 pt-2 text-center text-sm text-fg-secondary"

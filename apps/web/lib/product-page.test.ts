@@ -3,12 +3,12 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import en from "@/messages/en.json";
-import fr from "@/messages/fr.json";
+import en from "@/messages/site/en.json";
+import fr from "@/messages/site/fr.json";
 
 import { overBudget, parseTemplate, PRODUCT_PAGE, reportLines, sceneMedia } from "./product-page";
 
-const WORDS = { en: en.landing.productPage, fr: fr.landing.productPage } as const;
+const WORDS = { en: en.productPage, fr: fr.productPage } as const;
 
 describe("product page template (krizaka-internal#4636, #4692)", () => {
   it("shows the scenes the media registry lists for its role, each with a recording", () => {
@@ -63,7 +63,7 @@ describe("product page template (krizaka-internal#4636, #4692)", () => {
   });
 
   it("speaks with « vous », promises no date, no compliance and no transmission, and says the merchant files", () => {
-    expect(JSON.stringify(fr.landing.productPage)).not.toMatch(/\b(tu|ton|ta|tes|toi|rentres)\b/i);
+    expect(JSON.stringify(fr.productPage)).not.toMatch(/\b(tu|ton|ta|tes|toi|rentres)\b/i);
     for (const w of Object.values(WORDS)) {
       expect(JSON.stringify(w)).not.toMatch(
         /bientôt|soon|prochainement|coming|conforme|compliant|au cent près|to the cent|open source/i,

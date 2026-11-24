@@ -10,8 +10,8 @@ vi.mock("@/lib/hero-session", () => ({ heroSignedIn: async () => false }));
 
 import Home from "@/app/[locale]/page";
 import { sceneMedia } from "@/lib/product-page";
-import en from "@/messages/en.json";
-import fr from "@/messages/fr.json";
+import en from "@/messages/site/en.json";
+import fr from "@/messages/site/fr.json";
 
 const text = (s: string) => s.replace(/'/g, "&#x27;");
 
@@ -37,10 +37,10 @@ describe("the home, rendered (the product page template, krizaka-internal#4636)"
   });
 
   it("says what it does not do, and that the merchant files, in each language", () => {
-    expect(pages.en).toContain(text(en.landing.productPage.limits.items.taxes));
-    expect(pages.fr).toContain(text(fr.landing.productPage.limits.items.taxes));
-    expect(pages.fr).toContain(text(fr.landing.productPage.about));
-    expect(pages.en).toContain(text(en.landing.productPage.about));
+    expect(pages.en).toContain(text(en.productPage.limits.items.taxes));
+    expect(pages.fr).toContain(text(fr.productPage.limits.items.taxes));
+    expect(pages.fr).toContain(text(fr.productPage.about));
+    expect(pages.en).toContain(text(en.productPage.about));
   });
 
   it("keeps the company's status sentence, no date promise, no tutoiement", () => {

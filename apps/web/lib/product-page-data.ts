@@ -1,7 +1,8 @@
 import type { ProductPageData } from "@krizaka/ui/product-page";
 
 import { BRAND_ID } from "./brand";
-import { getDictionary, type Locale } from "./i18n";
+import type { Locale } from "./i18n";
+import { productPageWords } from "./product-page-words";
 import { PRODUCT_PAGE, productScenes, reportLines } from "./product-page";
 
 /** The page's ways in: the primary (the demo shop, or the contact form), its quiet companion, and the closing one. */
@@ -13,11 +14,11 @@ export interface ProductPageLinks {
 
 /**
  * Everything the home shows, as the template's data (krizaka-internal#4636, design #4692): the words come from the catalogue
- * (`landing.productPage`), the media from the registry (by role). Nothing is typed here, and no product's name: the template draws,
+ * (`messages/site`, `productPage`), the media from the registry (by role). Nothing is typed here, and no product's name: the template draws,
  * the data says. The report in the hero is an example with no amount: figures only ever appear in the app, on demo data.
  */
 export function homePageData(locale: Locale, links: ProductPageLinks): ProductPageData {
-  const w = getDictionary(locale).landing.productPage;
+  const w = productPageWords(locale);
   const scenes = productScenes(w.scenes);
   return {
     brand: BRAND_ID,
