@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   journeys:
-    uses: krizaka/.github/.github/workflows/journeys.yml@765d08535145b800cb9db2dbb118588c764313da # main
+    uses: krizaka/.github/.github/workflows/journeys.yml@84a22e72359caf315d8bf346f4a31cdb22f25997 # main
     # CI_SLEEP (README, « CI sleep »): the journeys sleep, and `journeys-asleep` below reports the required check in their place.
     if: ${{ vars.CI_SLEEP != 'true' }}
     permissions:
