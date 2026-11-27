@@ -1,8 +1,14 @@
 {
   "$comment": "Which media a page section shows, by ROLE (krizaka-internal#4636, the pattern of verikora#914; fields of the asset registry of krizaka-internal#4482: origin, owner, location, uses). `id` is a recording of content/app-videos.json (`<platform>-<flow>`), its words are `download.videos.items.<id>` in the messages. The page asks for « the media of role R on page P » and gets every entry listed here, in this order. Adding an entry shows it, with no code change. `frames` is the box of each platform's recordings. Read by lib/section-media.ts.",
   "frames": {
-    "web": { "width": 1280, "height": 800 },
-    "android": { "width": 390, "height": 845 }
+    "web": {
+      "width": 1280,
+      "height": 800
+    },
+    "android": {
+      "width": 390,
+      "height": 845
+    }
   },
   "media": [
     {
@@ -11,7 +17,12 @@
       "owner": "folioviv",
       "location": "content/app-videos.json",
       "reason": "What a client sees before booking: the shop's public page, recorded on demo data.",
-      "uses": [{ "page": "home", "role": "storefront" }]
+      "uses": [
+        {
+          "page": "home",
+          "role": "scene"
+        }
+      ]
     },
     {
       "id": "web-composer",
@@ -19,7 +30,16 @@
       "owner": "folioviv",
       "location": "content/app-videos.json",
       "reason": "The owner arranges the page; nothing is published until the owner publishes.",
-      "uses": [{ "page": "docs/shop", "role": "lead" }]
+      "uses": [
+        {
+          "page": "docs/shop",
+          "role": "lead"
+        },
+        {
+          "page": "home",
+          "role": "scene"
+        }
+      ]
     },
     {
       "id": "android-today-books",
@@ -28,8 +48,18 @@
       "location": "content/app-videos.json",
       "reason": "The day's board and the books on the phone: the figures the owner reads before filing.",
       "uses": [
-        { "page": "docs", "role": "lead" },
-        { "page": "docs/books", "role": "lead" }
+        {
+          "page": "docs",
+          "role": "lead"
+        },
+        {
+          "page": "docs/books",
+          "role": "lead"
+        },
+        {
+          "page": "home",
+          "role": "scene"
+        }
       ]
     }
   ]
